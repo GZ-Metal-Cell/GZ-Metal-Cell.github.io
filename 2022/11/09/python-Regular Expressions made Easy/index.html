@@ -301,6 +301,20 @@
 <li><a href="#lets-go-over-quantifiers">Let’s go over quantifiers’</a><ul>
 <li><a href="#other-types-of-characters-sets">Other types of characters sets</a></li>
 <li><a href="#creating-your-own-character-sets">Creating your own character sets</a></li>
+<li><a href="#quantifers-with-custom-sets">Quantifers with custom sets</a></li>
+<li><a href="#groups">GROUPS</a></li>
+<li><a href="#naming-groups">Naming Groups</a><ul>
+<li><a href="#quantifiers-on-groups">Quantifiers on groups</a></li>
+<li><a href="#nuances-to-be-wary-of">Nuances to be wary of</a></li>
+<li><a href="#quantifiers-with-groups-within-findall">Quantifiers with groups within findall</a></li>
+<li><a href="#groups-for-word-completion">Groups for word completion</a></li>
+</ul>
+</li>
+<li><a href="#non-capture-groups">Non-capture Groups</a><ul>
+<li><a href="#be-careful-with-syntax">BE CAREFUL WITH SYNTAX</a></li>
+</ul>
+</li>
+<li><a href="#backreferences-using-captured-groups-inside-other-operations">Backreferences - Using captured groups inside other operations</a></li>
 </ul>
 </li>
 </ul>
@@ -768,6 +782,337 @@
  &#39;.&#39;,
  &#39;.&#39;,
  &#39;.&#39;]
+</code></pre><h2><span id="quantifers-with-custom-sets">Quantifers with custom sets</span></h2><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> re<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>+</code> 出现一次或更多</li>
+<li><code>?</code> 出现0或1次</li>
+<li><code>*</code> 出现0次或更多</li>
+<li><code>&#123;&#125;</code> 自定义出现次数</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">string = <span class="hljs-string">&#x27;HELLO, There, How, Are, You...&#x27;</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">re.search(<span class="hljs-string">&#x27;[A-Z]+&#x27;</span>, string)<br></code></pre></td></tr></table></figure>
+<pre><code>&lt;re.Match object; span=(0, 5), match=&#39;HELLO&#39;&gt;
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">re.findall(<span class="hljs-string">&#x27;[A-Z]+&#x27;</span>, string)<br></code></pre></td></tr></table></figure>
+<pre><code>[&#39;HELLO&#39;, &#39;T&#39;, &#39;H&#39;, &#39;A&#39;, &#39;Y&#39;]
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">re.findall(<span class="hljs-string">&#x27;[A-Z]&#123;2,&#125;&#x27;</span>, string)  <span class="hljs-comment"># 2 or more</span><br></code></pre></td></tr></table></figure>
+<pre><code>[&#39;HELLO&#39;]
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># one or more of 4 types of characters</span><br><span class="hljs-comment"># 四种字符中的一种或多种</span><br>re.search(<span class="hljs-string">&#x27;[A-Za-z\s,]+&#x27;</span>, string).group() <br></code></pre></td></tr></table></figure>
+<pre><code>&#39;HELLO, There, How, Are, You&#39;
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">re.findall(<span class="hljs-string">&#x27;[A-Z]?[a-z\s,]+&#x27;</span>, string)<br></code></pre></td></tr></table></figure>
+<pre><code>[&#39;O, &#39;, &#39;There, &#39;, &#39;How, &#39;, &#39;Are, &#39;, &#39;You&#39;]
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># ^ is a metacharacter within brackets</span><br><span class="hljs-comment"># ^是括号中的元字符</span><br><span class="hljs-comment"># 表示相反</span><br>re.search(<span class="hljs-string">&#x27;[^A-Za-z\s,]+&#x27;</span>, string).group()  <br></code></pre></td></tr></table></figure>
+<pre><code>&#39;...&#39;
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">re.findall(<span class="hljs-string">&#x27;[^A-Z]+&#x27;</span>, string) <span class="hljs-comment"># 匹配所有非大写字符</span><br></code></pre></td></tr></table></figure>
+<pre><code>[&#39;, &#39;, &#39;here, &#39;, &#39;ow, &#39;, &#39;re, &#39;, &#39;ou...&#39;]
+</code></pre><h2><span id="groups">GROUPS</span></h2><ul>
+<li><code>groups</code> allow us to pull out sections of a match and store them<ul>
+<li><code>groups</code> 允许我们提取匹配的部分并存储它们</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># contrived example 举例</span><br><span class="hljs-keyword">import</span> re<br>string = <span class="hljs-string">&#x27;John has 6 cats but I think my friend Susan has 3 dogs and Mike has 8 fishes&#x27;</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">re.findall(<span class="hljs-string">&#x27;[A-Za-z]+ \w+ \d+ \w+&#x27;</span>, string)<br></code></pre></td></tr></table></figure>
+<pre><code>[&#39;John has 6 cats&#39;, &#39;Susan has 3 dogs&#39;, &#39;Mike has 8 fishes&#39;]
+</code></pre><ul>
+<li>the use of <code>brackets</code> denotes a group 使用括号表示一个组<ul>
+<li><code>()</code>  = metacharacter 元字符</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">re.findall(<span class="hljs-string">&#x27;([A-Za-z]+) \w+ \d+ \w+&#x27;</span>, string) <span class="hljs-comment"># to pull out just the names 只把名字取出来</span><br></code></pre></td></tr></table></figure>
+<pre><code>[&#39;John&#39;, &#39;Susan&#39;, &#39;Mike&#39;]
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">re.findall(<span class="hljs-string">&#x27;[A-Za-z]+ \w+ \d+ (\w+)&#x27;</span>, string) <span class="hljs-comment"># pull out animals 取出所有动物</span><br></code></pre></td></tr></table></figure>
+<pre><code>[&#39;cats&#39;, &#39;dogs&#39;, &#39;fishes&#39;]
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">re.findall(<span class="hljs-string">&#x27;([A-Za-z]+) \w+ (\d+) (\w+)&#x27;</span>, string)<br><span class="hljs-comment"># use original string to make sure matching is correct, then use groups to pull out the info you want</span><br><span class="hljs-comment"># 使用原始字符串确保匹配是正确的，然后使用组拉出你想要的信息</span><br></code></pre></td></tr></table></figure>
+<pre><code>[(&#39;John&#39;, &#39;6&#39;, &#39;cats&#39;), (&#39;Susan&#39;, &#39;3&#39;, &#39;dogs&#39;), (&#39;Mike&#39;, &#39;8&#39;, &#39;fishes&#39;)]
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># organize the data by data-types 按数据类型组织数据</span><br>info = re.findall(<span class="hljs-string">&#x27;([A-Za-z]+) \w+ (\d+) (\w+)&#x27;</span>, string)<br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">info<br></code></pre></td></tr></table></figure>
+<pre><code>[(&#39;John&#39;, &#39;6&#39;, &#39;cats&#39;), (&#39;Susan&#39;, &#39;3&#39;, &#39;dogs&#39;), (&#39;Mike&#39;, &#39;8&#39;, &#39;fishes&#39;)]
+</code></pre><p><a target="_blank" rel="noopener" href="https://www.runoob.com/python3/python3-func-zip.html">Python3 zip() 函数</a></p>
+<ul>
+<li>zip() 函数用于将可迭代的对象作为参数，将对象中对应的元素打包成一个个元组，然后返回由这些元组组成的对象，这样做的好处是节约了不少的内存。</li>
+<li>与 zip 相反，zip(*) 可理解为解压，返回二维矩阵式</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-built_in">list</span>(<span class="hljs-built_in">zip</span>(*info))  <span class="hljs-comment"># organize your data by categories 按类别组织数据</span><br></code></pre></td></tr></table></figure>
+<pre><code>[(&#39;John&#39;, &#39;Susan&#39;, &#39;Mike&#39;), (&#39;6&#39;, &#39;3&#39;, &#39;8&#39;), (&#39;cats&#39;, &#39;dogs&#39;, &#39;fishes&#39;)]
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">match = re.search(<span class="hljs-string">&#x27;([A-Za-z]+) \w+ (\d+) (\w+)&#x27;</span>, string)  <span class="hljs-comment"># pulls out three groups 抽出三组</span><br>match<br></code></pre></td></tr></table></figure>
+<pre><code>&lt;re.Match object; span=(0, 15), match=&#39;John has 6 cats&#39;&gt;
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">match.group(<span class="hljs-number">0</span>)<br></code></pre></td></tr></table></figure>
+<pre><code>&#39;John has 6 cats&#39;
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">match.groups()<br></code></pre></td></tr></table></figure>
+<pre><code>(&#39;John&#39;, &#39;6&#39;, &#39;cats&#39;)
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">match.group(<span class="hljs-number">1</span>)<br></code></pre></td></tr></table></figure>
+<pre><code>&#39;John&#39;
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">match.group(<span class="hljs-number">2</span>)<br></code></pre></td></tr></table></figure>
+<pre><code>&#39;6&#39;
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">match.group(<span class="hljs-number">3</span>)<br></code></pre></td></tr></table></figure>
+<pre><code>&#39;cats&#39;
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">match.group(<span class="hljs-number">1</span>, <span class="hljs-number">3</span>)  <span class="hljs-comment"># multiple groups 多个组</span><br></code></pre></td></tr></table></figure>
+<pre><code>(&#39;John&#39;, &#39;cats&#39;)
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">match.group(<span class="hljs-number">3</span>, <span class="hljs-number">2</span>, <span class="hljs-number">1</span>, <span class="hljs-number">1</span>)  <span class="hljs-comment"># change the order 改变顺序</span><br></code></pre></td></tr></table></figure>
+<pre><code>(&#39;cats&#39;, &#39;6&#39;, &#39;John&#39;, &#39;John&#39;)
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">match.span()<br></code></pre></td></tr></table></figure>
+<pre><code>(0, 15)
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">match.span(<span class="hljs-number">2</span>)<br></code></pre></td></tr></table></figure>
+<pre><code>(9, 10)
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">match.span(<span class="hljs-number">3</span>)<br></code></pre></td></tr></table></figure>
+<pre><code>(11, 15)
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">match.start(<span class="hljs-number">3</span>)<br></code></pre></td></tr></table></figure>
+<pre><code>11
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># find all has no group function</span><br><span class="hljs-comment"># re.findall 没有 group 函数</span><br>re.findall(<span class="hljs-string">&#x27;([A-Za-z]+) \w+ (\d+) (\w+)&#x27;</span>, string).group(<span class="hljs-number">1</span>)<br></code></pre></td></tr></table></figure>
+<pre><code>---------------------------------------------------------------------------
+
+AttributeError                            Traceback (most recent call last)
+
+Input In [101], in &lt;cell line: 3&gt;()
+      1 # find all has no group function
+      2 # re.findall 没有 group 函数
+----&gt; 3 re.findall(&#39;([A-Za-z]+) \w+ (\d+) (\w+)&#39;, string).group(1)
+
+
+AttributeError: &#39;list&#39; object has no attribute &#39;group&#39;
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">re.findall(<span class="hljs-string">&#x27;([A-Za-z]+) \w+ (\d+) (\w+)&#x27;</span>, string)[<span class="hljs-number">0</span>]<br></code></pre></td></tr></table></figure>
+<pre><code>(&#39;John&#39;, &#39;6&#39;, &#39;cats&#39;)
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">re.findall(<span class="hljs-string">&#x27;([A-Za-z]+) \w+ (\d+) (\w+)&#x27;</span>, string)[<span class="hljs-number">0</span>].group(<span class="hljs-number">1</span>)  <span class="hljs-comment"># 这也不好使</span><br></code></pre></td></tr></table></figure>
+<pre><code>---------------------------------------------------------------------------
+
+AttributeError                            Traceback (most recent call last)
+
+Input In [39], in &lt;cell line: 1&gt;()
+----&gt; 1 re.findall(&#39;([A-Za-z]+) \w+ (\d+) (\w+)&#39;, string)[0].group(1)
+
+
+AttributeError: &#39;tuple&#39; object has no attribute &#39;group&#39;
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">re.findall(<span class="hljs-string">&#x27;([A-Za-z]+) \w+ (\d+) (\w+)&#x27;</span>, string)<br></code></pre></td></tr></table></figure>
+<pre><code>[(&#39;John&#39;, &#39;6&#39;, &#39;cats&#39;), (&#39;Susan&#39;, &#39;3&#39;, &#39;dogs&#39;), (&#39;Mike&#39;, &#39;8&#39;, &#39;fishes&#39;)]
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">data = re.findall(<span class="hljs-string">&#x27;(([A-Za-z]+) \w+ (\d+) (\w+))&#x27;</span>, string)  <span class="hljs-comment"># 组中组</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">data<br></code></pre></td></tr></table></figure>
+<pre><code>[(&#39;John has 6 cats&#39;, &#39;John&#39;, &#39;6&#39;, &#39;cats&#39;),
+ (&#39;Susan has 3 dogs&#39;, &#39;Susan&#39;, &#39;3&#39;, &#39;dogs&#39;),
+ (&#39;Mike has 8 fishes&#39;, &#39;Mike&#39;, &#39;8&#39;, &#39;fishes&#39;)]
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># 你只能这么干</span><br><span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> data:<br>    <span class="hljs-built_in">print</span>(i[<span class="hljs-number">3</span>])<br></code></pre></td></tr></table></figure>
+<pre><code>cats
+dogs
+fishes
+</code></pre><ul>
+<li><p>we can use iteration</p>
+<ul>
+<li>我们可以使用迭代</li>
+</ul>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://www.runoob.com/python/python-func-next.html">Python next() 函数</a></p>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">it = re.finditer(<span class="hljs-string">&#x27;([A-Za-z]+) \w+ (\d+) (\w+)&#x27;</span>, string)<br><span class="hljs-built_in">next</span>(it).groups()<br></code></pre></td></tr></table></figure>
+<pre><code>(&#39;John&#39;, &#39;6&#39;, &#39;cats&#39;)
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">it = re.finditer(<span class="hljs-string">&#x27;([A-Za-z]+) \w+ (\d+) (\w+)&#x27;</span>, string)<br><span class="hljs-keyword">for</span> element <span class="hljs-keyword">in</span> it:<br>    <span class="hljs-built_in">print</span> (element.group(<span class="hljs-number">1</span>, <span class="hljs-number">3</span>, <span class="hljs-number">2</span>))   <span class="hljs-comment"># don&#x27;t forget iterators exhaust</span><br></code></pre></td></tr></table></figure>
+<pre><code>(&#39;John&#39;, &#39;cats&#39;, &#39;6&#39;)
+(&#39;Susan&#39;, &#39;dogs&#39;, &#39;3&#39;)
+(&#39;Mike&#39;, &#39;fishes&#39;, &#39;8&#39;)
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">it = re.finditer(<span class="hljs-string">&#x27;([A-Za-z]+) \w+ (\d+) (\w+)&#x27;</span>, string)<br><span class="hljs-keyword">for</span> element <span class="hljs-keyword">in</span> it:<br>    <span class="hljs-built_in">print</span>(element.group())<br></code></pre></td></tr></table></figure>
+<pre><code>John has 6 cats
+Susan has 3 dogs
+Mike has 8 fishes
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">it = re.finditer(<span class="hljs-string">&#x27;([A-Za-z]+) \w+ (\d+) (\w+)&#x27;</span>, string)<br><span class="hljs-keyword">for</span> element <span class="hljs-keyword">in</span> it:<br>    <span class="hljs-built_in">print</span>(element.groups())<br></code></pre></td></tr></table></figure>
+<pre><code>(&#39;John&#39;, &#39;6&#39;, &#39;cats&#39;)
+(&#39;Susan&#39;, &#39;3&#39;, &#39;dogs&#39;)
+(&#39;Mike&#39;, &#39;8&#39;, &#39;fishes&#39;)
+</code></pre><h2><span id="naming-groups">Naming Groups</span></h2><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> re<br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">string = <span class="hljs-string">&#x27;New York, New York 11369&#x27;</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>([A-Za-z\s]+)</code> 寄件地址</li>
+<li><code>([A-Za-z\s]+)</code> 收件地址</li>
+<li><code>(\d+)</code> 邮编</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">match = re.search(<span class="hljs-string">&#x27;([A-Za-z\s]+),([A-Za-z\s]+)(\d+)&#x27;</span>, string)<br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">match.group(<span class="hljs-number">1</span>), match.group(<span class="hljs-number">2</span>), match.group(<span class="hljs-number">3</span>), match.group(<span class="hljs-number">0</span>)<br></code></pre></td></tr></table></figure>
+<pre><code>(&#39;New York&#39;, &#39; New York &#39;, &#39;11369&#39;, &#39;New York, New York 11369&#39;)
+</code></pre><p><code>?P&lt; &gt;</code> to name a group— group name inside the <code>&lt;&gt;</code>, followed by RE for group</p>
+<ul>
+<li><code>(?P&lt;City&gt;)</code></li>
+<li><code>(?P&lt;State&gt;)</code></li>
+<li><code>(?P&lt;ZipCode&gt;)</code></li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">pattern = re.<span class="hljs-built_in">compile</span>(<span class="hljs-string">&#x27;(?P&lt;City&gt;[A-Za-z\s]+),(?P&lt;State&gt;[A-Za-z\s]+)(?P&lt;ZipCode&gt;\d+)&#x27;</span>)<br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">match = re.search(pattern, string)<br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">match.group(<span class="hljs-string">&#x27;City&#x27;</span>), match.group(<span class="hljs-string">&#x27;State&#x27;</span>), match.group(<span class="hljs-string">&#x27;ZipCode&#x27;</span>)<br></code></pre></td></tr></table></figure>
+<pre><code>(&#39;New York&#39;, &#39; New York &#39;, &#39;11369&#39;)
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">match.group(<span class="hljs-number">1</span>)<br></code></pre></td></tr></table></figure>
+<pre><code>&#39;New York&#39;
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">match.groups()<br></code></pre></td></tr></table></figure>
+<pre><code>(&#39;New York&#39;, &#39; New York &#39;, &#39;11369&#39;)
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># Just incase you forget the names of the groups you used</span><br><span class="hljs-comment"># 以防您忘记了您使用的组的名称</span><br>match.groupdict()<br></code></pre></td></tr></table></figure>
+<pre><code>&#123;&#39;City&#39;: &#39;New York&#39;, &#39;State&#39;: &#39; New York &#39;, &#39;ZipCode&#39;: &#39;11369&#39;&#125;
+</code></pre><h3><span id="quantifiers-on-groups">Quantifiers on groups</span></h3><ul>
+<li>Using quantifiers on groups has some nuances, but very useful<ul>
+<li>在组上使用量词有一些细微差别，但非常有用</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> re<br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">string = <span class="hljs-string">&#x27;abababababab&#x27;</span>  <span class="hljs-comment"># ab repeated many times</span><br>re.search(<span class="hljs-string">&#x27;(ab)+&#x27;</span>, string)  <span class="hljs-comment">#(ab)+ is many instances of one group repeated 同一组的许多实例重复出现</span><br></code></pre></td></tr></table></figure>
+<pre><code>&lt;re.Match object; span=(0, 12), match=&#39;abababababab&#39;&gt;
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">string = <span class="hljs-string">&#x27;abababababab&#x27;</span>  <span class="hljs-comment"># ab repeated many times 重复了很多次</span><br><br>re.search(<span class="hljs-string">&#x27;[ab]+&#x27;</span>, string)  <span class="hljs-comment"># this is different</span><br></code></pre></td></tr></table></figure>
+<pre><code>&lt;re.Match object; span=(0, 12), match=&#39;abababababab&#39;&gt;
+</code></pre><ul>
+<li>difference explained below<ul>
+<li><code>(ab)</code> 表示 a 和 b</li>
+<li><code>[ab]</code> 表示 a 或 b</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">string = <span class="hljs-string">&#x27;abababbbbbbb&#x27;</span>  <span class="hljs-comment"># only partial fit to our new string 只有部分符合我们的新字符串</span><br>re.search(<span class="hljs-string">&#x27;(ab)+&#x27;</span>, string)<br></code></pre></td></tr></table></figure>
+<pre><code>&lt;re.Match object; span=(0, 6), match=&#39;ababab&#39;&gt;
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">string = <span class="hljs-string">&#x27;abababbbbbbb&#x27;</span>  <span class="hljs-comment"># but this pattern fits perfectly 但这个模式完全吻合</span><br>re.search(<span class="hljs-string">&#x27;[ab]+&#x27;</span>, string)<br></code></pre></td></tr></table></figure>
+<pre><code>&lt;re.Match object; span=(0, 12), match=&#39;abababbbbbbb&#39;&gt;
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">string = <span class="hljs-string">&#x27;abababbbbbbb&#x27;</span>  <span class="hljs-comment"># allows flexibility 允许的灵活性</span><br>re.search(<span class="hljs-string">&#x27;(ab)+\w+&#x27;</span>, string)<br></code></pre></td></tr></table></figure>
+<pre><code>&lt;re.Match object; span=(0, 12), match=&#39;abababbbbbbb&#39;&gt;
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">string = <span class="hljs-string">&#x27;abababsssss&#x27;</span>  <span class="hljs-comment"># allows flexibility</span><br>re.search(<span class="hljs-string">&#x27;(ab)+\w+&#x27;</span>, string)<br></code></pre></td></tr></table></figure>
+<pre><code>&lt;re.Match object; span=(0, 11), match=&#39;abababsssss&#39;&gt;
+</code></pre><h3><span id="nuances-to-be-wary-of">Nuances to be wary of</span></h3><p>需要注意的细微差别</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># only one group not multiple groups 只有一个组而不是多个组</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">string = <span class="hljs-string">&#x27;abababababab&#x27;</span> <span class="hljs-comment"># original string</span><br>match = re.search(<span class="hljs-string">&#x27;(ab)+&#x27;</span>, string) <br><br>match.group(<span class="hljs-number">1</span>)<br><span class="hljs-comment"># capturing only one group; value is overwritten each time</span><br><span class="hljs-comment"># 只捕获一个群体; 值每次都会被覆盖</span><br></code></pre></td></tr></table></figure>
+<pre><code>&#39;ab&#39;
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">match.group(<span class="hljs-number">2</span>) <span class="hljs-comment"># no value 没有值</span><br></code></pre></td></tr></table></figure>
+<pre><code>---------------------------------------------------------------------------
+
+IndexError                                Traceback (most recent call last)
+
+Input In [10], in &lt;cell line: 1&gt;()
+----&gt; 1 match.group(2)
+
+
+IndexError: no such group
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">match.groups()  <span class="hljs-comment"># only one group, group just overwritten 只有一个组，组被覆盖了</span><br></code></pre></td></tr></table></figure>
+<pre><code>(&#39;ab&#39;,)
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">match.group(<span class="hljs-number">0</span>) <span class="hljs-comment"># the full match, not related to groups 完全匹配，与组无关</span><br></code></pre></td></tr></table></figure>
+<pre><code>&#39;abababababab&#39;
+</code></pre><ul>
+<li>Another simple example with two groups using quantifiers<ul>
+<li>另一个使用量词的两个组的简单例子</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">string = <span class="hljs-string">&#x27;ababababab&#x27;</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">match = re.search (<span class="hljs-string">&#x27;(ab)+(ab)+&#x27;</span>, string)<br>match<br></code></pre></td></tr></table></figure>
+<pre><code>&lt;re.Match object; span=(0, 10), match=&#39;ababababab&#39;&gt;
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">match.groups()<br></code></pre></td></tr></table></figure>
+<pre><code>(&#39;ab&#39;, &#39;ab&#39;)
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">match.span(<span class="hljs-number">2</span>) <span class="hljs-comment"># the first group is greedy</span><br></code></pre></td></tr></table></figure>
+<pre><code>(8, 10)
+</code></pre><ul>
+<li>Only one group captured<ul>
+<li>只捕获了一个群体</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">string = <span class="hljs-string">&#x27;123456789&#x27;</span><br><br>match = re.search(<span class="hljs-string">&#x27;(\d)+&#x27;</span>, string)<br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">match<br></code></pre></td></tr></table></figure>
+<pre><code>&lt;re.Match object; span=(0, 9), match=&#39;123456789&#39;&gt;
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">(match.groups())  <span class="hljs-comment"># only one group, and it uses the last value 只有一个组，它使用最后一个值</span><br></code></pre></td></tr></table></figure>
+<pre><code>(&#39;9&#39;,)
+</code></pre><h3><span id="quantifiers-with-groups-within-findall">Quantifiers with groups within findall</span></h3><p>在 findall 中包含组的量词</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">string = <span class="hljs-string">&#x27;123456789&#x27;</span><br><br>re.findall(<span class="hljs-string">&#x27;(\d)+&#x27;</span>, string)<br><span class="hljs-comment"># only pulls out group and last instance</span><br><span class="hljs-comment"># 只取出组和最后一个实例</span><br></code></pre></td></tr></table></figure>
+<pre><code>[&#39;9&#39;]
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">string = <span class="hljs-string">&#x27;1234 56789&#x27;</span><br>re.findall(<span class="hljs-string">&#x27;(\d)+&#x27;</span>, string)<br><span class="hljs-comment"># Here we have two matches 匹配了两个</span><br></code></pre></td></tr></table></figure>
+<pre><code>[&#39;4&#39;, &#39;9&#39;]
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">re.findall(<span class="hljs-string">&#x27;((\d)+)&#x27;</span>, string)[<span class="hljs-number">1</span>][<span class="hljs-number">0</span>] <br><span class="hljs-comment"># to find full match create a main group engulfing the smaller groups</span><br><span class="hljs-comment"># 要找到完全匹配，创建一个主组，吞噬较小的组</span><br></code></pre></td></tr></table></figure>
+<pre><code>&#39;56789&#39;
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># another example</span><br>string  = <span class="hljs-string">&#x27;abbbbb ababababab&#x27;</span><br>re.findall(<span class="hljs-string">&#x27;(ab)+&#x27;</span>, string)  <span class="hljs-comment"># two instances</span><br></code></pre></td></tr></table></figure>
+<pre><code>[&#39;ab&#39;, &#39;ab&#39;]
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">string  = <span class="hljs-string">&#x27;abbbbb ababababab&#x27;</span><br>re.findall(<span class="hljs-string">&#x27;((ab)+)&#x27;</span>, string)   <span class="hljs-comment">#full match</span><br></code></pre></td></tr></table></figure>
+<pre><code>[(&#39;ab&#39;, &#39;ab&#39;), (&#39;ababababab&#39;, &#39;ab&#39;)]
+</code></pre><h3><span id="groups-for-word-completion">Groups for word completion</span></h3><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">re.search(<span class="hljs-string">&#x27;Happy (Valentines|Birthday|Anniversary)&#x27;</span>, <span class="hljs-string">&#x27;Happy Birthday&#x27;</span>)<br></code></pre></td></tr></table></figure>
+<pre><code>&lt;re.Match object; span=(0, 14), match=&#39;Happy Birthday&#39;&gt;
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">re.search(<span class="hljs-string">&#x27;Happy (Valentines|Birthday|Anniversary)&#x27;</span>, <span class="hljs-string">&#x27;Happy Valentines&#x27;</span>)<br></code></pre></td></tr></table></figure>
+<pre><code>&lt;re.Match object; span=(0, 16), match=&#39;Happy Valentines&#39;&gt;
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">re.search(<span class="hljs-string">&#x27;Happy Valentines| Happy Birthday | Happy Anniversary&#x27;</span>, <span class="hljs-string">&#x27;Happy Valentines&#x27;</span>)<br></code></pre></td></tr></table></figure>
+<pre><code>&lt;re.Match object; span=(0, 16), match=&#39;Happy Valentines&#39;&gt;
+</code></pre><h2><span id="non-capture-groups">Non-capture Groups</span></h2><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> re<br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># Here is one such example:</span><br><span class="hljs-keyword">import</span> re<br><br>string = <span class="hljs-string">&#x27;1234 56789&#x27;</span><br>re.findall(<span class="hljs-string">&#x27;(\d)+&#x27;</span>, string)<br></code></pre></td></tr></table></figure>
+<pre><code>[&#39;4&#39;, &#39;9&#39;]
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">re.search(<span class="hljs-string">&#x27;(\d)+&#x27;</span>, string).groups()  <span class="hljs-comment">#using search</span><br></code></pre></td></tr></table></figure>
+<pre><code>(&#39;4&#39;,)
+</code></pre><p><strong>捕获组</strong>（capturing group）是把多个字符当作一个单元对待的一种方式。通过把字符括在括号内创建捕获组。例如，正则表达式(dog)创建包含字母“d”、“o”和“g”的一个组。输入字符串和捕获组匹配的那一部分将被保存在内存中，以便以后通过反向引用再次使用。</p>
+<p>而<strong>非捕获组</strong>就是输入字符串和捕获组匹配的那一部分将不被保存在内存中。</p>
+<ul>
+<li>non-capture groups syntax<ul>
+<li><code>?:</code> The symbol above represents non-capture groups and looks slightly similar to the syntax for naming groups<ul>
+<li>上面的符号表示非捕获组，看起来有点类似于命名组的语法</li>
+</ul>
+</li>
+<li><code>?P</code> don’t confuse the two please.<ul>
+<li>请不要混淆这两者</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># comparison 比较</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">re.findall(<span class="hljs-string">&#x27;(\d)+&#x27;</span>, string)<br></code></pre></td></tr></table></figure>
+<pre><code>[&#39;4&#39;, &#39;9&#39;]
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">re.findall(<span class="hljs-string">&#x27;(?:\d)+&#x27;</span>, string)  <span class="hljs-comment"># with non capture group 非捕获组</span><br></code></pre></td></tr></table></figure>
+<pre><code>[&#39;1234&#39;, &#39;56789&#39;]
+</code></pre><ul>
+<li>So the group is part of the pattern, but we don’t output the groups’ results<ul>
+<li>所以 group 是模式的一部分，但我们不输出 group 的结果</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">re.findall(<span class="hljs-string">&#x27;\d+&#x27;</span>, string)<br><span class="hljs-comment"># when RE has no groups in findall, we output entire match</span><br><span class="hljs-comment"># 当RE在findall中没有组时，我们输出整个匹配</span><br></code></pre></td></tr></table></figure>
+<pre><code>[&#39;1234&#39;, &#39;56789&#39;]
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># Another example</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">string  = <span class="hljs-string">&#x27;123123 = Alex, 123123123 = Danny, 123123123123 = Mike, 456456 = rick, 121212 = John, 132132 = Luis,&#x27;</span> <br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># We want to pull out all names whose ID has 123 within in</span><br><span class="hljs-comment"># 我们要取出所有ID 包含 123的名字</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">re.findall(<span class="hljs-string">&#x27;(?:123)+ = (\w+),&#x27;</span>, string)  <span class="hljs-comment"># three instances</span><br></code></pre></td></tr></table></figure>
+<pre><code>[&#39;Alex&#39;, &#39;Danny&#39;, &#39;Mike&#39;]
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># Another example</span><br>string = <span class="hljs-string">&#x27;1*1*1*1*22222  1*1*3333  2*1*2*1*222  1*2*2*2*333 3*3*3*444&#x27;</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">re.findall(<span class="hljs-string">&#x27;(?:1\*)&#123;2,&#125;\d+&#x27;</span>, string)<br></code></pre></td></tr></table></figure>
+<pre><code>[&#39;1*1*1*1*22222&#39;, &#39;1*1*3333&#39;]
+</code></pre><ul>
+<li>Now, non-captured groups doesn’t just affect the findall method</li>
+<li>it also affects the search and match methods<ul>
+<li>现在，未捕获的组不仅影响findall方法——它还影响搜索和匹配方法</li>
+</ul>
+</li>
+</ul>
+<h3><span id="be-careful-with-syntax">BE CAREFUL WITH SYNTAX</span></h3><ul>
+<li><code>?:</code> correct!</li>
+<li><code>:?</code> incorrect!</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">string = <span class="hljs-string">&#x27;1234 56789&#x27;</span><br>match = re.search(<span class="hljs-string">&#x27;(?:\d)+&#x27;</span>, string)  <span class="hljs-comment"># correct syntax</span><br><span class="hljs-built_in">print</span>(match.groups())<br></code></pre></td></tr></table></figure>
+<pre><code>()
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">string = <span class="hljs-string">&#x27;1234 56789&#x27;</span><br>match = re.search(<span class="hljs-string">&#x27;(:?\d)+&#x27;</span>, string)  <span class="hljs-comment"># :? incorrect syntax!!!! </span><br><span class="hljs-built_in">print</span>(match.groups())<br></code></pre></td></tr></table></figure>
+<pre><code>(&#39;4&#39;,)
+</code></pre><p>Summary: </p>
+<ul>
+<li>when we capture groups we are either storing the value or outputting them.<ul>
+<li>当我们捕获组时，我们要么存储值，要么输出值。</li>
+</ul>
+</li>
+</ul>
+<h2><span id="backreferences-using-captured-groups-inside-other-operations">Backreferences  - Using captured groups inside other operations</span></h2><p>反向引用——在其他操作中使用捕获的组</p>
+<ul>
+<li>backreferencing is making a refererence to the captured group within the same regular expression<ul>
+<li>反向引用是在同一个正则表达式中引用捕获的组</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># syntax and example</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">re.search(<span class="hljs-string">r&#x27;(\w+) \1&#x27;</span>,<span class="hljs-string">&#x27;Merry Merry Christmas&#x27;</span>)  <span class="hljs-comment"># Looking for repeated words 寻找重复的单词</span><br></code></pre></td></tr></table></figure>
+<pre><code>&lt;re.Match object; span=(0, 11), match=&#39;Merry Merry&#39;&gt;
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">re.search(<span class="hljs-string">r&#x27;(\w+) \1&#x27;</span>,<span class="hljs-string">&#x27;Merry Merry Christmas&#x27;</span>).groups()<br></code></pre></td></tr></table></figure>
+<pre><code>(&#39;Merry&#39;,)
+</code></pre><p><code>\1</code> is just referencing the first group within the regular expression </p>
+<p><code>‘\1’</code> 匹配的是 所获取的第1个()匹配的引用。例如，<code>’(\d)\1’</code> 匹配两个连续数字字符。如33aa 中的33</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># Another example</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">re.findall(<span class="hljs-string">r&#x27;(\w+)&#x27;</span>,<span class="hljs-string">&#x27;Happy Happy Holidays. Merry Christmas Christmas&#x27;</span>)<br></code></pre></td></tr></table></figure>
+<pre><code>[&#39;Happy&#39;, &#39;Happy&#39;, &#39;Holidays&#39;, &#39;Merry&#39;, &#39;Christmas&#39;, &#39;Christmas&#39;]
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">re.findall(<span class="hljs-string">r&#x27;(\w+) \1&#x27;</span>,<span class="hljs-string">&#x27;Happy Happy Holidays. Merry Christmas Christmas&#x27;</span>)   <span class="hljs-comment"># Want to look for repeated words 想要寻找重复的单词</span><br></code></pre></td></tr></table></figure>
+<pre><code>[&#39;Happy&#39;, &#39;Christmas&#39;]
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># another example</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">re.findall(<span class="hljs-string">r&#x27;(\w+) \1&#x27;</span>,<span class="hljs-string">&#x27;Merry Merry Christmas Christmas Merry Merry Christmas&#x27;</span>)<br></code></pre></td></tr></table></figure>
+<pre><code>[&#39;Merry&#39;, &#39;Christmas&#39;, &#39;Merry&#39;]
 </code></pre>
     </div>
 </div>
