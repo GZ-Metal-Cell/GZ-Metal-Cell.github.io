@@ -337,6 +337,10 @@
 <li><a href="#tutorial-51-what-is-image-thresholding-and-segmentation">Tutorial 51 - What is image thresholding and segmentation</a></li>
 <li><a href="#tutorial-52-auto-thresholding-for-multiple-regions-_using-multi-otsu">Tutorial 52 - Auto-thresholding for multiple regions _using multi-otsu</a></li>
 <li><a href="#tutorial-53-using-texture-to-segment-images-demo-in-python">Tutorial 53 - Using texture to segment images -demo in python</a></li>
+<li><a href="#tutorial-54-scratch-assay-analysis-in-python-by-using-texture-for-segmentation">Tutorial 54 - Scratch assay analysis in python by using texture for segmentation</a></li>
+<li><a href="#tutorial-55-image-segmentation-followed-by-measurements-in-python">Tutorial 55 - Image segmentation followed by measurements- in python</a></li>
+<li><a href="#tutorial-56-blob-detector-for-segmentation-based-on-feature-properties-in-python-">Tutorial 56 - Blob Detector for segmentation based on feature properties -in python-</a></li>
+<li><a href="#tutorial-57-nuclei-cell-segmentation-in-python-using-watershed">Tutorial 57 - Nuclei -cell- segmentation in python using watershed</a></li>
 </ul>
 <!-- tocstop -->
 <h2><span id="tutorial-51-what-is-image-thresholding-and-segmentation">Tutorial 51 - What is image thresholding and segmentation</span></h2><p><strong>What is image segmentation?</strong> 什么是图像分割?</p>
@@ -727,7 +731,437 @@
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># Sum all pixels in the scratch region (values =1)</span><br>scratch_area = np.<span class="hljs-built_in">sum</span>(binary == <span class="hljs-number">1</span>)<br><span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Scratched area is: &quot;</span>, scratch_area, <span class="hljs-string">&quot;Square pixels&quot;</span>)<br><br>scale = <span class="hljs-number">0.45</span> <span class="hljs-comment"># microns / pixel</span><br><span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Scratched area in sq. microns is: &quot;</span>, scratch_area*((scale)**<span class="hljs-number">2</span>), <span class="hljs-string">&quot;Square pixels&quot;</span>)<br></code></pre></td></tr></table></figure>
 <pre><code>Scratched area is:  33485 Square pixels
 Scratched area in sq. microns is:  6780.712500000001 Square pixels
-</code></pre>
+</code></pre><h2><span id="tutorial-54-scratch-assay-analysis-in-python-by-using-texture-for-segmentation">Tutorial 54 - Scratch assay analysis in python by using texture for segmentation</span></h2><p><strong>What is scratch assay (wound healing) analysis? 什么是划痕分析(伤口愈合)?</strong></p>
+<ul>
+<li><p>The wound healing assay is a standard technique for probing collective cell migration in two dimensions.</p>
+<ul>
+<li>伤口愈合试验是一种标准的技术，用于探测细胞在二维上的集体迁移。</li>
+</ul>
+</li>
+<li><p>A monolayer of cells scratched with a pipette tip.</p>
+<ul>
+<li>用移液管尖划破的单层细胞。</li>
+</ul>
+</li>
+<li>The migration of cells into the gap imaged over several hours using a microscope.<ul>
+<li>用显微镜在几个小时内拍摄到细胞进入缝隙的迁移过程。</li>
+</ul>
+</li>
+<li>The primary information derived is the rate of gap closure → a measure of the speed of the collective motion of the cells.<ul>
+<li>得到的主要信息是间隙闭合率→细胞集体运动速度的度量。</li>
+</ul>
+</li>
+</ul>
+<p><img src="54_1.png" alt="png"></p>
+
+
+	<div class="row">
+    <embed src="54.pdf" width="100%" height="550" type="application/pdf">
+	</div>
+
+
+
+<h2><span id="tutorial-55-image-segmentation-followed-by-measurements-in-python">Tutorial 55 - Image segmentation followed by measurements- in python</span></h2><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> skimage <span class="hljs-keyword">import</span> measure, io, img_as_ubyte<br><span class="hljs-keyword">import</span> matplotlib.pyplot <span class="hljs-keyword">as</span> plt<br><span class="hljs-keyword">from</span> skimage.color <span class="hljs-keyword">import</span> label2rgb, rgb2gray<br><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">import</span> cv2<br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">image = img_as_ubyte(rgb2gray(io.imread(<span class="hljs-string">&#x27;images/cast_iron1.tif&#x27;</span>)))<br>scale = <span class="hljs-number">0.6</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">plt.imshow(image, cmap=<span class="hljs-string">&#x27;gray&#x27;</span>)<br></code></pre></td></tr></table></figure>
+<pre><code>&lt;matplotlib.image.AxesImage at 0x200892d89a0&gt;
+</code></pre><p><img src="55_1.png" alt="png"></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">plt.hist(image.flat, bins=<span class="hljs-number">100</span>, <span class="hljs-built_in">range</span>=(<span class="hljs-number">0</span>, <span class="hljs-number">255</span>))<br></code></pre></td></tr></table></figure>
+<pre><code>(array([    0.,    46.,   479.,  1449.,   966.,  1498.,  1081.,  1901.,
+         1408.,  2200.,  2605.,  1816.,  2434.,  1382.,  1474.,   686.,
+          719.,   387.,   439.,   275.,   322.,   311.,   195.,   347.,
+          197.,   305.,   191.,   297.,   193.,   303.,   315.,   169.,
+          300.,   173.,   331.,   239.,   344.,   234.,   409.,   271.,
+          467.,   435.,   337.,   569.,   420.,   744.,   545.,   906.,
+          747.,  1251.,  1509.,  1195.,  2163.,  1900.,  3508.,  3022.,
+         5913.,  5444., 11870., 11205., 25793., 40120., 29310., 32387.,
+         8740.,  1102.,     0.,     0.,     0.,     0.,     0.,     0.,
+            0.,     0.,     0.,     0.,     0.,     0.,     0.,     0.,
+            0.,     0.,     0.,     0.,     0.,     0.,     0.,     0.,
+            0.,     0.,     0.,     0.,     0.,     0.,     0.,     0.,
+            0.,     0.,     0.,     0.]),
+ array([  0.  ,   2.55,   5.1 ,   7.65,  10.2 ,  12.75,  15.3 ,  17.85,
+         20.4 ,  22.95,  25.5 ,  28.05,  30.6 ,  33.15,  35.7 ,  38.25,
+         40.8 ,  43.35,  45.9 ,  48.45,  51.  ,  53.55,  56.1 ,  58.65,
+         61.2 ,  63.75,  66.3 ,  68.85,  71.4 ,  73.95,  76.5 ,  79.05,
+         81.6 ,  84.15,  86.7 ,  89.25,  91.8 ,  94.35,  96.9 ,  99.45,
+        102.  , 104.55, 107.1 , 109.65, 112.2 , 114.75, 117.3 , 119.85,
+        122.4 , 124.95, 127.5 , 130.05, 132.6 , 135.15, 137.7 , 140.25,
+        142.8 , 145.35, 147.9 , 150.45, 153.  , 155.55, 158.1 , 160.65,
+        163.2 , 165.75, 168.3 , 170.85, 173.4 , 175.95, 178.5 , 181.05,
+        183.6 , 186.15, 188.7 , 191.25, 193.8 , 196.35, 198.9 , 201.45,
+        204.  , 206.55, 209.1 , 211.65, 214.2 , 216.75, 219.3 , 221.85,
+        224.4 , 226.95, 229.5 , 232.05, 234.6 , 237.15, 239.7 , 242.25,
+        244.8 , 247.35, 249.9 , 252.45, 255.  ]),
+ &lt;BarContainer object of 100 artists&gt;)
+</code></pre><p><img src="55_2.png" alt="png"></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> skimage.filters <span class="hljs-keyword">import</span> threshold_otsu<br>threshold = threshold_otsu(image)<br>threshold<br></code></pre></td></tr></table></figure>
+<pre><code>93
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># Generate thresholded image</span><br>thresholded_img = image &lt; threshold<br>plt.imshow(thresholded_img, cmap=<span class="hljs-string">&#x27;gray&#x27;</span>)<br></code></pre></td></tr></table></figure>
+<pre><code>&lt;matplotlib.image.AxesImage at 0x20089b28760&gt;
+</code></pre><p><img src="55_3.png" alt="png"></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># Remove edge touching regions</span><br><span class="hljs-keyword">from</span> skimage.segmentation <span class="hljs-keyword">import</span> clear_border<br><br>edge_touching_removed = clear_border(thresholded_img)<br>plt.imshow(edge_touching_removed, cmap=<span class="hljs-string">&#x27;gray&#x27;</span>)<br></code></pre></td></tr></table></figure>
+<pre><code>&lt;matplotlib.image.AxesImage at 0x20089c39ca0&gt;
+</code></pre><p><img src="55_4.png" alt="png"></p>
+<ul>
+<li><p>Label connected regions of an integer array using <code>measure.label</code></p>
+<ul>
+<li>使用<code>measure.label</code>标记整数数组中已连接的区域</li>
+</ul>
+</li>
+<li><p>Labels each connected entity as one object</p>
+<ul>
+<li>将每个连接的实体标记为一个对象</li>
+</ul>
+</li>
+<li><p>Connectivity = Maximum number of orthogonal hops to consider a pixel/voxel as a neighbor. </p>
+<ul>
+<li>连通性 = 将像素 / 体素视为邻居的最大正交跳数。</li>
+</ul>
+</li>
+<li><p>If None, a full connectivity of input.ndim is used, number of dimensions of the image</p>
+<ul>
+<li>如果为None，则表示输入的完全连通性。</li>
+</ul>
+</li>
+<li><p>For 2D image it would be 2</p>
+<ul>
+<li>对于2D图像，它将是2</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">label_image = measure.label(edge_touching_removed, connectivity=image.ndim)<br>plt.imshow(label_image)<br></code></pre></td></tr></table></figure>
+<pre><code>&lt;matplotlib.image.AxesImage at 0x20089c9dbb0&gt;
+</code></pre><p><img src="55_5.png" alt="png"></p>
+<ul>
+<li><p>Return an RGB image where color-coded labels are painted over the image.</p>
+<ul>
+<li>返回一个RGB图像，其中颜色编码的标签涂在图像上。</li>
+</ul>
+</li>
+<li><p>Using <code>label2rgb</code></p>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">image_label_overlay = label2rgb(label_image, image=image)<br>plt.imshow(image_label_overlay)<br></code></pre></td></tr></table></figure>
+<pre><code>&lt;matplotlib.image.AxesImage at 0x20089d0a8e0&gt;
+</code></pre><p><img src="55_6.png" alt="png"></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment">#################################################</span><br><span class="hljs-comment"># Calculate properties</span><br><span class="hljs-comment"># Using regionprops or regionprops_table</span><br>all_props = measure.regionprops(label_image, image)<br><span class="hljs-comment"># Can print various parameters for all objects</span><br><span class="hljs-keyword">for</span> prop <span class="hljs-keyword">in</span> all_props:<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Label: &#123;&#125; Area: &#123;&#125;&#x27;</span>.<span class="hljs-built_in">format</span>(prop.label, prop.area))<br></code></pre></td></tr></table></figure>
+<ul>
+<li><p>Compute image properties and return them as a <code>pandas</code>-compatible table.</p>
+<ul>
+<li>计算映像属性并将它们作为与<code>pandas</code>兼容的表返回。</li>
+</ul>
+</li>
+<li><p>Available regionprops: area, bbox, centroid, convex_area, coords, eccentricity, equivalent diameter, euler number, label, intensity image, major axis length, max intensity, mean intensity, moments, orientation, perimeter, solidity, and many more</p>
+<ul>
+<li>可用的区域：面积，bbox，质心，凸面积，坐标，偏心，等效直径，欧拉数，标签，强度图像，主轴长度，最大强度，平均强度，力矩，方向，周长，固体，和许多</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">props = measure.regionprops_table(label_image, image, <br>                          properties=[<span class="hljs-string">&#x27;label&#x27;</span>,<br>                                      <span class="hljs-string">&#x27;area&#x27;</span>, <span class="hljs-string">&#x27;equivalent_diameter&#x27;</span>,<br>                                      <span class="hljs-string">&#x27;mean_intensity&#x27;</span>, <span class="hljs-string">&#x27;solidity&#x27;</span>])<br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> pandas <span class="hljs-keyword">as</span> pd<br>df = pd.DataFrame(props)<br>df.head()<br></code></pre></td></tr></table></figure>
+<table border="1">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>label</th>
+      <th>area</th>
+      <th>equivalent_diameter</th>
+      <th>mean_intensity</th>
+      <th>solidity</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1</td>
+      <td>1</td>
+      <td>1.128379</td>
+      <td>92.000000</td>
+      <td>1.000000</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>2</td>
+      <td>587</td>
+      <td>27.338464</td>
+      <td>19.701874</td>
+      <td>0.956026</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>3</td>
+      <td>1</td>
+      <td>1.128379</td>
+      <td>83.000000</td>
+      <td>1.000000</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>4</td>
+      <td>40</td>
+      <td>7.136496</td>
+      <td>64.625000</td>
+      <td>0.701754</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>5</td>
+      <td>1</td>
+      <td>1.128379</td>
+      <td>91.000000</td>
+      <td>1.000000</td>
+    </tr>
+  </tbody>
+</table>
+
+
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># To delete small regions...</span><br>df = df[df[<span class="hljs-string">&#x27;area&#x27;</span>] &gt; <span class="hljs-number">50</span>]<br>df.head()<br></code></pre></td></tr></table></figure>
+<table border="1">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>label</th>
+      <th>area</th>
+      <th>equivalent_diameter</th>
+      <th>mean_intensity</th>
+      <th>solidity</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>1</th>
+      <td>2</td>
+      <td>587</td>
+      <td>27.338464</td>
+      <td>19.701874</td>
+      <td>0.956026</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>9</td>
+      <td>366</td>
+      <td>21.587165</td>
+      <td>32.696721</td>
+      <td>0.963158</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>12</td>
+      <td>226</td>
+      <td>16.963258</td>
+      <td>32.787611</td>
+      <td>0.945607</td>
+    </tr>
+    <tr>
+      <th>15</th>
+      <td>16</td>
+      <td>71</td>
+      <td>9.507892</td>
+      <td>49.253521</td>
+      <td>0.934211</td>
+    </tr>
+    <tr>
+      <th>16</th>
+      <td>17</td>
+      <td>220</td>
+      <td>16.736568</td>
+      <td>28.759091</td>
+      <td>0.897959</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Convert to micron scale</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">df[<span class="hljs-string">&#x27;area_sq_microns&#x27;</span>] = df[<span class="hljs-string">&#x27;area&#x27;</span>] * (scale ** <span class="hljs-number">2</span>)<br>df[<span class="hljs-string">&#x27;equivalent_diameter_microns&#x27;</span>] = df[<span class="hljs-string">&#x27;equivalent_diameter&#x27;</span>] * (scale)<br>df.head()<br></code></pre></td></tr></table></figure>
+<table border="1">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>label</th>
+      <th>area</th>
+      <th>equivalent_diameter</th>
+      <th>mean_intensity</th>
+      <th>solidity</th>
+      <th>area_sq_microns</th>
+      <th>equivalent_diameter_microns</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>1</th>
+      <td>2</td>
+      <td>587</td>
+      <td>27.338464</td>
+      <td>19.701874</td>
+      <td>0.956026</td>
+      <td>211.32</td>
+      <td>16.403078</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>9</td>
+      <td>366</td>
+      <td>21.587165</td>
+      <td>32.696721</td>
+      <td>0.963158</td>
+      <td>131.76</td>
+      <td>12.952299</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>12</td>
+      <td>226</td>
+      <td>16.963258</td>
+      <td>32.787611</td>
+      <td>0.945607</td>
+      <td>81.36</td>
+      <td>10.177955</td>
+    </tr>
+    <tr>
+      <th>15</th>
+      <td>16</td>
+      <td>71</td>
+      <td>9.507892</td>
+      <td>49.253521</td>
+      <td>0.934211</td>
+      <td>25.56</td>
+      <td>5.704735</td>
+    </tr>
+    <tr>
+      <th>16</th>
+      <td>17</td>
+      <td>220</td>
+      <td>16.736568</td>
+      <td>28.759091</td>
+      <td>0.897959</td>
+      <td>79.20</td>
+      <td>10.041941</td>
+    </tr>
+  </tbody>
+</table>
+
+
+
+
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">df.to_csv(<span class="hljs-string">&#x27;data/cast_iron_measurements.csv&#x27;</span>)<br></code></pre></td></tr></table></figure>
+<h2><span id="tutorial-56-blob-detector-for-segmentation-based-on-feature-properties-in-python-">Tutorial 56 - Blob Detector for segmentation based on feature properties -in python-</span></h2><p><a target="_blank" rel="noopener" href="https://baike.baidu.com/item/BLOB/543419">blob_百度百科 (baidu.com)</a></p>
+<blockquote>
+<p>​    计算机视觉中的Blob是指图像中的一块连通区域，Blob分析就是对前景/背景分离后的<a target="_blank" rel="noopener" href="https://baike.baidu.com/item/二值图像/5166431?fromModule=lemma_inlink">二值图像</a>，进行连通域提取和标记。标记完成的每一个Blob都代表一个前景目标，然后就可以计算Blob的一些相关特征。其优点在于通过Blob提取，可以获得相关区域的信息，但是速度较慢，分析难度大。</p>
+</blockquote>
+<p><a target="_blank" rel="noopener" href="https://www.learnopencv.com/blob-detection-using-opencv-python-c/">https://www.learnopencv.com/blob-detection-using-opencv-python-c/</a></p>
+<ul>
+<li><p>BLOB stands for Binary Large OBject and refers to a group of connected pixels in a binary image. </p>
+<ul>
+<li>BLOB代表二进制大对象，指的是二值图像中一组相互连接的像素。</li>
+</ul>
+</li>
+<li><p>A Blob is a group of connected pixels in an image that share some common property ( E.g grayscale value ). </p>
+<ul>
+<li>Blob是一组在图像中具有某种共同属性(如灰度值)的相互连接的像素。</li>
+</ul>
+</li>
+<li><p>In the image above, the dark connected regions are blobs,<br>and the goal of blob detection is to identify and mark these regions.  </p>
+<ul>
+<li>在上图中，暗连接的区域是斑点，斑点检测的目标是识别和标记这些区域。</li>
+</ul>
+</li>
+</ul>
+<p>How it works:  </p>
+<pre><code>1. Threshold input images to binary.  阈值输入图像为二值。
+    2. Grouping: connected white/black pixels are grouped together.   分组:连接的白色/黑色像素分组在一起。
+    3. Merging: blobs located closer than minDistBetweenBlobs are merged.  合并:位于比minDistBetweenBlobs更近的blobs被合并。
+    4. Center &amp; Radius Calculation :  The centers and radii of the new merged blobs are computed and returned.  中心和半径计算:计算并返回新合并blobs的中心和半径。
+</code></pre><ul>
+<li>Can be filtered by color, size or shape<ul>
+<li>可以根据颜色、大小或形状过滤</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> matplotlib.pyplot <span class="hljs-keyword">as</span> plt<br><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">import</span> cv2<br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">image = cv2.imread(<span class="hljs-string">&#x27;images/cast_iron1.tif&#x27;</span>, <span class="hljs-number">0</span>)<br></code></pre></td></tr></table></figure>
+<ul>
+<li>Set up the SimpleBlobdetector with default parameters.<ul>
+<li>使用默认参数设置SimpleBlobdetector。</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">params = cv2.SimpleBlobDetector_Params()<br></code></pre></td></tr></table></figure>
+<ul>
+<li>Define thresholds<ul>
+<li>定义阈值</li>
+</ul>
+</li>
+</ul>
+<p>Can define thresholdStep. See documentation. </p>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">params.minThreshold = <span class="hljs-number">0</span><br>params.maxThreshold = <span class="hljs-number">255</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>Filter by Area.<ul>
+<li>按面积过滤。</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">params.filterByArea = <span class="hljs-literal">True</span><br>params.minArea = <span class="hljs-number">50</span><br>params.maxArea = <span class="hljs-number">10000</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>Filter by Color (black=0)<ul>
+<li>按颜色过滤</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">params.filterByColor = <span class="hljs-literal">False</span>  <span class="hljs-comment">#Set true for cast_iron as we&#x27;ll be detecting black regions</span><br>params.blobColor = <span class="hljs-number">0</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>Filter by Circularity<ul>
+<li>圆度过滤器</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">params.filterByCircularity = <span class="hljs-literal">True</span><br>params.minCircularity = <span class="hljs-number">0.5</span><br>params.maxCircularity = <span class="hljs-number">1</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>Filter by Convexity<ul>
+<li>通过凸性过滤器</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">params.filterByConvexity = <span class="hljs-literal">True</span><br>params.minConvexity = <span class="hljs-number">0.5</span><br>params.maxConvexity = <span class="hljs-number">1</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>Filter by InertiaRatio<ul>
+<li>通过惯性系数过滤器</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">params.filterByInertia = <span class="hljs-literal">True</span><br>params.minInertiaRatio = <span class="hljs-number">0</span><br>params.maxInertiaRatio = <span class="hljs-number">1</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>Distance Between Blobs<ul>
+<li>Blobs 之间的距离</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">params.minDistBetweenBlobs = <span class="hljs-number">0</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>Setup the detector with parameters<ul>
+<li>用参数设置探测器</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">detector = cv2.SimpleBlobDetector_create(params)<br></code></pre></td></tr></table></figure>
+<ul>
+<li>Detect blobs<ul>
+<li>检测 blobs</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">keypoints = detector.detect(image)<br><span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Number of blobs detected are : &quot;</span>, <span class="hljs-built_in">len</span>(keypoints))<br></code></pre></td></tr></table></figure>
+<pre><code>Number of blobs detected are :  82
+</code></pre><ul>
+<li>Draw blobs<ul>
+<li>绘制 blobs</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">img_with_blobs = cv2.drawKeypoints(image, keypoints, np.array([]), (<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">255</span>), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)<br>plt.imshow(img_with_blobs)<br></code></pre></td></tr></table></figure>
+<pre><code>&lt;matplotlib.image.AxesImage at 0x2b46aa494f0&gt;
+</code></pre><p><img src="56.png" alt="png"></p>
+<h2><span id="tutorial-57-nuclei-cell-segmentation-in-python-using-watershed">Tutorial 57 - Nuclei -cell- segmentation in python using watershed</span></h2>
   </div>
   <div id="gitalk-container"></div>
 </div>
