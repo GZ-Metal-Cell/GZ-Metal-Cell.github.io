@@ -341,6 +341,7 @@
 <li><a href="#tutorial-55-image-segmentation-followed-by-measurements-in-python">Tutorial 55 - Image segmentation followed by measurements- in python</a></li>
 <li><a href="#tutorial-56-blob-detector-for-segmentation-based-on-feature-properties-in-python-">Tutorial 56 - Blob Detector for segmentation based on feature properties -in python-</a></li>
 <li><a href="#tutorial-57-nuclei-cell-segmentation-in-python-using-watershed">Tutorial 57 - Nuclei -cell- segmentation in python using watershed</a></li>
+<li><a href="#tutorial-58-object-detection-using-template-matching">Tutorial 58 - Object detection using template matching</a></li>
 </ul>
 <!-- tocstop -->
 <h2><span id="tutorial-51-what-is-image-thresholding-and-segmentation">Tutorial 51 - What is image thresholding and segmentation</span></h2><p><strong>What is image segmentation?</strong> 什么是图像分割?</p>
@@ -1068,11 +1069,30 @@ Scratched area in sq. microns is:  6780.712500000001 Square pixels
 </li>
 </ul>
 <p>How it works:  </p>
-<pre><code>1. Threshold input images to binary.  阈值输入图像为二值。
-    2. Grouping: connected white/black pixels are grouped together.   分组:连接的白色/黑色像素分组在一起。
-    3. Merging: blobs located closer than minDistBetweenBlobs are merged.  合并:位于比minDistBetweenBlobs更近的blobs被合并。
-    4. Center &amp; Radius Calculation :  The centers and radii of the new merged blobs are computed and returned.  中心和半径计算:计算并返回新合并blobs的中心和半径。
-</code></pre><ul>
+<ul>
+<li><p>Threshold input images to binary.  </p>
+<ul>
+<li>阈值输入图像为二值。</li>
+</ul>
+</li>
+<li><p>Grouping: connected white/black pixels are grouped together.  </p>
+<ul>
+<li>分组:连接的白色/黑色像素分组在一起。</li>
+</ul>
+</li>
+<li><p>Merging: blobs located closer than minDistBetweenBlobs are merged. </p>
+<ul>
+<li>合并:位于比minDistBetweenBlobs更近的blobs被合并。</li>
+</ul>
+</li>
+<li><p>Center &amp; Radius Calculation :  The centers and radii of the new merged blobs are computed and returned.  </p>
+<ul>
+<li>中心和半径计算:计算并返回新合并blobs的中心和半径。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<ul>
 <li>Can be filtered by color, size or shape<ul>
 <li>可以根据颜色、大小或形状过滤</li>
 </ul>
@@ -1161,7 +1181,676 @@ Scratched area in sq. microns is:  6780.712500000001 Square pixels
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">img_with_blobs = cv2.drawKeypoints(image, keypoints, np.array([]), (<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">255</span>), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)<br>plt.imshow(img_with_blobs)<br></code></pre></td></tr></table></figure>
 <pre><code>&lt;matplotlib.image.AxesImage at 0x2b46aa494f0&gt;
 </code></pre><p><img src="56.png" alt="png"></p>
-<h2><span id="tutorial-57-nuclei-cell-segmentation-in-python-using-watershed">Tutorial 57 - Nuclei -cell- segmentation in python using watershed</span></h2>
+<h2><span id="tutorial-57-nuclei-cell-segmentation-in-python-using-watershed">Tutorial 57 - Nuclei -cell- segmentation in python using watershed</span></h2><p><strong>What is watershed? 什么是分水岭?</strong></p>
+<ul>
+<li>Any grayscale image can be viewed as a topographic surface where high intensity denotes hills and low intensity denotes valleys.<ul>
+<li>任何灰度图像都可以看作是一个地形表面，其中高强度表示丘陵，低强度表示山谷。</li>
+</ul>
+</li>
+</ul>
+<p><img src="57_watershed_1.png" alt="png"></p>
+<ul>
+<li>With watershed, we start filling every valleys with different colored water (labels).<ul>
+<li>有了分水岭，我们开始用不同颜色的水(标签)填充每个山谷。</li>
+</ul>
+</li>
+<li><p>As the water rises, water from different valleys will start to merge.</p>
+<ul>
+<li>随着水位上升，来自不同山谷的水开始融合。</li>
+</ul>
+</li>
+<li><p>To avoid that, we build barriers in the locations where water merges.</p>
+<ul>
+<li>为了避免这种情况，我们在水汇合处建造了屏障。</li>
+</ul>
+</li>
+<li>Continue filling water and building barriers until all the peaks are under water.<ul>
+<li>继续填水和建造屏障，直到所有的山峰都在水下。</li>
+</ul>
+</li>
+<li>The barriers will give us the segmentation result.<ul>
+<li>屏障会给我们分割的结果。</li>
+</ul>
+</li>
+</ul>
+<p><img src="57_watershed_2.png" alt="png"></p>
+<ul>
+<li>To minimize over-segmentation due to noise in the image, OpenCV implemented a marker-based watershedalgorithm.<ul>
+<li>为了减少图像中噪声引起的过分割，OpenCV实现了一种基于标记的分水岭算法。</li>
+</ul>
+</li>
+<li>We specify all valley points to be merged and also the ones not to be merged.<ul>
+<li>我们指定所有要合并的谷点和不合并的谷点。</li>
+</ul>
+</li>
+<li>We first label the regions that we are sure of being the foreground (or object of interest) with one color.<ul>
+<li>我们首先用一种颜色标记我们确定是前景(或感兴趣的对象)的区域。</li>
+</ul>
+</li>
+<li>Then label the regions that we are sure of being background or non-object with another color.<ul>
+<li>然后用另一种颜色标记我们确定为背景或非物体的区域。</li>
+</ul>
+</li>
+<li>And, for unsure regions in between, label them with 0.<ul>
+<li>对于中间的不确定区域，用0标记它们。</li>
+</ul>
+</li>
+<li>This process creates the marker.<ul>
+<li>这个过程创建了标记。</li>
+</ul>
+</li>
+<li>Now apply watershed algorithm.<ul>
+<li>现在应用分水岭算法。</li>
+</ul>
+</li>
+<li>The marker will be updated with the labels we provided, and the boundaries of objects will have a value of -1.<ul>
+<li>标记将更新为我们提供的标签，对象的边界将有一个-1的值。</li>
+</ul>
+</li>
+</ul>
+<p><a target="_blank" rel="noopener" href="https://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_watershed/py_watershed.html">https://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_watershed/py_watershed.html</a></p>
+<hr>
+<ul>
+<li><p>This code performs cell counting and size distribution analysis and dumps results into a csv file.</p>
+<ul>
+<li>此代码执行单元格计数和大小分布分析，并将结果转储到csv文件中。</li>
+</ul>
+</li>
+<li><p>It uses watershed segmentation for better segmentation, separating touching nuclei.</p>
+<ul>
+<li>它使用分水岭分割来更好的分割，分离接触的核。</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> cv2<br><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">from</span> matplotlib <span class="hljs-keyword">import</span> pyplot <span class="hljs-keyword">as</span> plt<br><span class="hljs-keyword">from</span> scipy <span class="hljs-keyword">import</span> ndimage<br><span class="hljs-keyword">from</span> skimage <span class="hljs-keyword">import</span> measure, color, io<br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">img = cv2.imread(<span class="hljs-string">&#x27;images/Osteosarcoma_01.tif&#x27;</span>)<br></code></pre></td></tr></table></figure>
+<ul>
+<li><p>Extract only blue channel as DAPI / nuclear (blue) staining is the best channel to perform cell count.</p>
+<ul>
+<li>只提取蓝色通道，因为DAPI /核(蓝色)染色是进行细胞计数的最佳通道。</li>
+</ul>
+</li>
+<li><p>Blue channel. Image equivalent to grey image.</p>
+<ul>
+<li>蓝色通道。图像相当于灰色图像。</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">cells = img[:, :, <span class="hljs-number">0</span>]<br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">plt.imshow(cells, cmap=<span class="hljs-string">&#x27;gray&#x27;</span>)<br></code></pre></td></tr></table></figure>
+<pre><code>&lt;matplotlib.image.AxesImage at 0x2b36b074850&gt;
+</code></pre><p><img src="57_1.png" alt="png"></p>
+<ul>
+<li><p>1 pixel = 454 nm (got this from the metadata of original image)</p>
+<ul>
+<li>1像素 = 454 nm(来自原始图像的元数据)</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">pixels_to_um = <span class="hljs-number">0.454</span><br></code></pre></td></tr></table></figure>
+<p><strong>STEP 1: Thresholded image for nuclei 核的阈值图像</strong></p>
+<ul>
+<li>Threshold image to binary using OTSU. ALl thresholded pixels will be set to 255<ul>
+<li>阈值图像的二值化使用 OTSU。所有阈值像素将被设置为255</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">ret1, thresh = cv2.threshold(cells, <span class="hljs-number">0</span>, <span class="hljs-number">255</span>, cv2.THRESH_BINARY + cv2.THRESH_OTSU)<br>plt.imshow(thresh, cmap=<span class="hljs-string">&#x27;gray&#x27;</span>)<br></code></pre></td></tr></table></figure>
+<pre><code>&lt;matplotlib.image.AxesImage at 0x2b36b181f10&gt;
+</code></pre><p><img src="57_2.png" alt="png"></p>
+<ul>
+<li><p>Morphological operations to remove small noise - opening</p>
+<ul>
+<li>形态学运算去除开孔小噪声</li>
+</ul>
+</li>
+<li><p>To remove holes we can use closing</p>
+<ul>
+<li>要去除小孔，我们可以用闭合法</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">kernel = np.ones((<span class="hljs-number">3</span>,<span class="hljs-number">3</span>),np.uint8)<br>opening = cv2.morphologyEx(thresh,cv2.MORPH_OPEN,kernel, iterations = <span class="hljs-number">2</span>)<br><br><span class="hljs-keyword">from</span> skimage.segmentation <span class="hljs-keyword">import</span> clear_border<br>opening = clear_border(opening)  <span class="hljs-comment"># Remove edge touching grains</span><br>plt.imshow(opening, cmap=<span class="hljs-string">&#x27;gray&#x27;</span>)  <span class="hljs-comment"># This is our image to be segmented further using watershed</span><br></code></pre></td></tr></table></figure>
+<pre><code>&lt;matplotlib.image.AxesImage at 0x2b36bd0d6d0&gt;
+</code></pre><p><img src="57_3.png" alt="png"></p>
+<ul>
+<li>Check the total regions found before and after applying this. <ul>
+<li>检查应用此方法前后找到的区域总数。</li>
+</ul>
+</li>
+</ul>
+<p><strong>STEP 2: Sude background</strong>  </p>
+<ul>
+<li><p>Now we know that the regions at the center of cells is for sure cells</p>
+<ul>
+<li>现在我们知道细胞中心的区域是确定的细胞</li>
+</ul>
+</li>
+<li><p>The region far away is background.</p>
+<ul>
+<li>远处的区域是背景。</li>
+</ul>
+</li>
+<li><p>We need to extract sure regions. For that erode a few times. </p>
+<ul>
+<li>我们需要提取确定的区域。因为腐蚀了几次。</li>
+</ul>
+</li>
+<li><p>But we have cells touching, so erode alone will not work. </p>
+<ul>
+<li>但我们有细胞接触，所以单独腐蚀是不起作用的。</li>
+</ul>
+</li>
+<li><p>To separate touching objects, the best approach would be distance transform and then thresholding.</p>
+<ul>
+<li>要分离接触物体，最好的方法是先进行距离变换，再进行阈值分割。</li>
+</ul>
+</li>
+<li><p>let us start by identifying sure background area dilating pixes a few times increases cell boundary to background. </p>
+<ul>
+<li>让我们从确定背景区域开始，将像素放大几倍，以增加背景的细胞边界。</li>
+</ul>
+</li>
+<li><p>This way whatever is remaining for sure will be background. </p>
+<ul>
+<li>这样，任何可以确定的东西都将成为背景。</li>
+</ul>
+</li>
+<li><p>The area in between sure background and foreground is our ambiguous area. </p>
+<ul>
+<li>在确定的背景和前景之间的区域是我们的模糊区域。</li>
+</ul>
+</li>
+<li><p>Watershed should find this area for us. </p>
+<ul>
+<li>分水岭应该帮我们找到这片区域。</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">sure_bg = cv2.dilate(opening,kernel,iterations=<span class="hljs-number">10</span>)<br>plt.imshow(sure_bg, cmap=<span class="hljs-string">&#x27;gray&#x27;</span>)  <span class="hljs-comment"># Dark region is our sure background</span><br></code></pre></td></tr></table></figure>
+<pre><code>&lt;matplotlib.image.AxesImage at 0x2b36c5b2ac0&gt;
+</code></pre><p><img src="57_4.png" alt="png"></p>
+<ul>
+<li><p>Finding sure foreground area using distance transform and thresholding intensities of the points inside the foreground regions are changed to distance their respective distances from the closest 0 value (boundary).</p>
+<ul>
+<li>利用距离变换找到确定的前景区域，并将前景区域内点的阈值强度变化为它们各自距离最近的0值(边界)的距离。</li>
+</ul>
+</li>
+</ul>
+<p><a target="_blank" rel="noopener" href="https://www.tutorialspoint.com/opencv/opencv_distance_transformation.htm">https://www.tutorialspoint.com/opencv/opencv_distance_transformation.htm</a></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">dist_transform = cv2.distanceTransform(opening,cv2.DIST_L2,<span class="hljs-number">5</span>)<br>plt.imshow(dist_transform, cmap=<span class="hljs-string">&#x27;gray&#x27;</span>)  <span class="hljs-comment"># Dist transformed img. </span><br></code></pre></td></tr></table></figure>
+<pre><code>&lt;matplotlib.image.AxesImage at 0x2b36bd55d00&gt;
+</code></pre><p><img src="57_5.png" alt="png"></p>
+<ul>
+<li><p>Let us threshold the dist transform by starting at 1/2 its max value.</p>
+<ul>
+<li>让我们从dist变换的最大值的1/2开始阈值。</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-built_in">print</span>(dist_transform.<span class="hljs-built_in">max</span>())  <span class="hljs-comment"># gives about 21.9</span><br></code></pre></td></tr></table></figure>
+<pre><code>21.968996
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">ret2, sure_fg = cv2.threshold(dist_transform,<span class="hljs-number">0.5</span>*dist_transform.<span class="hljs-built_in">max</span>(),<span class="hljs-number">255</span>,<span class="hljs-number">0</span>)<br>plt.imshow(sure_fg, cmap=<span class="hljs-string">&#x27;gray&#x27;</span>)<br></code></pre></td></tr></table></figure>
+<pre><code>&lt;matplotlib.image.AxesImage at 0x2b36bdc25e0&gt;
+</code></pre><p><img src="57_6.png" alt="png"></p>
+<p><strong>STEP 3: Unknown</strong></p>
+<ul>
+<li><p>Later you realize that 0.25 * max value will not separate the cells well.</p>
+<ul>
+<li>后来你意识到0.25 * max值不能很好地分离单元格。</li>
+</ul>
+</li>
+<li><p>High value like 0.7 will not recognize some cells. 0.5 seems to be a good compromize</p>
+<ul>
+<li>像0.7这样的高值将无法识别某些单元格。0.5似乎是一个很好的折衷方案</li>
+</ul>
+</li>
+<li><p>Unknown ambiguous region is nothing but bkground - foreground</p>
+<ul>
+<li>未知的模糊区域不过是背景-前景</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">sure_fg = np.uint8(sure_fg)  <span class="hljs-comment"># Convert to uint8 from float</span><br>unknown = cv2.subtract(sure_bg,sure_fg)<br>plt.imshow(unknown, cmap=<span class="hljs-string">&#x27;gray&#x27;</span>)<br></code></pre></td></tr></table></figure>
+<pre><code>&lt;matplotlib.image.AxesImage at 0x2b36be24c10&gt;
+</code></pre><p><img src="57_7.png" alt="png"></p>
+<p><strong>STEP 4: Markers</strong></p>
+<ul>
+<li><p>Now we create a marker and label the regions inside. </p>
+<ul>
+<li>现在我们创建一个标记，并标记里面的区域。</li>
+</ul>
+</li>
+<li><p>For sure regions, both foreground and background will be labeled with positive numbers.</p>
+<ul>
+<li>对于确定的区域，前景和背景都将被标记为正数。</li>
+</ul>
+</li>
+<li><p>Unknown regions will be labeled 0. </p>
+<ul>
+<li>未知区域将被标记为0。</li>
+</ul>
+</li>
+<li><p>For markers let us use ConnectedComponents. </p>
+<ul>
+<li>对于标记，让我们使用<code>ConnectedComponents</code>。</li>
+</ul>
+</li>
+<li><p>Connected components labeling scans an image and groups its pixels into components based on pixel connectivity, i.e. all pixels in a connected component share similar pixel intensity values and are in some way connected with each other. </p>
+<ul>
+<li>连接组件标签扫描图像，并根据像素连接性将其像素分组，即连接组件中的所有像素共享相似的像素强度值，并以某种方式相互连接。</li>
+</ul>
+</li>
+<li><p>Once all groups have been determined, each pixel is labeled with a graylevel or a color (color labeling) according to the component it was assigned to.</p>
+<ul>
+<li>一旦确定了所有的组，每个像素将根据分配给它的组件用灰度或颜色(颜色标记)标记。</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">ret3, markers = cv2.connectedComponents(sure_fg)<br>plt.imshow(markers)<br></code></pre></td></tr></table></figure>
+<pre><code>&lt;matplotlib.image.AxesImage at 0x2b36d8060a0&gt;
+</code></pre><p><img src="57_8.png" alt="png"></p>
+<ul>
+<li><p>One problem rightnow is that the entire background pixels is given value 0.</p>
+<ul>
+<li>现在的一个问题是，整个背景像素的值是0。</li>
+</ul>
+</li>
+<li><p>This means watershed considers this region as unknown.</p>
+<ul>
+<li>这意味着watershed认为这个区域是未知的。</li>
+</ul>
+</li>
+<li><p>So let us add 10 to all labels so that sure background is not 0, but 10</p>
+<ul>
+<li>所以让我们给所有标签加上10，这样确定的背景不是0，而是10</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">markers = markers + <span class="hljs-number">10</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>Now, mark the region of unknown with zero<ul>
+<li>现在，用零标记未知区域</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">markers[unknown==<span class="hljs-number">255</span>] = <span class="hljs-number">0</span><br>plt.imshow(markers, cmap=<span class="hljs-string">&#x27;jet&#x27;</span>)  <span class="hljs-comment"># Look at the 3 distinct regions.</span><br></code></pre></td></tr></table></figure>
+<pre><code>&lt;matplotlib.image.AxesImage at 0x2b36d8f51c0&gt;
+</code></pre><p><img src="57_9.png" alt="png"></p>
+<ul>
+<li><p>Now we are ready for watershed filling. </p>
+<ul>
+<li>现在我们已经准备好进行流域注水了。</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">markers = cv2.watershed(img,markers)<br></code></pre></td></tr></table></figure>
+<ul>
+<li><p>Let us color boundaries in yellow. </p>
+<ul>
+<li>让我们用黄色标记边界。</li>
+</ul>
+</li>
+<li><p>Remember that watershed assigns boundaries a value of -1</p>
+<ul>
+<li>记住，分水岭的边界值是-1</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">img[markers == -<span class="hljs-number">1</span>] = [<span class="hljs-number">0</span>,<span class="hljs-number">255</span>,<span class="hljs-number">255</span>]  <br></code></pre></td></tr></table></figure>
+<ul>
+<li>label2rgb - Return an RGB image where color-coded labels are painted over the image.<ul>
+<li>label2rgb -返回一个RGB图像，其中彩色编码的标签涂在图像上。</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">img2 = color.label2rgb(markers, bg_label=<span class="hljs-number">0</span>)<br>plt.imshow(img2)<br></code></pre></td></tr></table></figure>
+<pre><code>&lt;matplotlib.image.AxesImage at 0x2b36d9c4970&gt;
+</code></pre><p><img src="57_10.png" alt="png"></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))<br></code></pre></td></tr></table></figure>
+<pre><code>&lt;matplotlib.image.AxesImage at 0x2b36da2de50&gt;
+</code></pre><p><img src="57_11.png" alt="png"></p>
+<ul>
+<li><p>Now, time to extract properties of detected cells</p>
+<ul>
+<li>现在，是时候提取检测到的细胞的属性了</li>
+</ul>
+</li>
+<li><p>Directly capturing props to pandas dataframe</p>
+<ul>
+<li>直接捕捉<code>pandas dataframe</code></li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">props = measure.regionprops_table(markers, cells, <br>                          properties=[<span class="hljs-string">&#x27;label&#x27;</span>,<br>                                      <span class="hljs-string">&#x27;area&#x27;</span>, <span class="hljs-string">&#x27;equivalent_diameter&#x27;</span>,<br>                                      <span class="hljs-string">&#x27;mean_intensity&#x27;</span>, <span class="hljs-string">&#x27;solidity&#x27;</span>, <span class="hljs-string">&#x27;orientation&#x27;</span>,<br>                                      <span class="hljs-string">&#x27;perimeter&#x27;</span>])<br><br><span class="hljs-keyword">import</span> pandas <span class="hljs-keyword">as</span> pd<br>df = pd.DataFrame(props)<br>df.head()<br></code></pre></td></tr></table></figure>
+<table border="1">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>label</th>
+      <th>area</th>
+      <th>equivalent_diameter</th>
+      <th>mean_intensity</th>
+      <th>solidity</th>
+      <th>orientation</th>
+      <th>perimeter</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>10</td>
+      <td>1400327</td>
+      <td>1335.272149</td>
+      <td>4.860480</td>
+      <td>0.924828</td>
+      <td>-1.499676</td>
+      <td>18900.592991</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>11</td>
+      <td>1092</td>
+      <td>37.287767</td>
+      <td>80.092491</td>
+      <td>0.923858</td>
+      <td>1.282415</td>
+      <td>138.953319</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>12</td>
+      <td>1142</td>
+      <td>38.131871</td>
+      <td>151.830998</td>
+      <td>0.955649</td>
+      <td>0.670516</td>
+      <td>132.296465</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>13</td>
+      <td>1108</td>
+      <td>37.559944</td>
+      <td>78.256318</td>
+      <td>0.891392</td>
+      <td>-1.062275</td>
+      <td>146.852814</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>14</td>
+      <td>1670</td>
+      <td>46.111929</td>
+      <td>106.720359</td>
+      <td>0.862603</td>
+      <td>1.532047</td>
+      <td>188.823376</td>
+    </tr>
+  </tbody>
+</table>
+
+<ul>
+<li>To delete small regions…<ul>
+<li>删除较小区域…</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">df = df[df[<span class="hljs-string">&#x27;area&#x27;</span>] &gt; <span class="hljs-number">50</span>]<br>df.head()<br></code></pre></td></tr></table></figure>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>label</th>
+      <th>area</th>
+      <th>equivalent_diameter</th>
+      <th>mean_intensity</th>
+      <th>solidity</th>
+      <th>orientation</th>
+      <th>perimeter</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>10</td>
+      <td>1400327</td>
+      <td>1335.272149</td>
+      <td>4.860480</td>
+      <td>0.924828</td>
+      <td>-1.499676</td>
+      <td>18900.592991</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>11</td>
+      <td>1092</td>
+      <td>37.287767</td>
+      <td>80.092491</td>
+      <td>0.923858</td>
+      <td>1.282415</td>
+      <td>138.953319</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>12</td>
+      <td>1142</td>
+      <td>38.131871</td>
+      <td>151.830998</td>
+      <td>0.955649</td>
+      <td>0.670516</td>
+      <td>132.296465</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>13</td>
+      <td>1108</td>
+      <td>37.559944</td>
+      <td>78.256318</td>
+      <td>0.891392</td>
+      <td>-1.062275</td>
+      <td>146.852814</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>14</td>
+      <td>1670</td>
+      <td>46.111929</td>
+      <td>106.720359</td>
+      <td>0.862603</td>
+      <td>1.532047</td>
+      <td>188.823376</td>
+    </tr>
+  </tbody>
+</table>
+
+
+
+<ul>
+<li>Convert to micron scale<ul>
+<li>转换成微米级</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">df[<span class="hljs-string">&#x27;area_sq_microns&#x27;</span>] = df[<span class="hljs-string">&#x27;area&#x27;</span>] * (pixels_to_um ** <span class="hljs-number">2</span>)<br>df[<span class="hljs-string">&#x27;equivalent_diameter_microns&#x27;</span>] = df[<span class="hljs-string">&#x27;equivalent_diameter&#x27;</span>] * (pixels_to_um)<br>df.head()<br></code></pre></td></tr></table></figure>
+<table border="1">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>label</th>
+      <th>area</th>
+      <th>equivalent_diameter</th>
+      <th>mean_intensity</th>
+      <th>solidity</th>
+      <th>orientation</th>
+      <th>perimeter</th>
+      <th>area_sq_microns</th>
+      <th>equivalent_diameter_microns</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>10</td>
+      <td>1400327</td>
+      <td>1335.272149</td>
+      <td>4.860480</td>
+      <td>0.924828</td>
+      <td>-1.499676</td>
+      <td>18900.592991</td>
+      <td>288629.799932</td>
+      <td>606.213556</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>11</td>
+      <td>1092</td>
+      <td>37.287767</td>
+      <td>80.092491</td>
+      <td>0.923858</td>
+      <td>1.282415</td>
+      <td>138.953319</td>
+      <td>225.078672</td>
+      <td>16.928646</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>12</td>
+      <td>1142</td>
+      <td>38.131871</td>
+      <td>151.830998</td>
+      <td>0.955649</td>
+      <td>0.670516</td>
+      <td>132.296465</td>
+      <td>235.384472</td>
+      <td>17.311869</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>13</td>
+      <td>1108</td>
+      <td>37.559944</td>
+      <td>78.256318</td>
+      <td>0.891392</td>
+      <td>-1.062275</td>
+      <td>146.852814</td>
+      <td>228.376528</td>
+      <td>17.052215</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>14</td>
+      <td>1670</td>
+      <td>46.111929</td>
+      <td>106.720359</td>
+      <td>0.862603</td>
+      <td>1.532047</td>
+      <td>188.823376</td>
+      <td>344.213720</td>
+      <td>20.934816</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2><span id="tutorial-58-object-detection-using-template-matching">Tutorial 58 - Object detection using template matching</span></h2><p><strong>Template Matching 模式匹配</strong></p>
+<p><a target="_blank" rel="noopener" href="https://docs.opencv.org/3.4/d4/dc6/tutorial_py_template_matching.html">OpenCV: Template Matching</a></p>
+<p>OBJECT DETECTION WITH TEMPLATES</p>
+<ul>
+<li><p>Need a source image and a template image.</p>
+<ul>
+<li>需要一个源图像和一个模板图像。</li>
+</ul>
+</li>
+<li><p>The template image T is slided over the source image (as in 2D convolution), and the program tries to find matches using statistics.</p>
+<ul>
+<li>模板图像T在源图像上滑动(在2D卷积中)，程序尝试使用统计信息找到匹配。</li>
+</ul>
+</li>
+<li><p>Several comparison methods are implemented in OpenCV.</p>
+<ul>
+<li>OpenCV中实现了几种比较方法。</li>
+</ul>
+</li>
+<li><p>It returns a grayscale image, where each pixel denotes how much does the neighbourhood of that pixel match with template.</p>
+<ul>
+<li>它返回一个灰度图像，其中每个像素表示该像素的邻域与模板的匹配程度。</li>
+</ul>
+</li>
+<li><p>Once you got the result, you can use cv2.minMaxLoc() function to find where is the maximum/minimum value. Take it as the top-left corner of the rectangle and take (w,h) as width and height of the rectangle. </p>
+<ul>
+<li>得到结果后，可以使用cv2.minMaxLoc()函数来查找最大值/最小值的位置。<br>将其作为矩形的左上角，并将(w,h)作为矩形的宽和高。</li>
+</ul>
+</li>
+<li><p>That rectangle can be drawn on the region of matched template.</p>
+<ul>
+<li>该矩形可以绘制在匹配模板的区域上。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<ul>
+<li><p>Template matching, <strong>single</strong> object in an image.</p>
+<ul>
+<li>模板匹配，图像中<strong>单个</strong>对象。</li>
+</ul>
+</li>
+<li><p>Multiple methods to see which one works best. </p>
+<ul>
+<li>多种方法，看看哪一种效果最好。</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> cv2<br><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">import</span> matplotlib.pyplot <span class="hljs-keyword">as</span> plt <br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">img_rgb = cv2.imread(<span class="hljs-string">&#x27;images/Ti_powder.tif&#x27;</span>)<br>img_gray = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2GRAY)<br>plt.imshow(img_gray, cmap=<span class="hljs-string">&#x27;gray&#x27;</span>)<br></code></pre></td></tr></table></figure>
+<pre><code>&lt;matplotlib.image.AxesImage at 0x263a924c550&gt;
+</code></pre><p><img src="58_1.png" alt="png"></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">template = cv2.imread(<span class="hljs-string">&#x27;images/Ti_powder_single.tif&#x27;</span>, <span class="hljs-number">0</span>)<br>plt.imshow(template, cmap=<span class="hljs-string">&#x27;gray&#x27;</span>)<br></code></pre></td></tr></table></figure>
+<pre><code>&lt;matplotlib.image.AxesImage at 0x263ae0a4be0&gt;
+</code></pre><p><img src="58_2.png" alt="png"></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">h, w = template.shape[::]<br>h, w<br></code></pre></td></tr></table></figure>
+<pre><code>(18, 16)
+</code></pre><ul>
+<li><p>For TM_SQDIFF, Good match yields minimum value; bad match yields large values</p>
+<ul>
+<li>对于TM_SQDIFF，良好匹配产生最小值; 不匹配会产生较大的值</li>
+</ul>
+</li>
+<li><p>For all others it is exactly opposite, max value = good fit.</p>
+<ul>
+<li>对于所有其他的情况，情况正好相反，最大值 = 良好的适合度。</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># methods available: [&#x27;cv2.TM_CCOEFF&#x27;, &#x27;cv2.TM_CCOEFF_NORMED&#x27;, &#x27;cv2.TM_CCORR&#x27;,</span><br><span class="hljs-comment">#             &#x27;cv2.TM_CCORR_NORMED&#x27;, &#x27;cv2.TM_SQDIFF&#x27;, &#x27;cv2.TM_SQDIFF_NORMED&#x27;]</span><br>res = cv2.matchTemplate(img_gray, template, cv2.TM_SQDIFF)<br>plt.imshow(res, cmap=<span class="hljs-string">&#x27;gray&#x27;</span>)<br></code></pre></td></tr></table></figure>
+<pre><code>&lt;matplotlib.image.AxesImage at 0x263ae0ff8e0&gt;
+</code></pre><p><img src="58_3.png" alt="png"></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)<br>min_val, max_val, min_loc, max_loc<br></code></pre></td></tr></table></figure>
+<pre><code>(4.0, 7702931.0, (318, 418), (66, 407))
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># Change to max_loc for all except for TM_SQDIFF</span><br><span class="hljs-comment"># 将除TM_SQDIFF外的所有数据更改为max_loc</span><br>top_left = min_loc<br>bottom_right = (top_left[<span class="hljs-number">0</span>] + w, top_left[<span class="hljs-number">1</span>] + h)<br><br><span class="hljs-comment"># Black rectangle with thickness 2. </span><br><span class="hljs-comment"># 绘制厚度为 2 的黑色矩形。</span><br>cv2.rectangle(img_gray, top_left, bottom_right, <span class="hljs-number">0</span>, <span class="hljs-number">1</span>)<br><br>plt.imshow(img_gray, cmap=<span class="hljs-string">&#x27;gray&#x27;</span>)<br></code></pre></td></tr></table></figure>
+<pre><code>&lt;matplotlib.image.AxesImage at 0x263ae4de220&gt;
+</code></pre><p><img src="58_4.png" alt="png"></p>
+<hr>
+<p><strong>Template matching - multiple objects</strong></p>
+<ul>
+<li><p>For multiple occurances, cv2.minMaxLoc() won’t give all the locations</p>
+<ul>
+<li>对于多次出现，cv2.minMaxLoc()不会给出所有的位置</li>
+</ul>
+</li>
+<li><p>So we need to set a threshold</p>
+<ul>
+<li>所以我们需要设置一个阈值</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> cv2<br><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">from</span> matplotlib <span class="hljs-keyword">import</span> pyplot <span class="hljs-keyword">as</span> plt<br><br>img_rgb = cv2.imread(<span class="hljs-string">&#x27;images/Ti_powder.tif&#x27;</span>)<br>img_gray = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2GRAY)<br>template = cv2.imread(<span class="hljs-string">&#x27;images/Ti_powder_single.tif&#x27;</span>,<span class="hljs-number">0</span>)<br>h, w = template.shape[::]<br><br>res = cv2.matchTemplate(img_gray, template, cv2.TM_CCOEFF_NORMED)<br>plt.imshow(res, cmap=<span class="hljs-string">&#x27;gray&#x27;</span>)<br></code></pre></td></tr></table></figure>
+<pre><code>&lt;matplotlib.image.AxesImage at 0x263ae67ac40&gt;
+</code></pre><p><img src="58_5.png" alt="png"></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># Pick only values above 0.8. For TM_CCOEFF_NORMED, larger values = good fit.</span><br><span class="hljs-comment"># 只选择高于0.8的值。对于TM_CCOEFF_NORMED，较大的值=良好的拟合。</span><br>threshold = <span class="hljs-number">0.8</span>  <br><br>loc = np.where( res &gt;= threshold)  <br><span class="hljs-comment"># Outputs 2 arrays. Combine these arrays to get x,y coordinates - take x from one array and y from the other.</span><br><span class="hljs-comment"># 输出2个数组。组合这些数组得到x,y坐标——从一个数组取x，从另一个数组取y。</span><br><br><span class="hljs-comment"># Reminder: ZIP function is an iterator of tuples where first item in each iterator is paired together, then the second item and then third, etc. </span><br><span class="hljs-comment"># 提醒:ZIP函数是一个元组迭代器，其中每个迭代器中的第一个项配对在一起，然后是第二个项，然后是第三个，等等。</span><br><br><span class="hljs-keyword">for</span> pt <span class="hljs-keyword">in</span> <span class="hljs-built_in">zip</span>(*loc[::-<span class="hljs-number">1</span>]):   <span class="hljs-comment"># -1 to swap the values as we assign x and y coordinate to draw the rectangle. -1来交换我们分配的x和y坐标来绘制矩形的值。</span><br>    <span class="hljs-comment"># Draw rectangle around each object. We know the top left (pt), draw rectangle to match the size of the template image. 在每个物体周围画一个矩形。我们知道左上角(pt)，绘制矩形以匹配模板图像的大小。</span><br>    cv2.rectangle(img_rgb, pt, (pt[<span class="hljs-number">0</span>] + w, pt[<span class="hljs-number">1</span>] + h), (<span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">255</span>), <span class="hljs-number">1</span>)  <span class="hljs-comment"># Red rectangles with thickness 2. </span><br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">plt.imshow(img_rgb)<br></code></pre></td></tr></table></figure>
+<pre><code>&lt;matplotlib.image.AxesImage at 0x263a957fc10&gt;
+</code></pre><p><img src="58_6.png" alt="png"></p>
+
   </div>
   <div id="gitalk-container"></div>
 </div>
