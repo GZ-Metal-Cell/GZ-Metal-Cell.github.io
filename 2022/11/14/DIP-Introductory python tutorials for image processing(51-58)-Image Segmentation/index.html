@@ -762,7 +762,53 @@ Scratched area in sq. microns is:  6780.712500000001 Square pixels
 
 
 
-<h2><span id="tutorial-55-image-segmentation-followed-by-measurements-in-python">Tutorial 55 - Image segmentation followed by measurements- in python</span></h2><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> skimage <span class="hljs-keyword">import</span> measure, io, img_as_ubyte<br><span class="hljs-keyword">import</span> matplotlib.pyplot <span class="hljs-keyword">as</span> plt<br><span class="hljs-keyword">from</span> skimage.color <span class="hljs-keyword">import</span> label2rgb, rgb2gray<br><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">import</span> cv2<br></code></pre></td></tr></table></figure>
+<hr>
+<ul>
+<li>Scratch Assay on time series images<ul>
+<li>时间序列图像划痕分析</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> matplotlib.pyplot <span class="hljs-keyword">as</span> plt<br><span class="hljs-keyword">from</span> skimage <span class="hljs-keyword">import</span> io<br><span class="hljs-keyword">from</span> skimage.filters.rank <span class="hljs-keyword">import</span> entropy<br><span class="hljs-keyword">from</span> skimage.morphology <span class="hljs-keyword">import</span> disk<br><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">from</span> skimage.filters <span class="hljs-keyword">import</span> threshold_otsu<br></code></pre></td></tr></table></figure>
+<ul>
+<li>Use glob to extract image names and load them. <ul>
+<li>使用glob提取图像名称并加载它们。</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> glob<br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">time = <span class="hljs-number">0</span><br>scale = <span class="hljs-number">0.45</span>  <span class="hljs-comment"># microns/pixel</span><br>time_list = []<br>area_list = []<br>path = <span class="hljs-string">&quot;images/scratch_assay/*.*&quot;</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>Put the code from single image segmentation in a for loop to apply segmentaion to all images<ul>
+<li>将来自单个图像分割的代码放入for循环中，将分割应用于所有图像</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">for</span> file <span class="hljs-keyword">in</span> glob.glob(path):<br>    img=io.imread(file)<br>    entropy_img = entropy(img, disk(<span class="hljs-number">3</span>))<br>    thresh = threshold_otsu(entropy_img)<br>    binary = entropy_img &lt;= thresh<br>    scratch_area = np.<span class="hljs-built_in">sum</span>(binary == <span class="hljs-number">1</span>)<br>    scratch_area = scratch_area * ((scale) ** <span class="hljs-number">2</span>)  <span class="hljs-comment"># Convert to microns from pixel units</span><br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;time=&quot;</span>, time, <span class="hljs-string">&quot;hr  &quot;</span>, <span class="hljs-string">&quot;Scratch area=&quot;</span>, scratch_area, <span class="hljs-string">&quot;um\N&#123;SUPERSCRIPT TWO&#125;&quot;</span>)<br>    time_list.append(time)<br>    area_list.append(scratch_area)<br>    time += <span class="hljs-number">1</span><br></code></pre></td></tr></table></figure>
+<pre><code>time= 0 hr   Scratch area= 6768.765 um²
+time= 1 hr   Scratch area= 5605.807500000001 um²
+time= 2 hr   Scratch area= 4881.465 um²
+time= 3 hr   Scratch area= 4277.4075 um²
+time= 4 hr   Scratch area= 3742.4025 um²
+time= 5 hr   Scratch area= 3261.2625000000003 um²
+time= 6 hr   Scratch area= 2919.4425 um²
+time= 7 hr   Scratch area= 2575.1925 um²
+time= 8 hr   Scratch area= 2218.7925 um²
+time= 9 hr   Scratch area= 1890.7425 um²
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">plt.plot(time_list, area_list, <span class="hljs-string">&#x27;bo&#x27;</span>)  <span class="hljs-comment"># Print blue dots scatter plot</span><br></code></pre></td></tr></table></figure>
+<pre><code>[&lt;matplotlib.lines.Line2D at 0x295b35d21c0&gt;]
+</code></pre><p><img src="54_2.png" alt="png"></p>
+<ul>
+<li><p>Print slope, intercept</p>
+<ul>
+<li>打印斜率、截距</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> scipy.stats <span class="hljs-keyword">import</span> linregress  <span class="hljs-comment"># Linear regression</span><br><br>slope, intercept, r_value, p_value, std_err = linregress(time_list, area_list)<br><span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;y = &quot;</span>,slope, <span class="hljs-string">&quot;x&quot;</span>, <span class="hljs-string">&quot; + &quot;</span>, intercept)<br><span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;R\N&#123;SUPERSCRIPT TWO&#125; = &quot;</span>, r_value ** <span class="hljs-number">2</span>)<br></code></pre></td></tr></table></figure>
+<pre><code>y =  -507.25881818181824 x  +  6096.792681818182
+R² =  0.9568904267126052
+</code></pre><h2><span id="tutorial-55-image-segmentation-followed-by-measurements-in-python">Tutorial 55 - Image segmentation followed by measurements- in python</span></h2><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> skimage <span class="hljs-keyword">import</span> measure, io, img_as_ubyte<br><span class="hljs-keyword">import</span> matplotlib.pyplot <span class="hljs-keyword">as</span> plt<br><span class="hljs-keyword">from</span> skimage.color <span class="hljs-keyword">import</span> label2rgb, rgb2gray<br><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">import</span> cv2<br></code></pre></td></tr></table></figure>
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">image = img_as_ubyte(rgb2gray(io.imread(<span class="hljs-string">&#x27;images/cast_iron1.tif&#x27;</span>)))<br>scale = <span class="hljs-number">0.6</span><br></code></pre></td></tr></table></figure>
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">plt.imshow(image, cmap=<span class="hljs-string">&#x27;gray&#x27;</span>)<br></code></pre></td></tr></table></figure>
 <pre><code>&lt;matplotlib.image.AxesImage at 0x200892d89a0&gt;
