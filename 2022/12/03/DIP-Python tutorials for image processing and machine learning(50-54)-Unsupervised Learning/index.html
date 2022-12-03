@@ -336,6 +336,10 @@
 <ul>
 <li><a href="#50-what-is-k-means-clustering-and-how-to-code-it-in-python">50 - What is k-means clustering and how to code it in Python</a></li>
 <li><a href="#51-image-segmentation-using-k-means">51 - Image Segmentation using K-means</a></li>
+<li><a href="#52-what-is-gmm-and-how-to-use-it-for-image-segmentation">52 - What is GMM and how to use it for Image segmentation</a></li>
+<li><a href="#52b-understanding-gaussian-mixture-model-gmm-using-1d-2d-and-3d-examples">52b - Understanding Gaussian Mixture Model -GMM- using 1D- 2D- and 3D examples</a></li>
+<li><a href="#53-how-to-pick-optimal-number-of-parameters-for-your-unsupervised-machine-learning-model">53 - How to pick optimal number of parameters for your unsupervised machine learning model</a></li>
+<li><a href="#54-unsupervised-and-supervised-machine-learning-a-reminder">54 - Unsupervised and supervised machine learning - a reminder</a></li>
 </ul>
 <!-- tocstop -->
 <h2><span id="50-what-is-k-means-clustering-and-how-to-code-it-in-python">50 - What is k-means clustering and how to code it in Python</span></h2><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> pandas <span class="hljs-keyword">as</span> pd<br><br>df = pd.read_excel(<span class="hljs-string">&#x27;data/K_Means.xlsx&#x27;</span>)<br>df.head()<br></code></pre></td></tr></table></figure>
@@ -381,12 +385,247 @@
 
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> seaborn <span class="hljs-keyword">as</span> sns<br>sns.regplot(x=df[<span class="hljs-string">&#x27;X&#x27;</span>], y=df[<span class="hljs-string">&#x27;Y&#x27;</span>], fit_reg=<span class="hljs-literal">False</span>)<br></code></pre></td></tr></table></figure>
 <pre><code>&lt;AxesSubplot:xlabel=&#39;X&#39;, ylabel=&#39;Y&#39;&gt;
-</code></pre><p><img src="50_1.png" alt="png"></p>
+</code></pre><p><img src="50_1.png" alt="png"><br>    我们知道初始值的选取对结果的影响很大，对初始值选择的改进是很重要的一部分。在所有的改进算法中，K-means++ 最有名。</p>
+<p>K-means++ 算法步骤如下所示：</p>
+<ol>
+<li>随机选取一个中心点 $a_1$ ；</li>
+<li>计算数据到之前 n 个聚类中心最远的距离 $D(x)$ ，并以一定概率 $\frac{D(x)^2}{\Sigma D(x)^2}$ 选择新中心点 $a_i$ ；</li>
+<li>重复第二步。</li>
+</ol>
+<p>​    简单的来说，就是 K-means++ 就是选择离已选中心点最远的点。这也比较符合常理，聚类中心当然是互相离得越远越好。</p>
+<p>​    但是这个算法的缺点在于，难以并行化。所以 k-means II 改变取样策略，并非按照 k-means++ 那样每次遍历只取样一个样本，而是每次遍历取样 $k$ 个，重复该取样过程 $\log(n)$ 次，则得到 $k\log(n)$ 个样本点组成的集合，然后从这些点中选取 $k$ 个。当然一般也不需要 $\log(n)$ 次取样，5 次即可。</p>
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> sklearn.cluster <span class="hljs-keyword">import</span> KMeans<br><br>kmeans = KMeans(n_clusters=<span class="hljs-number">3</span>, init=<span class="hljs-string">&#x27;k-means++&#x27;</span>, max_iter=<span class="hljs-number">300</span>, n_init=<span class="hljs-number">10</span>, random_state=<span class="hljs-number">0</span>)<br>model = kmeans.fit(df)<br>predicted_values = kmeans.predict(df)<br></code></pre></td></tr></table></figure>
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> matplotlib <span class="hljs-keyword">import</span> pyplot <span class="hljs-keyword">as</span> plt<br><br>plt.scatter(df[<span class="hljs-string">&#x27;X&#x27;</span>], df[<span class="hljs-string">&#x27;Y&#x27;</span>], c=predicted_values, s=<span class="hljs-number">50</span>, cmap=<span class="hljs-string">&#x27;viridis&#x27;</span>)<br>plt.scatter(kmeans.cluster_centers_[:, <span class="hljs-number">0</span>], kmeans.cluster_centers_[:, <span class="hljs-number">1</span>], s=<span class="hljs-number">200</span>, c=<span class="hljs-string">&#x27;black&#x27;</span>, alpha=<span class="hljs-number">0.5</span>)<br></code></pre></td></tr></table></figure>
 <pre><code>&lt;matplotlib.collections.PathCollection at 0x2e8afc39d00&gt;
 </code></pre><p><img src="50_2.png" alt="png"></p>
-<h2><span id="51-image-segmentation-using-k-means">51 - Image Segmentation using K-means</span></h2>
+<h2><span id="51-image-segmentation-using-k-means">51 - Image Segmentation using K-means</span></h2><ul>
+<li><a target="_blank" rel="noopener" href="https://docs.opencv.org/4.x/d1/d5c/tutorial_py_kmeans_opencv.html">K-Means Clustering in OpenCV</a></li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">import</span> matplotlib.pyplot <span class="hljs-keyword">as</span> plt<br><span class="hljs-keyword">import</span> cv2<br><br>img = cv2.imread(<span class="hljs-string">&#x27;images/BSE_Image.jpg&#x27;</span>)<br>plt.imshow(img)<br></code></pre></td></tr></table></figure>
+<pre><code>&lt;matplotlib.image.AxesImage at 0x202a78459d0&gt;
+</code></pre><p><img src="51_1.png" alt="png"></p>
+<ul>
+<li>将图像变成一维的</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">img2 = img.reshape((-<span class="hljs-number">1</span>, <span class="hljs-number">3</span>))<br>img2 = np.float32(img2)<br></code></pre></td></tr></table></figure>
+<ul>
+<li><p>Now we apply the KMeans function. Before that we need to specify the criteria. My criteria is such that, whenever 10 iterations of algorithm is ran, or an accuracy of epsilon = 1.0 is reached, stop the algorithm and return the answer.</p>
+<ul>
+<li>现在我们应用KMeans函数。在此之前，我们需要指定标准。我的标准是这样的，每当算法运行10次迭代，或达到epsilon = 1.0的精度时，停止算法并返回答案。</li>
+</ul>
+</li>
+<li><p><strong>criteria</strong> : It is the iteration termination criteria. When this criteria is satisfied, algorithm iteration stops. Actually, it should be a tuple of 3 parameters. They are <code>( type, max_iter, epsilon )</code>:</p>
+<ul>
+<li>它是迭代终止条件。当满足该条件时，算法迭代停止。实际上，它应该是一个包含3个参数的元组。</li>
+<li>type of termination criteria. It has 3 flags as below:<ul>
+<li>cv.TERM_CRITERIA_EPS - stop the algorithm iteration if specified accuracy, epsilon, is reached.<ul>
+<li>如果达到指定的精度epsilon，则停止算法迭代。</li>
+</ul>
+</li>
+<li>cv.TERM_CRITERIA_MAX_ITER - stop the algorithm after the specified number of iterations, max_iter.<ul>
+<li>在指定的迭代次数max_iter后停止算法。</li>
+</ul>
+</li>
+<li>cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER - stop the iteration when any of the above condition is met.<ul>
+<li>当满足上述任何一个条件时，对迭代进行顶迭代。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>max_iter</strong> - An integer specifying maximum number of iterations.</p>
+<ul>
+<li>指定最大迭代次数的整数。</li>
+</ul>
+</li>
+<li><p><strong>epsilon</strong> - Required accuracy</p>
+<ul>
+<li>所需的精度</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, <span class="hljs-number">10</span>, <span class="hljs-number">1.0</span>)<br></code></pre></td></tr></table></figure>
+<ul>
+<li><p>Clusters</p>
+</li>
+<li><p><strong>attempts</strong> : Flag to specify the number of times the algorithm is executed using different initial labellings. The algorithm returns the labels that yield the best compactness. This compactness is returned as output.</p>
+<ul>
+<li>标志指定使用不同初始标记执行算法的次数。该算法返回产生最佳紧凑性的标签。这种紧凑度作为输出返回。</li>
+</ul>
+</li>
+<li><p><strong>flags</strong> : This flag is used to specify how initial centers are taken. Normally two flags are used for this : cv.KMEANS_PP_CENTERS and cv.KMEANS_RANDOM_CENTERS.</p>
+<ul>
+<li>此标志用于指定如何获取初始中心。通常使用两个标志:cv.KMEANS_PP_CENTERS和cv.KMEANS_RANDOM_CENTERS。</li>
+</ul>
+</li>
+<li><p><strong>compactness</strong> : It is the sum of squared distance from each point to their corresponding centers.</p>
+<ul>
+<li><strong>紧凑度</strong>:它是每个点到它们相应中心的距离平方和。</li>
+</ul>
+</li>
+<li><p><strong>labels</strong> : This is the label array (same as ‘code’ in previous article) where each element marked ‘0’, ‘1’…..</p>
+<ul>
+<li>这是标签数组(与上一篇文章中的’code’相同)，其中每个元素标记为’0’，’1’…..</li>
+</ul>
+</li>
+<li><p><strong>centers</strong> : This is array of centers of clusters.</p>
+<ul>
+<li>这是集群中心的数组。</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">k = <span class="hljs-number">3</span><br>attempts = <span class="hljs-number">10</span><br>ret, label, center = cv2.kmeans(img2, k, <span class="hljs-literal">None</span>, criteria, attempts, cv2.KMEANS_PP_CENTERS)<br>center = np.uint8(center)<br>res = center[label.flatten()]<br></code></pre></td></tr></table></figure>
+<ul>
+<li>将数组重新转成原来的形状</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">res2 = res.reshape((img.shape))<br></code></pre></td></tr></table></figure>
+<ul>
+<li>最终将图像缩减成了只有 3 种颜色</li>
+<li>Color Quantization is the process of reducing number of colors in an image. One reason to do so is to reduce the memory. Sometimes, some devices may have limitation such that it can produce only limited number of colors. In those cases also, color quantization is performed. Here we use k-means clustering for color quantization.<ul>
+<li>颜色量化是减少图像中颜色数量的过程。<br>这样做的一个原因是减少内存。<br>有时，一些设备可能有限制，例如它只能产生有限数量的颜色。<br>在这些情况下，还执行颜色量化。<br>这里我们使用k-means聚类进行颜色量化。</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>There is nothing new to be explained here. There are 3 features, say, R,G,B. So we need to reshape the image to an array of Mx3 size (M is number of pixels in image). And after the clustering, we apply centroid values (it is also R,G,B) to all pixels, such that resulting image will have specified number of colors. And again we need to reshape it back to the shape of original image. <ul>
+<li>这里没有什么新东西要解释的。有三个特征，R,G,B。因此我们需要将图像重塑为Mx3大小的数组(M为图像中的像素数)。在聚类之后，我们对所有像素应用质心值(它也是R,G,B)，这样得到的图像将具有指定数量的颜色。我们需要重新塑造它回到原始图像的形状。</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">center<br></code></pre></td></tr></table></figure>
+<pre><code>array([[251, 251, 251],
+       [151, 151, 151],
+       [ 47,  47,  47]], dtype=uint8)
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">plt.imshow(res2)<br></code></pre></td></tr></table></figure>
+<pre><code>&lt;matplotlib.image.AxesImage at 0x202a83ac2b0&gt;
+</code></pre><p><img src="51_2.png" alt="png"></p>
+<h2><span id="52-what-is-gmm-and-how-to-use-it-for-image-segmentation">52 - What is GMM and how to use it for Image segmentation</span></h2><ul>
+<li><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/151671154">如何通俗的理解高斯混合模型（Gaussian Mixture Models） - 知乎 (zhihu.com)</a></li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">import</span> cv2<br><br>img = cv2.imread(<span class="hljs-string">&#x27;images/plant_cells.jpg&#x27;</span>)<br>img2 = img.reshape((-<span class="hljs-number">1</span>, <span class="hljs-number">3</span>))<br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> sklearn.mixture <span class="hljs-keyword">import</span> GaussianMixture <span class="hljs-keyword">as</span> GMM<br><br>gmm_model = GMM(n_components=<span class="hljs-number">2</span>, covariance_type=<span class="hljs-string">&#x27;tied&#x27;</span>).fit(img2)<br>gmm_labels = gmm_model.predict(img2)<br>original_shape = img.shape<br>segmented = gmm_labels.reshape(original_shape[<span class="hljs-number">0</span>], original_shape[<span class="hljs-number">1</span>])<br></code></pre></td></tr></table></figure>
+<ul>
+<li>图像被分成 0 和 1 两类</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> matplotlib.pyplot <span class="hljs-keyword">as</span> plt<br><br>plt.imshow(segmented, cmap=<span class="hljs-string">&#x27;gray&#x27;</span>)<br></code></pre></td></tr></table></figure>
+<pre><code>&lt;matplotlib.image.AxesImage at 0x1ee043bb4c0&gt;
+</code></pre><p><img src="52_1.png" alt="png"></p>
+<hr>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">import</span> cv2<br><br>img = cv2.imread(<span class="hljs-string">&#x27;images/BSE_Image.jpg&#x27;</span>)<br>img2 = img.reshape((-<span class="hljs-number">1</span>, <span class="hljs-number">3</span>))<br><br><span class="hljs-keyword">from</span> sklearn.mixture <span class="hljs-keyword">import</span> GaussianMixture <span class="hljs-keyword">as</span> GMM<br><br><span class="hljs-comment"># 分成 4 类</span><br>gmm_model = GMM(n_components=<span class="hljs-number">4</span>, covariance_type=<span class="hljs-string">&#x27;tied&#x27;</span>).fit(img2)<br>gmm_labels = gmm_model.predict(img2)<br>original_shape = img.shape<br>segmented = gmm_labels.reshape(original_shape[<span class="hljs-number">0</span>], original_shape[<span class="hljs-number">1</span>])<br><br><span class="hljs-keyword">import</span> matplotlib.pyplot <span class="hljs-keyword">as</span> plt<br><br>plt.imshow(segmented, cmap=<span class="hljs-string">&#x27;gray&#x27;</span>)<br></code></pre></td></tr></table></figure>
+<pre><code>&lt;matplotlib.image.AxesImage at 0x1ee04598c10&gt;
+</code></pre><p><img src="52_2.png" alt="png"></p>
+<h2><span id="52b-understanding-gaussian-mixture-model-gmm-using-1d-2d-and-3d-examples">52b - Understanding Gaussian Mixture Model -GMM- using 1D- 2D- and 3D examples</span></h2><ul>
+<li>Demonstration of GMM on 1D, 2D, and 3D data. </li>
+</ul>
+<p>For <strong>1D</strong></p>
+<ul>
+<li><p>First we generate data by sampling random data from two normal distributions</p>
+<ul>
+<li>首先，我们通过从两个正态分布中抽样随机数据来生成数据</li>
+</ul>
+</li>
+<li><p>Then, we decmpose it into 3 (or different number) gaussians. </p>
+<ul>
+<li>然后，我们将其分解为3个(或不同的数字)高斯函数。</li>
+</ul>
+</li>
+<li><p>Finally, we plot the original data and the decomposed Gaussians. </p>
+<ul>
+<li>最后，绘制了原始数据和分解后的高斯数据。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<ul>
+<li><p>Do something similar for 2D and 3D cases…</p>
+<ul>
+<li>对2D和3D情况做类似的事情……</li>
+</ul>
+</li>
+<li><p>Generate data, perform GMM and plot individual components.</p>
+<ul>
+<li>生成数据，执行GMM并绘制单个组件。</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> sklearn <span class="hljs-keyword">import</span> mixture<br><span class="hljs-keyword">import</span> matplotlib.pyplot <span class="hljs-keyword">as</span> plt<br><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">import</span> scipy.stats <span class="hljs-keyword">as</span> stats<br></code></pre></td></tr></table></figure>
+<ul>
+<li>Create some data</li>
+<li><p>Draw samples from different normal distributions so we get data that is good to demonstrate GMM. Different mean and Std. dev. </p>
+<ul>
+<li>从不同的正态分布中抽取样本，这样我们得到的数据可以很好地演示GMM。不同的平均值和标准。</li>
+</ul>
+</li>
+<li><p>Concatenate to create a single data set</p>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># 均值为 5 方差为 5 的 1000 个数据 和 均值为 10 方差为 2 的 1000 个数据</span><br><span class="hljs-comment"># 合并起来就是 2000 个数据</span><br>x = np.concatenate((np.random.normal(<span class="hljs-number">5</span>, <span class="hljs-number">5</span>, <span class="hljs-number">1000</span>), np.random.normal(<span class="hljs-number">10</span>, <span class="hljs-number">2</span>, <span class="hljs-number">1000</span>)))<br>plt.plot(x)<br></code></pre></td></tr></table></figure>
+<pre><code>[&lt;matplotlib.lines.Line2D at 0x1fc9d0cd7c0&gt;]
+</code></pre><p><img src="52b_1.png" alt="png"></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">plt.hist(x, bins=<span class="hljs-number">100</span>)<br></code></pre></td></tr></table></figure>
+<p><img src="52b_2.png" alt="png"></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">f = x.reshape(-<span class="hljs-number">1</span>, <span class="hljs-number">1</span>)<br></code></pre></td></tr></table></figure>
+<ul>
+<li>We created data from two normal distributions but for the fun of it let us decompose our data into 3 Gaussians. n_components=3<ul>
+<li>我们从两个正态分布创建了数据，但为了有趣，我们将数据分解为3个高斯分布。</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">g = mixture.GaussianMixture(n_components=<span class="hljs-number">3</span>,covariance_type=<span class="hljs-string">&#x27;full&#x27;</span>)<br>g.fit(f)<br>weights = g.weights_  <span class="hljs-comment"># 权重</span><br>means = g.means_  <span class="hljs-comment"># 均值</span><br>covars = g.covariances_  <span class="hljs-comment"># 协方差</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">x_axis = x<br>x_axis.sort()<br><br>plt.hist(f, bins=<span class="hljs-number">100</span>, histtype=<span class="hljs-string">&#x27;bar&#x27;</span>, density=<span class="hljs-literal">True</span>, ec=<span class="hljs-string">&#x27;red&#x27;</span>, alpha=<span class="hljs-number">0.5</span>)<br>plt.plot(x_axis,weights[<span class="hljs-number">0</span>]*stats.norm.pdf(x_axis,means[<span class="hljs-number">0</span>],np.sqrt(covars[<span class="hljs-number">0</span>])).ravel(), c=<span class="hljs-string">&#x27;red&#x27;</span>)<br>plt.plot(x_axis,weights[<span class="hljs-number">1</span>]*stats.norm.pdf(x_axis,means[<span class="hljs-number">1</span>],np.sqrt(covars[<span class="hljs-number">1</span>])).ravel(), c=<span class="hljs-string">&#x27;green&#x27;</span>)<br>plt.plot(x_axis,weights[<span class="hljs-number">2</span>]*stats.norm.pdf(x_axis,means[<span class="hljs-number">2</span>],np.sqrt(covars[<span class="hljs-number">2</span>])).ravel(), c=<span class="hljs-string">&#x27;blue&#x27;</span>)<br><br>plt.grid()<br>plt.show()<br></code></pre></td></tr></table></figure>
+<p><img src="52b_3.png" alt="png"></p>
+<hr>
+<p><strong>2D</strong> example</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> sklearn.datasets <span class="hljs-keyword">import</span> make_blobs<br><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">from</span> matplotlib <span class="hljs-keyword">import</span> pyplot <span class="hljs-keyword">as</span> plt<br></code></pre></td></tr></table></figure>
+<ul>
+<li>Generate some data</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">X, y_true = make_blobs(n_samples=<span class="hljs-number">400</span>, centers=<span class="hljs-number">4</span>,<br>                       cluster_std=<span class="hljs-number">0.60</span>, random_state=<span class="hljs-number">0</span>)<br>X = X[:, ::-<span class="hljs-number">1</span>]  <span class="hljs-comment"># flip axes for better plotting 翻转坐标轴可以更好地绘图</span><br><br>rng = np.random.RandomState(<span class="hljs-number">13</span>)<br>X_stretched = np.dot(X, rng.randn(<span class="hljs-number">2</span>, <span class="hljs-number">2</span>))<br>plt.scatter(X_stretched[:, <span class="hljs-number">0</span>], X_stretched[:, <span class="hljs-number">1</span>], s=<span class="hljs-number">7</span>, cmap=<span class="hljs-string">&#x27;viridis&#x27;</span>)<br></code></pre></td></tr></table></figure>
+<pre><code>&lt;matplotlib.collections.PathCollection at 0x1fc9eac9310&gt;
+</code></pre><p><img src="52b_4.png" alt="png"></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> sklearn.mixture <span class="hljs-keyword">import</span> GaussianMixture <span class="hljs-keyword">as</span> GMM<br><br>gmm = GMM(n_components=<span class="hljs-number">4</span>, covariance_type=<span class="hljs-string">&#x27;full&#x27;</span>, random_state=<span class="hljs-number">42</span>)<br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> matplotlib.patches <span class="hljs-keyword">import</span> Ellipse<br><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">draw_ellipse</span>(<span class="hljs-params">position, covariance, ax=<span class="hljs-literal">None</span>, **kwargs</span>):<br>    <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">    Draw an ellipse with a given position and covariance</span><br><span class="hljs-string">    画一个具有给定位置和协方差的椭圆</span><br><span class="hljs-string">    &quot;&quot;&quot;</span><br>    ax = ax <span class="hljs-keyword">or</span> plt.gca()<br>    <br>    <span class="hljs-comment"># Convert covariance to principal axes 将协方差转换为主轴</span><br>    <span class="hljs-keyword">if</span> covariance.shape == (<span class="hljs-number">2</span>, <span class="hljs-number">2</span>):<br>        U, s, Vt = np.linalg.svd(covariance)<br>        angle = np.degrees(np.arctan2(U[<span class="hljs-number">1</span>, <span class="hljs-number">0</span>], U[<span class="hljs-number">0</span>, <span class="hljs-number">0</span>]))<br>        width, height = <span class="hljs-number">2</span> * np.sqrt(s)<br>    <span class="hljs-keyword">else</span>:<br>        angle = <span class="hljs-number">0</span><br>        width, height = <span class="hljs-number">2</span> * np.sqrt(covariance)<br>    <br>    <span class="hljs-comment"># Draw the Ellipse</span><br>    <span class="hljs-keyword">for</span> nsig <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">1</span>, <span class="hljs-number">4</span>):<br>        ax.add_patch(Ellipse(position, nsig * width, nsig * height, <br>                             angle, **kwargs))<br>        <br>        <br><span class="hljs-keyword">def</span> <span class="hljs-title function_">plot_gmm</span>(<span class="hljs-params">gmm, X, label=<span class="hljs-literal">True</span>, ax=<span class="hljs-literal">None</span></span>):<br>    ax = ax <span class="hljs-keyword">or</span> plt.gca()<br>    labels = gmm.fit(X).predict(X)<br>    <span class="hljs-keyword">if</span> label:<br>        ax.scatter(X[:, <span class="hljs-number">0</span>], X[:, <span class="hljs-number">1</span>], c=labels, s=<span class="hljs-number">7</span>, cmap=<span class="hljs-string">&#x27;viridis&#x27;</span>, zorder=<span class="hljs-number">2</span>)<br>    <span class="hljs-keyword">else</span>:<br>        ax.scatter(X[:, <span class="hljs-number">0</span>], X[:, <span class="hljs-number">1</span>], s=<span class="hljs-number">7</span>, zorder=<span class="hljs-number">2</span>)<br>    ax.axis(<span class="hljs-string">&#x27;equal&#x27;</span>)<br>    <br>    w_factor = <span class="hljs-number">0.2</span> / gmm.weights_.<span class="hljs-built_in">max</span>()<br>    <span class="hljs-keyword">for</span> pos, covar, w <span class="hljs-keyword">in</span> <span class="hljs-built_in">zip</span>(gmm.means_, gmm.covariances_, gmm.weights_):<br>        draw_ellipse(pos, covar, alpha=w * w_factor)  <br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">plot_gmm(gmm, X_stretched)<br></code></pre></td></tr></table></figure>
+<p><img src="52b_5.png" alt="png"></p>
+<hr>
+<p><strong>3D</strong></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">from</span> sklearn.mixture <span class="hljs-keyword">import</span> GaussianMixture<br><span class="hljs-keyword">from</span> matplotlib <span class="hljs-keyword">import</span> pyplot <span class="hljs-keyword">as</span> plt<br></code></pre></td></tr></table></figure>
+<ul>
+<li>Generate 3D data with 4 clusters set gaussian ceters and covariances in 3D<ul>
+<li>生成具有4个聚类的三维数据，集合高斯中心和三维协方差</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">means = np.array([[<span class="hljs-number">0.5</span>, <span class="hljs-number">0.0</span>, <span class="hljs-number">0.0</span>],<br>                      [<span class="hljs-number">0.0</span>, <span class="hljs-number">0.0</span>, <span class="hljs-number">0.0</span>],<br>                      [-<span class="hljs-number">0.5</span>, -<span class="hljs-number">0.5</span>, -<span class="hljs-number">0.5</span>],<br>                      [-<span class="hljs-number">0.8</span>, <span class="hljs-number">0.3</span>, <span class="hljs-number">0.4</span>]])<br><br>covs = np.array([np.diag([<span class="hljs-number">0.01</span>, <span class="hljs-number">0.01</span>, <span class="hljs-number">0.03</span>]),<br>                     np.diag([<span class="hljs-number">0.08</span>, <span class="hljs-number">0.01</span>, <span class="hljs-number">0.01</span>]),<br>                     np.diag([<span class="hljs-number">0.01</span>, <span class="hljs-number">0.05</span>, <span class="hljs-number">0.01</span>]),<br>                     np.diag([<span class="hljs-number">0.03</span>, <span class="hljs-number">0.07</span>, <span class="hljs-number">0.01</span>])])<br><br>n_gaussians = means.shape[<span class="hljs-number">0</span>]  <span class="hljs-comment"># Number of clusters 集群数量</span><br><br>N = <span class="hljs-number">1000</span>  <span class="hljs-comment"># Number of points to be generated for each cluster. 为每个集群生成的点数。</span><br>points = []<br><span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-built_in">len</span>(means)):<br>    x = np.random.multivariate_normal(means[i], covs[i], N )<br>    points.append(x)<br>points = np.concatenate(points)<br></code></pre></td></tr></table></figure>
+<ul>
+<li>Plot</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">fig = plt.figure()<br>ax = fig.add_subplot(<span class="hljs-number">111</span>, projection=<span class="hljs-string">&#x27;3d&#x27;</span>)<br>ax.scatter(points[:,<span class="hljs-number">0</span>], points[:,<span class="hljs-number">1</span>], points[:,<span class="hljs-number">2</span>], s=<span class="hljs-number">1</span>, alpha=<span class="hljs-number">1</span>)<br>ax.view_init(<span class="hljs-number">35.246</span>, <span class="hljs-number">45</span>)<br>plt.show()<br></code></pre></td></tr></table></figure>
+<p><img src="52b_6.png" alt="png"></p>
+<ul>
+<li>Fit the gaussian model</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">gmm = GaussianMixture(n_components=n_gaussians, covariance_type=<span class="hljs-string">&#x27;diag&#x27;</span>)<br>gmm.fit(points)<br></code></pre></td></tr></table></figure>
+<ul>
+<li>Functions to visualize data 可视化数据的函数</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> matplotlib.cm <span class="hljs-keyword">as</span> cmx<br><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">plot_sphere</span>(<span class="hljs-params">w=<span class="hljs-number">0</span>, c=[<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>], r=[<span class="hljs-number">1</span>, <span class="hljs-number">1</span>, <span class="hljs-number">1</span>], subdev=<span class="hljs-number">10</span>, ax=<span class="hljs-literal">None</span>, sigma_multiplier=<span class="hljs-number">3</span></span>):<br>    <span class="hljs-string">&#x27;&#x27;&#x27;</span><br><span class="hljs-string">        plot a sphere surface</span><br><span class="hljs-string">        Input: </span><br><span class="hljs-string">            c: 3 elements list, sphere center</span><br><span class="hljs-string">            r: 3 element list, sphere original scale in each axis ( allowing to draw elipsoids)</span><br><span class="hljs-string">            subdiv: scalar, number of subdivisions (subdivision^2 points sampled on the surface)</span><br><span class="hljs-string">            ax: optional pyplot axis object to plot the sphere in.</span><br><span class="hljs-string">            sigma_multiplier: sphere additional scale (choosing an std value when plotting gaussians)</span><br><span class="hljs-string">        Output:</span><br><span class="hljs-string">            ax: pyplot axis object</span><br><span class="hljs-string">    &#x27;&#x27;&#x27;</span><br><br>    <span class="hljs-keyword">if</span> ax <span class="hljs-keyword">is</span> <span class="hljs-literal">None</span>:<br>        fig = plt.figure()<br>        ax = fig.add_subplot(<span class="hljs-number">111</span>, projection=<span class="hljs-string">&#x27;3d&#x27;</span>)<br>    pi = np.pi<br>    cos = np.cos<br>    sin = np.sin<br>    phi, theta = np.mgrid[<span class="hljs-number">0.0</span>:pi:<span class="hljs-built_in">complex</span>(<span class="hljs-number">0</span>,subdev), <span class="hljs-number">0.0</span>:<span class="hljs-number">2.0</span> * pi:<span class="hljs-built_in">complex</span>(<span class="hljs-number">0</span>,subdev)]<br>    x = sigma_multiplier*r[<span class="hljs-number">0</span>] * sin(phi) * cos(theta) + c[<span class="hljs-number">0</span>]<br>    y = sigma_multiplier*r[<span class="hljs-number">1</span>] * sin(phi) * sin(theta) + c[<span class="hljs-number">1</span>]<br>    z = sigma_multiplier*r[<span class="hljs-number">2</span>] * cos(phi) + c[<span class="hljs-number">2</span>]<br>    cmap = cmx.ScalarMappable()<br>    cmap.set_cmap(<span class="hljs-string">&#x27;jet&#x27;</span>)<br>    c = cmap.to_rgba(w)<br><br>    ax.plot_surface(x, y, z, color=c, alpha=<span class="hljs-number">0.2</span>, linewidth=<span class="hljs-number">1</span>)<br><br>    <span class="hljs-keyword">return</span> ax<br><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">visualize_3d_gmm</span>(<span class="hljs-params">points, w, mu, stdev</span>):<br>    <span class="hljs-string">&#x27;&#x27;&#x27;</span><br><span class="hljs-string">    plots points and their corresponding gmm model in 3D</span><br><span class="hljs-string">    Input: </span><br><span class="hljs-string">        points: N X 3, sampled points</span><br><span class="hljs-string">        w: n_gaussians, gmm weights</span><br><span class="hljs-string">        mu: 3 X n_gaussians, gmm means</span><br><span class="hljs-string">        stdev: 3 X n_gaussians, gmm standard deviation (assuming diagonal covariance matrix)</span><br><span class="hljs-string">    Output:</span><br><span class="hljs-string">        None</span><br><span class="hljs-string">    &#x27;&#x27;&#x27;</span><br><br>    n_gaussians = mu.shape[<span class="hljs-number">1</span>]<br>    N = <span class="hljs-built_in">int</span>(np.<span class="hljs-built_in">round</span>(points.shape[<span class="hljs-number">0</span>] / n_gaussians))<br>    <span class="hljs-comment"># Visualize data</span><br>    fig = plt.figure(figsize=(<span class="hljs-number">8</span>, <span class="hljs-number">8</span>))<br>    axes = fig.add_subplot(<span class="hljs-number">111</span>, projection=<span class="hljs-string">&#x27;3d&#x27;</span>)<br>    axes.set_xlim([-<span class="hljs-number">1</span>, <span class="hljs-number">1</span>])<br>    axes.set_ylim([-<span class="hljs-number">1</span>, <span class="hljs-number">1</span>])<br>    axes.set_zlim([-<span class="hljs-number">1</span>, <span class="hljs-number">1</span>])<br>    plt.set_cmap(<span class="hljs-string">&#x27;Set1&#x27;</span>)<br>    colors = cmx.Set1(np.linspace(<span class="hljs-number">0</span>, <span class="hljs-number">1</span>, n_gaussians))<br>    <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(n_gaussians):<br>        idx = <span class="hljs-built_in">range</span>(i * N, (i + <span class="hljs-number">1</span>) * N)<br>        axes.scatter(points[idx, <span class="hljs-number">0</span>], points[idx, <span class="hljs-number">1</span>], points[idx, <span class="hljs-number">2</span>], alpha=<span class="hljs-number">0.3</span>, c=colors[i])<br>        plot_sphere(w=w[i], c=mu[:, i], r=stdev[:, i], ax=axes)<br><br>    plt.title(<span class="hljs-string">&#x27;3D GMM&#x27;</span>)<br>    axes.set_xlabel(<span class="hljs-string">&#x27;X&#x27;</span>)<br>    axes.set_ylabel(<span class="hljs-string">&#x27;Y&#x27;</span>)<br>    axes.set_zlabel(<span class="hljs-string">&#x27;Z&#x27;</span>)<br>    axes.view_init(<span class="hljs-number">35.246</span>, <span class="hljs-number">45</span>)<br>    plt.show()<br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">visualize_3d_gmm(points, gmm.weights_, gmm.means_.T, np.sqrt(gmm.covariances_).T)<br></code></pre></td></tr></table></figure>
+<p><img src="52b_7.png" alt="png"></p>
+<h2><span id="53-how-to-pick-optimal-number-of-parameters-for-your-unsupervised-machine-learning-model">53 - How to pick optimal number of parameters for your unsupervised machine learning model</span></h2><ul>
+<li><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/142489599">模型选择方法：AIC和BIC - 知乎 (zhihu.com)</a></li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">import</span> cv2<br><span class="hljs-keyword">from</span> matplotlib <span class="hljs-keyword">import</span> pyplot <span class="hljs-keyword">as</span> plt<br><br>img = cv2.imread(<span class="hljs-string">&#x27;images/alloy.jpg&#x27;</span>)<br>img2 = img.reshape((-<span class="hljs-number">1</span>, <span class="hljs-number">3</span>))<br>plt.imshow(img)<br></code></pre></td></tr></table></figure>
+<pre><code>&lt;matplotlib.image.AxesImage at 0x2650b465fd0&gt;
+</code></pre><p><img src="53_1.png" alt="png"></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> sklearn.mixture <span class="hljs-keyword">import</span> GaussianMixture <span class="hljs-keyword">as</span> GMM<br><br>n_components = np.arange(<span class="hljs-number">1</span>, <span class="hljs-number">10</span>)<br>gmm_models = [GMM(n, covariance_type=<span class="hljs-string">&#x27;tied&#x27;</span>).fit(img2) <span class="hljs-keyword">for</span> n <span class="hljs-keyword">in</span> n_components]<br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">plt.plot(n_components, [m.bic(img2) <span class="hljs-keyword">for</span> m <span class="hljs-keyword">in</span> gmm_models], label=<span class="hljs-string">&#x27;BIC&#x27;</span>)<br>plt.xlabel(<span class="hljs-string">&#x27;n_components&#x27;</span>)<br></code></pre></td></tr></table></figure>
+<pre><code>Text(0.5, 0, &#39;n_components&#39;)
+</code></pre><p><img src="53_2.png" alt="png"></p>
+<p>所以 n 取 2 最合适。</p>
+<h2><span id="54-unsupervised-and-supervised-machine-learning-a-reminder">54 - Unsupervised and supervised machine learning - a reminder</span></h2><p>比较 <code>Unsupervised</code> and <code>supervised machine learning</code>。</p>
+
   </div>
   <div id="gitalk-container"></div>
 </div>
@@ -445,6 +684,13 @@ Fancybox.bind('[data-fancybox="fancybox-gallery-img"]', {
 </style>
 
     <div class="post-paging">
+    
+    <a href="/2022/12/03/DIP-Python%20tutorials%20for%20image%20processing%20and%20machine%20learning(55-61)-Supervised%20Learning/">
+        <div class="post-paging-last">
+            <span>上一篇</span>
+            <p>DIP-Python tutorials for image processing and machine learning(55-61)-Supervised Learning</p>
+        </div>
+    </a>
     
 
     
@@ -581,6 +827,21 @@ Fancybox.bind('[data-fancybox="fancybox-gallery-img"]', {
 <script>
 	console.log('\n %c Hexo-Quiet 主题 %c https://github.com/79e/hexo-theme-quiet \n', 'color: #fadfa3; background: #030307; padding:5px 0;', 'background: #fadfa3; padding:5px 0;')
 </script>
-	</body>
+	<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
 </html>
 
