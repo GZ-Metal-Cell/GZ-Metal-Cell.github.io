@@ -456,7 +456,76 @@
 </table></p>
 <p>1048576 rows × 4 columns</p>
 
-<h2><span id="58-what-are-gabor-filters">58 - What are Gabor filters</span></h2><h2><span id="59-what-is-random-forest-classifier">59 - What is Random Forest classifier</span></h2><h2><span id="60-how-to-use-random-forest-in-python">60 - How to use Random Forest in Python</span></h2><h2><span id="61-how-to-create-gabor-feature-banks-for-machine-learning">61 - How to create Gabor feature banks for machine learning</span></h2>
+<h2><span id="58-what-are-gabor-filters">58 - What are Gabor filters</span></h2><ul>
+<li><p><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Gabor_filter">Gabor filter - Wikipedia</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/lhanchao/article/details/55006663">Gabor滤波简介与Opencv中的实现及参数变化实验</a></p>
+</li>
+<li><p>复数表达：</p>
+</li>
+</ul>
+<script type="math/tex; mode=display">g(x,y;\lambda,\theta,\psi,\sigma,\gamma)=\exp \left(-\frac{x'^2+\gamma^2y'^2}{2\sigma^2}\right)\cdot\exp\left[i\left(2\pi\frac{x'}{\lambda}+\psi\right)\right]</script><ul>
+<li>根据欧拉公式：</li>
+</ul>
+<script type="math/tex; mode=display">e^{ix}=\cos x + i \sin x</script><ul>
+<li>实数部分：</li>
+</ul>
+<script type="math/tex; mode=display">g(x,y;\lambda,\theta,\psi,\sigma,\gamma)=\exp \left(-\frac{x'^2+\gamma^2y'^2}{2\sigma^2}\right)\cdot\cos\left(2\pi\frac{x'}{\lambda}+\psi\right)</script><ul>
+<li>虚数部分：</li>
+</ul>
+<script type="math/tex; mode=display">g(x,y;\lambda,\theta,\psi,\sigma,\gamma)=\exp \left(-\frac{x'^2+\gamma^2y'^2}{2\sigma^2}\right)\cdot\sin\left(2\pi\frac{x'}{\lambda}+\psi\right)</script><p>其中 $x’=x\cos\theta + y\sin \theta$, $y’=-x\sin\theta + y\cos \theta$</p>
+<ul>
+<li><p>$\lambda$ represents the wavelength of the sinusoidal factor.</p>
+<ul>
+<li>$\lambda$表示正弦因子的波长。</li>
+</ul>
+</li>
+<li><p>$\theta$ represents the orientation of the normal to the parallel stripes of a Gabor function.</p>
+<ul>
+<li>$\theta$表示Gabor函数平行条纹的法线方向。</li>
+</ul>
+</li>
+<li><p>$\psi$ is the phase offset.</p>
+<ul>
+<li>$\psi$ 为相位偏移量。</li>
+</ul>
+</li>
+<li><p>$\sigma$ is the sigma/standard deviation of the Gaussian envelope.</p>
+<ul>
+<li>$\sigma$ 为高斯包络线的标准差/标准差。</li>
+</ul>
+</li>
+<li><p>$\gamma$ is the spatial aspect ratio, and specifies the ellipticity of the support of the Gabor function.</p>
+<ul>
+<li>$\gamma$ 为空间纵横比，表示Gabor函数支持度的椭圆度。越接近 1，越像圆；越接近 0，越像椭圆。</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># kernel = cv2.getGaborKernel((ksize, ksize), sigma, theta, lamda, gamma, phi, ktype=cv2.CV_32F)</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">import</span> cv2<br><span class="hljs-keyword">import</span> matplotlib.pyplot <span class="hljs-keyword">as</span> plt<br><br>ksize = <span class="hljs-number">5</span><br>sigma = <span class="hljs-number">3</span><br>theta = <span class="hljs-number">1</span> * np.pi / <span class="hljs-number">4</span><br>lamda = <span class="hljs-number">1</span> * np.pi / <span class="hljs-number">4</span><br>gamma = <span class="hljs-number">0.5</span><br>phi = <span class="hljs-number">0</span><br><br>kernel = cv2.getGaborKernel((ksize, ksize), sigma, theta, lamda, gamma, phi, ktype=cv2.CV_32F)<br>plt.imshow(kernel, cmap=<span class="hljs-string">&#x27;gray&#x27;</span>)<br></code></pre></td></tr></table></figure>
+<pre><code>&lt;matplotlib.image.AxesImage at 0x2021c8e8d90&gt;
+</code></pre><p><img src="58_1.png" alt="png"></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">img = cv2.imread(<span class="hljs-string">&#x27;images/synthetic.jpg&#x27;</span>, <span class="hljs-number">0</span>)<br>plt.imshow(img, cmap=<span class="hljs-string">&#x27;gray&#x27;</span>)<br></code></pre></td></tr></table></figure>
+<pre><code>&lt;matplotlib.image.AxesImage at 0x2021c966fd0&gt;
+</code></pre><p><img src="58_2.png" alt="png"></p>
+<ul>
+<li><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_43243787/article/details/104727193">opencv学习之CV_8UC3的含义</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/hysterisis/article/details/113097507">OpenCV 图像卷积：cv.filter2D() 函数详解</a></p>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">fimg = cv2.filter2D(img, cv2.CV_8UC3, kernel)<br>plt.imshow(fimg, cmap=<span class="hljs-string">&#x27;gray&#x27;</span>)<br></code></pre></td></tr></table></figure>
+<pre><code>&lt;matplotlib.image.AxesImage at 0x2021c9bec40&gt;
+</code></pre><p><img src="58_3.png" alt="png"></p>
+<hr>
+<p>通过修改 $\theta$ 的值来使 Gabor 过滤器识别右下斜线。</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">import</span> cv2<br><span class="hljs-keyword">import</span> matplotlib.pyplot <span class="hljs-keyword">as</span> plt<br><br>ksize = <span class="hljs-number">5</span><br>sigma = <span class="hljs-number">3</span><br>theta = <span class="hljs-number">3</span> * np.pi / <span class="hljs-number">4</span><br>lamda = <span class="hljs-number">1</span> * np.pi / <span class="hljs-number">4</span><br>gamma = <span class="hljs-number">0.5</span><br>phi = <span class="hljs-number">0</span><br><br>kernel = cv2.getGaborKernel((ksize, ksize), sigma, theta, lamda, gamma, phi, ktype=cv2.CV_32F)<br>fimg = cv2.filter2D(img, cv2.CV_8UC3, kernel)<br>plt.imshow(fimg, cmap=<span class="hljs-string">&#x27;gray&#x27;</span>)<br></code></pre></td></tr></table></figure>
+<pre><code>&lt;matplotlib.image.AxesImage at 0x2021c697b20&gt;
+</code></pre><p><img src="58_4.png" alt="png"></p>
+<h2><span id="59-what-is-random-forest-classifier">59 - What is Random Forest classifier</span></h2><blockquote>
+<p>很多的决策树在一起就变成了森林，就是随机森林了。</p>
+</blockquote>
+<h2><span id="60-how-to-use-random-forest-in-python">60 - How to use Random Forest in Python</span></h2><h2><span id="61-how-to-create-gabor-feature-banks-for-machine-learning">61 - How to create Gabor feature banks for machine learning</span></h2>
   </div>
   <div id="gitalk-container"></div>
 </div>
@@ -515,6 +584,13 @@ Fancybox.bind('[data-fancybox="fancybox-gallery-img"]', {
 </style>
 
     <div class="post-paging">
+    
+    <a href="/2022/12/04/Python-Manim/">
+        <div class="post-paging-last">
+            <span>上一篇</span>
+            <p>Python-Manim</p>
+        </div>
+    </a>
     
 
     
