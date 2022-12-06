@@ -343,14 +343,27 @@
 <li><a href="#边缘检测">边缘检测</a></li>
 </ul>
 </li>
-<li><a href="#convolution-via-fourier-transform-is-faster">Convolution via Fourier transform is faster</a></li>
+<li><a href="#convolution-via-fourier-transform-is-faster">Convolution via Fourier transform is faster</a><ul>
+<li><a href="#定义法">定义法</a></li>
+<li><a href="#使用-numpy-库">使用 numpy 库</a></li>
+<li><a href="#fft-快速卷积">FFT 快速卷积</a></li>
+<li><a href="#对比">对比</a></li>
+</ul>
+</li>
 </ul>
 <!-- tocstop -->
 <h2><span id="参考">参考</span></h2><ul>
 <li><a target="_blank" rel="noopener" href="https://www.youtube.com/watch?v=8rrHTtUzyZA&amp;ab_channel=TheJuliaProgrammingLanguage">Convolutions in image processing | Week 1 | MIT 18.S191 Fall 2020 | Grant Sanderson - YouTube</a></li>
 <li><a target="_blank" rel="noopener" href="https://www.youtube.com/watch?v=KuXjwB4LzSA&amp;ab_channel=3Blue1Brown">But what is a convolution? - YouTube</a></li>
 </ul>
-<h2><span id="卷积运算">卷积运算</span></h2><p>点对点相乘，再相加</p>
+<h2><span id="卷积运算">卷积运算</span></h2><ul>
+<li>连续卷积：</li>
+</ul>
+<script type="math/tex; mode=display">(f*g)(t):=\int_{-\infty}^{+\infty} f(x)\cdot g(t-x)dx</script><p><img src="1.gif" alt="gif"></p>
+<ul>
+<li>离散卷积：</li>
+</ul>
+<script type="math/tex; mode=display">\sum_{m=-M}^{M} f[n-m]g[m]</script><p>点对点相乘，再相加</p>
 <p><img src="1.jpg" alt="jpg"></p>
 <p>使相乘后的数据拥有周边数据的一些特征：</p>
 <p><img src="2.jpg" alt="jpg"></p>
@@ -451,7 +464,39 @@
 </code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">fimg = cv2.filter2D(img, cv2.CV_8UC3, kernel)<br>plt.imshow(<span class="hljs-number">4</span> * cv2.cvtColor(fimg, cv2.COLOR_BGR2RGB))  <span class="hljs-comment"># 太黑了，我乘个 4</span><br></code></pre></td></tr></table></figure>
 <pre><code>&lt;matplotlib.image.AxesImage at 0x2a11c124520&gt;
 </code></pre><p><img src="15.png" alt="png"></p>
-<h2><span id="convolution-via-fourier-transform-is-faster">Convolution via Fourier transform is faster</span></h2><p>就是说卷积运算使用了太多的乘法，运用 FFT 算法的思想会加速运算？</p>
+<h2><span id="convolution-via-fourier-transform-is-faster">Convolution via Fourier transform is faster</span></h2><ul>
+<li><a target="_blank" rel="noopener" href="https://zh.wikipedia.org/zh/卷积">卷积 - 维基百科，自由的百科全书 (wikipedia.org)</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.cnblogs.com/5long/p/algorithms-on-cuda-fft-convolution.html">CUDA并行算法系列之FFT快速卷积 - 张朝龙(行之) - 博客园 (cnblogs.com)</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.youtube.com/watch?v=mvmuCPvRoWQ&amp;ab_channel=3Blue1Brown">Euler’s formula with introductory group theory - YouTube</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.youtube.com/watch?v=spUNpyF58BY&amp;t=1s&amp;ab_channel=3Blue1Brown">But what is the Fourier Transform? A visual introduction. - YouTube</a></li>
+</ul>
+<p>就是说卷积运算使用了太多的乘法，运用 FFT 算法的思想会加速运算？</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><br>arr1 = np.random.random(<span class="hljs-number">100000</span>)<br>arr2 = np.random.random(<span class="hljs-number">100000</span>)<br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">%%timeit<br>np.convolve(arr1, arr2)<br></code></pre></td></tr></table></figure>
+<pre><code>1.66 s ± 341 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
+</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> scipy.signal<br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">%%timeit<br>scipy.signal.fftconvolve(arr1, arr2)<br></code></pre></td></tr></table></figure>
+<pre><code>10.8 ms ± 1.24 ms per loop (mean ± std. dev. of 7 runs, 100 loops each)
+</code></pre><h3><span id="定义法">定义法</span></h3><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">conv</span>(<span class="hljs-params">a, b</span>):<br>    N = <span class="hljs-built_in">len</span>(a)<br>    M = <span class="hljs-built_in">len</span>(b)<br>    YN = N + M - <span class="hljs-number">1</span><br>    y = [<span class="hljs-number">0.0</span> <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(YN)]<br>    <span class="hljs-keyword">for</span> n <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(YN):<br>        <span class="hljs-keyword">for</span> m <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(M):<br>            <span class="hljs-keyword">if</span> <span class="hljs-number">0</span> &lt;= n - m <span class="hljs-keyword">and</span> n - m &lt; N:<br>                y[n] += a[n - m] * b[m]<br>    <span class="hljs-keyword">return</span> y<br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">conv((<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>), (<span class="hljs-number">4</span>, <span class="hljs-number">5</span>, <span class="hljs-number">6</span>))<br></code></pre></td></tr></table></figure>
+<pre><code>[4.0, 13.0, 28.0, 27.0, 18.0]
+</code></pre><h3><span id="使用-numpy-库">使用 numpy 库</span></h3><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><br>np.convolve((<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>), (<span class="hljs-number">4</span>, <span class="hljs-number">5</span>, <span class="hljs-number">6</span>))<br></code></pre></td></tr></table></figure>
+<pre><code>array([ 4, 13, 28, 27, 18])
+</code></pre><h3><span id="fft-快速卷积">FFT 快速卷积</span></h3><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">convfft</span>(<span class="hljs-params">a, b</span>):<br>    N = <span class="hljs-built_in">len</span>(a)<br>    M = <span class="hljs-built_in">len</span>(b)<br>    YN = N + M - <span class="hljs-number">1</span><br>    FFT_N = <span class="hljs-number">2</span> ** (<span class="hljs-built_in">int</span>(np.log2(YN)) + <span class="hljs-number">1</span>)<br>    afft = np.fft.fft(a, FFT_N)<br>    bfft = np.fft.fft(b, FFT_N)<br>    abfft = afft * bfft<br>    y = np.fft.ifft(abfft).real[:YN]<br>    <span class="hljs-keyword">return</span> y<br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">convfft((<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>), (<span class="hljs-number">4</span>, <span class="hljs-number">5</span>, <span class="hljs-number">6</span>))<br></code></pre></td></tr></table></figure>
+<pre><code>array([ 4., 13., 28., 27., 18.])
+</code></pre><h3><span id="对比">对比</span></h3><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> time<br><span class="hljs-keyword">import</span> matplotlib.pyplot <span class="hljs-keyword">as</span> plt<br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">run</span>(<span class="hljs-params">func, a, b</span>):<br>    n = <span class="hljs-number">1</span><br>    start = time.perf_counter()<br>    <span class="hljs-keyword">for</span> j <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(n):<br>        func(a, b)<br>    end = time.perf_counter()<br>    run_time = end - start<br>    <span class="hljs-keyword">return</span> run_time / n<br><br>n_list = []<br>t1_list = []<br>t2_list = []<br><span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">10</span>):<br>    count = i * <span class="hljs-number">1000</span> + <span class="hljs-number">10</span><br>    <span class="hljs-built_in">print</span>(count)<br>    a = np.ones(count)<br>    b = np.ones(count)<br>    t1 = run(conv, a, b)  <span class="hljs-comment"># 直接卷积</span><br>    t2 = run(convfft, a, b)  <span class="hljs-comment"># FFT卷积</span><br>    n_list.append(count)<br>    t1_list.append(t1)<br>    t2_list.append(t2)<br><br><span class="hljs-comment"># plot</span><br>plt.plot(n_list, t1_list, label=<span class="hljs-string">&#x27;conv&#x27;</span>)<br>plt.plot(n_list, t2_list, label=<span class="hljs-string">&#x27;convfft&#x27;</span>)<br>plt.legend()<br>plt.title(<span class="hljs-string">u&quot;convolve times&quot;</span>)<br>plt.ylabel(<span class="hljs-string">u&quot;run times(ms/point)&quot;</span>)<br>plt.xlabel(<span class="hljs-string">u&quot;length&quot;</span>)<br>plt.show()<br></code></pre></td></tr></table></figure>
+<pre><code>10
+1010
+2010
+3010
+4010
+5010
+6010
+7010
+8010
+9010
+</code></pre><p><img src="16.png" alt="png"></p>
 
   </div>
   <div id="gitalk-container"></div>
