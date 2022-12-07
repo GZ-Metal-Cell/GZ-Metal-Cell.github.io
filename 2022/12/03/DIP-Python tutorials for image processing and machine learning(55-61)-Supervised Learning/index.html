@@ -363,7 +363,7 @@
 <li>使用 Pandas 统计数据用于机器学习</li>
 </ul>
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> matplotlib.pyplot <span class="hljs-keyword">as</span> plt<br><span class="hljs-keyword">import</span> cv2<br><span class="hljs-keyword">from</span> skimage.filters.rank <span class="hljs-keyword">import</span> entropy<br><span class="hljs-keyword">from</span> skimage.morphology <span class="hljs-keyword">import</span> disk<br><span class="hljs-keyword">from</span> scipy <span class="hljs-keyword">import</span> ndimage <span class="hljs-keyword">as</span> nd<br><span class="hljs-keyword">from</span> skimage.filters <span class="hljs-keyword">import</span> sobel<br><span class="hljs-keyword">import</span> pandas <span class="hljs-keyword">as</span> pd<br><br>img = cv2.imread(<span class="hljs-string">&#x27;images/Yeast_Cells.png&#x27;</span>, <span class="hljs-number">0</span>)<br>img2 = img.reshape(-<span class="hljs-number">1</span>)<br><br>df = pd.DataFrame()<br>df[<span class="hljs-string">&#x27;Original Pixel Values&#x27;</span>] = img2<br><br>entropy_img = entropy(img, disk(<span class="hljs-number">1</span>))<br>entropy1 = entropy_img.reshape(-<span class="hljs-number">1</span>)<br>df[<span class="hljs-string">&#x27;Entropy&#x27;</span>] = entropy1<br><br>gaussian_img = nd.gaussian_filter(img, sigma=<span class="hljs-number">3</span>)<br>gaussian1 = gaussian_img.reshape(-<span class="hljs-number">1</span>)<br>df[<span class="hljs-string">&#x27;Gaussian&#x27;</span>] = gaussian1<br><br>sobel_img = sobel(img)<br>sobel1 = sobel_img.reshape(-<span class="hljs-number">1</span>)<br>df[<span class="hljs-string">&#x27;Sobel&#x27;</span>] = sobel1<br><br>df<br></code></pre></td></tr></table></figure>
-<p><table border="1">
+<table border="1">
   <thead>
     <tr style="text-align: right;">
       <th></th>
@@ -452,79 +452,678 @@
       <td>0.005280</td>
     </tr>
   </tbody>
-</table></p>
+</table>
 <p>1048576 rows × 4 columns</p>
 
-<h2><span id="58-what-are-gabor-filters">58 - What are Gabor filters</span></h2><ul>
-<li><p><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Gabor_filter">Gabor filter - Wikipedia</a></p>
-</li>
-<li><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/lhanchao/article/details/55006663">Gabor滤波简介与Opencv中的实现及参数变化实验</a></p>
-</li>
-<li><p>复数表达：</p>
-</li>
-</ul>
-<script type="math/tex; mode=display">g(x,y;\lambda,\theta,\psi,\sigma,\gamma)=\exp \left(-\frac{x'^2+\gamma^2y'^2}{2\sigma^2}\right)\cdot\exp\left[i\left(2\pi\frac{x'}{\lambda}+\psi\right)\right]</script><ul>
-<li>根据欧拉公式：</li>
-</ul>
-<script type="math/tex; mode=display">e^{ix}=\cos x + i \sin x</script><ul>
-<li>实数部分：</li>
-</ul>
-<script type="math/tex; mode=display">g(x,y;\lambda,\theta,\psi,\sigma,\gamma)=\exp \left(-\frac{x'^2+\gamma^2y'^2}{2\sigma^2}\right)\cdot\cos\left(2\pi\frac{x'}{\lambda}+\psi\right)</script><ul>
-<li>虚数部分：</li>
-</ul>
-<script type="math/tex; mode=display">g(x,y;\lambda,\theta,\psi,\sigma,\gamma)=\exp \left(-\frac{x'^2+\gamma^2y'^2}{2\sigma^2}\right)\cdot\sin\left(2\pi\frac{x'}{\lambda}+\psi\right)</script><p>其中 $x’=x\cos\theta + y\sin \theta$, $y’=-x\sin\theta + y\cos \theta$</p>
-<ul>
-<li><p>$\lambda$ represents the wavelength of the sinusoidal factor.</p>
-<ul>
-<li>$\lambda$表示正弦因子的波长。</li>
-</ul>
-</li>
-<li><p>$\theta$ represents the orientation of the normal to the parallel stripes of a Gabor function.</p>
-<ul>
-<li>$\theta$表示Gabor函数平行条纹的法线方向。</li>
-</ul>
-</li>
-<li><p>$\psi$ is the phase offset.</p>
-<ul>
-<li>$\psi$ 为相位偏移量。</li>
-</ul>
-</li>
-<li><p>$\sigma$ is the sigma/standard deviation of the Gaussian envelope.</p>
-<ul>
-<li>$\sigma$ 为高斯包络线的标准差/标准差。</li>
-</ul>
-</li>
-<li><p>$\gamma$ is the spatial aspect ratio, and specifies the ellipticity of the support of the Gabor function.</p>
-<ul>
-<li>$\gamma$ 为空间纵横比，表示Gabor函数支持度的椭圆度。越接近 1，越像圆；越接近 0，越像椭圆。</li>
-</ul>
-</li>
-</ul>
+## 58 - What are Gabor filters
+
+- [Gabor filter - Wikipedia](https://en.wikipedia.org/wiki/Gabor_filter)
+
+- [Gabor滤波简介与Opencv中的实现及参数变化实验](https://blog.csdn.net/lhanchao/article/details/55006663)
+
+- 复数表达：
+
+$$g(x,y;\lambda,\theta,\psi,\sigma,\gamma)=\exp \left(-\frac{x'^2+\gamma^2y'^2}{2\sigma^2}\right)\cdot\exp\left[i\left(2\pi\frac{x'}{\lambda}+\psi\right)\right]$$
+
+- 根据欧拉公式：
+
+$$e^{ix}=\cos x + i \sin x$$
+
+- 实数部分：
+
+$$g(x,y;\lambda,\theta,\psi,\sigma,\gamma)=\exp \left(-\frac{x'^2+\gamma^2y'^2}{2\sigma^2}\right)\cdot\cos\left(2\pi\frac{x'}{\lambda}+\psi\right)$$
+
+- 虚数部分：
+
+$$g(x,y;\lambda,\theta,\psi,\sigma,\gamma)=\exp \left(-\frac{x'^2+\gamma^2y'^2}{2\sigma^2}\right)\cdot\sin\left(2\pi\frac{x'}{\lambda}+\psi\right)$$
+
+其中 $x'=x\cos\theta + y\sin \theta$, $y'=-x\sin\theta + y\cos \theta$
+
+- $\lambda$ represents the wavelength of the sinusoidal factor.
+  - $\lambda$表示正弦因子的波长。
+
+- $\theta$ represents the orientation of the normal to the parallel stripes of a Gabor function.
+  - $\theta$表示Gabor函数平行条纹的法线方向。
+
+- $\psi$ is the phase offset.
+  - $\psi$ 为相位偏移量。
+
+- $\sigma$ is the sigma/standard deviation of the Gaussian envelope.
+  - $\sigma$ 为高斯包络线的标准差/标准差。
+
+- $\gamma$ is the spatial aspect ratio, and specifies the ellipticity of the support of the Gabor function.
+  - $\gamma$ 为空间纵横比，表示Gabor函数支持度的椭圆度。越接近 1，越像圆；越接近 0，越像椭圆。
+
+
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># kernel = cv2.getGaborKernel((ksize, ksize), sigma, theta, lamda, gamma, phi, ktype=cv2.CV_32F)</span><br></code></pre></td></tr></table></figure>
+
+
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">import</span> cv2<br><span class="hljs-keyword">import</span> matplotlib.pyplot <span class="hljs-keyword">as</span> plt<br><br>ksize = <span class="hljs-number">5</span><br>sigma = <span class="hljs-number">3</span><br>theta = <span class="hljs-number">1</span> * np.pi / <span class="hljs-number">4</span><br>lamda = <span class="hljs-number">1</span> * np.pi / <span class="hljs-number">4</span><br>gamma = <span class="hljs-number">0.5</span><br>phi = <span class="hljs-number">0</span><br><br>kernel = cv2.getGaborKernel((ksize, ksize), sigma, theta, lamda, gamma, phi, ktype=cv2.CV_32F)<br>plt.imshow(kernel, cmap=<span class="hljs-string">&#x27;gray&#x27;</span>)<br></code></pre></td></tr></table></figure>
-<pre><code>&lt;matplotlib.image.AxesImage at 0x2021c8e8d90&gt;
-</code></pre><p><img src="58_1.png" alt="png"></p>
+
+
+
+
+    <matplotlib.image.axesimage at 0x2021c8e8d90>
+
+
+![png](58_1.png)
+
+
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">img = cv2.imread(<span class="hljs-string">&#x27;images/synthetic.jpg&#x27;</span>, <span class="hljs-number">0</span>)<br>plt.imshow(img, cmap=<span class="hljs-string">&#x27;gray&#x27;</span>)<br></code></pre></td></tr></table></figure>
-<pre><code>&lt;matplotlib.image.AxesImage at 0x2021c966fd0&gt;
-</code></pre><p><img src="58_2.png" alt="png"></p>
-<ul>
-<li><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_43243787/article/details/104727193">opencv学习之CV_8UC3的含义</a></p>
-</li>
-<li><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/hysterisis/article/details/113097507">OpenCV 图像卷积：cv.filter2D() 函数详解</a></p>
-</li>
-</ul>
+
+
+
+
+    <matplotlib.image.axesimage at 0x2021c966fd0>
+
+
+
+![png](58_2.png)
+
+
+
+- [opencv学习之CV_8UC3的含义](https://blog.csdn.net/weixin_43243787/article/details/104727193)
+
+- [OpenCV 图像卷积：cv.filter2D() 函数详解](https://blog.csdn.net/hysterisis/article/details/113097507)
+
+
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">fimg = cv2.filter2D(img, cv2.CV_8UC3, kernel)<br>plt.imshow(fimg, cmap=<span class="hljs-string">&#x27;gray&#x27;</span>)<br></code></pre></td></tr></table></figure>
-<pre><code>&lt;matplotlib.image.AxesImage at 0x2021c9bec40&gt;
-</code></pre><p><img src="58_3.png" alt="png"></p>
-<hr>
-<p>通过修改 $\theta$ 的值来使 Gabor 过滤器识别右下斜线。</p>
+
+
+
+
+    <matplotlib.image.axesimage at 0x2021c9bec40>
+
+
+
+
+![png](58_3.png)
+
+
+
+---
+
+通过修改 $\theta$ 的值来使 Gabor 过滤器识别右下斜线。
+
+
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">import</span> cv2<br><span class="hljs-keyword">import</span> matplotlib.pyplot <span class="hljs-keyword">as</span> plt<br><br>ksize = <span class="hljs-number">5</span><br>sigma = <span class="hljs-number">3</span><br>theta = <span class="hljs-number">3</span> * np.pi / <span class="hljs-number">4</span><br>lamda = <span class="hljs-number">1</span> * np.pi / <span class="hljs-number">4</span><br>gamma = <span class="hljs-number">0.5</span><br>phi = <span class="hljs-number">0</span><br><br>kernel = cv2.getGaborKernel((ksize, ksize), sigma, theta, lamda, gamma, phi, ktype=cv2.CV_32F)<br>fimg = cv2.filter2D(img, cv2.CV_8UC3, kernel)<br>plt.imshow(fimg, cmap=<span class="hljs-string">&#x27;gray&#x27;</span>)<br></code></pre></td></tr></table></figure>
-<pre><code>&lt;matplotlib.image.AxesImage at 0x2021c697b20&gt;
-</code></pre><p><img src="58_4.png" alt="png"></p>
-<h2><span id="59-what-is-random-forest-classifier">59 - What is Random Forest classifier</span></h2><blockquote>
-<p>很多的决策树在一起就变成了森林，就是随机森林了。</p>
-</blockquote>
-<h2><span id="60-how-to-use-random-forest-in-python">60 - How to use Random Forest in Python</span></h2><h2><span id="61-how-to-create-gabor-feature-banks-for-machine-learning">61 - How to create Gabor feature banks for machine learning</span></h2>
+
+
+
+
+    <matplotlib.image.axesimage at 0x2021c697b20>
+
+
+![png](58_4.png)
+
+## 59 - What is Random Forest classifier
+
+> 很多的决策树在一起就变成了森林，就是随机森林了。
+
+- **决策树**
+
+比如要将一张图分类成:
+
+- Air 空气
+
+- Pyrite 黄铁矿
+
+- Clay 粘土
+- Pore 孔洞
+- Quartz 石英
+
+从图像的 Pixel Value 灰度值和 Texture 纹理进行分类:
+
+![jpg](59_1.jpg)
+
+- **Why start with pixel value and not texture metric for this image?**
+  - **为什么从像素值开始，而不是纹理度量这张图像?**
+
+- Because it gives the best split of input data.
+  - 因为它给出了输入数据的最佳分割。
+
+- **How to pick a node that gives the best split?**
+  - 如何选择一个能给出最佳分割的节点?
+
+- Use Gini impurity → pick the one that maximizes the Gini gain.
+  - 使用基尼系数→选择一个使基尼系数增益最大化的。
+- Gini lmpurity is the probability of incorrectly classifying a randomly chosenelement in the dataset if it were randomly labeled according to the classdistribution in the dataset. lt's calculated as
+  - 基尼系数是指数据集中随机选择的元素，如果根据数据集中的类别分布随机标记，则错误分类的概率。计算为
+
+$$G=\sum^C_{i=1}p(i)*\left(1-p(i)\right)$$
+
+- where $C$ is the number of classes and $p(i)$ is the probability of randomly picking an element of class $i$.
+
+  - 其中 $C$ 是类的数量，$p(i)$ 是随机抽取类 $i$ 中的一个元素的概率。
+
+- **Primary Disadvantage of decision trees:**
+  Often suffers from overfitting →works well on training data but fails on newdata leading to low accuracy.
+
+  - **决策树的主要缺点:**
+
+    经常存在过拟合问题→在训练数据上很好，但在新数据上失败，导致精度低。
+
+- **Random Forest to the rescue!**
+
+  - 使用决策森林规避决策树的缺点。
+
+![jpg](59_2.jpg)
+
+## 60 - How to use Random Forest in Python
+
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> pandas <span class="hljs-keyword">as</span> pd<br><span class="hljs-keyword">import</span> matplotlib.pyplot <span class="hljs-keyword">as</span> plt<br><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><br>df = pd.read_csv(<span class="hljs-string">&#x27;data/images_analyzed_productivity1.csv&#x27;</span>)<br>df.head()<br></code></pre></td></tr></table></figure>
+
+
+
+<table border="1">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>User</th>
+      <th>Time</th>
+      <th>Coffee</th>
+      <th>Age</th>
+      <th>Images_Analyzed</th>
+      <th>Productivity</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1</td>
+      <td>8</td>
+      <td>0</td>
+      <td>23</td>
+      <td>20</td>
+      <td>Good</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1</td>
+      <td>13</td>
+      <td>0</td>
+      <td>23</td>
+      <td>14</td>
+      <td>Bad</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1</td>
+      <td>17</td>
+      <td>0</td>
+      <td>23</td>
+      <td>18</td>
+      <td>Good</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>1</td>
+      <td>22</td>
+      <td>0</td>
+      <td>23</td>
+      <td>15</td>
+      <td>Bad</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>1</td>
+      <td>8</td>
+      <td>2</td>
+      <td>23</td>
+      <td>22</td>
+      <td>Good</td>
+    </tr>
+  </tbody>
+</table>
+
+
+
+
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">sizes = df[<span class="hljs-string">&#x27;Productivity&#x27;</span>].value_counts(sort=<span class="hljs-number">1</span>)<br>sizes<br></code></pre></td></tr></table></figure>
+<pre><code>Bad     42
+Good    38
+Name: Productivity, dtype: int64
+</code></pre><p>去除无关的列</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">df.drop([<span class="hljs-string">&#x27;Images_Analyzed&#x27;</span>], axis=<span class="hljs-number">1</span>, inplace=<span class="hljs-literal">True</span>)<br>df.drop([<span class="hljs-string">&#x27;User&#x27;</span>], axis=<span class="hljs-number">1</span>, inplace=<span class="hljs-literal">True</span>)<br>df.head()<br></code></pre></td></tr></table></figure>
+<table border="1">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Time</th>
+      <th>Coffee</th>
+      <th>Age</th>
+      <th>Productivity</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>8</td>
+      <td>0</td>
+      <td>23</td>
+      <td>Good</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>13</td>
+      <td>0</td>
+      <td>23</td>
+      <td>Bad</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>17</td>
+      <td>0</td>
+      <td>23</td>
+      <td>Good</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>22</td>
+      <td>0</td>
+      <td>23</td>
+      <td>Bad</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>8</td>
+      <td>2</td>
+      <td>23</td>
+      <td>Good</td>
+    </tr>
+  </tbody>
+</table>
+
+
+
+<p>删除缺失数据</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">df = df.dropna()<br></code></pre></td></tr></table></figure>
+<p>将分析结果转换为数字</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">df.Productivity[df.Productivity == <span class="hljs-string">&#x27;Good&#x27;</span>] = <span class="hljs-number">1</span><br>df.Productivity[df.Productivity == <span class="hljs-string">&#x27;Bad&#x27;</span>] = <span class="hljs-number">2</span><br>df.head()<br></code></pre></td></tr></table></figure>
+<table border="1">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Time</th>
+      <th>Coffee</th>
+      <th>Age</th>
+      <th>Productivity</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>8</td>
+      <td>0</td>
+      <td>23</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>13</td>
+      <td>0</td>
+      <td>23</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>17</td>
+      <td>0</td>
+      <td>23</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>22</td>
+      <td>0</td>
+      <td>23</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>8</td>
+      <td>2</td>
+      <td>23</td>
+      <td>1</td>
+    </tr>
+  </tbody>
+</table>
+
+
+
+<p>定义因变量</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">Y = df[<span class="hljs-string">&#x27;Productivity&#x27;</span>].values<br>Y = Y.astype(<span class="hljs-string">&#x27;int&#x27;</span>)<br>Y<br></code></pre></td></tr></table></figure>
+<pre><code>array([1, 2, 1, 2, 1, 2, 1, 1, 1, 2, 1, 1, 1, 2, 2, 2, 1, 2, 1, 2, 1, 2,
+       1, 2, 1, 2, 1, 2, 1, 2, 2, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 1,
+       1, 2, 2, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 2, 2, 1, 2,
+       1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 2, 2])
+</code></pre><p>定义自变量</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">X = df.drop(labels=[<span class="hljs-string">&#x27;Productivity&#x27;</span>], axis=<span class="hljs-number">1</span>)<br>X<br></code></pre></td></tr></table></figure>
+<p><table border="1">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Time</th>
+      <th>Coffee</th>
+      <th>Age</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>8</td>
+      <td>0</td>
+      <td>23</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>13</td>
+      <td>0</td>
+      <td>23</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>17</td>
+      <td>0</td>
+      <td>23</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>22</td>
+      <td>0</td>
+      <td>23</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>8</td>
+      <td>2</td>
+      <td>23</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>75</th>
+      <td>23</td>
+      <td>4</td>
+      <td>52</td>
+    </tr>
+    <tr>
+      <th>76</th>
+      <td>9</td>
+      <td>6</td>
+      <td>52</td>
+    </tr>
+    <tr>
+      <th>77</th>
+      <td>14</td>
+      <td>6</td>
+      <td>52</td>
+    </tr>
+    <tr>
+      <th>78</th>
+      <td>17</td>
+      <td>6</td>
+      <td>52</td>
+    </tr>
+    <tr>
+      <th>79</th>
+      <td>23</td>
+      <td>6</td>
+      <td>52</td>
+    </tr>
+  </tbody>
+</table></p>
+<p>80 rows × 3 columns</p>
+
+
+
+<p>将数据分割为训练集和测试集</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> sklearn.model_selection <span class="hljs-keyword">import</span> train_test_split<br><br>X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=<span class="hljs-number">0.4</span>, random_state=<span class="hljs-number">20</span>)<br></code></pre></td></tr></table></figure>
+<p>使用随机森林</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://scikitlearn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html">sklearn.ensemble.RandomForestClassifier</a></li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> sklearn.ensemble <span class="hljs-keyword">import</span> RandomForestClassifier<br><br>model = RandomForestClassifier(n_estimators=<span class="hljs-number">10</span>, random_state=<span class="hljs-number">30</span>)<br>model.fit(X_train, Y_train)<br>prediction_test = model.predict(X_test)<br>prediction_test<br></code></pre></td></tr></table></figure>
+<pre><code>array([1, 1, 2, 1, 2, 1, 1, 1, 2, 1, 1, 1, 2, 2, 2, 1, 2, 1, 1, 2, 1, 2,
+       1, 1, 2, 1, 1, 2, 1, 1, 1, 1])
+</code></pre><p>计算训练出的结果的精确度</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> sklearn <span class="hljs-keyword">import</span> metrics<br><br><span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Accuracy =&#x27;</span>, metrics.accuracy_score(Y_test, prediction_test))<br></code></pre></td></tr></table></figure>
+<pre><code>Accuracy = 0.9375
+</code></pre><p>扩大训练集的比例可以增加精确度</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=<span class="hljs-number">0.2</span>, random_state=<span class="hljs-number">20</span>)<br>model = RandomForestClassifier(n_estimators=<span class="hljs-number">10</span>, random_state=<span class="hljs-number">30</span>)<br>model.fit(X_train, Y_train)<br>prediction_test = model.predict(X_test)<br>prediction_test<br><span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Accuracy =&#x27;</span>, metrics.accuracy_score(Y_test, prediction_test))<br></code></pre></td></tr></table></figure>
+<pre><code>Accuracy = 0.9375
+</code></pre><p>显示特征值的重要性</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">feature_list = <span class="hljs-built_in">list</span>(X.columns)<br>feature_imp = pd.Series(model.feature_importances_, index=feature_list).sort_values(ascending=<span class="hljs-literal">False</span>)<br>feature_imp<br></code></pre></td></tr></table></figure>
+<pre><code>Time      0.714433
+Coffee    0.205474
+Age       0.080092
+dtype: float64
+</code></pre><h2><span id="61-how-to-create-gabor-feature-banks-for-machine-learning">61 - How to create Gabor feature banks for machine learning</span></h2><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">import</span> cv2<br><span class="hljs-keyword">import</span> matplotlib.pyplot <span class="hljs-keyword">as</span> plt<br><span class="hljs-keyword">import</span> pandas <span class="hljs-keyword">as</span> pd<br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">img = cv2.imread(<span class="hljs-string">&#x27;images/synthetic.jpg&#x27;</span>, <span class="hljs-number">0</span>)<br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">df = pd.DataFrame()<br>img2 = img.reshape(-<span class="hljs-number">1</span>)<br>df[<span class="hljs-string">&#x27;Original Pixels&#x27;</span>] = img2<br>df<br></code></pre></td></tr></table></figure>
+<p><table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Original Pixels</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>255</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>255</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>255</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>255</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>255</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>363446</th>
+      <td>255</td>
+    </tr>
+    <tr>
+      <th>363447</th>
+      <td>255</td>
+    </tr>
+    <tr>
+      <th>363448</th>
+      <td>255</td>
+    </tr>
+    <tr>
+      <th>363449</th>
+      <td>255</td>
+    </tr>
+    <tr>
+      <th>363450</th>
+      <td>255</td>
+    </tr>
+  </tbody>
+</table></p>
+<p>363451 rows × 1 columns</p>
+
+
+
+<p>设置 Gabor 的不同参数构造出不同的卷积核，生成用于机器学习的 csv 文件：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">num = <span class="hljs-number">1</span><br><span class="hljs-keyword">for</span> sigma <span class="hljs-keyword">in</span> (<span class="hljs-number">3</span>, <span class="hljs-number">5</span>):<br>    <span class="hljs-keyword">for</span> theta <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">2</span>):<br>        theta = theta / <span class="hljs-number">4.</span> * np.pi<br>        <span class="hljs-keyword">for</span> lamda <span class="hljs-keyword">in</span> np.arange(<span class="hljs-number">0</span>, np.pi, np.pi / <span class="hljs-number">4.</span>):<br>            <span class="hljs-keyword">for</span> gamma <span class="hljs-keyword">in</span> (<span class="hljs-number">0.05</span>, <span class="hljs-number">0.5</span>):<br>                gabor_label = <span class="hljs-string">&#x27;Gabor &#x27;</span> + <span class="hljs-built_in">str</span>(num)<br>                kernel = cv2.getGaborKernel((<span class="hljs-number">5</span>, <span class="hljs-number">5</span>), sigma, theta, lamda, gamma, <span class="hljs-number">0</span>, ktype=cv2.CV_32F)<br>                fimg = cv2.filter2D(img, cv2.CV_8UC3, kernel)<br>                filtered_img = fimg.reshape(-<span class="hljs-number">1</span>)<br>                df[gabor_label] = filtered_img<br>                num += <span class="hljs-number">1</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">df.head()<br></code></pre></td></tr></table></figure>
+<p><table border="1">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Original Pixels</th>
+      <th>Gabor 1</th>
+      <th>Gabor 2</th>
+      <th>Gabor 3</th>
+      <th>Gabor 4</th>
+      <th>Gabor 5</th>
+      <th>Gabor 6</th>
+      <th>Gabor 7</th>
+      <th>Gabor 8</th>
+      <th>Gabor 9</th>
+      <th>...</th>
+      <th>Gabor 23</th>
+      <th>Gabor 24</th>
+      <th>Gabor 25</th>
+      <th>Gabor 26</th>
+      <th>Gabor 27</th>
+      <th>Gabor 28</th>
+      <th>Gabor 29</th>
+      <th>Gabor 30</th>
+      <th>Gabor 31</th>
+      <th>Gabor 32</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>255</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>255</td>
+      <td>255</td>
+      <td>0</td>
+      <td>...</td>
+      <td>255</td>
+      <td>255</td>
+      <td>0</td>
+      <td>0</td>
+      <td>255</td>
+      <td>255</td>
+      <td>130</td>
+      <td>122</td>
+      <td>255</td>
+      <td>255</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>255</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>255</td>
+      <td>255</td>
+      <td>0</td>
+      <td>...</td>
+      <td>255</td>
+      <td>255</td>
+      <td>0</td>
+      <td>0</td>
+      <td>255</td>
+      <td>255</td>
+      <td>130</td>
+      <td>122</td>
+      <td>255</td>
+      <td>255</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>255</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>255</td>
+      <td>255</td>
+      <td>0</td>
+      <td>...</td>
+      <td>255</td>
+      <td>255</td>
+      <td>0</td>
+      <td>0</td>
+      <td>255</td>
+      <td>255</td>
+      <td>130</td>
+      <td>122</td>
+      <td>255</td>
+      <td>255</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>255</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>255</td>
+      <td>255</td>
+      <td>0</td>
+      <td>...</td>
+      <td>255</td>
+      <td>255</td>
+      <td>0</td>
+      <td>0</td>
+      <td>255</td>
+      <td>255</td>
+      <td>130</td>
+      <td>122</td>
+      <td>255</td>
+      <td>255</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>255</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>255</td>
+      <td>255</td>
+      <td>0</td>
+      <td>...</td>
+      <td>255</td>
+      <td>255</td>
+      <td>0</td>
+      <td>0</td>
+      <td>255</td>
+      <td>255</td>
+      <td>130</td>
+      <td>122</td>
+      <td>255</td>
+      <td>255</td>
+    </tr>
+  </tbody>
+</table></p>
+<p>5 rows × 33 columns</p>
+
+
+
+
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">df.to_csv(<span class="hljs-string">&#x27;Gabor.csv&#x27;</span>)<br></code></pre></td></tr></table></figure>
+<p><img src="61_1.png" alt="png"></p>
+</matplotlib.image.axesimage></matplotlib.image.axesimage></matplotlib.image.axesimage></matplotlib.image.axesimage>
   </div>
   <div id="gitalk-container"></div>
 </div>
