@@ -337,8 +337,9 @@
 <li><a href="#abstract">Abstract</a></li>
 <li><a href="#1-introduction">1 Introduction</a></li>
 <li><a href="#2-normalization-techniques">2 Normalization techniques</a><ul>
-<li><a href="#21-implementation-of-normalization">2.1 Implementation of normalization</a></li>
-<li><a href="#22-aspect-radio-mapping">2.2 Aspect radio mapping</a></li>
+<li><a href="#21-implementation-of-normalization-正则化的实施">2.1 Implementation of normalization 正则化的实施</a></li>
+<li><a href="#22-aspect-radio-mapping-纵横比映射">2.2 Aspect radio mapping 纵横比映射</a></li>
+<li><a href="#3-feature-extraction-techniques-特征提取技术">3 Feature extraction techniques 特征提取技术</a></li>
 </ul>
 </li>
 </ul>
@@ -481,11 +482,11 @@
 <li>第 4 节给出实验结果；</li>
 <li>第 5 节给出结论。</li>
 </ul>
-<h2><span id="2-normalization-techniques">2 Normalization techniques</span></h2><h3><span id="21-implementation-of-normalization">2.1 Implementation of normalization</span></h3><p>​    为了便于特征提取和分类，归一化图像平面(标准平面)的x/y维数(大小)是固定的。</p>
+<h2><span id="2-normalization-techniques">2 Normalization techniques</span></h2><h3><span id="21-implementation-of-normalization-正则化的实施">2.1 Implementation of normalization 正则化的实施</span></h3><p>​    为了便于特征提取和分类，归一化图像平面(标准平面)的x/y维数(大小)是固定的。</p>
 <p>​    然而，在纵横比自适应归一化（ARAN）中，标准平面的维度不一定是填充的。</p>
 <p>​    根据纵横比，归一化图像以一维填充的平面为中心。<br>假设标准平面为正方形，边长用 $L$表示。将归一化字符图像的宽度和高度分别表示为 $W_2$ 和 $H_2$，纵横比定义为</p>
 <script type="math/tex; mode=display">R_2=\left\{\begin{matrix}
- W_2/H_2, \mathrm{if}\ W_2<H2\\H_2/W_2, \mathrm{otherwise.}
+ W_2/H_2, \mathrm{if}\ W_2<H2\\H_2/W_2,\mathrm{otherwise.}
 \end{matrix}\right.</script><p>​    如果归一化图像填充一维，则 $\max(W_2, H_2) = L$ 。但是，在字符图像质心对准标准平面中心的矩归一化中，归一化图像不一定填充一维，可能会超出标准平面。在这种情况下，$W_2$和 $H_2$ 不由L决定，将标准平面外的图像部分截断。</p>
 <hr>
 <p>​    在 ARAN 的实现中，将规范化的字符图像填充到另一个尺寸为 $W_2 \times H_2$的柔性平面中，然后通过对齐边界或质心将该柔性平面平移至与标准平面重叠。<br>​    在下面，我们将演示如何将大小为 $W_1 \times H1$的字符图像转换为大小为$W_2 \times H_2$的规范化图像。转换可以通过正向映射或反向映射来完成。<br>将原图像和归一化后的图像分别表示为 $f(x, y)$ 和 $g(x’, y’)$，归一化后的图像由 $g(x’, y’) = f(x, y)$ 基于坐标映射生成。<br>正向映射（forward mapping）和反向映射（backward mapping）由 $x’=x’(x,y),y’=y’(x,y)$ 和 $x=x(x’,y’),y=y(x’,y’)$分别给出。</p>
@@ -594,7 +595,94 @@
 <p>​    在前向映射插值生成灰度图像时，将原图像和归一化图像中的每个像素看作一个单位面积的平方。<br>​    通过坐标映射，将原图像的单位正方形映射到归一化平面上的矩形。</p>
 <p><img src="1.jpg" alt="jpg"></p>
 <p>​    如图所示，在归一化平面中，每个与矩形重叠的单元正方形都被赋予与重叠面积成比例的灰度。</p>
-<h3><span id="22-aspect-radio-mapping">2.2 Aspect radio mapping</span></h3>
+<h3><span id="22-aspect-radio-mapping-纵横比映射">2.2 Aspect radio mapping 纵横比映射</span></h3><p>​    为了实现归一化，需要确定归一化图像的宽度 $W_2$ 和高度 $H_2$。我们假设 $\max(W_2,H_2)$ 等于标准平面的边长 $L$。而 $\min(W_2,H_2)$由$R_2=\left\{\begin{matrix}<br> W_2/H_2, \mathrm{if}\ W_2&lt;H2\\H_2/W_2,\mathrm{otherwise.}<br>\end{matrix}\right.$ 中的纵横比决定，归一化后的图像纵横比与原始图像的纵横比相适应。因此长宽比映射函数决定了归一化图像的大小和形状。</p>
+<ul>
+<li><p>基于 dimension 的归一化，以实际图像的宽度和高度作为尺寸。</p>
+</li>
+<li><p>基于 moment 的归一化，</p>
+<ul>
+<li>原始图像被设为中心点</li>
+<li>边界被重新设置为 $[x_c-2\sqrt{\mu_{20}},x_c+2\sqrt{\mu_{20}}]$ 和 $[y_c-2\sqrt{\mu_{02}},y_c+2\sqrt{\mu_{02}}]$</li>
+<li>尺寸被重新设置为 $W_1=4\sqrt{\mu_{20}}$ 和 $H_1=4\sqrt{\mu_{02}}$</li>
+</ul>
+<p>图像平面被扩展或修建，以便适应在范围内。</p>
+<ul>
+<li>计算原始图像的纵横比：$R_1=\left\{\begin{matrix}<br> W_1/H_1, \mathrm{if}\ W_1&lt;H_1\\H_1/W_1,\mathrm{otherwise.}<br>\end{matrix}\right.$</li>
+</ul>
+</li>
+<li><p>改变归一化策略和纵横比映射函数，10 个归一化函数如下所示。</p>
+</li>
+</ul>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>序号</th>
+<th>描述</th>
+<th>公式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>F0</td>
+<td>固定长宽比</td>
+<td>$R_2=1$</td>
+</tr>
+<tr>
+<td>F1</td>
+<td>保留长宽比</td>
+<td>$R_2=R_1$</td>
+</tr>
+<tr>
+<td>F2</td>
+<td>长宽比的平方根</td>
+<td>$R_2=\sqrt{R_1}$</td>
+</tr>
+<tr>
+<td>F3</td>
+<td>长宽比的立方根</td>
+<td>$R_2=\sqrt[3]{R_1}$</td>
+</tr>
+<tr>
+<td>F4</td>
+<td>分段线性长宽比</td>
+<td>$R_1=\left\{\begin{matrix} 0.25+1.5R_1, \mathrm{if}\ R_1&lt;0.5\\1,\mathrm{otherwise.}\end{matrix}\right.$</td>
+</tr>
+<tr>
+<td>F5</td>
+<td>长宽比的正弦值的平方根</td>
+<td>$R_2=\sqrt{\sin\left(\frac{\pi}{2}R_1\right)}$</td>
+</tr>
+<tr>
+<td>F6</td>
+<td>F5 的非线性归一化，线密度直方图计算采用的方法</td>
+<td></td>
+</tr>
+<tr>
+<td>F7</td>
+<td>保留长宽比的矩归一化</td>
+<td></td>
+</tr>
+<tr>
+<td>F8</td>
+<td>长宽比平方根的矩归一化</td>
+<td></td>
+</tr>
+<tr>
+<td>F9</td>
+<td>长宽比立方根的矩归一化</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>​    F0-F5如图所示，其中 F4、F5 优于 F0。</p>
+<p><img src="2.jpg" alt="jpg"></p>
+<p>​    所有的归一化函数都是通过正向映射来实现的。图 3 为归一化函数对应的同一原始图像。</p>
+<p><img src="3.jpg" alt="jpg"></p>
+<p>​    图 4 为对应的同一原始图像和归一化后的二值图像和灰度图像。</p>
+<p>​    标准归一化平面尺寸为 $35\times 35$，当归一化图像的长宽比与原始长宽比偏离较大时，字符形状的变形也是相当大的。（如 F0 和 F5）</p>
+<p>​    对于基于矩的归一化（F7，F8 和 F9），归一化图像在中心点居中，标准平面的任何维度都不被填充。</p>
+<h3><span id="3-feature-extraction-techniques-特征提取技术">3 Feature extraction techniques 特征提取技术</span></h3>
   </div>
   <div id="gitalk-container"></div>
 </div>
@@ -789,21 +877,6 @@ Fancybox.bind('[data-fancybox="fancybox-gallery-img"]', {
 <script>
 	console.log('\n %c Hexo-Quiet 主题 %c https://github.com/79e/hexo-theme-quiet \n', 'color: #fadfa3; background: #030307; padding:5px 0;', 'background: #fadfa3; padding:5px 0;')
 </script>
-	<script type="text/x-mathjax-config">
-    MathJax.Hub.Config({
-        tex2jax: {
-            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
-            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
-            processEscapes: true
-        }
-    });
-    MathJax.Hub.Queue(function() {
-        var all = MathJax.Hub.getAllJax();
-        for (var i = 0; i < all.length; ++i)
-            all[i].SourceElement().parentNode.className += ' has-jax';
-    });
-</script>
-<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-</body>
+	</body>
 </html>
 
