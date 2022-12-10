@@ -342,6 +342,13 @@
 <li><a href="#3-feature-extraction-techniques-特征提取技术">3 Feature extraction techniques 特征提取技术</a></li>
 </ul>
 </li>
+<li><a href="#4-experimental-results">4 Experimental results</a><ul>
+<li><a href="#41-reults-on-cenparmi-database">4.1 Reults on CENPARMI database</a></li>
+<li><a href="#42-results-on-nist-database">4.2 Results on NIST database</a></li>
+<li><a href="#43-results-on-hitachi-database">4.3 Results on Hitachi database</a></li>
+</ul>
+</li>
+<li><a href="#5-conclusion">5 Conclusion</a></li>
 </ul>
 <!-- tocstop -->
 <h2><span id="论文">论文</span></h2>
@@ -682,7 +689,160 @@
 <p>​    图 4 为对应的同一原始图像和归一化后的二值图像和灰度图像。</p>
 <p>​    标准归一化平面尺寸为 $35\times 35$，当归一化图像的长宽比与原始长宽比偏离较大时，字符形状的变形也是相当大的。（如 F0 和 F5）</p>
 <p>​    对于基于矩的归一化（F7，F8 和 F9），归一化图像在中心点居中，标准平面的任何维度都不被填充。</p>
-<h3><span id="3-feature-extraction-techniques-特征提取技术">3 Feature extraction techniques 特征提取技术</span></h3>
+<h3><span id="3-feature-extraction-techniques-特征提取技术">3 Feature extraction techniques 特征提取技术</span></h3><ul>
+<li><p>我们提取了三种类型的方向特征:</p>
+<ul>
+<li><p>chaincode feature</p>
+</li>
+<li><p>NCFE feature</p>
+</li>
+<li><p>gradient feature</p>
+</li>
+</ul>
+</li>
+<li><p>根据是否使用 slant normalization，chaincode feature 有两种变换。</p>
+</li>
+<li><p>对于 chaincode feature 和 gradient feature extraction，将归一化后的图像分解为 $4$ 个方向平面或 $8$ 个方向平面。</p>
+</li>
+<li><p>在 NCFE 中，原始图像的边缘像素直接映射到 $4$ 向或 $8$ 向平面上。</p>
+</li>
+<li><p>对于 feature measuring，将每个特征平面（feature plane）划分为均匀的区域（uniform zones），并将每个区域的强度累积为一个测量值，或将模糊掩膜（blurring masks）与该平面进行卷积以给出测量值。</p>
+</li>
+<li><p>带模糊掩膜的卷积相当于低通滤波（low-pass filtering）和采样（sampling）。通常，使用高斯掩膜：$h(x,y)=\frac{1}{2\pi \sigma^2_x}\exp\left(-\frac{x^2+y^2}{2\sigma^2_x}\right)$</p>
+<ul>
+<li><p>其中 $\sigma_x$ 与模糊掩膜之间的间隔有关，可以看作是采样间隔（sampling interval），是采样频率的倒数（the reciprocal of sampling frequency）。</p>
+<p>经验公式 $\sigma_x=\frac{\sqrt 2t_x}{\pi}$</p>
+<ul>
+<li>其中 $t_x$ 是 $x$ 轴和 $y$ 轴模糊蒙版（blurring masks）</li>
+</ul>
+</li>
+<li><p>在中心 $(x_0,y_0)$ 的模糊掩膜，卷积给出了一个测量值：$F(x_0,y_0)=\sum_x\sum_yf(x,y)h(x-x_0,y-y_0)$</p>
+</li>
+</ul>
+</li>
+<li><p>在 chaincode feature extraction 中，将归一化图像的轮廓赋给 $8$ 方向码：</p>
+<p><img src="5.jpg" alt="jpg"></p>
+<p>并将每个方向的轮廓像素赋给相应的方向平面。链码的分配可以在图像的光栅扫描（raster scan of the image）中完成，无需轮廓跟踪（contour tracing）。在这个过程中，一个具有多个连接的像素可以被分出多个 chaincodes。若要提取 $4$ 方向特征，则将每对相反方向的平面合并为一个特征平面，并对 $4$ 个平面进行模糊处理。</p>
+</li>
+</ul>
+<hr>
+<ul>
+<li><p>对于 NCFE，原始图像中的每一个 chaincode 都被视为是一个线段，该线段被映射到标准平面方向平面上的另一个线段。</p>
+</li>
+<li><p>在 direction plane 上，每个与线段在主方向（$x$  或 $y$）上相交的网格单元都被赋予了一个方向贡献单位。</p>
+</li>
+<li><p>由于线段对网格单元的覆盖不是离散的，我们在此提出了一种基于连续特征平面的改进的 NCFE 方法。</p>
+</li>
+<li><p>在 continuous plane 上，像素被视为一个正方形，方向长度与落在这个正方形中的线段长度成正比。</p>
+</li>
+</ul>
+<p><img src="6.jpg" alt="jpg"></p>
+<ul>
+<li>如图 6 所示，从链码映射的线段覆盖了 4 个单元 A、B、C、D。<ul>
+<li>通过离散的 NCFE，$A$ 和 $C$ 被分配成一个一个方向单元。</li>
+<li>通过连续的 NCFE，所有 $4$ 个单元都被分配与单元线段长度成比例的方向强度。</li>
+</ul>
+</li>
+<li>注意，对于 NCFE，有时平滑字符图像是必要的，以便 chaincode 更好地解释笔画方向。</li>
+</ul>
+<hr>
+<p>​    gradient feature extraction 中，采用 Sobel 算子计算梯度的 $x/y$ 分量。将梯度图像分解为 4 个方向平面或 8 个方向平面。其他学者也使用 Roberts 算子和 Kirsh 算子。</p>
+<p><img src="7.jpg" alt="jpg"></p>
+<p>​    梯度 $\mathbf{g}(x,y)=[g_x，g_y]^T$，位置 $(x,y)$：</p>
+<ul>
+<li><p>$g_x(x,y)=f(x+1,y-1)+2f(x+1,y)+f(x+1,y+1)-f(x-1,y-1)-2f(x-1,y)-f(x-1,y+1)$</p>
+</li>
+<li><p>$g_y(x,y)=f(x-1,y+1)+2f(x,y+1)+f(x+1,y+1)-f(x-1,y-1)-2f(x,y-1)-f(x+1,y-1)$</p>
+</li>
+</ul>
+<hr>
+<p>​    梯度强度和方向可以从向量 $[g_x,g_y]^T$ 得出.对于字符特征提取，计算归一化图像上每个像素的梯度。梯度方向的范围被划分为若干个区域(比如 $8$ 个或 $16$ 个)，每个区域对应一个方向平面。每个像素被分配到一个方向区域，梯度强度贡献相应平面的强度。然而，在我们的实验中，我们采用了另一种策略，即将每个梯度向量分解为标准方向上的分量。</p>
+<p>​    该策略曾用于在线字符识别的特征提取。我们将梯度向量分解成八个链码方向。如果梯度方向位于两个标准方向之间，则在两个标准方向上分解为两个分量，如图 8。</p>
+<p><img src="8.jpg" alt="jpg"></p>
+<p>​    梯度特征可以从二进制或灰度归一化图像中提取。从一个二值字符图像，灰度归一化图像是通过前向二值到灰度像素映射生成的。我们也称这种方法生成的灰度图像为伪灰度图像。伪灰色图像的梯度特征是对二值图像梯度特征的改进。</p>
+<hr>
+<p>​    为了增强方向特征的识别能力，我们将结构特征和形状特征作为互补特征。结构特征表示为水平交叉计数，而形状特征表示为最外边缘与凸包之间的距离。交叉计数和距离序列也通过一维高斯掩模进行模糊处理，以给出特征测量。由于归一化平面设置为 $35 \times 35$ 像素，序列的长度为 $35$。我们提取了 $11$ 个模糊的水平交叉计数和 $22$ 个（左和右）正面形状测量。这些测量值被添加到模糊链码特征中，以形成增强的特征向量。</p>
+<hr>
+<p>​    NCFE 功能还可以通过补充功能来增强。采用 NCFE 方法计算交叉计数和轮廓形状距离，并将其映射到标准平面上。然后，它们被模糊，以给出 $11 + 22$ 个测量值，以添加到 NCFE 方向特征中。增强的 NCFE 特征以及连续的 NCFE 特征可以被视为对现有 NCFE 方法的改进。</p>
+<hr>
+<p>​    在我们的实验中，我们测试了八个方向特征或增强的特征向量。每个特征向量有 4 个方向和 8 个方向。<br>特征向量如下所示。</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>特征向量</th>
+<th>描述</th>
+<th>$4$ 方向</th>
+<th>$8$ 方向</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>blr</strong></td>
+<td>blurred chaincode feature，在每个特征平面上，均匀放置 $5×5$ 高斯掩模来计算 $25$ 个测量值。</td>
+<td>100D</td>
+<td>200D</td>
+</tr>
+<tr>
+<td><strong>des</strong></td>
+<td>deslant chain feature，对原始图像进行去噪和归一化，提取链码特征。</td>
+<td>100D</td>
+<td>200D</td>
+</tr>
+<tr>
+<td><strong>mul</strong></td>
+<td>enhanced chaincode feature with complementary（互补的） features.</td>
+<td>133D</td>
+<td>233D</td>
+</tr>
+<tr>
+<td><strong>ncf</strong></td>
+<td>discrete NCFE direction feature.</td>
+<td>100D</td>
+<td>200D</td>
+</tr>
+<tr>
+<td><strong>ncf-p</strong></td>
+<td>discrete NCFE direction feature plus complementary features.</td>
+<td>133D</td>
+<td>233D</td>
+</tr>
+<tr>
+<td><strong>ncf-c</strong></td>
+<td>continuous NCFE direction feature.</td>
+<td>100D</td>
+<td>200D</td>
+</tr>
+<tr>
+<td><strong>grd</strong></td>
+<td>gradient feature from binary images（二值图像的梯度特征）.</td>
+<td>100D</td>
+<td>200D</td>
+</tr>
+<tr>
+<td><strong>grd-g</strong></td>
+<td>gradient feature from pseudo gray-scale images（伪灰度图像的梯度特征）.</td>
+<td>100D</td>
+<td>200D</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>​    为了修改特征分布以提高分类性能，对特征向量中的所有测量值进行变量变换 $y=x^p$。这个变换也被称为 <strong>Box-Cox</strong> 变换。为了计算方便，我们在实验中没有对功率参数进行优化，而是设置为 $p=0.5$。</p>
+<h2><span id="4-experimental-results">4 Experimental results</span></h2><h3><span id="41-reults-on-cenparmi-database">4.1 Reults on CENPARMI database</span></h3><p>​    使用了两种分类：</p>
+<ul>
+<li>多项式分类器 polynomial classifier（PC）</li>
+<li>径向基函数核支持向量分类器 support vector classifier with radial basis function kernel（SVC-rbf）</li>
+</ul>
+<hr>
+<script type="math/tex; mode=display">RPM=\frac{100AER}{\min(AER)}</script><p>$RPM$ 的倒数对应 ratio of error rate between the best method and an alternative method.</p>
+<ul>
+<li>当 ratio of error rate $\ge0.9$ 时（对应的 $RPM\le111.1$），我们认为备选方法 competitive to the best one。</li>
+<li>当 ratio of error rate  $\ge0.8$ 时（对应的 $RPM\le125$），我们认为备选方法 is good。</li>
+<li>当 $0.7\le$ ratio of error rate $&lt;0.8$ 时（$125&lt;RPM\le142.9$），我们认为备选方法 is fair。</li>
+<li>ratio of error rate $<0.7$ （$rpm>142.9$）说明替代方法性能较差。</0.7$></li>
+</ul>
+<h3><span id="42-results-on-nist-database">4.2 Results on NIST database</span></h3><h3><span id="43-results-on-hitachi-database">4.3 Results on Hitachi database</span></h3><h2><span id="5-conclusion">5 Conclusion</span></h2>
   </div>
   <div id="gitalk-container"></div>
 </div>
