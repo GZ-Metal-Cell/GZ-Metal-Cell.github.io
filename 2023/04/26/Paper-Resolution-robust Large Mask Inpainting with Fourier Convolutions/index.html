@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		
+<title>Paper-Resolution-robust Large Mask Inpainting with Fourier Convolutions-Zi-Zi's Journey</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="shortcut icon" type="image/x-icon" href="/image/favicon.ico">
+
+<link rel="stylesheet" href="/css/index.css">
+
+
+
+<meta name="keywords" content="论文,">
+<meta name="description" content="">
+
+
+<script src="/js/jquery.min.js"></script>
+
+
+<script src="/js/index.js"></script>
+
+
+<script src="/js/fancybox.umd.js"></script>
+
+
+<script src="/js/fancybox-images.js"></script>
+
+
+<script src="/js/gitalk.min.js"></script>
+
+
+<script src="/js/hljs.min.js"></script>
+ 
+
+	<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.1.0"></head>
+
+	<body>
+		
+	<div class="header">
+		<div class="header-top" id="header-top">
+			<div class="h-left">
+				<a href="/">
+					<img src="/image/logo.png" alt="Quiet">
+				</a>
+			</div>
+			<div class="h-right">
+				<ul>
+					
+						
+								<li>
+									<a href="/">
+										主页
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/archives">
+										统计
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/categories">
+										类别
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/tags">
+										标签
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/links">
+										链接
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/about">
+										关于
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+				</ul>
+			</div>
+			<div class="h-right-close">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+					<path fill="none" d="M0 0h24v24H0z" />
+					<path d="M3 4h18v2H3V4zm0 7h18v2H3v-2zm0 7h18v2H3v-2z" fill="rgba(68,68,68,1)" />
+				</svg>
+			</div>
+		</div>
+	</div>
+	<div class="sidebar">
+    <div class="topo">
+        <h2>Zi-Zi</h2>
+    </div>
+    <ul>
+        
+        <li>
+            <a href="/">主页</a>
+        </li>
+        
+        <li>
+            <a href="/archives">统计</a>
+        </li>
+        
+        <li>
+            <a href="/categories">类别</a>
+        </li>
+        
+        <li>
+            <a href="/tags">标签</a>
+        </li>
+        
+        <li>
+            <a href="/links">链接</a>
+        </li>
+        
+        <li>
+            <a href="/about">关于</a>
+        </li>
+        
+    </ul>
+    <div class="my_foot">
+        
+        <a target="_blank" rel="noopener" href="https://weibo.com/u/5020307235">
+            <img src="/image/Weibo.png" alt="Quiet主题">
+        </a>
+        
+        <a target="_blank" rel="noopener" href="https://tieba.baidu.com/home/main?id=tb.1.ff6d2775.vFH7wrdW2ZjPCmyBHJcjnA">
+            <img src="/image/Tieba.png" alt="Quiet主题">
+        </a>
+        
+        <a target="_blank" rel="noopener" href="https://space.bilibili.com/11547880">
+            <img src="/image/Bilibili.png" alt="Quiet主题">
+        </a>
+        
+        <a target="_blank" rel="noopener" href="https://github.com/GZ-Metal-Cell">
+            <img src="/image/github.png" alt="Quiet主题">
+        </a>
+        
+    </div>
+</div>
+<div class='shelter'>
+</div>
+<style>
+    .shelter{
+        background-color: #333;
+        opacity:0.5;
+        cursor: pointer;
+        display: none; 
+        position: fixed;
+        left: 0;
+        top: 0; 
+        right: 0;
+        bottom: 0;
+        z-index: 1998;
+    }
+    .sidebar {
+        width: 66%;
+        height: 100%;
+        position: fixed;
+        top: 0;
+        right: -100%;
+        bottom: 0;
+        background: #fff;
+        z-index: 1999;
+        text-align: center;
+        box-shadow: -6px 0 20px rgba(98, 94, 94, .815);
+    }
+
+    .topo {
+        width: 100%;
+        height: 200px;
+        background: url(https://api.ixiaowai.cn/gqapi/gqapi.php) no-repeat;
+        background-size: 100% 100%;
+        position: relative;
+        display: flex;
+        align-items: flex-end
+    }
+
+    .topo h2 {
+        color: #fff;
+        z-index: 1;
+        position: relative;
+        margin: 0 0 10px 10px;
+        font-size: 1.2em;
+        box-sizing: border-box
+    }
+
+    .topo:before {
+        content: '';
+        background-image: url(/image/pattern.png);
+        background-repeat: repeat;
+        height: 100%;
+        left: 0;
+        position: absolute;
+        top: 0;
+        width: 100%;
+        z-index: 1
+    }
+
+    .sidebar ul {
+        width: 100%;
+        margin-top: 50px
+    }
+
+    .sidebar ul li {
+        height: 50px;
+        list-style: none;
+        font-size: 1.2em;
+        text-align: right;
+        margin-right: 10px
+    }
+
+    .sidebar ul li a {
+        display: grid;
+        color: #5d606a;
+        text-overflow: ellipsis;
+        width: 100%;
+        text-decoration: none
+    }
+
+    .my_foot {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        position: absolute;
+        bottom: 0
+    }
+
+    .my_foot a {
+        text-decoration: none;
+        margin-right: 10px;
+        display: inline-block
+    }
+
+    .my_foot a img {
+        width: 30px;
+        height: 30px
+    }
+</style>
+
+<script>
+    $( function () {
+	$( '.h-right-close>svg' )
+		.click( function () {
+			$( '.sidebar' )
+				.animate( {
+					right: "0"
+				}, 500 );
+			$( '.shelter' )
+				.fadeIn( "slow" )
+		} );
+	$( '.shelter' )
+		.click( function ( e ) {
+			$( '.sidebar' )
+				.animate( {
+					right: "-100%"
+				}, 500 );
+			$( '.shelter' )
+				.fadeOut( "slow" )
+		} )
+} )
+
+</script>
+
+<div class="post">
+    <div class="post-header-background post-header-img"
+    style="background: url('https://api.ixiaowai.cn/gqapi/gqapi.php')" 
+>
+    <div class="post-header-background-content">
+        <ul class="post-header-tag">
+            
+                
+                    <li><a href="/tags/论文">论文</a></li>
+                
+            
+        </ul>
+        
+        <h1>Paper-Resolution-robust Large Mask Inpainting with Fourier Convolutions</h1>
+        <div class="post-header-info">
+            <div class="post-header-info-author">
+                
+                    <svg t="1604839279282" class="icon" viewBox="0 0 1024 1024" version="1.1"
+                        xmlns="http://www.w3.org/2000/svg" p-id="2901" width="20" height="20">
+                        <path
+                            d="M513 956.3c-247.7 0-448-200.3-448-448S265.3 66.2 513 66.2s448 200.3 448 448-200.3 442.1-448 442.1z m0-830.9c-212.2 0-388.8 170.7-388.8 388.8C124.2 726.3 294.9 903 513 903c212.2 0 388.8-170.7 388.8-388.8S725.2 125.4 513 125.4z m0 430.2c-94.2 0-170.7-76.5-170.7-170.7S418.8 207.8 513 207.8s170.7 76.5 170.7 170.7S607.2 555.6 513 555.6z m0-289.1c-64.6 0-112 52.8-112 112s47.4 117.9 112 117.9 112-52.8 112-112-47.4-117.9-112-117.9z m0 689.8c-135.7 0-259-58.7-341.9-158.9l-11.8-17.8 11.8-17.8c76.5-117.9 206.2-188.5 347.8-188.5 135.7 0 265 64.6 341.9 182.6l11.8 17.8-11.8 17.8C778 897.1 648.7 956.3 513 956.3zM230.3 773.2C300.9 849.7 406.9 897 513 897c112 0 218.1-47.4 288.6-129.8-70.5-88.2-170.7-135.6-282.7-135.6s-218.1 53.3-288.6 141.6z"
+                            p-id="2902" fill="#ffffff"></path>
+                    </svg>
+                    
+                <span class="post-header-info-author-text"> <a href="../../about">Zi-Zi</a></span>
+                <div class="post-header-info-author-categories">
+                    
+                         <a href="/categories/学习笔记" target="_blank" >学习笔记</a>
+                    
+                </div>
+                <p>2023-04-26 21:16:00</p>
+            </div>
+        </div>
+    </div>
+</div>
+    <div class="post-content" id="content">
+  
+  <div id="article" class="post-content-info">
+    
+
+    <h2><span id="paper-resolution-robust-large-mask-inpainting-with-fourier-convolutions">Paper-Resolution-robust Large Mask Inpainting with Fourier Convolutions</span></h2><h2><span id="目录">目录</span></h2><!-- toc -->
+<ul>
+<li><a href="#资源">资源</a></li>
+<li><a href="#笔记">笔记</a></li>
+</ul>
+<!-- tocstop -->
+<h2><span id="资源">资源</span></h2><ul>
+<li>原文：<a target="_blank" rel="noopener" href="https://arxiv.org/abs/2304.02643v1">[2304.02643v1] Segment Anything (arxiv.org)</a></li>
+<li>代码：<a target="_blank" rel="noopener" href="https://github.com/geekyutao/inpaint-anything">geekyutao/Inpaint-Anything: Inpaint anything using Segment Anything and inpainting models. (github.com)</a></li>
+</ul>
+<h2><span id="笔记">笔记</span></h2><p>目前的<strong>图像修复</strong>系统往往难以处理：</p>
+<ul>
+<li>大面积的缺失</li>
+<li>复杂的几何结构</li>
+<li>高分辨率</li>
+</ul>
+<p>认为这种情况的主要原因之一是<strong>修复网络</strong>和<strong>损失函数</strong>中都缺乏有效的<strong>感受野（receptive field）</strong>。</p>
+<p>提出了 <strong>large mask inpatienting（LaMa）</strong> 的新方法：</p>
+<ul>
+<li><p>基于一种新的修复网络结构，该架构使用具有全图像感受野的<strong>快速傅里叶卷积（FFCs）</strong></p>
+<ul>
+<li><p>FFC 允许覆盖整个图像的感受野，FFC 的这种性质提高了网络的感知质量和参数效率</p>
+</li>
+<li><p><strong>快速傅立叶卷积（FFC）</strong>是最近提出的允许在早期层中使用全局上下文的算子。FFC 基于通道快速傅立叶变换（FFT），具有覆盖整个图像的感受野。FFC 将信道分成两个并行分支：</p>
+<ul>
+<li>i）局部分支使用传统卷积</li>
+<li>ii）全局分支使用实数FFT来说明全局上下文。</li>
+</ul>
+<p>实数FFT只能应用于实数值信号，而逆实数FFT确保输出是实数值的。与 FFT 相比，实数 FFT 仅使用频谱的一半。具体而言，FFC采取以下步骤：</p>
+<ul>
+<li>将实数 FFT2d 应用于输入张量：$Real\ FFT2d:\mathbb{R}^{H\times W\times C}\to\mathbb{C}^{H\times \frac{W}{2}\times C}$，并连接实部和虚部：$ComplexToReal:\mathbb{C}^{H\times \frac{W}{2}\times 2C}$</li>
+<li>在频域中应用卷积块：$ReLU\circ BN\circ Conv1\times 1:\mathbb{R}^{H\times\frac{W}{2}\times2C}\to \mathbb{R}^{H\times \frac{W}{2}\times 2C}$</li>
+<li>应用逆变换来恢复空间结构：$RealToComplex:\mathbb{R}^{H\times\frac{W}{2}\times 2C}\to \mathbb{C}^{H\times \frac{W}{2}\times C}$，$Inverse\ Real\ FFT2d:\mathbb{C}^{H\times \frac{W}{2}\times C}\to\mathbb{R}^{H\times W\times C}$</li>
+<li>最后，将 i) 和 ii) 分支输出融合在一起。</li>
+</ul>
+</li>
+<li><p>FFCs 的功率 FFCs 是完全可微分的，并且易于使用，可以<strong>代替传统卷积</strong>。由于图像宽的感受野，FFC允许生成器考虑从早期层开始的全局上下文，这<strong>对于高分辨率图像修复</strong>至关重要。这也带来了更好的效率：可训练的参数可以用于推理和生成，而不是“等待”信息的传播。</p>
+</li>
+</ul>
+</li>
+<li><p>高 receptive field 的语义分割网络的感知<strong>损失函数</strong></p>
+<ul>
+<li>促进了全局结构和形态的一致性</li>
+<li>通过基础预训练网络评估从预测图像和目标图像中提取的特征之间的距离。它不需要精确的重建，允许重建图像的变化。大型掩模修复的重点转向了对全局结构的理解。</li>
+<li>high receptive field base model $\phi_{HRF}(·):\mathcal{L}_{HRFPL}(x,\hat x)=\mathcal{M}\left(\left[\phi_{HRF}(x)-\phi_{HRF}(\hat x)\right]^2\right)$<ul>
+<li>$[\cdot -\cdot]^2$ 是逐元素运算</li>
+<li>$\mathcal M$ 是顺序两阶段平均运算（层内平均和层间平均）</li>
+<li>使用傅里叶或扩展卷积来实现 $\phi_{HRF}(x)$</li>
+</ul>
+</li>
+<li>使用对抗性损失来确保修复模型 $f_\theta(x’)$ 生成看起来自然的局部细节，定义了一个鉴别器 $D_{\xi}(\cdot)$，只在与 mask 相交的部分才会获得 “fake” 标签，损失函数 $\mathcal L_D$</li>
+<li>最终损失函数使用了梯度惩罚 $R_1=E_x||\bigtriangledown  D_\xi(x)||^2$，和基于鉴别器的感知损失 $\mathcal L_{DiscPL}$，最终损失函数 $\mathcal L_{final}=\kappa L_{Adv}+\alpha\mathcal L_{HRFPL}+\beta \mathcal L_{DiscPL}+\gamma R_1$</li>
+</ul>
+</li>
+<li><p><strong>大型训练 masks</strong>，释放前两个组件的潜力</p>
+<ul>
+<li>产生宽而大的掩码，迫使网络充分利用模型的高感受野和损失函数</li>
+</ul>
+</li>
+</ul>
+<p>LaMa 只在低分辨率上训练后，就可以推广到高分辨率图像。</p>
+<p><img src="2.png" alt="png"></p>
+<hr>
+<ul>
+<li>目标是修复由未知像素 $m$ 的二进制蒙版掩蔽的彩色图像 $x$<ul>
+<li>掩蔽的图像表示为 $x\odot m$。$m$ 与 $x\odot m$ 堆叠，产生四通道输入张量 $x’=\mathrm{stack}(x\odot m,m)$</li>
+<li>使用前馈修复网络 $f_\theta(\cdot)$，我们将其称为生成器</li>
+<li>以 $x’$ 为例，修复网络以完全卷积的方式处理输入，并产生修复的三通道彩色图像 $\hat x=f_\theta(x’)$</li>
+<li>在从真实图像和合成生成的掩模获得的 $(\mathrm{image},\mathrm{mask})$ 对数据集上执行训练</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div id="gitalk-container"></div>
+</div>
+
+<script>
+  
+Fancybox.bind('[data-fancybox="fancybox-gallery-img"]', {
+  dragToClose: true,
+  Toolbar: true,
+  closeButton: "top",
+  Image: {
+    zoom: true,
+  },
+  on: {
+    initCarousel: (fancybox) => {
+      const slide = fancybox.Carousel.slides[fancybox.Carousel.page];
+      fancybox.$container.style.setProperty(
+        "--bg-image",
+        `url("${slide.$thumb.src}")`
+      );
+    },
+    "Carousel.change": (fancybox, carousel, to, from) => {
+      const slide = carousel.slides[to];
+      fancybox.$container.style.setProperty(
+        "--bg-image",
+        `url("${slide.$thumb.src}")`
+      );
+    },
+  },
+});
+</script>
+
+<style>
+    #noneimg img {
+        display: none;
+        z-index: 9999;
+        /* width: 600px !important; */
+        min-width: 0%;
+        max-width: 90%;
+        max-height: 80%;
+        border-radius: 0px;
+        position: fixed;
+        box-shadow: 0 0 0px #c3c3c300 !important;
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        margin: auto !important;
+    }
+
+    @media screen and (max-width:600px) {
+        #noneimg img {
+            max-width: 88%
+        }
+    }
+</style>
+
+    <div class="post-paging">
+    
+    <a href="/2023/04/27/Diary-%E5%A5%BD%E5%A5%BD%E5%AD%A6%E4%B9%A0%E5%A5%BD%E5%A5%BD%E7%8E%A9%E7%9A%84%E7%AC%AC%209%20%E5%91%A8%E5%92%8C%E7%AC%AC%2010%20%E5%91%A8/">
+        <div class="post-paging-last">
+            <span>上一篇</span>
+            <p>Diary-好好学习好好玩的第 9 周和第 10 周</p>
+        </div>
+    </a>
+    
+
+    
+    <a href="/2023/04/26/Paper-Segment%20Anything%20in%20Medical%20Images/">
+        <div class="post-paging-next">
+            <span>下一篇</span>
+            <p>Paper-Segment Anything in Medical Images</p>
+        </div>
+    </a>
+    
+</div>
+</div>
+		
+<div class="footer">
+	<div class="Copyright">
+		©2023 By Zi-Zi. 主题：<a
+			style="text-decoration: none;display: contents; color: #898F9F;"
+			target="_blank" rel="noopener" href="https://github.com/79e/hexo-theme-quiet">Quiet</a>
+	</div>
+	<div class="contact">
+		
+		<a target="_blank" rel="noopener" href="https://weibo.com/u/5020307235">
+			<img src="/image/Weibo.png" alt="Quiet主题">
+		</a>
+		
+		<a target="_blank" rel="noopener" href="https://tieba.baidu.com/home/main?id=tb.1.ff6d2775.vFH7wrdW2ZjPCmyBHJcjnA">
+			<img src="/image/Tieba.png" alt="Quiet主题">
+		</a>
+		
+		<a target="_blank" rel="noopener" href="https://space.bilibili.com/11547880">
+			<img src="/image/Bilibili.png" alt="Quiet主题">
+		</a>
+		
+		<a target="_blank" rel="noopener" href="https://github.com/GZ-Metal-Cell">
+			<img src="/image/github.png" alt="Quiet主题">
+		</a>
+		
+	</div>
+</div>
+
+<script src="/js/gotop.js"></script>
+
+
+<style type="text/css">
+    @media screen and (min-width: 600px) {
+        .goTop>span {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            opacity: 0.8;
+            background: rgba(18, 24, 58, 0.06);
+            text-align: center;
+            transition: border .5s;
+            border: 1px solid rgba(18, 24, 58, 0.06);
+
+            -moz-transition: border .5s;
+            /* Firefox 4 */
+            -webkit-transition: border .5s;
+            /* Safari 和 Chrome */
+            -o-transition: border .5s;
+            /* Opera */
+        }
+
+        .goTop>span:hover {
+            border: 1px solid #6680B3;
+        }
+
+
+        .goTop {
+            position: fixed;
+            right: 30px;
+            bottom: 80px;
+        }
+
+        .goTop>span>svg {
+            width: 20px;
+            height: 20px;
+            opacity: 0.7;
+        }
+
+    }
+
+    @media screen and (max-width: 600px) {
+        .goTop {
+            display: none;
+        }
+    }
+</style>
+<div class="goTop" id="js-go_top">
+    <span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+            <g>
+                <path d="M13 12v8h-2v-8H4l8-8 8 8z"></path>
+            </g>
+        </svg>
+    </span>
+</div>
+<script>
+    $( '#js-go_top' )
+	.gotoTop( {
+		offset: 500,
+		speed: 300,
+		animationShow: {
+			'transform': 'translate(0,0)',
+			'transition': 'transform .5s ease-in-out'
+		},
+		animationHide: {
+			'transform': 'translate(100px,0)',
+			'transition': 'transform .5s ease-in-out'
+		}
+	} );
+</script>
+
+
+    <script src="/js/md5.min.js"></script>
+    <!-- Gitalk -->
+    <script>
+        const data = '{"clientID":"f3a4ea928b90c73f66d4","clientSecret":"d697ef6f42e83e83c49ff8d19e753f36bc375015","repo":"GZ-Metal-Cell.github.io","owner":"GZ-Metal-Cell","admin":"GZ-Metal-Cell"}'
+        const gitalk = new Gitalk({
+            ...JSON.parse( data),
+            id:md5(location.pathname), //  location.pathname,
+            distractionFreeMode:false
+        })
+        
+        if(Boolean('true')){
+            gitalk.render('gitalk-container')
+        }
+    </script>
+
+<script>
+	console.log('\n %c Hexo-Quiet 主题 %c https://github.com/79e/hexo-theme-quiet \n', 'color: #fadfa3; background: #030307; padding:5px 0;', 'background: #fadfa3; padding:5px 0;')
+</script>
+	<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+</html>
+

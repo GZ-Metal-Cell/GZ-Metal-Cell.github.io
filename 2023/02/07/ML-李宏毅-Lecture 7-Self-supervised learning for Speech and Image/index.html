@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		
+<title>ML-李宏毅-Lecture 7-Self-supervised learning for Speech and Image-Zi-Zi's Journey</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="shortcut icon" type="image/x-icon" href="/image/favicon.ico">
+
+<link rel="stylesheet" href="/css/index.css">
+
+
+
+<meta name="keywords" content="Python,机器学习,">
+<meta name="description" content="">
+
+
+<script src="/js/jquery.min.js"></script>
+
+
+<script src="/js/index.js"></script>
+
+
+<script src="/js/fancybox.umd.js"></script>
+
+
+<script src="/js/fancybox-images.js"></script>
+
+
+<script src="/js/gitalk.min.js"></script>
+
+
+<script src="/js/hljs.min.js"></script>
+ 
+
+	<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.1.0"></head>
+
+	<body>
+		
+	<div class="header">
+		<div class="header-top" id="header-top">
+			<div class="h-left">
+				<a href="/">
+					<img src="/image/logo.png" alt="Quiet">
+				</a>
+			</div>
+			<div class="h-right">
+				<ul>
+					
+						
+								<li>
+									<a href="/">
+										主页
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/archives">
+										统计
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/categories">
+										类别
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/tags">
+										标签
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/links">
+										链接
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/about">
+										关于
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+				</ul>
+			</div>
+			<div class="h-right-close">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+					<path fill="none" d="M0 0h24v24H0z" />
+					<path d="M3 4h18v2H3V4zm0 7h18v2H3v-2zm0 7h18v2H3v-2z" fill="rgba(68,68,68,1)" />
+				</svg>
+			</div>
+		</div>
+	</div>
+	<div class="sidebar">
+    <div class="topo">
+        <h2>Zi-Zi</h2>
+    </div>
+    <ul>
+        
+        <li>
+            <a href="/">主页</a>
+        </li>
+        
+        <li>
+            <a href="/archives">统计</a>
+        </li>
+        
+        <li>
+            <a href="/categories">类别</a>
+        </li>
+        
+        <li>
+            <a href="/tags">标签</a>
+        </li>
+        
+        <li>
+            <a href="/links">链接</a>
+        </li>
+        
+        <li>
+            <a href="/about">关于</a>
+        </li>
+        
+    </ul>
+    <div class="my_foot">
+        
+        <a target="_blank" rel="noopener" href="https://weibo.com/u/5020307235">
+            <img src="/image/Weibo.png" alt="Quiet主题">
+        </a>
+        
+        <a target="_blank" rel="noopener" href="https://tieba.baidu.com/home/main?id=tb.1.ff6d2775.vFH7wrdW2ZjPCmyBHJcjnA">
+            <img src="/image/Tieba.png" alt="Quiet主题">
+        </a>
+        
+        <a target="_blank" rel="noopener" href="https://space.bilibili.com/11547880">
+            <img src="/image/Bilibili.png" alt="Quiet主题">
+        </a>
+        
+        <a target="_blank" rel="noopener" href="https://github.com/GZ-Metal-Cell">
+            <img src="/image/github.png" alt="Quiet主题">
+        </a>
+        
+    </div>
+</div>
+<div class='shelter'>
+</div>
+<style>
+    .shelter{
+        background-color: #333;
+        opacity:0.5;
+        cursor: pointer;
+        display: none; 
+        position: fixed;
+        left: 0;
+        top: 0; 
+        right: 0;
+        bottom: 0;
+        z-index: 1998;
+    }
+    .sidebar {
+        width: 66%;
+        height: 100%;
+        position: fixed;
+        top: 0;
+        right: -100%;
+        bottom: 0;
+        background: #fff;
+        z-index: 1999;
+        text-align: center;
+        box-shadow: -6px 0 20px rgba(98, 94, 94, .815);
+    }
+
+    .topo {
+        width: 100%;
+        height: 200px;
+        background: url(https://api.ixiaowai.cn/gqapi/gqapi.php) no-repeat;
+        background-size: 100% 100%;
+        position: relative;
+        display: flex;
+        align-items: flex-end
+    }
+
+    .topo h2 {
+        color: #fff;
+        z-index: 1;
+        position: relative;
+        margin: 0 0 10px 10px;
+        font-size: 1.2em;
+        box-sizing: border-box
+    }
+
+    .topo:before {
+        content: '';
+        background-image: url(/image/pattern.png);
+        background-repeat: repeat;
+        height: 100%;
+        left: 0;
+        position: absolute;
+        top: 0;
+        width: 100%;
+        z-index: 1
+    }
+
+    .sidebar ul {
+        width: 100%;
+        margin-top: 50px
+    }
+
+    .sidebar ul li {
+        height: 50px;
+        list-style: none;
+        font-size: 1.2em;
+        text-align: right;
+        margin-right: 10px
+    }
+
+    .sidebar ul li a {
+        display: grid;
+        color: #5d606a;
+        text-overflow: ellipsis;
+        width: 100%;
+        text-decoration: none
+    }
+
+    .my_foot {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        position: absolute;
+        bottom: 0
+    }
+
+    .my_foot a {
+        text-decoration: none;
+        margin-right: 10px;
+        display: inline-block
+    }
+
+    .my_foot a img {
+        width: 30px;
+        height: 30px
+    }
+</style>
+
+<script>
+    $( function () {
+	$( '.h-right-close>svg' )
+		.click( function () {
+			$( '.sidebar' )
+				.animate( {
+					right: "0"
+				}, 500 );
+			$( '.shelter' )
+				.fadeIn( "slow" )
+		} );
+	$( '.shelter' )
+		.click( function ( e ) {
+			$( '.sidebar' )
+				.animate( {
+					right: "-100%"
+				}, 500 );
+			$( '.shelter' )
+				.fadeOut( "slow" )
+		} )
+} )
+
+</script>
+
+<div class="post">
+    <div class="post-header-background post-header-img"
+    style="background: url('https://api.ixiaowai.cn/gqapi/gqapi.php')" 
+>
+    <div class="post-header-background-content">
+        <ul class="post-header-tag">
+            
+                
+                    <li><a href="/tags/Python">Python</a></li>
+                
+                    <li><a href="/tags/机器学习">机器学习</a></li>
+                
+            
+        </ul>
+        
+        <h1>ML-李宏毅-Lecture 7-Self-supervised learning for Speech and Image</h1>
+        <div class="post-header-info">
+            <div class="post-header-info-author">
+                
+                    <svg t="1604839279282" class="icon" viewBox="0 0 1024 1024" version="1.1"
+                        xmlns="http://www.w3.org/2000/svg" p-id="2901" width="20" height="20">
+                        <path
+                            d="M513 956.3c-247.7 0-448-200.3-448-448S265.3 66.2 513 66.2s448 200.3 448 448-200.3 442.1-448 442.1z m0-830.9c-212.2 0-388.8 170.7-388.8 388.8C124.2 726.3 294.9 903 513 903c212.2 0 388.8-170.7 388.8-388.8S725.2 125.4 513 125.4z m0 430.2c-94.2 0-170.7-76.5-170.7-170.7S418.8 207.8 513 207.8s170.7 76.5 170.7 170.7S607.2 555.6 513 555.6z m0-289.1c-64.6 0-112 52.8-112 112s47.4 117.9 112 117.9 112-52.8 112-112-47.4-117.9-112-117.9z m0 689.8c-135.7 0-259-58.7-341.9-158.9l-11.8-17.8 11.8-17.8c76.5-117.9 206.2-188.5 347.8-188.5 135.7 0 265 64.6 341.9 182.6l11.8 17.8-11.8 17.8C778 897.1 648.7 956.3 513 956.3zM230.3 773.2C300.9 849.7 406.9 897 513 897c112 0 218.1-47.4 288.6-129.8-70.5-88.2-170.7-135.6-282.7-135.6s-218.1 53.3-288.6 141.6z"
+                            p-id="2902" fill="#ffffff"></path>
+                    </svg>
+                    
+                <span class="post-header-info-author-text"> <a href="../../about">Zi-Zi</a></span>
+                <div class="post-header-info-author-categories">
+                    
+                         <a href="/categories/学习笔记" target="_blank" >学习笔记</a>
+                    
+                </div>
+                <p>2023-02-07 14:42:00</p>
+            </div>
+        </div>
+    </div>
+</div>
+    <div class="post-content" id="content">
+  
+  <div id="article" class="post-content-info">
+    
+
+    <h2><span id="ml-李宏毅-lecture-7-self-supervised-learning-for-speech-and-image">ML-李宏毅-Lecture 7-Self-supervised learning for Speech and Image</span></h2><h2><span id="目录">目录</span></h2><!-- toc -->
+<ul>
+<li><a href="#class-material">Class Material</a><ul>
+<li><a href="#機器學習-2022語音與影像上的神奇自督導式學習-self-supervised-learning-模型">【機器學習 2022】語音與影像上的神奇自督導式學習 -Self-supervised Learning- 模型</a><ul>
+<li><a href="#generative-approaches">Generative Approaches</a></li>
+<li><a href="#predictive-approach">Predictive Approach</a></li>
+<li><a href="#contrastive-learning">Contrastive Learning</a></li>
+<li><a href="#bootstrapping-approaches">Bootstrapping Approaches</a></li>
+<li><a href="#simply-extea-regularization">Simply Extea Regularization</a></li>
+<li><a href="#concluding-remarks">Concluding Remarks</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<!-- tocstop -->
+<h1><span id="class-material">Class Material</span></h1><h2><span id="機器學習-2022語音與影像上的神奇自督導式學習-self-supervised-learning-模型">【機器學習 2022】語音與影像上的神奇自督導式學習 -Self-supervised Learning- 模型</span></h2><p><img src="C1.1.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;Self-supervised Learning 主要用在 NLP 中。</p>
+<p><img src="C1.2.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;BERT 也可用在 Speech 中，根据声音识别文字。</p>
+<p><img src="C1.3.png" alt="png"></p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://superbbenchmark.org/">SUPERB (superbbenchmark.org)</a></li>
+</ul>
+<p><img src="C1.4.png" alt="png"></p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/2105.01051">[2105.01051] SUPERB: Speech processing Universal PERformance Benchmark (arxiv.org)</a></li>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/2203.06849">[2203.06849] SUPERB-SG: Enhanced Speech processing Universal PERformance Benchmark for Semantic and Generative Capabilities (arxiv.org)</a></li>
+</ul>
+<p><img src="C1.5.png" alt="png"></p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://www.youtube.com/watch?v=MpsVE60iRLM&amp;ab_channel=Hung-yiLee">SUPERB: 語音上的自督導式學習模型居然十項全能？ - YouTube</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/s3prl/s3prl">s3prl/s3prl: Self-Supervised Speech/Sound Pre-training and Representation Learning Toolkit (github.com)</a></li>
+</ul>
+<p><img src="C1.6.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;将 Self-supervised Learning 用在图像上：</p>
+<ul>
+<li>Image Recognition</li>
+<li>Object Detection</li>
+<li>Semantic Segmentation</li>
+<li>Visual Navigation</li>
+</ul>
+<hr>
+<ul>
+<li><p><a target="_blank" rel="noopener" href="https://arxiv.org/abs/2011.13377">[2011.13377] How Well Do Self-Supervised Models Transfer? (arxiv.org)</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://arxiv.org/abs/1905.01235">[1905.01235] Scaling and Benchmarking Self-Supervised Visual Representation Learning (arxiv.org)</a></p>
+</li>
+</ul>
+<p><img src="C1.7.png" alt="png"></p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/2110.09327">[2110.09327] Self-Supervised Representation Learning: Introduction, Advances and Challenges (arxiv.org)</a></li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;有时 Self-supervised Learning 的效果比 Supervised Learning 还好。</p>
+<h3><span id="generative-approaches">Generative Approaches</span></h3><p><img src="C1.8.png" alt="png"></p>
+<p><img src="C1.9.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;BERT 使用 Masking 处理 NLP，同样的用此法处理 Speech 问题。</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/1910.12638">[1910.12638] Mockingjay: Unsupervised Speech Representation Learning with Deep Bidirectional Transformer Encoders (arxiv.org)</a></li>
+</ul>
+<p><img src="C1.10.png" alt="png"></p>
+<p>对于 BERT：</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/1910.12638">[1910.12638] Mockingjay: Unsupervised Speech Representation Learning with Deep Bidirectional Transformer Encoders (arxiv.org)</a> Mask 语音的一个片段用于训练（片段不能太短，否则太好猜了）</li>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/2007.06028">[2007.06028] TERA: Self-Supervised Learning of Transformer Encoder Representation for Speech (arxiv.org)</a> Mask 某些维度，而不是语音片段</li>
+</ul>
+<p><img src="C1.11.png" alt="png"></p>
+<p>对于 CPT：</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;预测接下来的语音序列（不能太短，不然太好猜了）</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/1910.12607">[1910.12607] Generative Pre-Training for Speech with Autoregressive Predictive Coding (arxiv.org)</a></li>
+</ul>
+<p><img src="C1.12.png" alt="png"></p>
+<h3><span id="predictive-approach">Predictive Approach</span></h3><p><img src="C1.13.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;不使用生成的方法训练模型。</p>
+<p><img src="C1.14.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;给出一张旋转的图片，让计算机判断旋转的角度。</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/1803.07728">[1803.07728] Unsupervised Representation Learning by Predicting Image Rotations (arxiv.org)</a></li>
+</ul>
+<p><img src="C1.15.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;给出两张图片片段，让计算机判断两张图片的位置关系。</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/1505.05192">[1505.05192] Unsupervised Visual Representation Learning by Context Prediction (arxiv.org)</a></li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;判断两部分 Speech 片段是时间关系。</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://ieeexplore.ieee.org/document/9060816">Pre-Training Audio Representations With Self-Supervision | IEEE Journals &amp; Magazine | IEEE Xplore</a></li>
+</ul>
+<p><img src="C1.16.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;让 Speech 直接判断 Clustering 后的分类结果。</p>
+<p><strong>Speech</strong></p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/2106.07447">[2106.07447] HuBERT: Self-Supervised Speech Representation Learning by Masked Prediction of Hidden Units (arxiv.org)</a></li>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/2202.01855">[2202.01855] Self-supervised Learning with Random-projection Quantizer for Speech Recognition (arxiv.org)</a></li>
+</ul>
+<p><strong>Image</strong></p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/1807.05520">[1807.05520] Deep Clustering for Unsupervised Learning of Visual Features (arxiv.org)</a></li>
+</ul>
+<h3><span id="contrastive-learning">Contrastive Learning</span></h3><p><img src="C1.17.png" alt="png"></p>
+<p><img src="C1.18.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;给几张图片，经过一些图像处理后让计算机还能认出原始图片（希望同一只猫输出的向量越接近越好，猫和狗输出的向量越远越好）。</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/2002.05709">[2002.05709] A Simple Framework for Contrastive Learning of Visual Representations (arxiv.org)</a></li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>Speech</strong> 版本：</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/2010.13991">[2010.13991] Speech SIMCLR: Combining Contrastive and Reconstruction Objective for Self-supervised Speech Representation Learning (arxiv.org)</a></li>
+</ul>
+<p><img src="C1.19.png" alt="png"></p>
+<p>Moco：比 SimCLR 多了 memory bank 和 momentum encoder</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/1911.05722">[1911.05722] Momentum Contrast for Unsupervised Visual Representation Learning (arxiv.org)</a></li>
+</ul>
+<p>Moco v2：借鉴了 SimCLR</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/2003.04297">[2003.04297] Improved Baselines with Momentum Contrastive Learning (arxiv.org)</a></li>
+</ul>
+<p><img src="C1.20.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;Encoder 出来的东西一部分给 Predicter，要求 Predicter 出来的东西与剩下 positive 类的尽可能相近，negative 类尽可能相远。CPC 中 Predicter 用的是 GRU，Wav2vec 用的是 CNN。</p>
+<ul>
+<li>CPC：<a target="_blank" rel="noopener" href="https://arxiv.org/abs/1807.03748">[1807.03748] Representation Learning with Contrastive Predictive Coding (arxiv.org)</a></li>
+<li>Wav2vec：<a target="_blank" rel="noopener" href="https://arxiv.org/abs/1904.05862">[1904.05862] wav2vec: Unsupervised Pre-training for Speech Recognition (arxiv.org)</a></li>
+</ul>
+<p><img src="C1.21.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;VQ-wav2vec 输出的不是连续的，而是离散的（利用 BERT、去除噪声）。</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/1910.05453">[1910.05453] vq-wav2vec: Self-Supervised Learning of Discrete Speech Representations (arxiv.org)</a></li>
+</ul>
+<p><img src="C1.22.png" alt="png"></p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/1911.03912">[1911.03912] Effectiveness of self-supervised pre-training for speech recognition (arxiv.org)</a></li>
+</ul>
+<p><img src="C1.23.png" alt="png"></p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/2006.11477">[2006.11477] wav2vec 2.0: A Framework for Self-Supervised Learning of Speech Representations (arxiv.org)</a></li>
+</ul>
+<p><img src="C1.24.png" alt="png"></p>
+<p><img src="C1.25.png" alt="png"></p>
+<ul>
+<li>Classification 分类 v.s. Contrastive 对比</li>
+</ul>
+<p>对比思想<strong>动机</strong>：人类不仅能从积极的信号中学习，还能从纠正不良行为中获益。对比学习其实是无监督学习的一种范式。</p>
+<p><img src="C1.26.png" alt="png"></p>
+<p><img src="C1.27.png" alt="png"></p>
+<p><img src="C1.28.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;选择 Negative Examples 并不容易，不能太复杂，也不太简单。</p>
+<h3><span id="bootstrapping-approaches">Bootstrapping Approaches</span></h3><p><img src="C1.29.png" alt="png"></p>
+<p><img src="C1.31.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;如果单纯的不给负类，机器就会倾向输出完全一样的向量，产生 Collapse 错误。（左）</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;给图像做一定变换后，经过 Encoder-Predictor 后的向量学习尽可能与直接 Encoder 的相等，并更新 Encoder。（右）</p>
+<p><img src="C1.32.png" alt="png"></p>
+<p><strong>Typical Knowledge Distillation</strong>：小模型（student）不断训练变得输出跟大模型一样（Teacher）。（左）</p>
+<p>把接了 Predictor 的 Encoder 当作学生，每一轮回后变成新的老师。（右）</p>
+<p><img src="C1.33.png" alt="png"></p>
+<ul>
+<li>Image<ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/2006.07733">[2006.07733] Bootstrap your own latent: A new approach to self-supervised Learning (arxiv.org)</a></li>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/2011.10566">[2011.10566] Exploring Simple Siamese Representation Learning (arxiv.org)</a></li>
+</ul>
+</li>
+<li>Speech<ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/2202.03555">[2202.03555] data2vec: A General Framework for Self-supervised Learning in Speech, Vision and Language (arxiv.org)</a></li>
+</ul>
+</li>
+</ul>
+<h3><span id="simply-extea-regularization">Simply Extea Regularization</span></h3><p><img src="C1.34.png" alt="png"></p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/2103.03230">[2103.03230] Barlow Twins: Self-Supervised Learning via Redundancy Reduction (arxiv.org)</a></li>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/2105.04906">[2105.04906] VICReg: Variance-Invariance-Covariance Regularization for Self-Supervised Learning (arxiv.org)</a></li>
+</ul>
+<p><img src="C1.36.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;分成三个部分：</p>
+<ul>
+<li>Invariance</li>
+<li>Variance</li>
+<li>Covariance<ul>
+<li>想办法让 Invariance 和 Variance 的协方差矩阵非对角线元素接近于 0 </li>
+</ul>
+</li>
+</ul>
+<h3><span id="concluding-remarks">Concluding Remarks</span></h3><p><img src="C1.37.png" alt="png"></p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>图像</th>
+<th>语音</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>生成</td>
+<td>GPT for image</td>
+<td>Mockingjay, APC</td>
+</tr>
+<tr>
+<td>预测</td>
+<td>Rotation Prediction, etc.</td>
+<td>HuBERT</td>
+</tr>
+<tr>
+<td>对比</td>
+<td>SimCLR,MoCo</td>
+<td>CPC, Wav2vec series</td>
+</tr>
+<tr>
+<td>Bootstrapping</td>
+<td>BYOL, SimSiam</td>
+<td>Data2vec</td>
+</tr>
+<tr>
+<td>正则化</td>
+<td>Barlow Twins, VICReg</td>
+<td>DeLoRes</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+  </div>
+  <div id="gitalk-container"></div>
+</div>
+
+<script>
+  
+Fancybox.bind('[data-fancybox="fancybox-gallery-img"]', {
+  dragToClose: true,
+  Toolbar: true,
+  closeButton: "top",
+  Image: {
+    zoom: true,
+  },
+  on: {
+    initCarousel: (fancybox) => {
+      const slide = fancybox.Carousel.slides[fancybox.Carousel.page];
+      fancybox.$container.style.setProperty(
+        "--bg-image",
+        `url("${slide.$thumb.src}")`
+      );
+    },
+    "Carousel.change": (fancybox, carousel, to, from) => {
+      const slide = carousel.slides[to];
+      fancybox.$container.style.setProperty(
+        "--bg-image",
+        `url("${slide.$thumb.src}")`
+      );
+    },
+  },
+});
+</script>
+
+<style>
+    #noneimg img {
+        display: none;
+        z-index: 9999;
+        /* width: 600px !important; */
+        min-width: 0%;
+        max-width: 90%;
+        max-height: 80%;
+        border-radius: 0px;
+        position: fixed;
+        box-shadow: 0 0 0px #c3c3c300 !important;
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        margin: auto !important;
+    }
+
+    @media screen and (max-width:600px) {
+        #noneimg img {
+            max-width: 88%
+        }
+    }
+</style>
+
+    <div class="post-paging">
+    
+    <a href="/2023/02/08/ML-%E6%9D%8E%E5%AE%8F%E6%AF%85-Lecture%208-Auto-encoder%20Anomaly%20Detection/">
+        <div class="post-paging-last">
+            <span>上一篇</span>
+            <p>ML-李宏毅-Lecture 8-Auto-encoder Anomaly Detection</p>
+        </div>
+    </a>
+    
+
+    
+    <a href="/2023/02/06/ML-%E6%9D%8E%E5%AE%8F%E6%AF%85-Recent%20Advance%20of%20Self-supervised%20learning%20for%20NLP/">
+        <div class="post-paging-next">
+            <span>下一篇</span>
+            <p>ML-李宏毅-Recent Advance of Self-supervised learning for NLP</p>
+        </div>
+    </a>
+    
+</div>
+</div>
+		
+<div class="footer">
+	<div class="Copyright">
+		©2023 By Zi-Zi. 主题：<a
+			style="text-decoration: none;display: contents; color: #898F9F;"
+			target="_blank" rel="noopener" href="https://github.com/79e/hexo-theme-quiet">Quiet</a>
+	</div>
+	<div class="contact">
+		
+		<a target="_blank" rel="noopener" href="https://weibo.com/u/5020307235">
+			<img src="/image/Weibo.png" alt="Quiet主题">
+		</a>
+		
+		<a target="_blank" rel="noopener" href="https://tieba.baidu.com/home/main?id=tb.1.ff6d2775.vFH7wrdW2ZjPCmyBHJcjnA">
+			<img src="/image/Tieba.png" alt="Quiet主题">
+		</a>
+		
+		<a target="_blank" rel="noopener" href="https://space.bilibili.com/11547880">
+			<img src="/image/Bilibili.png" alt="Quiet主题">
+		</a>
+		
+		<a target="_blank" rel="noopener" href="https://github.com/GZ-Metal-Cell">
+			<img src="/image/github.png" alt="Quiet主题">
+		</a>
+		
+	</div>
+</div>
+
+<script src="/js/gotop.js"></script>
+
+
+<style type="text/css">
+    @media screen and (min-width: 600px) {
+        .goTop>span {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            opacity: 0.8;
+            background: rgba(18, 24, 58, 0.06);
+            text-align: center;
+            transition: border .5s;
+            border: 1px solid rgba(18, 24, 58, 0.06);
+
+            -moz-transition: border .5s;
+            /* Firefox 4 */
+            -webkit-transition: border .5s;
+            /* Safari 和 Chrome */
+            -o-transition: border .5s;
+            /* Opera */
+        }
+
+        .goTop>span:hover {
+            border: 1px solid #6680B3;
+        }
+
+
+        .goTop {
+            position: fixed;
+            right: 30px;
+            bottom: 80px;
+        }
+
+        .goTop>span>svg {
+            width: 20px;
+            height: 20px;
+            opacity: 0.7;
+        }
+
+    }
+
+    @media screen and (max-width: 600px) {
+        .goTop {
+            display: none;
+        }
+    }
+</style>
+<div class="goTop" id="js-go_top">
+    <span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+            <g>
+                <path d="M13 12v8h-2v-8H4l8-8 8 8z"></path>
+            </g>
+        </svg>
+    </span>
+</div>
+<script>
+    $( '#js-go_top' )
+	.gotoTop( {
+		offset: 500,
+		speed: 300,
+		animationShow: {
+			'transform': 'translate(0,0)',
+			'transition': 'transform .5s ease-in-out'
+		},
+		animationHide: {
+			'transform': 'translate(100px,0)',
+			'transition': 'transform .5s ease-in-out'
+		}
+	} );
+</script>
+
+
+    <script src="/js/md5.min.js"></script>
+    <!-- Gitalk -->
+    <script>
+        const data = '{"clientID":"f3a4ea928b90c73f66d4","clientSecret":"d697ef6f42e83e83c49ff8d19e753f36bc375015","repo":"GZ-Metal-Cell.github.io","owner":"GZ-Metal-Cell","admin":"GZ-Metal-Cell"}'
+        const gitalk = new Gitalk({
+            ...JSON.parse( data),
+            id:md5(location.pathname), //  location.pathname,
+            distractionFreeMode:false
+        })
+        
+        if(Boolean('true')){
+            gitalk.render('gitalk-container')
+        }
+    </script>
+
+<script>
+	console.log('\n %c Hexo-Quiet 主题 %c https://github.com/79e/hexo-theme-quiet \n', 'color: #fadfa3; background: #030307; padding:5px 0;', 'background: #fadfa3; padding:5px 0;')
+</script>
+	<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+</html>
+

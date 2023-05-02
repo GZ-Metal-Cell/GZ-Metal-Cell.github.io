@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		
+<title>Paper-Segment Anything in Medical Images-Zi-Zi's Journey</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="shortcut icon" type="image/x-icon" href="/image/favicon.ico">
+
+<link rel="stylesheet" href="/css/index.css">
+
+
+
+<meta name="keywords" content="论文,">
+<meta name="description" content="">
+
+
+<script src="/js/jquery.min.js"></script>
+
+
+<script src="/js/index.js"></script>
+
+
+<script src="/js/fancybox.umd.js"></script>
+
+
+<script src="/js/fancybox-images.js"></script>
+
+
+<script src="/js/gitalk.min.js"></script>
+
+
+<script src="/js/hljs.min.js"></script>
+ 
+
+	<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.1.0"></head>
+
+	<body>
+		
+	<div class="header">
+		<div class="header-top" id="header-top">
+			<div class="h-left">
+				<a href="/">
+					<img src="/image/logo.png" alt="Quiet">
+				</a>
+			</div>
+			<div class="h-right">
+				<ul>
+					
+						
+								<li>
+									<a href="/">
+										主页
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/archives">
+										统计
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/categories">
+										类别
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/tags">
+										标签
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/links">
+										链接
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/about">
+										关于
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+				</ul>
+			</div>
+			<div class="h-right-close">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+					<path fill="none" d="M0 0h24v24H0z" />
+					<path d="M3 4h18v2H3V4zm0 7h18v2H3v-2zm0 7h18v2H3v-2z" fill="rgba(68,68,68,1)" />
+				</svg>
+			</div>
+		</div>
+	</div>
+	<div class="sidebar">
+    <div class="topo">
+        <h2>Zi-Zi</h2>
+    </div>
+    <ul>
+        
+        <li>
+            <a href="/">主页</a>
+        </li>
+        
+        <li>
+            <a href="/archives">统计</a>
+        </li>
+        
+        <li>
+            <a href="/categories">类别</a>
+        </li>
+        
+        <li>
+            <a href="/tags">标签</a>
+        </li>
+        
+        <li>
+            <a href="/links">链接</a>
+        </li>
+        
+        <li>
+            <a href="/about">关于</a>
+        </li>
+        
+    </ul>
+    <div class="my_foot">
+        
+        <a target="_blank" rel="noopener" href="https://weibo.com/u/5020307235">
+            <img src="/image/Weibo.png" alt="Quiet主题">
+        </a>
+        
+        <a target="_blank" rel="noopener" href="https://tieba.baidu.com/home/main?id=tb.1.ff6d2775.vFH7wrdW2ZjPCmyBHJcjnA">
+            <img src="/image/Tieba.png" alt="Quiet主题">
+        </a>
+        
+        <a target="_blank" rel="noopener" href="https://space.bilibili.com/11547880">
+            <img src="/image/Bilibili.png" alt="Quiet主题">
+        </a>
+        
+        <a target="_blank" rel="noopener" href="https://github.com/GZ-Metal-Cell">
+            <img src="/image/github.png" alt="Quiet主题">
+        </a>
+        
+    </div>
+</div>
+<div class='shelter'>
+</div>
+<style>
+    .shelter{
+        background-color: #333;
+        opacity:0.5;
+        cursor: pointer;
+        display: none; 
+        position: fixed;
+        left: 0;
+        top: 0; 
+        right: 0;
+        bottom: 0;
+        z-index: 1998;
+    }
+    .sidebar {
+        width: 66%;
+        height: 100%;
+        position: fixed;
+        top: 0;
+        right: -100%;
+        bottom: 0;
+        background: #fff;
+        z-index: 1999;
+        text-align: center;
+        box-shadow: -6px 0 20px rgba(98, 94, 94, .815);
+    }
+
+    .topo {
+        width: 100%;
+        height: 200px;
+        background: url(https://api.ixiaowai.cn/gqapi/gqapi.php) no-repeat;
+        background-size: 100% 100%;
+        position: relative;
+        display: flex;
+        align-items: flex-end
+    }
+
+    .topo h2 {
+        color: #fff;
+        z-index: 1;
+        position: relative;
+        margin: 0 0 10px 10px;
+        font-size: 1.2em;
+        box-sizing: border-box
+    }
+
+    .topo:before {
+        content: '';
+        background-image: url(/image/pattern.png);
+        background-repeat: repeat;
+        height: 100%;
+        left: 0;
+        position: absolute;
+        top: 0;
+        width: 100%;
+        z-index: 1
+    }
+
+    .sidebar ul {
+        width: 100%;
+        margin-top: 50px
+    }
+
+    .sidebar ul li {
+        height: 50px;
+        list-style: none;
+        font-size: 1.2em;
+        text-align: right;
+        margin-right: 10px
+    }
+
+    .sidebar ul li a {
+        display: grid;
+        color: #5d606a;
+        text-overflow: ellipsis;
+        width: 100%;
+        text-decoration: none
+    }
+
+    .my_foot {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        position: absolute;
+        bottom: 0
+    }
+
+    .my_foot a {
+        text-decoration: none;
+        margin-right: 10px;
+        display: inline-block
+    }
+
+    .my_foot a img {
+        width: 30px;
+        height: 30px
+    }
+</style>
+
+<script>
+    $( function () {
+	$( '.h-right-close>svg' )
+		.click( function () {
+			$( '.sidebar' )
+				.animate( {
+					right: "0"
+				}, 500 );
+			$( '.shelter' )
+				.fadeIn( "slow" )
+		} );
+	$( '.shelter' )
+		.click( function ( e ) {
+			$( '.sidebar' )
+				.animate( {
+					right: "-100%"
+				}, 500 );
+			$( '.shelter' )
+				.fadeOut( "slow" )
+		} )
+} )
+
+</script>
+
+<div class="post">
+    <div class="post-header-background post-header-img"
+    style="background: url('https://api.ixiaowai.cn/gqapi/gqapi.php')" 
+>
+    <div class="post-header-background-content">
+        <ul class="post-header-tag">
+            
+                
+                    <li><a href="/tags/论文">论文</a></li>
+                
+            
+        </ul>
+        
+        <h1>Paper-Segment Anything in Medical Images</h1>
+        <div class="post-header-info">
+            <div class="post-header-info-author">
+                
+                    <svg t="1604839279282" class="icon" viewBox="0 0 1024 1024" version="1.1"
+                        xmlns="http://www.w3.org/2000/svg" p-id="2901" width="20" height="20">
+                        <path
+                            d="M513 956.3c-247.7 0-448-200.3-448-448S265.3 66.2 513 66.2s448 200.3 448 448-200.3 442.1-448 442.1z m0-830.9c-212.2 0-388.8 170.7-388.8 388.8C124.2 726.3 294.9 903 513 903c212.2 0 388.8-170.7 388.8-388.8S725.2 125.4 513 125.4z m0 430.2c-94.2 0-170.7-76.5-170.7-170.7S418.8 207.8 513 207.8s170.7 76.5 170.7 170.7S607.2 555.6 513 555.6z m0-289.1c-64.6 0-112 52.8-112 112s47.4 117.9 112 117.9 112-52.8 112-112-47.4-117.9-112-117.9z m0 689.8c-135.7 0-259-58.7-341.9-158.9l-11.8-17.8 11.8-17.8c76.5-117.9 206.2-188.5 347.8-188.5 135.7 0 265 64.6 341.9 182.6l11.8 17.8-11.8 17.8C778 897.1 648.7 956.3 513 956.3zM230.3 773.2C300.9 849.7 406.9 897 513 897c112 0 218.1-47.4 288.6-129.8-70.5-88.2-170.7-135.6-282.7-135.6s-218.1 53.3-288.6 141.6z"
+                            p-id="2902" fill="#ffffff"></path>
+                    </svg>
+                    
+                <span class="post-header-info-author-text"> <a href="../../about">Zi-Zi</a></span>
+                <div class="post-header-info-author-categories">
+                    
+                         <a href="/categories/学习笔记" target="_blank" >学习笔记</a>
+                    
+                </div>
+                <p>2023-04-26 21:11:00</p>
+            </div>
+        </div>
+    </div>
+</div>
+    <div class="post-content" id="content">
+  
+  <div id="article" class="post-content-info">
+    
+
+    <h2><span id="paper-segment-anything-in-medical-images">Paper-Segment Anything in Medical Images</span></h2><h2><span id="目录">目录</span></h2><!-- toc -->
+<ul>
+<li><a href="#资源">资源</a></li>
+<li><a href="#笔记">笔记</a></li>
+</ul>
+<!-- tocstop -->
+<h2><span id="资源">资源</span></h2><ul>
+<li>原文：<a target="_blank" rel="noopener" href="https://arxiv.org/abs/2304.12306v1">[2304.12306v1] Segment Anything in Medical Images (arxiv.org)</a></li>
+<li>代码：<a target="_blank" rel="noopener" href="https://github.com/bowang-lab/medsam">bowang-lab/MedSAM: This the official repository for MedSAM: Segment Anything in Medical Images. (github.com)</a></li>
+</ul>
+<h2><span id="笔记">笔记</span></h2><ul>
+<li><p>SAM 真是太牛逼啦！但是它在医学图像上的性能十分有限。</p>
+</li>
+<li><p>介绍了 <strong>MedSAM</strong>：</p>
+<ul>
+<li><p>设计了一个大规模的医学图像数据集，包含 11 种模式，20 多万个蒙版。<strong>提供了关于在定制的新数据集上微调 SAM 的分步教程</strong>。</p>
+</li>
+<li><p>开发了一种简单的微调方法（simple fine-tuning method），将 SAM 用于普通医学图像分割。在 21 个 3D 分割任务和 9 个 2D 任务中，比默认 SAM 要好使。</p>
+</li>
+</ul>
+</li>
+</ul>
+<hr>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;第一个也是最著名的<strong>基础分割模型（segmentation foundation model）</strong>是 SAM，它在超过 1B 个蒙版上进行训练，可以根据提示（例如，边界框、点、文本）或以全自动的方式生成准确的对象蒙版。但是自然图像和医学图像之前存在显著差异，这些模型在医学图像分割中的适用性仍然有限，在一些典型的医学图像分割任务（对象边缘信息较弱）中不好使。</p>
+<hr>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;SAM 利用了基于 transformer 的架构：</p>
+<ul>
+<li><p>使用 transformer-based 的<strong>图像编码器（image encoder）</strong>提取图像特征</p>
+<ul>
+<li>pretrained with masked auto-encoder modeling，可以处理高分辨率图像（即 $1024\times 1024$），获得的图像嵌入是 $16\times \mathrm{downscaled}(64\times 64)$</li>
+</ul>
+</li>
+<li><p>使用<strong>提示编码器（prompt encoder）</strong>结合用户交互</p>
+<ul>
+<li>支持四种不同的提示<ul>
+<li>点：通过傅里叶位置编码和两个可学习的标记进行编码，分别用于指定前景和背景</li>
+<li>边界框：通过其左上角的点和右下角的点进行编码</li>
+<li>文本：由 CLIP 中经过预训练的文本编码器进行编码</li>
+<li>掩码：与输入图像具有相同的分辨率，输入图像由卷积特征图编码</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>使用<strong>掩码解码器（mask encoder）</strong>来基于图像嵌入、提示嵌入和输出令牌生成分割结果和置信度得分。</p>
+<ul>
+<li>采用了轻量级设计，由两个转换器层组成，具有动态蒙版预测头和两个交集（Intersection-over-Union，IOU）分数回归头。</li>
+</ul>
+</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;蒙版预测头可以生成 3 个 $4\times \mathrm{downscaled\ masks}$，分别对应于整个对象、部分对象和子对象。</p>
+<p><img src="2.png" alt="png"></p>
+<hr>
+<p>SAM 支持 3 中主要的分割模式：</p>
+<ul>
+<li>以全自动方式分割所有内容（segment everything in a fully automatic way）<ul>
+<li>没有语义标签，一些分割的东西无意义</li>
+</ul>
+</li>
+<li>边界框模式（bounding box mode）<ul>
+<li>只给出左上角和右下角的点，就可以为右肾提供良好的分割结果</li>
+</ul>
+</li>
+<li>点模式（point mode）<ul>
+<li>先给一个前景点，再给一个背景点</li>
+</ul>
+</li>
+</ul>
+<p>我们认为，在医学图像分割任务中使用 SAM 时，基于边界框的分割模式比基于分割一切和点的分割模式具有更广泛的实用价值。</p>
+<hr>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;为了使SAM适用于医学图像分割，有必要选择适当的用户提示和网络组件进行微调。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;基于以上分析，<strong>边界框提示</strong>是指定分割目标的正确选择。SAM 的网络架构包含三个主要组件：<strong>图像编码器</strong>、<strong>提示编码器</strong>和<strong>掩码解码器</strong>。人们可以选择微调它们的任何组合。</p>
+<ul>
+<li><p><strong>图像编码器</strong>基于 vision transformer，该转换器在 SAM 中具有最大的计算开销。为了降低计算成本，将<strong>图像编码器</strong> <em>冻结</em></p>
+</li>
+<li><p><strong>提示编码器</strong>对边界框的位置信息进行编码，并且可以从 SAM 中预先训练的边界框编码器中重复使用，<em>冻结</em></p>
+</li>
+<li><p><strong>只</strong> <em>微调</em> <strong>掩码解码器</strong></p>
+</li>
+</ul>
+<p><img src="3.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;由于图像编码器可以在提示模型之前应用，因此我们可以<strong>预先计算所有训练图像的图像嵌入</strong>，以避免每次提示的图像嵌入的重复计算，这可以显著提高训练效率。掩码解码器只需要生成一个掩码，而不需要生成三个掩码，因为在大多数情况下，边界框提示可以清楚地指定预期的分割目标。</p>
+<hr>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;每个数据集被随机分为80个和20个，用于训练和测试。排除了像素小于 100 的分割目标。由于 SAM 是为 2D 图像分割而设计的，我们将3D图像（即CT、MR、PET）沿平面外维度划分为2D切片。然后，我们使用预先训练的 ViT-Base 模型作为图像编码器，并通过将归一化的图像馈送到图像编码器来离线计算所有图像嵌入（图像编码器将图像大小转换为 $3\times 1024\times 1024$）。在训练期间，边界框提示是从具有0-20个像素的随机扰动的地面实况掩码生成的。损失函数是Dice损失和交叉熵损失之间的未加权和，已被证明在各种分割任务中是稳健的。Adam 优化器对网络进行了优化，初始学习率为1e-5。</p>
+<hr>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;使用<strong>骰子相似系数（DSC）</strong>和<strong>归一化表面距离（NSD，公差1 mm）</strong>来评估基本事实和分割结果之间的区域重叠率和边界一致性，这是两种常用的<strong>分割指标</strong>。</p>
+<hr>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;我们的代码和经过训练的模型是公开的，我们提供了关于在定制的新数据集上微调SAM的分步教程。我们期待着与社区合作，共同推进这一令人兴奋的研究领域。</p>
+
+  </div>
+  <div id="gitalk-container"></div>
+</div>
+
+<script>
+  
+Fancybox.bind('[data-fancybox="fancybox-gallery-img"]', {
+  dragToClose: true,
+  Toolbar: true,
+  closeButton: "top",
+  Image: {
+    zoom: true,
+  },
+  on: {
+    initCarousel: (fancybox) => {
+      const slide = fancybox.Carousel.slides[fancybox.Carousel.page];
+      fancybox.$container.style.setProperty(
+        "--bg-image",
+        `url("${slide.$thumb.src}")`
+      );
+    },
+    "Carousel.change": (fancybox, carousel, to, from) => {
+      const slide = carousel.slides[to];
+      fancybox.$container.style.setProperty(
+        "--bg-image",
+        `url("${slide.$thumb.src}")`
+      );
+    },
+  },
+});
+</script>
+
+<style>
+    #noneimg img {
+        display: none;
+        z-index: 9999;
+        /* width: 600px !important; */
+        min-width: 0%;
+        max-width: 90%;
+        max-height: 80%;
+        border-radius: 0px;
+        position: fixed;
+        box-shadow: 0 0 0px #c3c3c300 !important;
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        margin: auto !important;
+    }
+
+    @media screen and (max-width:600px) {
+        #noneimg img {
+            max-width: 88%
+        }
+    }
+</style>
+
+    <div class="post-paging">
+    
+    <a href="/2023/04/26/Paper-Resolution-robust%20Large%20Mask%20Inpainting%20with%20Fourier%20Convolutions/">
+        <div class="post-paging-last">
+            <span>上一篇</span>
+            <p>Paper-Resolution-robust Large Mask Inpainting with Fourier Convolutions</p>
+        </div>
+    </a>
+    
+
+    
+    <a href="/2023/04/26/AI-Stable%20Diffusion/">
+        <div class="post-paging-next">
+            <span>下一篇</span>
+            <p>AI-Stable Diffusion</p>
+        </div>
+    </a>
+    
+</div>
+</div>
+		
+<div class="footer">
+	<div class="Copyright">
+		©2023 By Zi-Zi. 主题：<a
+			style="text-decoration: none;display: contents; color: #898F9F;"
+			target="_blank" rel="noopener" href="https://github.com/79e/hexo-theme-quiet">Quiet</a>
+	</div>
+	<div class="contact">
+		
+		<a target="_blank" rel="noopener" href="https://weibo.com/u/5020307235">
+			<img src="/image/Weibo.png" alt="Quiet主题">
+		</a>
+		
+		<a target="_blank" rel="noopener" href="https://tieba.baidu.com/home/main?id=tb.1.ff6d2775.vFH7wrdW2ZjPCmyBHJcjnA">
+			<img src="/image/Tieba.png" alt="Quiet主题">
+		</a>
+		
+		<a target="_blank" rel="noopener" href="https://space.bilibili.com/11547880">
+			<img src="/image/Bilibili.png" alt="Quiet主题">
+		</a>
+		
+		<a target="_blank" rel="noopener" href="https://github.com/GZ-Metal-Cell">
+			<img src="/image/github.png" alt="Quiet主题">
+		</a>
+		
+	</div>
+</div>
+
+<script src="/js/gotop.js"></script>
+
+
+<style type="text/css">
+    @media screen and (min-width: 600px) {
+        .goTop>span {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            opacity: 0.8;
+            background: rgba(18, 24, 58, 0.06);
+            text-align: center;
+            transition: border .5s;
+            border: 1px solid rgba(18, 24, 58, 0.06);
+
+            -moz-transition: border .5s;
+            /* Firefox 4 */
+            -webkit-transition: border .5s;
+            /* Safari 和 Chrome */
+            -o-transition: border .5s;
+            /* Opera */
+        }
+
+        .goTop>span:hover {
+            border: 1px solid #6680B3;
+        }
+
+
+        .goTop {
+            position: fixed;
+            right: 30px;
+            bottom: 80px;
+        }
+
+        .goTop>span>svg {
+            width: 20px;
+            height: 20px;
+            opacity: 0.7;
+        }
+
+    }
+
+    @media screen and (max-width: 600px) {
+        .goTop {
+            display: none;
+        }
+    }
+</style>
+<div class="goTop" id="js-go_top">
+    <span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+            <g>
+                <path d="M13 12v8h-2v-8H4l8-8 8 8z"></path>
+            </g>
+        </svg>
+    </span>
+</div>
+<script>
+    $( '#js-go_top' )
+	.gotoTop( {
+		offset: 500,
+		speed: 300,
+		animationShow: {
+			'transform': 'translate(0,0)',
+			'transition': 'transform .5s ease-in-out'
+		},
+		animationHide: {
+			'transform': 'translate(100px,0)',
+			'transition': 'transform .5s ease-in-out'
+		}
+	} );
+</script>
+
+
+    <script src="/js/md5.min.js"></script>
+    <!-- Gitalk -->
+    <script>
+        const data = '{"clientID":"f3a4ea928b90c73f66d4","clientSecret":"d697ef6f42e83e83c49ff8d19e753f36bc375015","repo":"GZ-Metal-Cell.github.io","owner":"GZ-Metal-Cell","admin":"GZ-Metal-Cell"}'
+        const gitalk = new Gitalk({
+            ...JSON.parse( data),
+            id:md5(location.pathname), //  location.pathname,
+            distractionFreeMode:false
+        })
+        
+        if(Boolean('true')){
+            gitalk.render('gitalk-container')
+        }
+    </script>
+
+<script>
+	console.log('\n %c Hexo-Quiet 主题 %c https://github.com/79e/hexo-theme-quiet \n', 'color: #fadfa3; background: #030307; padding:5px 0;', 'background: #fadfa3; padding:5px 0;')
+</script>
+	<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+</html>
+

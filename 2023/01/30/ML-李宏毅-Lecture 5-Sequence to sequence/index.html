@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		
+<title>ML-李宏毅-Lecture 5-Sequence to sequence-Zi-Zi's Journey</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="shortcut icon" type="image/x-icon" href="/image/favicon.ico">
+
+<link rel="stylesheet" href="/css/index.css">
+
+
+
+<meta name="keywords" content="Python,机器学习,">
+<meta name="description" content="">
+
+
+<script src="/js/jquery.min.js"></script>
+
+
+<script src="/js/index.js"></script>
+
+
+<script src="/js/fancybox.umd.js"></script>
+
+
+<script src="/js/fancybox-images.js"></script>
+
+
+<script src="/js/gitalk.min.js"></script>
+
+
+<script src="/js/hljs.min.js"></script>
+ 
+
+	<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.1.0"></head>
+
+	<body>
+		
+	<div class="header">
+		<div class="header-top" id="header-top">
+			<div class="h-left">
+				<a href="/">
+					<img src="/image/logo.png" alt="Quiet">
+				</a>
+			</div>
+			<div class="h-right">
+				<ul>
+					
+						
+								<li>
+									<a href="/">
+										主页
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/archives">
+										统计
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/categories">
+										类别
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/tags">
+										标签
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/links">
+										链接
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/about">
+										关于
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+				</ul>
+			</div>
+			<div class="h-right-close">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+					<path fill="none" d="M0 0h24v24H0z" />
+					<path d="M3 4h18v2H3V4zm0 7h18v2H3v-2zm0 7h18v2H3v-2z" fill="rgba(68,68,68,1)" />
+				</svg>
+			</div>
+		</div>
+	</div>
+	<div class="sidebar">
+    <div class="topo">
+        <h2>Zi-Zi</h2>
+    </div>
+    <ul>
+        
+        <li>
+            <a href="/">主页</a>
+        </li>
+        
+        <li>
+            <a href="/archives">统计</a>
+        </li>
+        
+        <li>
+            <a href="/categories">类别</a>
+        </li>
+        
+        <li>
+            <a href="/tags">标签</a>
+        </li>
+        
+        <li>
+            <a href="/links">链接</a>
+        </li>
+        
+        <li>
+            <a href="/about">关于</a>
+        </li>
+        
+    </ul>
+    <div class="my_foot">
+        
+        <a target="_blank" rel="noopener" href="https://weibo.com/u/5020307235">
+            <img src="/image/Weibo.png" alt="Quiet主题">
+        </a>
+        
+        <a target="_blank" rel="noopener" href="https://tieba.baidu.com/home/main?id=tb.1.ff6d2775.vFH7wrdW2ZjPCmyBHJcjnA">
+            <img src="/image/Tieba.png" alt="Quiet主题">
+        </a>
+        
+        <a target="_blank" rel="noopener" href="https://space.bilibili.com/11547880">
+            <img src="/image/Bilibili.png" alt="Quiet主题">
+        </a>
+        
+        <a target="_blank" rel="noopener" href="https://github.com/GZ-Metal-Cell">
+            <img src="/image/github.png" alt="Quiet主题">
+        </a>
+        
+    </div>
+</div>
+<div class='shelter'>
+</div>
+<style>
+    .shelter{
+        background-color: #333;
+        opacity:0.5;
+        cursor: pointer;
+        display: none; 
+        position: fixed;
+        left: 0;
+        top: 0; 
+        right: 0;
+        bottom: 0;
+        z-index: 1998;
+    }
+    .sidebar {
+        width: 66%;
+        height: 100%;
+        position: fixed;
+        top: 0;
+        right: -100%;
+        bottom: 0;
+        background: #fff;
+        z-index: 1999;
+        text-align: center;
+        box-shadow: -6px 0 20px rgba(98, 94, 94, .815);
+    }
+
+    .topo {
+        width: 100%;
+        height: 200px;
+        background: url(https://api.ixiaowai.cn/gqapi/gqapi.php) no-repeat;
+        background-size: 100% 100%;
+        position: relative;
+        display: flex;
+        align-items: flex-end
+    }
+
+    .topo h2 {
+        color: #fff;
+        z-index: 1;
+        position: relative;
+        margin: 0 0 10px 10px;
+        font-size: 1.2em;
+        box-sizing: border-box
+    }
+
+    .topo:before {
+        content: '';
+        background-image: url(/image/pattern.png);
+        background-repeat: repeat;
+        height: 100%;
+        left: 0;
+        position: absolute;
+        top: 0;
+        width: 100%;
+        z-index: 1
+    }
+
+    .sidebar ul {
+        width: 100%;
+        margin-top: 50px
+    }
+
+    .sidebar ul li {
+        height: 50px;
+        list-style: none;
+        font-size: 1.2em;
+        text-align: right;
+        margin-right: 10px
+    }
+
+    .sidebar ul li a {
+        display: grid;
+        color: #5d606a;
+        text-overflow: ellipsis;
+        width: 100%;
+        text-decoration: none
+    }
+
+    .my_foot {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        position: absolute;
+        bottom: 0
+    }
+
+    .my_foot a {
+        text-decoration: none;
+        margin-right: 10px;
+        display: inline-block
+    }
+
+    .my_foot a img {
+        width: 30px;
+        height: 30px
+    }
+</style>
+
+<script>
+    $( function () {
+	$( '.h-right-close>svg' )
+		.click( function () {
+			$( '.sidebar' )
+				.animate( {
+					right: "0"
+				}, 500 );
+			$( '.shelter' )
+				.fadeIn( "slow" )
+		} );
+	$( '.shelter' )
+		.click( function ( e ) {
+			$( '.sidebar' )
+				.animate( {
+					right: "-100%"
+				}, 500 );
+			$( '.shelter' )
+				.fadeOut( "slow" )
+		} )
+} )
+
+</script>
+
+<div class="post">
+    <div class="post-header-background post-header-img"
+    style="background: url('https://api.ixiaowai.cn/gqapi/gqapi.php')" 
+>
+    <div class="post-header-background-content">
+        <ul class="post-header-tag">
+            
+                
+                    <li><a href="/tags/Python">Python</a></li>
+                
+                    <li><a href="/tags/机器学习">机器学习</a></li>
+                
+            
+        </ul>
+        
+        <h1>ML-李宏毅-Lecture 5-Sequence to sequence</h1>
+        <div class="post-header-info">
+            <div class="post-header-info-author">
+                
+                    <svg t="1604839279282" class="icon" viewBox="0 0 1024 1024" version="1.1"
+                        xmlns="http://www.w3.org/2000/svg" p-id="2901" width="20" height="20">
+                        <path
+                            d="M513 956.3c-247.7 0-448-200.3-448-448S265.3 66.2 513 66.2s448 200.3 448 448-200.3 442.1-448 442.1z m0-830.9c-212.2 0-388.8 170.7-388.8 388.8C124.2 726.3 294.9 903 513 903c212.2 0 388.8-170.7 388.8-388.8S725.2 125.4 513 125.4z m0 430.2c-94.2 0-170.7-76.5-170.7-170.7S418.8 207.8 513 207.8s170.7 76.5 170.7 170.7S607.2 555.6 513 555.6z m0-289.1c-64.6 0-112 52.8-112 112s47.4 117.9 112 117.9 112-52.8 112-112-47.4-117.9-112-117.9z m0 689.8c-135.7 0-259-58.7-341.9-158.9l-11.8-17.8 11.8-17.8c76.5-117.9 206.2-188.5 347.8-188.5 135.7 0 265 64.6 341.9 182.6l11.8 17.8-11.8 17.8C778 897.1 648.7 956.3 513 956.3zM230.3 773.2C300.9 849.7 406.9 897 513 897c112 0 218.1-47.4 288.6-129.8-70.5-88.2-170.7-135.6-282.7-135.6s-218.1 53.3-288.6 141.6z"
+                            p-id="2902" fill="#ffffff"></path>
+                    </svg>
+                    
+                <span class="post-header-info-author-text"> <a href="../../about">Zi-Zi</a></span>
+                <div class="post-header-info-author-categories">
+                    
+                         <a href="/categories/学习笔记" target="_blank" >学习笔记</a>
+                    
+                </div>
+                <p>2023-01-30 12:52:00</p>
+            </div>
+        </div>
+    </div>
+</div>
+    <div class="post-content" id="content">
+  
+  <div id="article" class="post-content-info">
+    
+
+    <h2><span id="ml-李宏毅-lecture-5-sequence-to-sequence">ML-李宏毅-Lecture 5-Sequence to sequence</span></h2><h2><span id="目录">目录</span></h2><!-- toc -->
+<ul>
+<li><a href="#preparation">Preparation</a><ul>
+<li><a href="#機器學習2021transformer-上-">【機器學習2021】Transformer -上-</a><ul>
+<li><a href="#encoder">Encoder</a></li>
+<li><a href="#encoder-总结">Encoder 总结</a></li>
+</ul>
+</li>
+<li><a href="#機器學習2021transformer-下-">【機器學習2021】Transformer -下-</a><ul>
+<li><a href="#decoder-autoregressive-at">Decoder-Autoregressive (AT)</a></li>
+<li><a href="#decoder-non-autoregressive-nat">Decoder-Non-Autoregressive (NAT)</a></li>
+<li><a href="#encoder-decoder">Encoder-Decoder</a></li>
+<li><a href="#training">Training</a><ul>
+<li><a href="#copy-mechanism">Copy Mechanism</a></li>
+<li><a href="#guided-attention">Guided Attention</a></li>
+<li><a href="#beam-search">Beam Search</a><ul>
+<li><a href="#sampling">Sampling</a></li>
+</ul>
+</li>
+<li><a href="#optimizing-evaluation-metrics">Optimizing Evaluation Metrics?</a></li>
+</ul>
+</li>
+<li><a href="#scheduled-sampling">Scheduled Sampling</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#class-material">Class Material</a><ul>
+<li><a href="#機器學習-2022各式各樣神奇的自注意力機制-self-attention-變型">【機器學習 2022】各式各樣神奇的自注意力機制 -Self-attention- 變型</a><ul>
+<li><a href="#local-attention-truncated-attention">Local Attention / Truncated Attention</a></li>
+<li><a href="#stride-attention">Stride Attention</a></li>
+<li><a href="#global-attention">Global Attention</a></li>
+<li><a href="#can-we-only-focus-on-critical-parts">Can we only focus on Critical Parts？</a></li>
+<li><a href="#clustering">Clustering</a></li>
+<li><a href="#learnable-patterns">Learnable Patterns</a></li>
+<li><a href="#do-we-need-full-attention-matrix">Do we need full attention matrix？</a></li>
+<li><a href="#reduce-number-of-keys">Reduce Number of Keys</a></li>
+<li><a href="#realization">Realization</a></li>
+<li><a href="#attention-free">Attention-free</a></li>
+<li><a href="#summary">Summary</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#extra-material">Extra Material</a><ul>
+<li><a href="#-dlhlp-2020-non-autoregressive-sequence-generation-由助教莊永松同學講授-">-DLHLP 2020- Non-Autoregressive Sequence Generation -由助教莊永松同學講授-</a><ul>
+<li><a href="#autoegressive-model-inference-stage">Autoegressive model (inference stage)</a></li>
+<li><a href="#whats-the-problem">What‘s the problem?</a></li>
+<li><a href="#vanilla-nat-non-autoregressive-translation">Vanilla NAT (Non-Autoregressive Translation)</a></li>
+<li><a href="#fertility">Fertility</a></li>
+<li><a href="#sequence-level-knowledge-distillation">Sequence-level knowledge distillation</a></li>
+<li><a href="#npd">NPD</a></li>
+<li><a href="#autogressive-model-wteacher-forcing">Autogressive model w/teacher forcing</a></li>
+<li><a href="#evolution-of-nat">Evolution of NAT</a></li>
+<li><a href="#nat-with-lterative-refinement">NAT with lterative Refinement</a></li>
+<li><a href="#mask-predict">Mask-Predict</a></li>
+<li><a href="#insertion-transformer">Insertion Transformer</a></li>
+<li><a href="#multiple-target-words-to-predict">Multiple target words to predict?</a></li>
+<li><a href="#kermit">KERMIT</a></li>
+<li><a href="#levenshtein-transformer">Levenshtein Transformer</a></li>
+<li><a href="#ctc">CTC</a></li>
+<li><a href="#block-decoding">Block Decoding</a></li>
+<li><a href="#knowledge-distillation-in-nat">Knowledge Distillation in NAT</a></li>
+<li><a href="#reference">Reference</a></li>
+</ul>
+</li>
+<li><a href="#pointer-network">Pointer Network</a><ul>
+<li><a href="#pointer-network-1">Pointer Network</a></li>
+<li><a href="#applications-summarization">Applications - Summarization</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<!-- tocstop -->
+<h1><span id="preparation">Preparation</span></h1><h2><span id="機器學習2021transformer-上-">【機器學習2021】Transformer -上-</span></h2><blockquote>
+<p><strong>Transformer</strong> 是 2017 年引入的深度学习模型，主要用于自然语言处理领域。与循环神经网络一样，Transformers 旨在处理顺序数据（例如自然语言），以执行翻译和文本摘要等任务。但是，与 RNN 不同，Transformers 不需要按顺序处理顺序数据。</p>
+</blockquote>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/349569097">【DL】图解 Transformer — 李宏毅 - 知乎 (zhihu.com)</a></li>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/wl1780852311/article/details/121015369">（2021李宏毅）机器学习-Transformer_顾道长生’的博客-CSDN博客</a></li>
+<li><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/530344872">李宏毅老师《机器学习》课程笔记-5 Transformer - 知乎 (zhihu.com)</a></li>
+</ul>
+<p><img src="P1.1.png" alt="png"></p>
+<p>Seq2seq 问题：输入一个序列，输出一个序列，输出序列的长度由模型决定。</p>
+<ul>
+<li>Speech Recognition：输入一段语音 T，输出对应的文字 N。</li>
+<li>Machine Translation：输出一段文字 N，输出另一种语言的文字 N’。</li>
+<li>Speech Translation：输入一段语音（这段语音使用的语言可能没有对应的文字），输出另一种语言的文字。<ul>
+<li>对于有文字的语言，可以将 Speech Recognition 和 Machine Translation 结合成 Speech Translation，但是没有文字的语言就不行。  </li>
+</ul>
+</li>
+</ul>
+<p><img src="P1.2.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;尝试使用 1500 小时的乡土剧（台语声音，中文字幕）做数据集，让机器试着听台语输出中文。</p>
+<p><img src="P1.3.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;不考虑训练集中 BGM、噪音、翻译文本的噪声、台语的口音等的因素。</p>
+<p><img src="P1.4.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;最后也能得到差强人意的效果。</p>
+<p><img src="P1.5.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;Taiwanese Speech Synthetic：语音辨识反过来：语言合成，输入文本，输出台语的项目。</p>
+<p><img src="P1.6.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;Seq2seq model 用在聊天模型中。</p>
+<p><img src="P1.7.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;把所有对话问题（各式各样的 NLP 问题）当作 QA 问题，用 seq2seq 模型解决。输入 question，context，输出 answer。</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/1806.08730"><a target="_blank" rel="noopener" href="https://arxiv.org/abs/1806.08730">[1806.08730] The Natural Language Decathlon: Multitask Learning as Question Answering (arxiv.org)</a></a></li>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/1909.03329">[1909.03329] LAMOL: LAnguage MOdeling for Lifelong Language Learning (arxiv.org)</a></li>
+</ul>
+<p><img src="P1.8.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;将 seq2seq 模型用在文法分析 Syntactic Parsing 中：输入一句话，输出这句话的语法成分（将语法成分看作用序列表示的一棵树）。</p>
+<p><img src="P1.9.png" alt="png"></p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/1412.7449">[1412.7449] Grammar as a Foreign Language (arxiv.org)</a> 当时 Seq2Seq还主要用在翻译上，因此论文题目”将文法当作一门外语“。</li>
+</ul>
+<p><img src="P1.10.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;用在多标签分类问题。（同一个东西可能属于不同分类）输入一个文章，输出几个 class（由机器及自己决定）</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/1909.03434">[1909.03434] Order-free Learning Alleviating Exposure Bias in Multi-label Classification (arxiv.org)</a></li>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/1707.05495">[1707.05495] Order-Free RNN with Visual Attention for Multi-Label Classification (arxiv.org)</a></li>
+</ul>
+<p><img src="P1.11.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;用在目标检测（看似没有关系，但是可以用 seq2seq 硬做）</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/2005.12872">[2005.12872] End-to-End Object Detection with Transformers (arxiv.org)</a></li>
+</ul>
+<p><img src="P1.12.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;在 2014 年，就提出了 Seq2seq 模型（不过时间比较久远，模型比较旧）：<a target="_blank" rel="noopener" href="https://arxiv.org/abs/1409.3215">[1409.3215] Sequence to Sequence Learning with Neural Networks (arxiv.org)</a>。由两个 RNN 分别组成了 Encoder、Decoder，可以应用于机器翻译。</p>
+<p><img src="P1.13.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;今天典型的 seq2deq model：Transformer <a target="_blank" rel="noopener" href="https://arxiv.org/abs/1706.03762">[1706.03762] Attention Is All You Need (arxiv.org)</a></p>
+<p>一般的 seq2seq model 会分成两块：Encoder（负责处理 input 的 seq）、Decoder（决定输出什么样的 seq）</p>
+<h3><span id="encoder">Encoder</span></h3><p><img src="P1.14.png" alt="png"></p>
+<p><img src="P1.15.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;在 seq2seq 模型中的 Encoder 要做的事情就是 <strong>输入一排向量，输出另一排向量</strong>。能实现输入一排向量，输出一排向量功能的模型有 Self-attention、CNN 和 RNN 等模型，而 <strong>Transformer</strong> 中用到的则是 <strong>Multi-Head attention 模型</strong> 。</p>
+<p><img src="P1.19.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;Transformer 中有 N 个 Block，每个Block 中包含了 Multi-Head Attention 和 Fully Connected 的 Feed Forward Network。</p>
+<ul>
+<li>先做一个 self-attention，输入一排向量，经过 self-attention 考虑整个 sequence 的信息后，输出另外一排向量。</li>
+<li>接下来将输出的这一排向量输入到 fully connected 的前馈网络中，得到处理后的向量，就是 Block 的输出。</li>
+</ul>
+<p><img src="P1.16.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;Transformer 引入了 <strong>residual connection</strong>，直接把 input 的 $a$ 和 output 的 $b$ 加起来得到新的 vector，再进行 layer normalization，得到 self-attention 的输出（FC 网络的输入）。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;在 fully connected 中也增加了同样的 residual 网络结构，FC 网络的输出先直接加上它对应的输入，然后经过 layer normalization 之后才是 FC 网络最终的输出。</p>
+<p>Layer Norm：</p>
+<script type="math/tex; mode=display">x'_i=\frac{x'_i-m}{\sigma}</script><ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/1607.06450">[1607.06450] Layer Normalization (arxiv.org)</a></li>
+</ul>
+<p><img src="P1.17.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;BERT 就使用了 transformer Eecoder。</p>
+<h3><span id="encoder-总结">Encoder 总结</span></h3><ul>
+<li>在将输入向量进行self-attention之前，先加上Positional Encoding，也就是输入向量中的位置信息。</li>
+<li>Multi-Head Attention：进行 Multi-Head 的 self-attention 处理得到输出向量。</li>
+<li><p>Add &amp; Norm (residual &amp; layer normalization): 也就是将 self-attention 的输出加上它对应的输入然后对其进行 Layer Normalization。</p>
+</li>
+<li><p>Feed Forward：将上一层的输出输入到 fully connected Network 中，将得到的输出向量和对应的输入向量同样经过 residual &amp; layer normalization 操作后得到该 block 的最终输出。</p>
+</li>
+<li><p>将这个 block 重复 n 次。</p>
+</li>
+</ul>
+<p><img src="P1.18.png" alt="png"></p>
+<p>尝试对原始的 transformer 的改进：<a target="_blank" rel="noopener" href="https://arxiv.org/abs/2002.04745">[2002.04745] On Layer Normalization in the Transformer Architecture (arxiv.org)</a></p>
+<p>为什么说要用 layer normalization 而不是 batch normalization：<a target="_blank" rel="noopener" href="https://arxiv.org/abs/2003.07845">[2003.07845] PowerNorm: Rethinking Batch Normalization in Transformers (arxiv.org)</a></p>
+<h2><span id="機器學習2021transformer-下-">【機器學習2021】Transformer -下-</span></h2><p>Decoder分为 <strong>Auto regressive</strong> （AT）和 <strong>Non-Auto regressive</strong> （NAT）两种。其中AT应用范围更为广泛一些。</p>
+<h3><span id="decoder-autoregressive-at">Decoder-Autoregressive (AT)</span></h3><p><img src="P2.1.png" alt="png"></p>
+<p><img src="P2.2.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;以 Speech Recognition 为例，从一段音频文件转换为文字序列。先由 Encoder 将这段音频变成一排 vector，再由 Decoder 将这排 vector 变成一段文字。每一个文字（Token）都用一个独热编码的向量表示（如果是英文，会更复杂）。BEGIN 和 END 被作为特殊的 Token。</p>
+<ul>
+<li><p>在 Encoder 完成之后，将其输出作为一个输入喂到 Decoder 中。</p>
+</li>
+<li><p>同时，输入一个 special token：BEGIN 表示开始工作。</p>
+</li>
+<li>Decoder 结合这两个输入， 输出一个经过 softmax 处理后的长度为 Vocabulary Size 的输出向量（是个概率分布），该向量中每一个中文字都对应一个数值，数值最大的中文字为最终输出的中文字 ，下图中，输出的结果是“机”。</li>
+</ul>
+<p><img src="P2.3.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;接下来将“机”作为 Decoder 的输入，输出”器“，依次法得到”学“和”习“。（Decoder 会把自己的输入当作接下来的输出）</p>
+<p><img src="P2.4.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;Decoder 的结构。</p>
+<p><img src="P2.5.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;Encoder 与 Decoder 相比， <strong>每一个 block 中 Decoder 比 Encoder 多了中间的一个 Multi-Head Attention</strong>，同时第一个自注意力机制使用的是 <strong>Masked Multi-Head Attention</strong> 。<br><img src="P2.7.png" alt="png"></p>
+<p><strong>Masked Self-attention 与 Self-attention 的不同</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;Masked Self-attention 的计算顺序其实是和 Decoder 的串行计算顺序相对应的，以上图中计算 $b^2$ 为例：在计算 $b^2$ 的时候，和原来的 Self-attention 考虑<strong>所有</strong>输入信息 $[a^1,a^2,a^3,a^4]$ 不同， Masked Self-attention <strong>只</strong>考虑 $[a^1,a^2]$ , 因为此时的 $[a^3,a^4]$ 还没有计算出来。</p>
+<p><strong>Why masked？</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;Encoder 是知道所有的 $a$，所以使用 Self-attention，而 Decoder 需要知道前一个的输出作为输入，不知道所有的 $a$（只能考虑左边的东西，不能考虑右边的东西），所以使用 Masked Multi attention。</p>
+<p><img src="P2.8.png" alt="png"></p>
+<p><img src="P2.9.png" alt="png"></p>
+<p><strong>Decoder 无法知道最终输出的长度？</strong></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;加入 special token：STOP，机器就会停止。</p>
+<p><img src="P2.10.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;要让机器识别出“机器学习”后，会输出 END。</p>
+<h3><span id="decoder-non-autoregressive-nat">Decoder-Non-Autoregressive (NAT)</span></h3><p><img src="P2.11.png" alt="png"></p>
+<p><img src="P2.12.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;与 AT 不同的是，NAT 并不使用之前时刻的输出，而是一次输入一组 special token。</p>
+<ul>
+<li><p>How to decide the output length for NAT Decoder?</p>
+<ul>
+<li><p>Another predictor for output length（由其他部分决定输出长度）</p>
+</li>
+<li><p>Output a very long sequence, ignore tokens after END</p>
+</li>
+</ul>
+</li>
+<li><p><font color="green">Advantage</font>: </p>
+<ul>
+<li>parallel<ul>
+<li>AT 一次输出一个 vector（因为上一个输出又作为下一个输入），无法并行处理。而 NAT 可以并行处理，NAT 速度比 AT 更快，在有 self-attention 之前，RNN 和 LSTM 是不能设计 NAT 的。</li>
+</ul>
+</li>
+<li>controllable output length<ul>
+<li>比如在语音合成 (TTS) 任务中，把 Eecoder 的输出送入一个 Classifier，预测 Decoder 输出 sequence 长度。通过改变这个 Classifier 预测的长度，可以调整生成语音的语速。例如，设置输出 sequence 长度 x2，语速就可以慢一倍。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>NAT is usually <font color="red">worse</font> than AT (why? Multi-modality 多模态的问题)</p>
+</li>
+</ul>
+<p>了解更多 NAT：<a target="_blank" rel="noopener" href="https://youtu.be/jvyKmU40M3c">https://youtu.be/jvyKmU40M3c</a></p>
+<h3><span id="encoder-decoder">Encoder-Decoder</span></h3><p><img src="P2.13.png" alt="png"></p>
+<p><img src="P2.14.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;Encoder 与 Decoder 联系起来的部分：<strong>Cross attention</strong>。两个输入 $(k,v)$ 来自 Encoder，一个输入 $q$ 来自 Decoder。它计算的是 Encoder 的输出与当前 vector 的 cross attention 。</p>
+<p><img src="P2.15.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;用 Decoder 中 Self-attention 层的输出 vector 生成 $q$ ，与由 Encoder 最后一层输出 sequence 产生的 $(k,v)$ 做运算。</p>
+<p><img src="P2.16.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;Cross Attention 实际的展示：<strong>Listen, attend and spell</strong>: A neural network for large vocabulary conversational speech recognition</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;并不是 transformer，说明先有 cross attention 机制后才有的 self-attention 机制。</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://ieeexplore.ieee.org/document/7472621">Listen, attend and spell: A neural network for large vocabulary conversational speech recognition | IEEE Conference Publication | IEEE Xplore</a></li>
+</ul>
+<p><img src="P2.17.png" alt="png"></p>
+<blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;试想一下，如果你要做一个演讲，虽然记了演讲内容，但还是会担心一上台紧张忘词。怎么办呢？可以把提纲写在卡片上，演讲中看上一眼，就知道接下来要讲什么了。我觉得 cross attention 的作用就有点像这个小卡片，因为它看过整个 sequence，可以给 Decoder 提示信息。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;cross attention 在早期的 Seq2seq 模型论文中就已经出现，是 Seq2seq 的重要单元。看到 <a href="https://link.zhihu.com/?target=https%3A//jalammar.github.io/visualizing-neural-machine-translation-mechanics-of-seq2seq-models-with-attention/">seq2seq model with attention</a> 和 <a href="https://link.zhihu.com/?target=https%3A//www.bilibili.com/video/BV1s64y1M721%3Fp%3D4">Yannic Kilcher 大神的论文解读视频</a> 介绍，早期 Seq2seq 模型的 Eecoder 和 Decoder 是用 RNN ，attention 用在 cross attention 单元。本来 Decoder 只能利用 Eecoder RNN 最后一个时刻的 hidden state，用了 cross attention 之后，之前时刻的 hidden state 也可以看。哪个时刻的 hidden state 对当前 Decoder 输出最相关 (attention)，重点看这个 hidden state，这样模型的性能更好。而 Transformer 架构干脆把 Eecoder 和 Decoder 也全部用 attention 来做 (Self-attention)，正如论文标题所言 “Attention is all you need”。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;你可能会有疑问， Decoder 有很多层 self-attention，每一层 self-attention 的输出都是与 Eecoder 最后的输出 sequence 做 cross attention 吗？可以有不同的设计吗？Transformer 论文中是这样设计，但是也可以用不同的设计，现在已经有一些这方面的研究和实验。</p>
+</blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;不同的 Cross Attention 连接方式：<a target="_blank" rel="noopener" href="https://arxiv.org/abs/2005.08081">[2005.08081] Rethinking and Improving Natural Language Generation with Layer-Wise Multi-View Decoding (arxiv.org)</a></p>
+<h3><span id="training">Training</span></h3><p><img src="P2.18.png" alt="png"></p>
+<p><img src="P2.19.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;Decoder 的输出 (output) 是一个概率分布，label 是 one-hot vector，优化的目标就是使 label 与 Decoder output 之间的 cross entropy 最小。这其实是一个分类问题。</p>
+<p><img src="P2.20.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;Decoder 中，前一个输出又作为下一个输入。使用 Teacher Forcing 方法，Decoder 输入用的是 ground truth value（在训练的时候会给 Decoder 看正确答案）。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;测试的时候没有正确答案？可能会有 mis match 的问题。</p>
+<h4><span id="copy-mechanism">Copy Mechanism</span></h4><p><img src="P2.21.png" alt="png"></p>
+<blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;Copy Mechanism 指<strong>在文本生成领域，生成的输出是输入序列元素的复制或者指向</strong>。 该机制最早由 Vinyals et al.（2015）在 Pointer Network 中提出，所以有时也被称为Pointer Mechanism指针机制。</p>
+</blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;有些情况，不需要对输入做改动，比如翻译人名地名，聊天机器人(chat-bot)，摘要 (summarization) 等，可以直接复制一部分输入内容。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;具体的方法：</p>
+<ul>
+<li>Pointer Network</li>
+<li>Copy network</li>
+</ul>
+<p><img src="P2.22.png" alt="png"></p>
+<p>应用：给机器读一篇文章，让机器输出一篇文章的摘要。</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/1704.04368">[1704.04368] Get To The Point: Summarization with Pointer-Generator Networks (arxiv.org)</a></li>
+</ul>
+<p><img src="P2.23.png" alt="png"></p>
+<p>Seq2seq model 如何做到 Copy Mechanism？</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://youtu.be/VdOyqNQ9aww">https://youtu.be/VdOyqNQ9aww</a></li>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/1603.06393">[1603.06393] Incorporating Copying Mechanism in Sequence-to-Sequence Learning (arxiv.org)</a></li>
+</ul>
+<h4><span id="guided-attention">Guided Attention</span></h4><p><img src="P2.24.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;举了一个语音合成 (TTS) 的例子，机器一次说四遍“发财”这个词时，说得挺好，还有抑扬顿挫之感。一次说三遍或两遍“发财”也正常。但是，一次说一遍“发财”时，不知怎的，只有一个音“财”（也许机器不知道怎么处理非常短的句子）。</p>
+<p><img src="P2.25.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;从这个例子可以看到，在处理语音识别 (speech recognition) 或语音合成 (TTS) 等任务时，我们不希望漏掉其中的任何一段内容，Guided Attention 正是要满足这个要求。而 chat-bot, summary 一类的应用在这方面的要求就宽松得多。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;Guided Attention 是让 attention 的计算按照一定顺序来进行。比如在做语音合成时，attention 的计算应该从左向右推进，如下图中前三幅图所示。如果 attention 的计算时顺序错乱，如下图中后三幅图所示，那就说明出了错误。具体方法：Monotonic Attention, Location-aware attention。</p>
+<h4><span id="beam-search">Beam Search</span></h4><p><img src="P2.26.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;这其实是一个最优路径的问题。前面介绍，Decoder 每次输出一个变量，假设输出词汇库只有 A, B 两个词汇。每一次都选择最大概率的作为输出，如下图中红色路径所示，这就是 Greedy Decoding。同时，Decoder 的每个输出又是下一时刻输入，如果我们从整个 sequence 的角度考虑，可能第一次不选最大概率，后面的输出概率（把握）都很大，整体更佳，如下图中绿色路径所示。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;怎么找到最好的路径（图中绿色路径）？穷尽所有选择（路径）吗？这不现实，运算量太大。一个优化方法就是 Beam Search，比如每次存前两个概率大的输出，下一步把这两种输出各走一遍，依此类推，一直到最后。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;但是，用 Beam Search 找到分数最高的路径，就一定是最好的吗？比如下图所示文本生成的例子，使用 Beam Search，后面一直在重复同一个句子。而 Pure Sampling 生成的文本至少看起来还正常。</p>
+<h5><span id="sampling">Sampling</span></h5><p><img src="P2.27.png" alt="png"></p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/1904.09751">[1904.09751] The Curious Case of Neural Text Degeneration (arxiv.org)</a></li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;Beam Search 有时有用，有时没用。对于有明确答案的任务，比如语音识别，beam search 方法表现好。对于有些创造型任务，比如文本生成，Decoder 是需要一些随机性 (randomness) （论文显示可能出现重复输出同一句话）。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;在实验室做语言合成 (TTS) 的经历。一开始总做不出理想的效果，和 Google 的研究人员交流，他们提到，测试时 Decoder 要加噪声 (noise)。听上去是不是难以置信？训练时 Decoder 加噪可以理解，让模型 more robust。测试时 Decoder 加噪，这不是给自己找麻烦吗？但是，按这个方法去做，效果确实好！没加噪时，Decoder 产生的声音就像机关枪一样。加噪（加入随机性）之后，产生的声音就接近人声。对于 TTS 或文本生成而言，Decoder 用 Beam Search 找到的最好结果，不见得是人类认为的最好结果（不自然）。加入一点随机性，效果反而更好。正如西谚所言：”Accept that nothing is perfect. True beauty lies in the cracks of imperfection.”（没有事情是完美的，真正的完美可能在不完美之中）</p>
+<h4><span id="optimizing-evaluation-metrics">Optimizing Evaluation Metrics?</span></h4><p><img src="P2.28.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;最佳优化评估指标？</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;在 homework 中，train 使用 cross entropy loss 做 criterion，要使 output 和 label 在对应 vector 上 cross-entropy 最小。而评估模型用的是 BLEU score, 是在两个 sequence 上运算（cross entropy 最小的模型 BLEU socre 不一定最大）。因此，validation 挑选模型时也用 BLEU score 作为衡量标准。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;那么， training 直接就用 BLEU score 做 criterion 岂不更好？</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;问题就在于：BLEU score 没办法微分，不知道要怎么做 gradient descent。实在要做：Reinforcement Learning(RL)。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;秘诀：”When you don’t know how to optimize, just use reinforcement learning(RL).” 遇到在 optimization 无法解决的问题，用 RL “硬 train 一发”。</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/1511.06732">[1511.06732] Sequence Level Training with Recurrent Neural Networks (arxiv.org)</a></li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;</p>
+<p><img src="P2.29.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;exposure bias：训练和测试时不一致：训练时 Decoder 永远看到正确的东西，而测试时可能看到错误的东西（可能一步错步步错）。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;有些解决方法：给训练时加一点错误的东西：Scheduled Sampling</p>
+<h3><span id="scheduled-sampling">Scheduled Sampling</span></h3><p><img src="P2.30.png" alt="png"></p>
+<p>Scheduled Sampling（可能会伤害到 transformer 的并行计算能力）</p>
+<ul>
+<li>Original Scheduled Sampling<ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/1506.03099">https://arxiv.org/abs/1506.03099</a></li>
+</ul>
+</li>
+<li>Scheduled Sampling for Transformer<ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/1906.07651">https://arxiv.org/abs/1906.07651</a></li>
+</ul>
+</li>
+<li>Parallel Scheduled Sampling<ul>
+<li><a target="_blank" rel="noopener" href="https://arxivorg/abs/1906.04331">https://arxivorg/abs/1906.04331</a></li>
+</ul>
+</li>
+</ul>
+<p><img src="P2.31.png" alt="png"></p>
+<h1><span id="class-material">Class Material</span></h1><h2><span id="機器學習-2022各式各樣神奇的自注意力機制-self-attention-變型">【機器學習 2022】各式各樣神奇的自注意力機制 -Self-attention- 變型</span></h2><ul>
+<li><a target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/article/2165918">收藏！各种各样神奇的自注意力机制（Self-attention） - 腾讯云开发者社区-腾讯云 (tencent.com)</a></li>
+</ul>
+<p><img src="C1.1.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;本节主要讲 Transformer 的变形：</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/2011.04006">[2011.04006] Long Range Arena: A Benchmark for Efficient Transformers (arxiv.org)</a></li>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/2009.06732">[2009.06732] Efficient Transformers: A Survey (arxiv.org)</a></li>
+</ul>
+<p><img src="C1.2.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;原始的 self-attention 的 Attention Matrix 大小为 $N\times N$，当 $N$ 特别大时计算量很大。</p>
+<p><img src="C1.3.png" alt="png"></p>
+<p><strong>Notice</strong></p>
+<ul>
+<li>对于 transformer 来说，self-attention 只是大的网络架构中的一个 module</li>
+<li>由上述分析我们知道，对于 self-attention 的运算量是跟 N 的平方成正比的。当 N 很小的时候，单纯增加 self-attention 的运算效率可能并不会对整个网络的计算效率有太大的影响。</li>
+<li>这种问题一般是用在处理图像的问题上，如一张 $256\times 256$ 的图像，其 $N=256\times256=65536$。</li>
+</ul>
+<p><img src="C1.4.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;用人类知识跳过某些计算，选择性的计算 Attention Matrix 中的某些数值或者某些数值不需要计算就可以知道数值，理论上可以减小计算量，提高计算效率。</p>
+<h3><span id="local-attention-truncated-attention">Local Attention / Truncated Attention</span></h3><p><img src="C1.5.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;举个例子，比如我们在做文本翻译的时候，有时候在翻译当前的 token 时不需要给出整个 sequence，其实只需要知道这个 token 两边的邻居，就可以翻译的很准，也就是做局部的 attention（local attention）。这样可以大大提升运算效率，但是缺点就是只关注周围局部的值，这样做法其实跟 CNN 就没有太大的区别了。</p>
+<h3><span id="stride-attention">Stride Attention</span></h3><p><img src="C1.6.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;如果觉得上述这种 local attention 不好，也可以换一种思路，就是在翻译当前 token 的时候，给它空一定间隔（stride）的左右邻居，从而捕获当前与过去和未来的关系。当然stride的数值可以自己确定。</p>
+<h3><span id="global-attention">Global Attention</span></h3><p><img src="C1.7.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;global attention 选择 sequence 中的某些 token 作为 special token（比如标点符号），或者在原始的 sequence 中增加 special token。让 special token 与序列产生全局的关系，但是其他不是 special token 的 token 之间没有 attention。</p>
+<p>Add special token into original sequence</p>
+<ul>
+<li>Attend to every token → collect global information</li>
+<li>Attended（参加） by every token → it knows global information</li>
+</ul>
+<p><img src="C1.8.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;对于上述三种 Attention，可以使用 different heads 使用多种 attention 机制。</p>
+<p><img src="C1.9.png" alt="png"></p>
+<ul>
+<li>Longformer 就是组合了上面的三种 attention <ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/2004.05150">[2004.05150] Longformer: The Long-Document Transformer (arxiv.org)</a></li>
+</ul>
+</li>
+<li>Big Bird 就是在 Longformer 基础上 Random attention 赋值，进一步提高计算效率<ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/2007.14062">[2007.14062] Big Bird: Transformers for Longer Sequences (arxiv.org)</a></li>
+</ul>
+</li>
+</ul>
+<h3><span id="can-we-only-focus-on-critical-parts">Can we only focus on Critical Parts？</span></h3><p><img src="C1.10.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;上面集中方法都是人为设定的哪些地方需要算 attention，哪些地方不需要算 attention，但是这样算是最好的方法吗？并不一定。对于 Attention Matrix 来说，如果某些位置值非常小，我们可以直接把这些位置设为 0，这样对实际预测的结果也不会有太大的影响。也就是说我们只需要找出 Attention Matrix 中 attention 的值相对较大的值。但是如何找出哪些位置的值非常小/非常大呢？</p>
+<h3><span id="clustering">Clustering</span></h3><p><img src="C1.11.png" alt="png"></p>
+<p><img src="C1.12.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;下面这两个文献中给出一种 Clustering（聚类）的方案，即先对 query 和 key 进行聚类。属于同一类的 query 和 key 来计算 attention，不属于同一类的就不参与计算，这样就可以加快 Attention Matrix 的计算。比如下面这个例子中，分为 4 类：1（红框）、2（紫框）、3（绿框）、4（黄框）。在下面两个文献中介绍了可以快速粗略聚类的方法。</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://openreview.net/forum?id=rkgNKkHtvB">Reformer: The Efficient Transformer | OpenReview</a></li>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/2003.05997">[2003.05997] Efficient Content-Based Sparse Attention with Routing Transformers (arxiv.org)</a></li>
+</ul>
+<h3><span id="learnable-patterns">Learnable Patterns</span></h3><p><img src="C1.13.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;上述我们所讲的都是 N<em>N 的 Matrix，但是实际来说，这样的 Matrix 通常来说并不是满秩的，也就是说我们可以对原始 N</em>N 的矩阵降维，将重复的 column 去掉，得到一个比较小的 Matrix。</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/2002.11296">[2002.11296] Sparse Sinkhorn Attention (arxiv.org)</a></li>
+</ul>
+<h3><span id="do-we-need-full-attention-matrix">Do we need full attention matrix？</span></h3><p><img src="C1.14.png" alt="png"></p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/2006.04768">[2006.04768] Linformer: Self-Attention with Linear Complexity (arxiv.org)</a></li>
+</ul>
+<p><img src="C1.15.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;具体来说，从 N 个 key 中选出 K 个具有代表的 key，每个 key 对应一个 value，然后跟 query 做点乘。然后做 gradient-decent，更新 value。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;为什么选有代表性的 key 不选有代表性的 query 呢？因为 query 跟 output 是对应的，这样会 output 就会缩短从而损失信息。</p>
+<h3><span id="reduce-number-of-keys">Reduce Number of Keys</span></h3><p><img src="C1.16.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;怎么选出有代表性的 key 呢？这里介绍两种方法：</p>
+<ul>
+<li>直接对 key 做卷积（conv）<ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/1801.10198">[1801.10198] Generating Wikipedia by Summarizing Long Sequences (arxiv.org)</a></li>
+</ul>
+</li>
+<li>对 key 跟一个矩阵做矩阵乘法<ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/2006.04768">[2006.04768] Linformer: Self-Attention with Linear Complexity (arxiv.org)</a></li>
+</ul>
+</li>
+</ul>
+<p><img src="C1.17.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;回顾一下注意力机制的计算过程，其中 I 为输入矩阵，O 为输出矩阵，暂时忽略 softmax 过程。</p>
+<p><img src="C1.19.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;矩阵乘法交换计算顺序，得出的结果相同，但是计算量可能不同。</p>
+<p><img src="C1.20.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;依法$O\approx V(K^TQ)$ 计算（$(d+d’)N^2$ 次乘法）要比 $O\approx (VK^T)Q$ 计算（$2dd’N$ 次乘法）量大得多。</p>
+<p><img src="C1.21.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;把 softmax 拿回来……</p>
+<p><img src="C1.22.png" alt="png"></p>
+<p><img src="C1.23.png" alt="png"></p>
+<p>如果我们可以将 $\exp(q\cdot k)$ 转换成两个映射相乘 $\approx \phi(q)\cdot\phi(k)$ 的形式，那么可以对上式进行进一步简化：</p>
+<p><img src="C1.24.png" alt="png"></p>
+<p><img src="C1.25.png" alt="png"></p>
+<p><img src="C1.26.png" alt="png"></p>
+<p><img src="C1.27.png" alt="png"></p>
+<p><img src="C1.28.png" alt="png"></p>
+<p><img src="C1.29.png" alt="png"></p>
+<p><img src="C1.30.png" alt="png"></p>
+<h3><span id="realization">Realization</span></h3><p><img src="C1.31.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;可以这样去理解，将 φ(k) 跟 v 计算的 vector 当做一个 template，然后通过 φ(q) 去寻找哪个 template 是最重要的，并进行矩阵的运算，得到输出 b。</p>
+<p>那么 φ 到底如何选择呢？不同的文献有不同的做法：</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/1812.01243">[1812.01243] Efficient Attention: Attention with Linear Complexities (arxiv.org)</a></li>
+<li><a target="_blank" rel="noopener" href="https://linear-transformers.com/">Linear Transformers (linear-transformers.com)</a></li>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/2103.02143">[2103.02143] Random Feature Attention (arxiv.org)</a></li>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/2009.14794">[2009.14794] Rethinking Attention with Performers (arxiv.org)</a></li>
+</ul>
+<p><img src="C1.32.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;在计算 self-attention 的时候一定需要 q 和 k 吗？不一定。在 Synthesizer 文献里面，对于 attention matrix 不是通过 q 和 k 得到的，而是作为网络参数学习得到。虽然不同的 input sequence 对应的 attention weight 是一样的，但是 performance 不会变差太多。其实这也引发一个思考，attention 的价值到底是什么？</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/2005.00743">[2005.00743] Synthesizer: Rethinking Self-Attention in Transformer Models (arxiv.org)</a></li>
+</ul>
+<h3><span id="attention-free">Attention-free</span></h3><p><img src="C1.33.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;不使用 attention 机制处理 seq2seq 问题：</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/2105.03824">[2105.03824] FNet: Mixing Tokens with Fourier Transforms (arxiv.org)</a></li>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/2105.08050">[2105.08050] Pay Attention to MLPs (arxiv.org)</a></li>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/2105.01601">[2105.01601] MLP-Mixer: An all-MLP Architecture for Vision (arxiv.org)</a></li>
+</ul>
+<h3><span id="summary">Summary</span></h3><p><img src="C1.34.png" alt="png"></p>
+<p>图中横轴为训练速度，纵轴为性能得分。</p>
+<ul>
+<li>Human knowledge<ul>
+<li>Local Attention，Big Bird</li>
+</ul>
+</li>
+<li>Clustering<ul>
+<li>Reformer</li>
+</ul>
+</li>
+<li>Learnable Pattern<ul>
+<li>Sinkforn</li>
+</ul>
+</li>
+<li>Representative key<ul>
+<li>Linformer</li>
+</ul>
+</li>
+<li>k, q first → v, k first<ul>
+<li>Linear Transformer, Performer</li>
+</ul>
+</li>
+<li>New framework<ul>
+<li>Synthesizer</li>
+</ul>
+</li>
+</ul>
+<h1><span id="extra-material">Extra Material</span></h1><h2><span id="-dlhlp-2020-non-autoregressive-sequence-generation-由助教莊永松同學講授-">-DLHLP 2020- Non-Autoregressive Sequence Generation -由助教莊永松同學講授-</span></h2><ul>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/Raphael9900/article/details/128283073">【学习】自注意力机制的改进方法、non-autoregressive sequence generation、point network_自注意力机制改进_Raphael9900的博客-CSDN博客</a></li>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/oldmao_2001/article/details/109580466">李宏毅DLHLP.20.Non-Autoregressive Generation_oldmao_2000的博客-CSDN博客</a></li>
+</ul>
+<p><img src="E1.1.png" alt="png"></p>
+<p>条件序列生成：语音识别</p>
+<p><img src="E1.2.png" alt="png"></p>
+<p>其他条件序列生成：</p>
+<ul>
+<li>Image Caption Generation 给一张图片返回文字描述</li>
+<li>Machine Translation 机器翻译</li>
+</ul>
+<h3><span id="autoegressive-model-inference-stage">Autoegressive model (inference stage)</span></h3><p><img src="E1.3.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;RNN，逐个的吃 token，然后生成 token 的时候是生成下一个 token 的时候要参考当前时间步的 token，因此，无论是输入和输出都比较花费时间。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;后来有了 BERT，这个时候就可以用BERT替换输入模块，这个时候可以直接一次把所有的输入都吃进来，不用一个个的吃，输入的速度是解决了，但是输出还是和RNN一样，一个个的往外吐。</p>
+<p><img src="E1.4.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;因此，就想能不能把输出也改成直接吐所有的token的模式，这个就是Non-autoregressive model的目标。</p>
+<h3><span id="whats-the-problem">What‘s the problem?</span></h3><p><img src="E1.5.png" alt="png"></p>
+<p>要实现上面提出的目标，有难度，借用之前ML课程中讲过的一个例子来说：<br>    有一个 Text-to-lmage 的任务，就是给一段文字，然后模型为文字配一个图片，传统使用有监督的方式进行训练，例如下图中给出的文字是奔跑的狗子，那么模型生成的图片要和 ground truth 要越接近越好。</p>
+<p><img src="E1.6.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;由于各个神经元之间没有相互联系，输出的模型又想像这张图片，又想像那张图片。</p>
+<p><img src="E1.7.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;假如我们使用Non-Autoregressive Sequence Generation的方式来进行translation。输入是【Hello!】，输出可以看到有好几种合理的翻译。可以看到输出第一个token中【哈】【你】几率都相等，都为50%，第二个token同理。那么在输出整个sequence的时候就有可能是 你喽/哈好。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;明显这两个都是错误的翻译，但是都是有可能被模型sample出来的结果。我们将这个问题称为：multi-modality problem，同一个输入，可能对应多个输出，那么Non-Autoregressive模型就会把各种可能的输出进行叠加，导致错误。</p>
+<p><img src="E1.8.png" alt="png"></p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>generate target / methods</th>
+<th>Image</th>
+<th>Text</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>naive approach</td>
+<td>Deconvolution layer + L2 loss，求均值，效果差</td>
+<td>non-autoregressive decoder，multi-modality problem 本文重点要解决的问题</td>
+</tr>
+<tr>
+<td>autoregressive</td>
+<td>PixelRNN, VQVAE-2，效果好</td>
+<td>autoregressive decoder，成熟，缺点是一个个输出效率低</td>
+</tr>
+<tr>
+<td>Generative Adversarial Networks/ non-auto model</td>
+<td>效果好</td>
+<td>文字应用还不成熟，待研究</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3><span id="vanilla-nat-non-autoregressive-translation">Vanilla NAT (Non-Autoregressive Translation)</span></h3><p><img src="E1.9.png" alt="png"></p>
+<h3><span id="fertility">Fertility</span></h3><p><img src="E1.10.png" alt="png"></p>
+<h3><span id="sequence-level-knowledge-distillation">Sequence-level knowledge distillation</span></h3><p><img src="E1.11.png" alt="png"></p>
+<p><img src="E1.12.png" alt="png"></p>
+<h3><span id="npd">NPD</span></h3><p><img src="E1.13.png" alt="png"></p>
+<h3><span id="autogressive-model-wteacher-forcing">Autogressive model w/teacher forcing</span></h3><p><img src="E1.14.png" alt="png"></p>
+<h3><span id="evolution-of-nat">Evolution of NAT</span></h3><p><img src="E1.16.png" alt="png"></p>
+<h3><span id="nat-with-lterative-refinement">NAT with lterative Refinement</span></h3><p><img src="E1.17.png" alt="png"></p>
+<h3><span id="mask-predict">Mask-Predict</span></h3><p><img src="E1.18.png" alt="png"></p>
+<p><img src="E1.19.png" alt="png"></p>
+<h3><span id="insertion-transformer">Insertion Transformer</span></h3><p><img src="E1.20.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;Partially Autoregressive Model，不是纯正的NAT，该模型会在每两个字之间做预测，是否需要插入新字</p>
+<p><img src="E1.21.png" alt="png"></p>
+<p><img src="E1.22.png" alt="png"></p>
+<h3><span id="multiple-target-words-to-predict">Multiple target words to predict?</span></h3><p><img src="E1.23.png" alt="png"></p>
+<p><img src="E1.24.png" alt="png"></p>
+<h3><span id="kermit">KERMIT</span></h3><p><img src="E1.25.png" alt="png"></p>
+<p>这个算法对于 Insertion Transformer而言是将encoder和Decoder都合并在一起了</p>
+<p><img src="E1.26.png" alt="png"></p>
+<p><img src="E1.27.png" alt="png"></p>
+<h3><span id="levenshtein-transformer">Levenshtein Transformer</span></h3><p><img src="E1.28.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;这个模型是在插入的基础上加入了删除功能，模型如下图所示：</p>
+<p><img src="E1.29.png" alt="png"></p>
+<p>可以看到输入经过encoder之后得到初始的输出要经过三个Decoder：</p>
+<ul>
+<li>第一个Decoder是一个删除分类器，判断是否需要删除当前单词；</li>
+<li>第二个Decoder是一个插入分类器，判断是否要在当前单词与单词之间插入单词，如果插入则生成一个占位符【PLH】place holder；</li>
+<li>第三个Decoder是token分类器，根据【PLH】的位置预测对应的单词。</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;这个模型训练就是采用上面提到的从另外一个模型学习的方法（knowledge distillation）。具体算法称为：Levenshtein Distance Algorithm<br><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> Levenshtein<br>Levenshtein.distance(<span class="hljs-string">&quot;ABCEFGHJJ&quot;</span>, <span class="hljs-string">&quot;ABCDEFGHI&quot;</span>)<br></code></pre></td></tr></table></figure></p>
+<figure class="highlight"><table><tr><td class="code"><pre><code class="hljs">3<br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">Levenshtein.editops(<span class="hljs-string">&quot;ABCEFGHJJ&quot;</span>, <span class="hljs-string">&quot;ABCDEFGHI&quot;</span>)<br></code></pre></td></tr></table></figure>
+<figure class="highlight scheme"><table><tr><td class="code"><pre><code class="hljs scheme">[(<span class="hljs-symbol">&#x27;insert</span>&#x27;, <span class="hljs-number">3</span>, <span class="hljs-number">3</span>), (<span class="hljs-symbol">&#x27;delete</span>&#x27;, <span class="hljs-number">7</span>, <span class="hljs-number">8</span>), (<span class="hljs-symbol">&#x27;replace</span>&#x27;, <span class="hljs-number">8</span>, <span class="hljs-number">8</span>)]<br></code></pre></td></tr></table></figure>
+<p><img src="E1.30.png" alt="png"></p>
+<h3><span id="ctc">CTC</span></h3><p><img src="E1.31.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;CTC也是Non-Autoregressive模型，只不过用在语音识别上；</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;语音识别没有multi-modality问题，就是一段语音对应多个结果。（特殊情况当然也有，不过加入LM可以解决，例如有人说：城市/程式还不错！）</p>
+<h3><span id="block-decoding">Block Decoding</span></h3><p><img src="E1.32.png" alt="png"></p>
+<p><img src="E1.33.png" alt="png"></p>
+<h3><span id="knowledge-distillation-in-nat">Knowledge Distillation in NAT</span></h3><p><img src="E1.34.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;最后给出来NAT对Autoregressive模型进行Knowledge Distillation后效果提升的研究，语料中原文为英文，译文有de德文，es西班牙文，fr法文，然后Autoregressive模型翻译结果非常清楚，一句话翻译出来是三种目标文字中的一种，不会混乱（下图中第一个图每一个点代表一个句子。），但是NAT模型就不行，最后以Autoregressive模型为例进行学习后，NAT可以获得很好的效果。</p>
+<h3><span id="reference">Reference</span></h3><p><img src="E1.35.png" alt="png"></p>
+<p><img src="E1.36.png" alt="png"></p>
+<h2><span id="pointer-network">Pointer Network</span></h2><ul>
+<li><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/388279039">李宏毅pointer network笔记 - 知乎 (zhihu.com)</a></li>
+</ul>
+<blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;Pointer Network是<a target="_blank" rel="noopener" href="https://www.zhihu.com/search?q=seq2seq模型&amp;search_source=Entity&amp;hybrid_search_source=Entity&amp;hybrid_search_extra={&quot;sourceType&quot;%3A&quot;answer&quot;%2C&quot;sourceId&quot;%3A1187307191}">seq2seq模型</a>的一个变种。他们不是把一个序列转换成另一个序列, 而是产生一系列指向输入序列元素的指针。最基础的用法是对可变长度序列或集合的元素进行排序。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;传统的seq2seq模型是无法解决<strong>输出序列的词汇表</strong>会随着<strong>输入序列长度的改变</strong>而改变的问题的。在某些任务中，<strong>输入严格依赖于输入</strong>，或者说<strong>输出只能从输入中选择</strong>。例如输入一段话，提取这句话中最关键的几个词语。又或是输入一串数字，输出对这些数字的排序。这时如果使用传统seq2seq模型，则忽略了<strong>输入只能从输出中选择</strong>这个<a target="_blank" rel="noopener" href="https://www.zhihu.com/search?q=先验信息&amp;search_source=Entity&amp;hybrid_search_source=Entity&amp;hybrid_search_extra={&quot;sourceType&quot;%3A&quot;answer&quot;%2C&quot;sourceId&quot;%3A1187307191}">先验信息</a>，Pointer Networks正是为了解决这个问题而提出的。</p>
+</blockquote>
+<h3><span id="pointer-network">Pointer Network</span></h3><p><img src="E2.1.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;pointer network是一种对attention机制的应用。它的输出是输入的子集（相当于输出的是输入序列中部分元素的copy）</p>
+<p>引例：使用 NN 求解一堆散点的凸包，输入是一堆点的坐标，输出是一个序列，每个元素表示选择了第几个输入的点。</p>
+<p><img src="E2.2.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;首先考虑使用seq2seq，但是会存在一个问题，因为我们输出的“候选集”的长度应该是1～输入元素的个数，而输入的点的个数是不确定的，所以这个输出的候选集是变的（也就是每一个输出时间步中，softmax输出的种类数是变化的）。（注意，这个候选集指的不是序列的长度，序列的长度是构成凸包的点的个数）在seq2seq模型中，只有输出序列的长度是变的，而这个softmax的类别数是固定的。</p>
+<p><img src="E2.3.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;解决方法，用attention机制对每一个输入元素做attention，取这个attention weight来做softmax，然后取argmax得到当前时间步的输出。为什么这样做work：因为输出每一步会对输入的所有元素去attention，这个attention vector的维度正好等于输入的个数，所以每个时间步的分类个数就等于输入元素数。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;用 $(x_0,y_0)$ 表示 END，当 argmax 的结果是 $(x_0,y_0)$ 时，结束。</p>
+<h3><span id="applications-summarization">Applications - Summarization</span></h3><p><img src="E2.4.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;其他应用：summary 给一段文章，返回它的简介。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;之所以加入pointer network在这个任务上可以比seq2seq更好，一个原因是，文章中一般会出现一些人名地名，而这些东西可能在我们的词汇表里没有。另外，pointer network可以直接从input中挑关键词出来，所以更适合做summary。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;上面的方案是传统 seq2seq + pointer network。特点是学出来的一个weight $p_{gen}$，表示pointer network和seq2seq分布结果的加权，求和之后得到最后的分布。</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/1704.04368">[1704.04368] Get To The Point: Summarization with Pointer-Generator Networks (arxiv.org)</a></li>
+</ul>
+<p><img src="E2.5.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;其他应用：机器翻译/chat bot，思想就是从输入中直接取一部分（这部分可能不在词汇库中）</p>
+
+  </div>
+  <div id="gitalk-container"></div>
+</div>
+
+<script>
+  
+Fancybox.bind('[data-fancybox="fancybox-gallery-img"]', {
+  dragToClose: true,
+  Toolbar: true,
+  closeButton: "top",
+  Image: {
+    zoom: true,
+  },
+  on: {
+    initCarousel: (fancybox) => {
+      const slide = fancybox.Carousel.slides[fancybox.Carousel.page];
+      fancybox.$container.style.setProperty(
+        "--bg-image",
+        `url("${slide.$thumb.src}")`
+      );
+    },
+    "Carousel.change": (fancybox, carousel, to, from) => {
+      const slide = carousel.slides[to];
+      fancybox.$container.style.setProperty(
+        "--bg-image",
+        `url("${slide.$thumb.src}")`
+      );
+    },
+  },
+});
+</script>
+
+<style>
+    #noneimg img {
+        display: none;
+        z-index: 9999;
+        /* width: 600px !important; */
+        min-width: 0%;
+        max-width: 90%;
+        max-height: 80%;
+        border-radius: 0px;
+        position: fixed;
+        box-shadow: 0 0 0px #c3c3c300 !important;
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        margin: auto !important;
+    }
+
+    @media screen and (max-width:600px) {
+        #noneimg img {
+            max-width: 88%
+        }
+    }
+</style>
+
+    <div class="post-paging">
+    
+    <a href="/2023/01/31/Homework-%E5%BF%AB%E5%86%80%E4%BA%86%E8%AF%A5%E5%86%99%E5%AF%92%E5%81%87%E4%BD%9C%E4%B8%9A%E4%BA%86%E4%B8%8D%E7%84%B6%E5%B0%B1%E5%AF%84%E4%BA%86/">
+        <div class="post-paging-last">
+            <span>上一篇</span>
+            <p>Homework-快冀了该写寒假作业了不然就寄了</p>
+        </div>
+    </a>
+    
+
+    
+    <a href="/2023/01/28/Python-%E4%B8%80%E4%BA%9B%E6%88%91%E5%B8%B8%E7%94%A8%E7%9A%84%E5%B0%8F%E6%93%8D%E4%BD%9C/">
+        <div class="post-paging-next">
+            <span>下一篇</span>
+            <p>Python-一些我常用的小操作</p>
+        </div>
+    </a>
+    
+</div>
+</div>
+		
+<div class="footer">
+	<div class="Copyright">
+		©2023 By Zi-Zi. 主题：<a
+			style="text-decoration: none;display: contents; color: #898F9F;"
+			target="_blank" rel="noopener" href="https://github.com/79e/hexo-theme-quiet">Quiet</a>
+	</div>
+	<div class="contact">
+		
+		<a target="_blank" rel="noopener" href="https://weibo.com/u/5020307235">
+			<img src="/image/Weibo.png" alt="Quiet主题">
+		</a>
+		
+		<a target="_blank" rel="noopener" href="https://tieba.baidu.com/home/main?id=tb.1.ff6d2775.vFH7wrdW2ZjPCmyBHJcjnA">
+			<img src="/image/Tieba.png" alt="Quiet主题">
+		</a>
+		
+		<a target="_blank" rel="noopener" href="https://space.bilibili.com/11547880">
+			<img src="/image/Bilibili.png" alt="Quiet主题">
+		</a>
+		
+		<a target="_blank" rel="noopener" href="https://github.com/GZ-Metal-Cell">
+			<img src="/image/github.png" alt="Quiet主题">
+		</a>
+		
+	</div>
+</div>
+
+<script src="/js/gotop.js"></script>
+
+
+<style type="text/css">
+    @media screen and (min-width: 600px) {
+        .goTop>span {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            opacity: 0.8;
+            background: rgba(18, 24, 58, 0.06);
+            text-align: center;
+            transition: border .5s;
+            border: 1px solid rgba(18, 24, 58, 0.06);
+
+            -moz-transition: border .5s;
+            /* Firefox 4 */
+            -webkit-transition: border .5s;
+            /* Safari 和 Chrome */
+            -o-transition: border .5s;
+            /* Opera */
+        }
+
+        .goTop>span:hover {
+            border: 1px solid #6680B3;
+        }
+
+
+        .goTop {
+            position: fixed;
+            right: 30px;
+            bottom: 80px;
+        }
+
+        .goTop>span>svg {
+            width: 20px;
+            height: 20px;
+            opacity: 0.7;
+        }
+
+    }
+
+    @media screen and (max-width: 600px) {
+        .goTop {
+            display: none;
+        }
+    }
+</style>
+<div class="goTop" id="js-go_top">
+    <span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+            <g>
+                <path d="M13 12v8h-2v-8H4l8-8 8 8z"></path>
+            </g>
+        </svg>
+    </span>
+</div>
+<script>
+    $( '#js-go_top' )
+	.gotoTop( {
+		offset: 500,
+		speed: 300,
+		animationShow: {
+			'transform': 'translate(0,0)',
+			'transition': 'transform .5s ease-in-out'
+		},
+		animationHide: {
+			'transform': 'translate(100px,0)',
+			'transition': 'transform .5s ease-in-out'
+		}
+	} );
+</script>
+
+
+    <script src="/js/md5.min.js"></script>
+    <!-- Gitalk -->
+    <script>
+        const data = '{"clientID":"f3a4ea928b90c73f66d4","clientSecret":"d697ef6f42e83e83c49ff8d19e753f36bc375015","repo":"GZ-Metal-Cell.github.io","owner":"GZ-Metal-Cell","admin":"GZ-Metal-Cell"}'
+        const gitalk = new Gitalk({
+            ...JSON.parse( data),
+            id:md5(location.pathname), //  location.pathname,
+            distractionFreeMode:false
+        })
+        
+        if(Boolean('true')){
+            gitalk.render('gitalk-container')
+        }
+    </script>
+
+<script>
+	console.log('\n %c Hexo-Quiet 主题 %c https://github.com/79e/hexo-theme-quiet \n', 'color: #fadfa3; background: #030307; padding:5px 0;', 'background: #fadfa3; padding:5px 0;')
+</script>
+	<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+</html>
+
