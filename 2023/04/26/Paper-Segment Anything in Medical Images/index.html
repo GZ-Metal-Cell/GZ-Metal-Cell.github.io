@@ -333,6 +333,11 @@
 <ul>
 <li><a href="#资源">资源</a></li>
 <li><a href="#笔记">笔记</a></li>
+<li><a href="#代码">代码</a><ul>
+<li><a href="#配置">配置</a></li>
+<li><a href="#在自定义数据集上微调-sam">在自定义数据集上微调 SAM</a></li>
+</ul>
+</li>
 </ul>
 <!-- tocstop -->
 <h2><span id="资源">资源</span></h2><ul>
@@ -416,6 +421,148 @@
 <p>&nbsp;&nbsp;&nbsp;&nbsp;使用<strong>骰子相似系数（DSC）</strong>和<strong>归一化表面距离（NSD，公差1 mm）</strong>来评估基本事实和分割结果之间的区域重叠率和边界一致性，这是两种常用的<strong>分割指标</strong>。</p>
 <hr>
 <p>&nbsp;&nbsp;&nbsp;&nbsp;我们的代码和经过训练的模型是公开的，<strong>我们提供了关于在定制的新数据集上微调SAM的分步教程</strong>。我们期待着与社区合作，共同推进这一令人兴奋的研究领域。</p>
+<h2><span id="代码">代码</span></h2><h3><span id="配置">配置</span></h3><p>新建一个 conda 环境：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><code class="hljs shell">conda create -n medsam python=3.10 -y<br></code></pre></td></tr></table></figure>
+<p>激活之：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><code class="hljs shell">conda activate medsam<br></code></pre></td></tr></table></figure>
+<p>离线安装 pytorch：</p>
+<p>从 <a target="_blank" rel="noopener" href="https://download.pytorch.org/whl/torch_stable.html">download.pytorch.org/whl/torch_stable.html</a> 下载对应版本的 <code>pytorch</code> 和 <code>torchvision</code>：</p>
+<ul>
+<li><code>torch-2.0.0+cu117-cp310-cp310-win_amd64.whl</code></li>
+<li><code>torchvision-0.15.1+cu117-cp310-cp310-win_amd64.whl</code></li>
+</ul>
+<p><img src="C1.png" alt="png"></p>
+<p>安装之：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><code class="hljs shell">pip install torch-2.0.0+cu117-cp310-cp310-win_amd64.whl -i https://pypi.tuna.tsinghua.edu.cn/simple<br></code></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="code"><pre><code class="hljs shell">pip install torchvision-0.15.1+cu117-cp310-cp310-win_amd64.whl -i https://pypi.tuna.tsinghua.edu.cn/simple<br></code></pre></td></tr></table></figure>
+<p>下载仓库：<a target="_blank" rel="noopener" href="https://github.com/bowang-lab/medsam">bowang-lab/MedSAM：MedSAM：Segment Anything in Medical Images的官方存储库。 (github.com)</a></p>
+<p>在仓库文件夹下:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><code class="hljs shell">pip install -e . -i https://pypi.tuna.tsinghua.edu.cn/simple<br></code></pre></td></tr></table></figure>
+<h3><span id="在自定义数据集上微调-sam">在自定义数据集上微调 SAM</span></h3><ol>
+<li>打开 <code>pre_CT.py</code>，查看里面 <code>parser</code> 都定义了什么玩意儿：</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># set up the parser</span><br>parser = argparse.ArgumentParser(description=<span class="hljs-string">&#x27;preprocess CT images&#x27;</span>)<br>parser.add_argument(<span class="hljs-string">&#x27;-i&#x27;</span>, <span class="hljs-string">&#x27;--nii_path&#x27;</span>, <span class="hljs-built_in">type</span>=<span class="hljs-built_in">str</span>, default=<span class="hljs-string">&#x27;data/FLARE22Train/images&#x27;</span>, <span class="hljs-built_in">help</span>=<span class="hljs-string">&#x27;path to the nii images&#x27;</span>)<br>parser.add_argument(<span class="hljs-string">&#x27;-gt&#x27;</span>, <span class="hljs-string">&#x27;--gt_path&#x27;</span>, <span class="hljs-built_in">type</span>=<span class="hljs-built_in">str</span>, default=<span class="hljs-string">&#x27;data/FLARE22Train/labels&#x27;</span>, <span class="hljs-built_in">help</span>=<span class="hljs-string">&#x27;path to the ground truth&#x27;</span>,)<br>parser.add_argument(<span class="hljs-string">&#x27;-o&#x27;</span>, <span class="hljs-string">&#x27;--npz_path&#x27;</span>, <span class="hljs-built_in">type</span>=<span class="hljs-built_in">str</span>, default=<span class="hljs-string">&#x27;data/Npz_files&#x27;</span>, <span class="hljs-built_in">help</span>=<span class="hljs-string">&#x27;path to save the npz files&#x27;</span>)<br><br>parser.add_argument(<span class="hljs-string">&#x27;--image_size&#x27;</span>, <span class="hljs-built_in">type</span>=<span class="hljs-built_in">int</span>, default=<span class="hljs-number">256</span>, <span class="hljs-built_in">help</span>=<span class="hljs-string">&#x27;image size&#x27;</span>)<br>parser.add_argument(<span class="hljs-string">&#x27;--modality&#x27;</span>, <span class="hljs-built_in">type</span>=<span class="hljs-built_in">str</span>, default=<span class="hljs-string">&#x27;CT&#x27;</span>, <span class="hljs-built_in">help</span>=<span class="hljs-string">&#x27;modality&#x27;</span>)<br>parser.add_argument(<span class="hljs-string">&#x27;--anatomy&#x27;</span>, <span class="hljs-built_in">type</span>=<span class="hljs-built_in">str</span>, default=<span class="hljs-string">&#x27;Abd-Gallbladder&#x27;</span>, <span class="hljs-built_in">help</span>=<span class="hljs-string">&#x27;anatomy&#x27;</span>)<br>parser.add_argument(<span class="hljs-string">&#x27;--img_name_suffix&#x27;</span>, <span class="hljs-built_in">type</span>=<span class="hljs-built_in">str</span>, default=<span class="hljs-string">&#x27;_0000.nii.gz&#x27;</span>, <span class="hljs-built_in">help</span>=<span class="hljs-string">&#x27;image name suffix&#x27;</span>)<br>parser.add_argument(<span class="hljs-string">&#x27;--label_id&#x27;</span>, <span class="hljs-built_in">type</span>=<span class="hljs-built_in">int</span>, default=<span class="hljs-number">9</span>, <span class="hljs-built_in">help</span>=<span class="hljs-string">&#x27;label id&#x27;</span>)<br>parser.add_argument(<span class="hljs-string">&#x27;--prefix&#x27;</span>, <span class="hljs-built_in">type</span>=<span class="hljs-built_in">str</span>, default=<span class="hljs-string">&#x27;CT_Abd-Gallbladder_&#x27;</span>, <span class="hljs-built_in">help</span>=<span class="hljs-string">&#x27;prefix&#x27;</span>)<br>parser.add_argument(<span class="hljs-string">&#x27;--model_type&#x27;</span>, <span class="hljs-built_in">type</span>=<span class="hljs-built_in">str</span>, default=<span class="hljs-string">&#x27;vit_b&#x27;</span>, <span class="hljs-built_in">help</span>=<span class="hljs-string">&#x27;model type&#x27;</span>)<br>parser.add_argument(<span class="hljs-string">&#x27;--checkpoint&#x27;</span>, <span class="hljs-built_in">type</span>=<span class="hljs-built_in">str</span>, default=<span class="hljs-string">&#x27;work_dir/SAM/sam_vit_b_01ec64.pth&#x27;</span>, <span class="hljs-built_in">help</span>=<span class="hljs-string">&#x27;checkpoint&#x27;</span>)<br>parser.add_argument(<span class="hljs-string">&#x27;--device&#x27;</span>, <span class="hljs-built_in">type</span>=<span class="hljs-built_in">str</span>, default=<span class="hljs-string">&#x27;cuda:0&#x27;</span>, <span class="hljs-built_in">help</span>=<span class="hljs-string">&#x27;device&#x27;</span>)<br><span class="hljs-comment"># seed</span><br>parser.add_argument(<span class="hljs-string">&#x27;--seed&#x27;</span>, <span class="hljs-built_in">type</span>=<span class="hljs-built_in">int</span>, default=<span class="hljs-number">2023</span>, <span class="hljs-built_in">help</span>=<span class="hljs-string">&#x27;random seed&#x27;</span>)<br>args = parser.parse_args()<br></code></pre></td></tr></table></figure>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>参数名</th>
+<th>简称</th>
+<th>类型</th>
+<th>默认值</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>—nii_path</td>
+<td>-i</td>
+<td>str</td>
+<td>‘data/FLARE22Train/images’</td>
+<td>path to the <strong>nii images</strong></td>
+</tr>
+<tr>
+<td>—gt_path</td>
+<td>-gt</td>
+<td>str</td>
+<td>‘data/FLARE22Train/labels’</td>
+<td>path to the <strong>ground truth</strong></td>
+</tr>
+<tr>
+<td>—npz_path</td>
+<td>-o</td>
+<td>str</td>
+<td>‘data/Npz_files’</td>
+<td>path to save the <strong>npz files</strong></td>
+</tr>
+<tr>
+<td>—image_size</td>
+<td></td>
+<td>int</td>
+<td>256</td>
+<td>image size</td>
+</tr>
+<tr>
+<td>—modality</td>
+<td></td>
+<td>str</td>
+<td>‘CT’</td>
+<td>modality 形态</td>
+</tr>
+<tr>
+<td>—anatomy</td>
+<td></td>
+<td>str</td>
+<td>‘Abd-Gallbladder’</td>
+<td>anatomy 解剖</td>
+</tr>
+<tr>
+<td>—img_name_suffix</td>
+<td></td>
+<td>str</td>
+<td>‘_0000.nii.gz’</td>
+<td>image name suffix 图像名称后缀</td>
+</tr>
+<tr>
+<td>—label_id</td>
+<td></td>
+<td>int</td>
+<td>9</td>
+<td>label id</td>
+</tr>
+<tr>
+<td>—prefix</td>
+<td></td>
+<td>str</td>
+<td>‘CT_Abd-Gallbladder_’</td>
+<td>prefix 前缀</td>
+</tr>
+<tr>
+<td>—model_type</td>
+<td></td>
+<td>str</td>
+<td>‘vit_b’</td>
+<td>model type 模型类别</td>
+</tr>
+<tr>
+<td>—checkpoint</td>
+<td></td>
+<td>str</td>
+<td>‘work_dir/SAM/sam_vit_b_01ec64.pth’</td>
+<td>checkpoint</td>
+</tr>
+<tr>
+<td>—device</td>
+<td></td>
+<td>str</td>
+<td>‘cuda:0’</td>
+<td>device</td>
+</tr>
+<tr>
+<td>—seed</td>
+<td></td>
+<td>int</td>
+<td>2023</td>
+<td>random seed 随机数种子</td>
+</tr>
+</tbody>
+</table>
+</div>
+<ol>
+<li>下载 <a target="_blank" rel="noopener" href="https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth">sam_vit_b_01ec64.pth</a> 并将其放置在 <code>work_dir/SAM/</code> 中：</li>
+</ol>
+<p><img src="C2.png" alt="png"></p>
+<ol>
+<li>下载 <a target="_blank" rel="noopener" href="https://zenodo.org/record/7860267">FLARE22Train.zip</a> 并将其解压，放置在 <code>data/</code> 中：</li>
+</ol>
+<p><img src="C3.png" alt="png"></p>
+<blockquote>
+<p>该数据集包含 50 个腹部 CT 扫描，每个扫描包含一个包含 13 个器官的注释面罩。器官标签的名称可在 <a target="_blank" rel="noopener" href="https://flare22.grand-challenge.org/">MICCAI FLARE2022</a> 上找到。 在本教程中，我们将微调 SAM 以进行胆囊 (gallbladder) 分割。</p>
+</blockquote>
+<ol>
+<li>开跑！</li>
+</ol>
+<p><img src="C4.png" alt="png"></p>
 
   </div>
   <div id="gitalk-container"></div>
