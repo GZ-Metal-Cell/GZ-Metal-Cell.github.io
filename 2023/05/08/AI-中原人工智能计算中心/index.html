@@ -329,18 +329,34 @@
   <div id="article" class="post-content-info">
     
 
-    <h2><span id="ai-中原人工智能计算中心">AI-中原人工智能计算中心</span></h2><h2><span id="目录">目录</span></h2><!-- toc -->
+    <h2><span id="ai-中原人工智能计算中心">AI-中原人工智能计算中心</span></h2><p>为了白嫖这个资源：<a target="_blank" rel="noopener" href="https://uconsole.xckpjs.com/#/mgt/dashboard">中原人工智能计算中心云运营平台 (xckpjs.com)</a>，学！</p>
+<h2><span id="目录">目录</span></h2><!-- toc -->
 <ul>
-<li><a href="#资源">资源</a></li>
 <li><a href="#接服务器">接服务器</a></li>
-<li><a href="#pycharm">PyCharm</a></li>
-<li><a href="#算法迁移">算法迁移</a></li>
+<li><a href="#pycharm">PyCharm</a><ul>
+<li><a href="#配置">配置</a></li>
+<li><a href="#开跑寄">开跑（寄）</a></li>
+</ul>
+</li>
+<li><a href="#算法迁移文档">算法迁移文档</a><ul>
+<li><a href="#迁移适配流程">迁移适配流程</a></li>
+<li><a href="#昇腾平台是否已适配需求算法">昇腾平台是否已适配需求算法</a><ul>
+<li><a href="#一-模型适配于昇腾平台">一、模型适配于昇腾平台</a><ul>
+<li><a href="#1-模型适配于mindspore">1. 模型适配于mindspore</a></li>
+<li><a href="#2-模型适配于npu">2. 模型适配于NPU</a></li>
+</ul>
+</li>
+<li><a href="#二-模型未适配于昇腾平台">二、模型未适配于昇腾平台</a></li>
+</ul>
+</li>
+<li><a href="#数据传输">数据传输</a></li>
+<li><a href="#迁移工具">迁移工具</a></li>
+<li><a href="#参考资料汇总">参考资料汇总</a></li>
+</ul>
+</li>
+<li><a href="#算法迁移实践寄">算法迁移实践（寄）</a></li>
 </ul>
 <!-- tocstop -->
-<h2><span id="资源">资源</span></h2><ul>
-<li><a target="_blank" rel="noopener" href="https://uconsole.xckpjs.com/#/mgt/dashboard">中原人工智能计算中心云运营平台 (xckpjs.com)</a></li>
-<li><a target="_blank" rel="noopener" href="https://www.mindspore.cn/">MindSpore官网</a></li>
-</ul>
 <h2><span id="接服务器">接服务器</span></h2><ol>
 <li>登录：<a target="_blank" rel="noopener" href="https://uconsole.xckpjs.com/#/mgt/dashboard">中原人工智能计算中心云运营平台 (xckpjs.com)</a></li>
 </ol>
@@ -412,14 +428,14 @@
 <ol>
 <li>试一试：</li>
 </ol>
-<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> torch_npu <span class="hljs-keyword">as</span> torch<br><br>torch npu.npu.<span class="hljs-keyword">is</span> available()<br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> torch_npu <span class="hljs-keyword">as</span> torch<br><br>torch.npu.is_available()<br></code></pre></td></tr></table></figure>
 <figure class="highlight ada"><table><tr><td class="code"><pre><code class="hljs ada"><span class="hljs-literal">True</span><br></code></pre></td></tr></table></figure>
-<h2><span id="pycharm">PyCharm</span></h2><ol>
+<h2><span id="pycharm">PyCharm</span></h2><h3><span id="配置">配置</span></h3><ol>
 <li>先整一个专业版的 PyCharm，谢谢小迷糊！</li>
 </ol>
 <p><img src="P1.png" alt="png"></p>
 <ol>
-<li>在 Pycharm 中随便打开一个项目，<code>Tools</code>-<code>Deployment</code>-<code>Configuration</code>:</li>
+<li>在 Pycharm 中随便打开一个项目（就你了，yolov5-5.0 <a target="_blank" rel="noopener" href="https://github.com/ultralytics/yolov5/tree/v5.0">ultralytics/yolov5 at v5.0 (github.com)</a>），<code>Tools</code>-<code>Deployment</code>-<code>Configuration</code>:</li>
 </ol>
 <p><img src="P2.png" alt="png"></p>
 <ol>
@@ -438,9 +454,17 @@
 <p><code>Test Connection</code> 显示 <code>Successfully connected!</code> 即可。</p>
 <p><img src="P4.png" alt="png"></p>
 <ol>
-<li>在服务器中新建一个文件夹，用于存放项目文件：</li>
+<li>在服务器中新建一个文件夹，用于存放项目文件，只有放在<code>work</code>文件夹里，下次再打开服务器时内容才不会丢失：</li>
 </ol>
+<blockquote>
+<p>/home/ma-user/work目录下的数据会保存，其余目录下内容会被清理。 如果需要保存开发环境，可以通过保存镜像的方式保留开发环境设置。</p>
+</blockquote>
 <p><img src="P5.png" alt="png"></p>
+<ol>
+<li>服务器中新建一个新的虚拟环境：<code>yolov5</code>：</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="code"><pre><code class="hljs shell">conda create -n yolov5 python=3.7<br>source activate yolov5<br>which python<br></code></pre></td></tr></table></figure>
+<p>linux 环境下的 <code>which python</code> 可以返回当前虚拟环境下的解释器位置：<code>~/.conda/envs/yolov5/bin/python</code></p>
 <ol>
 <li>设置解释器：Pycharm 下 File-Settings-Project: yolov5-5.0-Add Interpreter，选择 Existing 和对应的 SSH Server 地址：</li>
 </ol>
@@ -449,13 +473,156 @@
 <li>设置好解释器和对应的服务器目录：</li>
 </ol>
 <p><img src="P7.png" alt="png"></p>
-<p>在服务器激活 conda 环境的命令：<code>source activate /home/ma-user/anaconda3/envs/MindSpore</code></p>
-<p>然后就可以输入 <code>which python</code> 找到对应的解释器地址</p>
 <ol>
-<li>开跑！配环境啥的下次再说头好晕回去休息会儿呜呜呜</li>
+<li>此时服务器里就会同步 yolov5 这个项目了，等待同步完成</li>
 </ol>
 <p><img src="P8.png" alt="png"></p>
-<h2><span id="算法迁移">算法迁移</span></h2>
+<ol>
+<li>在 <code>requirements.txt</code> 里，删除 <code>torch&gt;=1.7.0</code> 和 <code>torchvision&gt;=0.8.1</code> 这两行</li>
+</ol>
+<p><img src="P9.png" alt="png"></p>
+<ol>
+<li>在服务器中安装环境，这个服务器自带 1.8.1 版本的 pytorch，对应的是 0.9.1 的 torchvision，必须设定好版本，不然会寄：</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="code"><pre><code class="hljs shell">cd /home/ma-user/work/yolov5-5.0/<br>pip install -r requirements.txt<br>pip install torchvision==0.9.1<br></code></pre></td></tr></table></figure>
+<ol>
+<li>在自己的 Notebook 中选择 <code>更多</code>-<code>保存镜像</code>，以在下次启动服务器时，配置的环境不丢失。</li>
+</ol>
+<p><img src="P11.png" alt="png"></p>
+<h3><span id="开跑寄">开跑（寄）</span></h3><ol>
+<li><p>开跑 <code>detect.py</code>！喜提错误：<font color="red">ImportError: libGL.so.1: cannot open shared object file: No such file or directory</font>，使用命令<code>pip install opencv-python-headless</code>填之。</p>
+</li>
+<li><p>开跑 <code>detect.py</code>！喜提错误：<font color="red">cv2.error: OpenCV(4.7.0) /io/opencv/modules/highgui/src/window.cpp:1272: error: (-2:Unspecified error) The function is not implemented. Rebuild the library with Windows, GTK+ 2.x or Cocoa support. If you are on Ubuntu or Debian, install libgtk2.0-dev and pkg-config, then re-run cmake or configure script in function ‘cvShowImage’</font>，问 ChatGPT，说<code>这个报错可能是由于 OpenCV 没有启用 GUI 支持导致的</code>，于是我把 <code>--view-img</code> 关了，能跑了，但是没有识别结果，giao！</p>
+</li>
+</ol>
+<p><img src="P13.png" alt="png"></p>
+<h2><span id="算法迁移文档">算法迁移文档</span></h2><h3><span id="迁移适配流程">迁移适配流程</span></h3><p><img src="T1.png" alt="png"></p>
+<ul>
+<li>互联网查询</li>
+<li><a target="_blank" rel="noopener" href="https://www.hiascend.com/forum/">昇腾论坛 (hiascend.com)</a> 发帖或查看类似问题</li>
+<li><p>gitee 仓提问：<a target="_blank" rel="noopener" href="https://www.yuque.com/fanxiangyu-xamn0/sthma6/igg7ngxqq7ipil1c">ModelZoo查询及提问链接 (yuque.com)</a></p>
+</li>
+<li><p>寻找技术中心技术人员技术支撑</p>
+</li>
+</ul>
+<h3><span id="昇腾平台是否已适配需求算法">昇腾平台是否已适配需求算法</span></h3><p>最新 modelzoo 地址以链接实时更新为准：<a target="_blank" rel="noopener" href="https://www.yuque.com/fanxiangyu-xamn0/sthma6/igg7ngxqq7ipil1c">ModelZoo查询及提问链接 (yuque.com)</a></p>
+<h4><span id="一-模型适配于昇腾平台">一、模型适配于昇腾平台</span></h4><h5><span id="1-模型适配于mindspore">1. 模型适配于mindspore</span></h5><p>gitee提问链接：<a target="_blank" rel="noopener" href="https://gitee.com/mindspore/mindspore/issues">Issues · MindSpore/mindspore - Gitee.com</a></p>
+<ol>
+<li>MindSporeModelZoo 模型库 (模型适配于 mindspore)<ul>
+<li><a target="_blank" rel="noopener" href="https://gitee.com/mindspore/models">models: Models of MindSpore (gitee.com)</a></li>
+</ul>
+</li>
+</ol>
+<h5><span id="2-模型适配于npu">2. 模型适配于NPU</span></h5><p>gitee提问链接：<a target="_blank" rel="noopener" href="https://gitee.com/ascend/modelzoo/issues">Issues · Ascend/modelzoo - Gitee.com</a></p>
+<ol>
+<li><p>AscendModelZoo 模型库—gitee</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://gitee.com/ascend/modelzoo">modelzoo: Ascend ModelZoo (gitee.com)</a></li>
+</ul>
+</li>
+<li><p>AscendModelZoo 模型库—官网展示</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://www.hiascend.com/software/modelzoo/models">ModelZoo-昇腾社区 (hiascend.com)</a></li>
+</ul>
+</li>
+<li><p>Modelzoo-Pytorch 模型库 </p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch">Ascend/ModelZoo-PyTorch - Gitee.com</a></li>
+</ul>
+</li>
+<li><p>Modelzoo-Tensorflow 模型库 </p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://gitee.com/ascend/ModelZoo-TensorFlow">Ascend/ModelZoo-TensorFlow (gitee.com)</a></li>
+</ul>
+</li>
+<li><p>Modelzoo-yolo系列 模型库</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://gitee.com/ascend/modelzoo-GPL/tree/master/built-in/PyTorch/Official/cv/object_detection">Ascend/modelzoo-GPL - Gitee.com</a></li>
+</ul>
+</li>
+</ol>
+<h4><span id="二-模型未适配于昇腾平台">二、模型未适配于昇腾平台</span></h4><ol>
+<li><p>第三方框架迁移至 mindspore</p>
+<ul>
+<li>gitee提问链接：<a target="_blank" rel="noopener" href="https://gitee.com/mindspore/mindspore/issues">Issues · MindSpore/mindspore - Gitee.com</a></li>
+</ul>
+</li>
+<li><p>pytorch 框架算法迁移至 npu</p>
+<ul>
+<li>gitee提问链接：<a target="_blank" rel="noopener" href="https://gitee.com/ascend/pytorch/issues">Issues · Ascend/pytorch - Gitee.com</a></li>
+</ul>
+</li>
+<li><p>tensorflow 框架算法迁移至 npu</p>
+<ul>
+<li>gitee 提问链接：<a target="_blank" rel="noopener" href="https://gitee.com/ascend/tensorflow/issues">Issues · Ascend/tensorflow - Gitee.com</a></li>
+</ul>
+</li>
+</ol>
+<h3><span id="数据传输">数据传输</span></h3><p>《notebook服务器数据准备》：主要用于将测试脚本、数据集、第三方依赖包等传输到notebook服务器</p>
+<ul>
+<li>使用 linux 命令直接下载<ul>
+<li>通过 wget，git 等命令直接下载</li>
+</ul>
+</li>
+<li>在本地已准备好的数据传输到 notebook 服务器<ul>
+<li>传辅较小的脚本数据或数据集时可直接通过 mobaxterm 直接上传</li>
+<li>传输较大的文件（百G量级）时可通过 obs 传输（先从本地传输到 obs，再从 obs 传输到 notebook 服务器）</li>
+</ul>
+</li>
+</ul>
+<h3><span id="迁移工具">迁移工具</span></h3><ul>
+<li>《迁移工具-pytorch/tensorflow 框架算法迁移至 mindspore 框架》：<a target="_blank" rel="noopener" href="https://www.yuque.com/fanxiangyu-xamn0/sthma6/uibw9hf04t8ofoh0">迁移工具-x2mindspore (yuque.com)</a></li>
+<li>《迁移工具-pytorch 框架算法迁移至 Ascend》：<a target="_blank" rel="noopener" href="https://www.yuque.com/fanxiangyu-xamn0/sthma6/gudf93qc88g2t605">迁移工具-Pytorch Gpu2Ascend脚本迁移工具 (yuque.com)</a></li>
+<li>《迁移工具-tensorflow 框架算法迁移至 Ascend》：<a target="_blank" rel="noopener" href="https://www.yuque.com/fanxiangyu-xamn0/sthma6/gudf93qc88g2t605">迁移工具-Pytorch Gpu2Ascend脚本迁移工具 (yuque.com)</a></li>
+</ul>
+<ol>
+<li>创建 notebook 服务器并登录</li>
+<li>命令行使用迁移工具分析脚本</li>
+<li>输出<ul>
+<li>迁移后脚本</li>
+<li>支持算子列表 <code>supported_api.csv</code></li>
+<li>不支持算子列表 <code>unsupported_api.csv</code></li>
+</ul>
+</li>
+<li>按照不支持算子列表 <code>unsupported_api.csv</code> 建议进行修改</li>
+</ol>
+<h3><span id="参考资料汇总">参考资料汇总</span></h3><ul>
+<li>昇腾社区： <a target="_blank" rel="noopener" href="https://www.hiascend.com/zh/">昇腾社区-官网丨昇腾万里 让智能无所不及 (hiascend.com)</a></li>
+<li>mindspore 官网： <a target="_blank" rel="noopener" href="https://www.mindspore.cn/">MindSpore官网</a></li>
+<li>计算中心平台帮助文档： <a target="_blank" rel="noopener" href="https://docs.xckpjs.com/zh-cn/usermanual/modelarts/modelarts_01_0001_0.html">帮助中心 (xckpjs.com)</a></li>
+<li>pytorch 网络模型迁移和训练：<a target="_blank" rel="noopener" href="https://www.hiascend.com/document/detail/zh/canncommercial/60RC1/modeldevpt/ptmigr/ptmigr_0001.html">概述-PyTorch 网络模型迁移和训练-模型开发（PyTorch）-6.0.RC1-CANN商用版-文档首页-昇腾社区 (hiascend.com)</a></li>
+<li>PyTorch 调试优化指南：<a target="_blank" rel="noopener" href="https://gitee.com/ascend/docs-openmind/blob/master/guide/modelzoo/pytorch_model/tutorials/PyTorch训练调试优化和工具使用指南.md#21-性能优化">guide/modelzoo/pytorch_model/tutorials/PyTorch训练调试优化和工具使用指南.md · Ascend/docs-openmind - Gitee.com</a></li>
+<li>tensorflow 网络模型迁移和训练：<a target="_blank" rel="noopener" href="https://www.hiascend.com/document/detail/zh/canncommercial/60RC1/modeldev/tfmigr1/tfmigr1_000002.html">前言-TensorFlow 1.15网络模型迁移和训练-模型开发（TensorFlow）-6.0.RC1-CANN商用版-文档首页-昇腾社区 (hiascend.com)</a></li>
+<li>mindspore 迁移指南：<a target="_blank" rel="noopener" href="https://www.mindspore.cn/docs/zh-CN/r1.9/migration_guide/overview.html">MindSpore</a></li>
+<li>mindspore 初学教程：<a target="_blank" rel="noopener" href="https://www.mindspore.cn/tutorials/zh-CN/r1.9/index.html">MindSpore</a></li>
+</ul>
+<h2><span id="算法迁移实践寄">算法迁移实践（寄）</span></h2><ol>
+<li>进入迁移工具所在目录并执行迁移命令</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="code"><pre><code class="hljs shell">cd /usr/local/Ascend/ascend-toolkit/latest/tools/x2mindspore<br></code></pre></td></tr></table></figure>
+<ol>
+<li>设置好待迁移的工程 <code>/home/ma-user/work/yolov5-5.0/</code> 和迁移后的目录位置 <code>/home/ma-user/work/yolov5-5.0-mindspore</code></li>
+</ol>
+<p><img src="T2.png" alt="png"></p>
+<ol>
+<li>开跑！</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="code"><pre><code class="hljs shell">./run_x2mindspore.sh -i /home/ma-user/work/yolov5-5.0/ -o /home/ma-user/work/yolov5-5.0-mindspore -f pytorch<br></code></pre></td></tr></table></figure>
+<p>喜提错误：<font color="red">ModuleNotFoundError: No module named ‘libcst’</font>，堵它：<code>pip install libcst</code></p>
+<ol>
+<li>继续开跑！</li>
+</ol>
+<p><img src="T4.png" alt="png"></p>
+<p>等等等……等到 <code>X2MindSpore run success, welcome to the next use.</code> 就可以 next use。</p>
+<ol>
+<li>把迁移好的项目下载到本地：</li>
+</ol>
+<p><img src="T5.png" alt="png"></p>
+<ol>
+<li>设置完解释器，然后修修补补……</li>
+</ol>
+<p>要按照不支持算子列表 <code>unsupported_api.csv</code> 建议进行修改……emmmmm……要不以后还是用现成的吧。</p>
+
   </div>
   <div id="gitalk-container"></div>
 </div>
@@ -514,6 +681,13 @@ Fancybox.bind('[data-fancybox="fancybox-gallery-img"]', {
 </style>
 
     <div class="post-paging">
+    
+    <a href="/2023/05/11/Diary-%E6%A2%85%E5%BC%80%E4%BA%8C%E5%BA%A6%E7%9A%84%E7%AC%AC%2011%20%E5%91%A8%E5%92%8C%E7%AC%AC%2012%20%E5%91%A8/">
+        <div class="post-paging-last">
+            <span>上一篇</span>
+            <p>Diary-梅开二度的第 11 周和第 12 周</p>
+        </div>
+    </a>
     
 
     
