@@ -332,8 +332,19 @@
     <h2><span id="paper-east-an-efficient-and-accurate-scene-text-detector">Paper-EAST-An Efficient and Accurate Scene Text Detector</span></h2><h2><span id="目录">目录</span></h2><!-- toc -->
 <ul>
 <li><a href="#资源">资源</a></li>
+<li><a href="#正文">正文</a></li>
+<li><a href="#代码">代码</a><ul>
 <li><a href="#pytorch">Pytorch</a></li>
-<li><a href="#mindspore">MindSpore</a></li>
+<li><a href="#mindspore">MindSpore</a><ul>
+<li><a href="#读代码">读代码</a><ul>
+<li><a href="#trainpy">train.py</a></li>
+</ul>
+</li>
+<li><a href="#跑">跑！</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 <!-- tocstop -->
 <h2><span id="资源">资源</span></h2><ul>
@@ -348,10 +359,122 @@
 <li><a target="_blank" rel="noopener" href="https://gitee.com/mindspore/models/tree/master/research/cv/east">EAST for Ascend - Gitee.com</a></li>
 </ul>
 </li>
-<li><p>Blog：<a target="_blank" rel="noopener" href="https://www.jianshu.com/p/b36f81bc61ef">EAST 算法超详细源码解析（六）、模型训练 - 简书 (jianshu.com)</a></p>
+<li><p>Blog：</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/34b73ca276fc">EAST 算法超详细源码解析（一）、数据预处理与标签生成 - 简书 (jianshu.com)</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/f499c7b4e751">EAST 算法超详细源码解析（二）、模型推断与测试结果生成 - 简书 (jianshu.com)</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/e83a55bc4cbc">EAST 算法超详细源码解析（三）、模型构建 - 简书 (jianshu.com)</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/0efd281b1481">EAST 算法超详细源码解析（四）、损失函数 - 简书 (jianshu.com)</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/beb10e3756ae">EAST 算法超详细源码解析（五）、评估验证 - 简书 (jianshu.com)</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/b36f81bc61ef">EAST 算法超详细源码解析（六）、模型训练 - 简书 (jianshu.com)</a></li>
+</ul>
 </li>
 </ul>
-<h2><span id="pytorch">Pytorch</span></h2><ol>
+<h2><span id="正文">正文</span></h2><p>&nbsp;&nbsp;&nbsp;&nbsp;我们这个模型使用单个神经网络<strong>直接预测</strong>完整图像中的任意方向和四边形的单词或文本行，消除了不必要的中间步骤（如候选聚合和单词划分）。我们的模型在 <code>ICDAR 2015</code>、<code>COCO Text</code> 和 <code>MSRA-TD500</code> 中都非常好使！</p>
+<hr>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;文本检测作为后续过程的<strong>先决</strong>条件，核心是设计特征来区分文本和背景。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;提出了一个快速准确的场景文本检测流水线，使用一个<strong>完全卷积神经网络（FCN）</strong>模型，产生单词或文本行级别的预测，排除了冗余和缓慢的中间步骤。生成的文本预测可以是旋转的矩形或四边形，将被发送到<strong>非最大抑制（Non-Maximum Suppression，NMS）</strong>以产生最终结果。</p>
+<hr>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>EAST</strong>, since it is an <strong>E</strong>fficient and <strong>A</strong>ccuracy <strong>S</strong>cene <strong>T</strong>ext detection pipeline.</p>
+<p><img src="T1.png" alt="png"></p>
+<ul>
+<li><font color="orange">Feature extractor
+stem，特征提取炳（PVANet）</font>
+
+<ul>
+<li>主干可以是在 ImageNet 数据集上预先训练的卷积网络，具有交错的卷积和池化层。从干提取四个级别的特征图，表示为 $f_i$，其大小分别为输入图像的 $\frac{1}{32},\frac{1}{16},\frac{1}{8}$ 和 $\frac{1}{4}$。</li>
+</ul>
+</li>
+<li><font color="green">Feature-merging
+branch，特征合并分支</font>
+
+<ul>
+<li><p>逐渐将它们合并（concat）：</p>
+<p>$g_i=\left\{\begin{matrix}\mathrm{unpool}(h_i) &amp; \mathrm{if} &amp; i\le3 \\ \mathrm{conv}_{3\times3}(h_i) &amp; \mathrm{if} &amp; i=4\end{matrix}\right.$</p>
+<p>$h_i=\left\{\begin{matrix}f_i &amp; \mathrm{if}\ i=1\\\mathrm{conv}_{3\times3}(\mathrm{conv_{1\times1}}([g_{i-1};f_i])) &amp; \mathrm{otherwise}\end{matrix}\right.$</p>
+<ul>
+<li><p>$g_i$ 是合并基数</p>
+</li>
+<li><p>$h_i$ 是合并后的特征图</p>
+</li>
+<li>运算符 $[·;·]$ 表示沿通道轴的串联</li>
+</ul>
+</li>
+<li><p>在每个合并阶段，来自最后一个阶段的特征图首先被馈送到 unpool 层以使其大小加倍，然后与当前特征图连接。</p>
+</li>
+<li><p>$\mathrm{conv}_{1×1}$ 减少了通道数量并减少了计算</p>
+</li>
+<li><p>$\mathrm{conv}_{3\times3}$ 融合了信息，最终产生了这个合并阶段的输出</p>
+</li>
+<li><p>在最后一个合并阶段之后，$\mathrm{conv}_{3\times3}$ 层生成合并分支的最终特征图，并将其提供给输出层。</p>
+</li>
+</ul>
+</li>
+<li><font color="navy">Output layer，输出层</font>
+
+<ul>
+<li><p>对文本区域的两种几何形状进行实验：</p>
+<ul>
+<li>旋转框（RBOX）<ul>
+<li>4 个轴对齐边界框（AABB）$\mathbf R$</li>
+<li>1 个通道旋转角度 $\theta$ </li>
+</ul>
+</li>
+<li>四边形（QUAD）<ul>
+<li>使用 8 个数字来表示从四边形的四个角顶点 $\{p_i|i\in\{1,2,3,4\}\}$ 到像素位置的坐标偏移，由于每个距离偏移包含两个数字 $(\Delta x_i,\Delta y_i)$，几何输出包含 8 个通道。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>为每种几何形状设计了不同的损失函数:</p>
+<ul>
+<li><p>$L=L_s+\lambda_gL_g$</p>
+<ul>
+<li><p>$L_s$ 表示<strong>分数图</strong>的损失，$L_s=\mathrm{balanced-xent}(\hat{\mathbf{Y}}, \mathbf Y^<em>)=-\beta\mathbf Y^</em>\log \hat{\mathbf{Y}} - (1-\beta)(1-\mathbf Y^*)\log(1-\hat{\mathbf{Y}})$</p>
+<ul>
+<li>$\hat{\mathbf{Y}}=F_s$ 是分数图的预测<ul>
+<li>$\mathbf Y^*$ 是 ground truth</li>
+<li>$\beta$ 是正样本和负样本之间的平衡因子，$\beta=1-\frac{\sum_{y^<em>\in\mathbf Y^</em>}y^<em>}{|\mathbf Y^</em>|}$</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>$L_g$ 表示<strong>几何图形</strong>的损失，直接用 $L_1$ 或 $L_2$ 将引导损失偏向于更大和更长的文本区域。</p>
+<ul>
+<li><p>在 RBOX 回归：$L_g=L_{AABB}+\lambda_\theta L_{\theta}$，$\lambda_\theta$ 取 10</p>
+<ul>
+<li><p>AABB 部分采用 IoU 损失：$L_{AABB}=-\log\mathrm{IoU}(\hat{\mathbf{R}},\mathbf R^<em>)=-\log\frac{|\mathbf{R}\cap \mathbf R^</em>|}{|\mathbf{R}\cup \mathbf R^*|}$</p>
+</li>
+<li><p>旋转角度损失：$L_\theta(\hat\theta,\theta^<em>)=1-\cos(\hat\theta-\theta^</em>)$</p>
+</li>
+</ul>
+</li>
+<li><p>在 QUAD 回归中采用尺度归一化平滑 $L_1$ 损失：$L_g=L_{QUAD}(\hat{\mathbf{Q}},\mathbf Q^*)$</p>
+</li>
+</ul>
+</li>
+<li><p>$\lambda_g$ 表示两个损失之间的重要性，设为 1。</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>包含几个 $\mathrm{conv}_{1×1}$ 操作，将 32 个通道的特征图投影到 1 个通道的分数图 $F_s$ 和一个多通道的几何图 $F_g$ 中。几何输出可以是RBOX 或 QUAD 中的一个</p>
+</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;将阈值应用于每个预测区域，其中得分超过预定义阈值的几何体被认为是有效的，并保存以供以后进行非最大值抑制。NMS 之后的结果被认为是管道的最终输出。ADAM 优化器，batch=24。</p>
+<hr>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;NMS：在假设附近像素的几何图形往往高度相关的情况下，我们建议逐行合并几何图形，在合并同一行中的几何图形时，我们将迭代合并当前遇到的几何图形和最后合并的几何图形。这种改进的技术在最佳场景中在 $O(n)$ 中运行。尽管它的最坏情况与原始情况相同，但只要局部性假设成立，该算法在实践中运行得足够快。</p>
+<hr>
+<p>未来研究的可能方向包括：</p>
+<ul>
+<li>调整几何公式，以允许直接检测弯曲文本；</li>
+<li>将所述检测器与文本识别器集成；</li>
+<li>将该思想扩展到通用对象检测。</li>
+</ul>
+<h2><span id="代码">代码</span></h2><h3><span id="pytorch">Pytorch</span></h3><ol>
 <li>从 <a target="_blank" rel="noopener" href="https://github.com/SakuraRiven/EAST">SakuraRiven/EAST: PyTorch Re-Implementation of EAST: An Efficient and Accurate Scene Text Detector (github.com)</a> 加载仓库：</li>
 </ol>
 <p><img src="P1.png" alt="png"></p>
@@ -403,7 +526,9 @@
 </li>
 <li>开跑 <code>train.py</code>！能跑了！</li>
 </ol>
-<h2><span id="mindspore">MindSpore</span></h2><ol>
+<h3><span id="mindspore">MindSpore</span></h3><h4><span id="读代码">读代码</span></h4><h5><span id="trainpy">train.py</span></h5><p>先使用 Argparse 模块创建一个 ArgumentParser 对象，用于解析命令行参数。</p>
+<p><code>ArgumentParser(&#39;mindspore icdar training&#39;)</code>：创建一个 <code>ArgumentParser</code> 对象，并把 <code>&#39;mindspore icdar training&#39;</code> 作为参数传入，即设置程序的描述信息为 <code>mindspore icdar training</code>。</p>
+<h4><span id="跑">跑！</span></h4><ol>
 <li>变更一个 mindspore 2.0 的镜像，太旧的 mindspore 会寄</li>
 </ol>
 <p><img src="M1.png" alt="png"></p>
@@ -437,16 +562,44 @@
 <ol>
 <li>安装环境一条龙！<code>requirements.txt</code> 里面的玩意着实难装，还是手动装好了……</li>
 </ol>
-<figure class="highlight shell"><table><tr><td class="code"><pre><code class="hljs shell">source activate base  # 第一次进服务器激活需要 activate base<br>python -c &quot;import mindspore;mindspore.run_check()&quot;  # 查看 mindspore 版本<br>conda create -n east --clone base  # 克隆 base 环境<br>conda activate east  # 激活 east 环境<br>pip install numpy<br>pip install opencv-python<br>pip install shapely<br>pip install pillow<br>pip install lanms-neo<br>pip install polygon<br>pip install onnxruntime<br></code></pre></td></tr></table></figure>
-<p>装好环境后可以保存一下镜像，这样下次重开服务器的时候就会保留之前安装好的环境：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><code class="hljs shell">source activate base  # 第一次进服务器激活需要 activate base<br>python -c &quot;import mindspore;mindspore.run_check()&quot;  # 查看 mindspore 版本<br>conda create -n east --clone base  # 克隆 base 环境<br>conda activate east  # 激活 east 环境<br>pip install numpy<br>pip install opencv-python<br>pip install shapely<br>pip install pillow<br>pip install lanms-neo<br>pip install --upgrade setuptools  # 更新 setuptools<br>pip install Polygon3  # 这个库很难装，可能需要更新 setuptools<br>pip install onnxruntime<br></code></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;装好环境后可以保存一下镜像，这样下次重开服务器的时候就会保留之前安装好的环境：</p>
 <p><img src="M4.png" alt="png"></p>
 <ol>
-<li>切到仓库目录，开跑！</li>
+<li>切到仓库目录，开跑 <code>train.py</code>！</li>
 </ol>
 <figure class="highlight shell"><table><tr><td class="code"><pre><code class="hljs shell">cd /home/ma-user/work/east/<br>python3 train.py<br></code></pre></td></tr></table></figure>
 <p><img src="M5_1.png" alt="png"></p>
-<p>显示完超参数后，等呗。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;显示完超参数后，就开始 train 了，继续等呗。</p>
 <p><img src="M5_2.png" alt="png"></p>
+<ol>
+<li>训练时间从 <code>14:27</code> 到 <code>18:41</code>，就能炼出仙丹一枚：<code>checkpoint_east-600_125.ckpt</code></li>
+</ol>
+<p><img src="M6.png" alt="png"></p>
+<ol>
+<li>设置一下 <code>eval.py</code> 的参数：</li>
+</ol>
+<ul>
+<li><code>--device_num</code> Ascend 设备的数量，因为我只租了 1 个，所以设为 0</li>
+<li><code>--test_img_path</code> 测试集路径，evaluate 时会读取这里面的图片</li>
+<li><code>--checkpoint_path</code> 模型的路径，把它设为刚刚炼好的仙丹的路径：<code>outputs/2023-05-15_time_14_27_25/ckpt_0/checkpoint_east-600_125.ckpt</code></li>
+</ul>
+<p><img src="M7.png" alt="png"></p>
+<ol>
+<li><blockquote>
+<p>The evaluation scripts are from <a href="https://gitee.com/link?target=http%3A%2F%2Frrc.cvc.uab.es%2F%3Fch%3D4%26com%3Dmymethods%26task%3D1">ICDAR Offline evaluation</a> and have been modified to run successfully with Python 3.7.1.</p>
+</blockquote>
+<p>从上面这个链接里下载 <code>script_test_ch4_t1_e1-1577983151.zip</code> ，并放在 <code>evaluate/</code>中：</p>
+<p><img src="M8.png" alt="png"></p>
+</li>
+<li><p>开跑 <code>eval.py</code>！</p>
+</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="code"><pre><code class="hljs shell">python3 eval.py<br></code></pre></td></tr></table></figure>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;然后就能在 <code>submit\</code> 里查看评估结果，和 ground truth 参考一下，能识别一点点东西。</p>
+<p><img src="M9.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;返回出来的效果比它宣传的要差好多啊，呜呜呜……</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><code class="hljs shell">Calculated!&#123;&quot;precision&quot;: 0.527431421446384, &quot;recall&quot;: 0.6109773712084737, &quot;hmean&quot;: 0.566138746375195, &quot;AP&quot;: 0&#125;<br></code></pre></td></tr></table></figure>
 
   </div>
   <div id="gitalk-container"></div>
