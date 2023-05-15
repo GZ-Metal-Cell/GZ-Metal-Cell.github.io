@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		
+<title>Paper-EAST-An Efficient and Accurate Scene Text Detector-Zi-Zi's Journey</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="shortcut icon" type="image/x-icon" href="/image/favicon.ico">
+
+<link rel="stylesheet" href="/css/index.css">
+
+
+
+<meta name="keywords" content="论文,">
+<meta name="description" content="">
+
+
+<script src="/js/jquery.min.js"></script>
+
+
+<script src="/js/index.js"></script>
+
+
+<script src="/js/fancybox.umd.js"></script>
+
+
+<script src="/js/fancybox-images.js"></script>
+
+
+<script src="/js/gitalk.min.js"></script>
+
+
+<script src="/js/hljs.min.js"></script>
+ 
+
+	<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.1.0"></head>
+
+	<body>
+		
+	<div class="header">
+		<div class="header-top" id="header-top">
+			<div class="h-left">
+				<a href="/">
+					<img src="/image/logo.png" alt="Quiet">
+				</a>
+			</div>
+			<div class="h-right">
+				<ul>
+					
+						
+								<li>
+									<a href="/">
+										主页
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/archives">
+										统计
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/categories">
+										类别
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/tags">
+										标签
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/links">
+										链接
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/about">
+										关于
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+				</ul>
+			</div>
+			<div class="h-right-close">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+					<path fill="none" d="M0 0h24v24H0z" />
+					<path d="M3 4h18v2H3V4zm0 7h18v2H3v-2zm0 7h18v2H3v-2z" fill="rgba(68,68,68,1)" />
+				</svg>
+			</div>
+		</div>
+	</div>
+	<div class="sidebar">
+    <div class="topo">
+        <h2>Zi-Zi</h2>
+    </div>
+    <ul>
+        
+        <li>
+            <a href="/">主页</a>
+        </li>
+        
+        <li>
+            <a href="/archives">统计</a>
+        </li>
+        
+        <li>
+            <a href="/categories">类别</a>
+        </li>
+        
+        <li>
+            <a href="/tags">标签</a>
+        </li>
+        
+        <li>
+            <a href="/links">链接</a>
+        </li>
+        
+        <li>
+            <a href="/about">关于</a>
+        </li>
+        
+    </ul>
+    <div class="my_foot">
+        
+        <a target="_blank" rel="noopener" href="https://weibo.com/u/5020307235">
+            <img src="/image/Weibo.png" alt="Quiet主题">
+        </a>
+        
+        <a target="_blank" rel="noopener" href="https://tieba.baidu.com/home/main?id=tb.1.ff6d2775.vFH7wrdW2ZjPCmyBHJcjnA">
+            <img src="/image/Tieba.png" alt="Quiet主题">
+        </a>
+        
+        <a target="_blank" rel="noopener" href="https://space.bilibili.com/11547880">
+            <img src="/image/Bilibili.png" alt="Quiet主题">
+        </a>
+        
+        <a target="_blank" rel="noopener" href="https://github.com/GZ-Metal-Cell">
+            <img src="/image/github.png" alt="Quiet主题">
+        </a>
+        
+    </div>
+</div>
+<div class='shelter'>
+</div>
+<style>
+    .shelter{
+        background-color: #333;
+        opacity:0.5;
+        cursor: pointer;
+        display: none; 
+        position: fixed;
+        left: 0;
+        top: 0; 
+        right: 0;
+        bottom: 0;
+        z-index: 1998;
+    }
+    .sidebar {
+        width: 66%;
+        height: 100%;
+        position: fixed;
+        top: 0;
+        right: -100%;
+        bottom: 0;
+        background: #fff;
+        z-index: 1999;
+        text-align: center;
+        box-shadow: -6px 0 20px rgba(98, 94, 94, .815);
+    }
+
+    .topo {
+        width: 100%;
+        height: 200px;
+        background: url(https://api.ixiaowai.cn/gqapi/gqapi.php) no-repeat;
+        background-size: 100% 100%;
+        position: relative;
+        display: flex;
+        align-items: flex-end
+    }
+
+    .topo h2 {
+        color: #fff;
+        z-index: 1;
+        position: relative;
+        margin: 0 0 10px 10px;
+        font-size: 1.2em;
+        box-sizing: border-box
+    }
+
+    .topo:before {
+        content: '';
+        background-image: url(/image/pattern.png);
+        background-repeat: repeat;
+        height: 100%;
+        left: 0;
+        position: absolute;
+        top: 0;
+        width: 100%;
+        z-index: 1
+    }
+
+    .sidebar ul {
+        width: 100%;
+        margin-top: 50px
+    }
+
+    .sidebar ul li {
+        height: 50px;
+        list-style: none;
+        font-size: 1.2em;
+        text-align: right;
+        margin-right: 10px
+    }
+
+    .sidebar ul li a {
+        display: grid;
+        color: #5d606a;
+        text-overflow: ellipsis;
+        width: 100%;
+        text-decoration: none
+    }
+
+    .my_foot {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        position: absolute;
+        bottom: 0
+    }
+
+    .my_foot a {
+        text-decoration: none;
+        margin-right: 10px;
+        display: inline-block
+    }
+
+    .my_foot a img {
+        width: 30px;
+        height: 30px
+    }
+</style>
+
+<script>
+    $( function () {
+	$( '.h-right-close>svg' )
+		.click( function () {
+			$( '.sidebar' )
+				.animate( {
+					right: "0"
+				}, 500 );
+			$( '.shelter' )
+				.fadeIn( "slow" )
+		} );
+	$( '.shelter' )
+		.click( function ( e ) {
+			$( '.sidebar' )
+				.animate( {
+					right: "-100%"
+				}, 500 );
+			$( '.shelter' )
+				.fadeOut( "slow" )
+		} )
+} )
+
+</script>
+
+<div class="post">
+    <div class="post-header-background post-header-img"
+    style="background: url('https://api.ixiaowai.cn/gqapi/gqapi.php')" 
+>
+    <div class="post-header-background-content">
+        <ul class="post-header-tag">
+            
+                
+                    <li><a href="/tags/论文">论文</a></li>
+                
+            
+        </ul>
+        
+        <h1>Paper-EAST-An Efficient and Accurate Scene Text Detector</h1>
+        <div class="post-header-info">
+            <div class="post-header-info-author">
+                
+                    <svg t="1604839279282" class="icon" viewBox="0 0 1024 1024" version="1.1"
+                        xmlns="http://www.w3.org/2000/svg" p-id="2901" width="20" height="20">
+                        <path
+                            d="M513 956.3c-247.7 0-448-200.3-448-448S265.3 66.2 513 66.2s448 200.3 448 448-200.3 442.1-448 442.1z m0-830.9c-212.2 0-388.8 170.7-388.8 388.8C124.2 726.3 294.9 903 513 903c212.2 0 388.8-170.7 388.8-388.8S725.2 125.4 513 125.4z m0 430.2c-94.2 0-170.7-76.5-170.7-170.7S418.8 207.8 513 207.8s170.7 76.5 170.7 170.7S607.2 555.6 513 555.6z m0-289.1c-64.6 0-112 52.8-112 112s47.4 117.9 112 117.9 112-52.8 112-112-47.4-117.9-112-117.9z m0 689.8c-135.7 0-259-58.7-341.9-158.9l-11.8-17.8 11.8-17.8c76.5-117.9 206.2-188.5 347.8-188.5 135.7 0 265 64.6 341.9 182.6l11.8 17.8-11.8 17.8C778 897.1 648.7 956.3 513 956.3zM230.3 773.2C300.9 849.7 406.9 897 513 897c112 0 218.1-47.4 288.6-129.8-70.5-88.2-170.7-135.6-282.7-135.6s-218.1 53.3-288.6 141.6z"
+                            p-id="2902" fill="#ffffff"></path>
+                    </svg>
+                    
+                <span class="post-header-info-author-text"> <a href="../../about">Zi-Zi</a></span>
+                <div class="post-header-info-author-categories">
+                    
+                         <a href="/categories/学习笔记" target="_blank" >学习笔记</a>
+                    
+                </div>
+                <p>2023-05-13 08:01:00</p>
+            </div>
+        </div>
+    </div>
+</div>
+    <div class="post-content" id="content">
+  
+  <div id="article" class="post-content-info">
+    
+
+    <h2><span id="paper-east-an-efficient-and-accurate-scene-text-detector">Paper-EAST-An Efficient and Accurate Scene Text Detector</span></h2><h2><span id="目录">目录</span></h2><!-- toc -->
+<ul>
+<li><a href="#资源">资源</a></li>
+<li><a href="#pytorch">Pytorch</a></li>
+<li><a href="#mindspore">MindSpore</a></li>
+</ul>
+<!-- tocstop -->
+<h2><span id="资源">资源</span></h2><ul>
+<li><p>PaperWithCode：<a target="_blank" rel="noopener" href="https://paperswithcode.com/paper/east-an-efficient-and-accurate-scene-text">EAST: An Efficient and Accurate Scene Text Detector | Papers With Code</a></p>
+<ul>
+<li>arxiv：<a target="_blank" rel="noopener" href="https://arxiv.org/abs/1704.03155v2">[1704.03155v2] EAST: An Efficient and Accurate Scene Text Detector (arxiv.org)</a></li>
+<li>github：<a target="_blank" rel="noopener" href="https://github.com/SakuraRiven/EAST">SakuraRiven/EAST: PyTorch Re-Implementation of EAST: An Efficient and Accurate Scene Text Detector (github.com)</a></li>
+</ul>
+</li>
+<li><p>Mindspore：<a target="_blank" rel="noopener" href="https://gitee.com/mindspore/models">models: Models of MindSpore (gitee.com)</a></p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://gitee.com/mindspore/models/tree/master/research/cv/east">EAST for Ascend - Gitee.com</a></li>
+</ul>
+</li>
+<li><p>Blog：<a target="_blank" rel="noopener" href="https://www.jianshu.com/p/b36f81bc61ef">EAST 算法超详细源码解析（六）、模型训练 - 简书 (jianshu.com)</a></p>
+</li>
+</ul>
+<h2><span id="pytorch">Pytorch</span></h2><ol>
+<li>从 <a target="_blank" rel="noopener" href="https://github.com/SakuraRiven/EAST">SakuraRiven/EAST: PyTorch Re-Implementation of EAST: An Efficient and Accurate Scene Text Detector (github.com)</a> 加载仓库：</li>
+</ol>
+<p><img src="P1.png" alt="png"></p>
+<center>加载工程文件</center>
+
+<ol>
+<li><p>conda 中新建一个 EAST 环境（<code>conda create -n east python=3.7</code>）并安装好：</p>
+<ul>
+<li>pytorch</li>
+<li>shapely</li>
+<li>opencv-python 4.0.0.21</li>
+<li>lanms，巨难装，用 <code>pip install lanms-neo==1.0.2 -i https://pypi.tuna.tsinghua.edu.cn/simple</code></li>
+</ul>
+<p>设置好解释器</p>
+</li>
+</ol>
+<p><img src="P2.png" alt="png"></p>
+<center>设置解释器</center>
+
+<ol>
+<li>下载模型：<a target="_blank" rel="noopener" href="https://drive.google.com/open?id=1HgDuFGd2q77Z6DcUlDEfBZgxeJv4tald">VGG16</a> 和 <a target="_blank" rel="noopener" href="https://drive.google.com/open?id=1AFABkJgr5VtxWnmBU3XcfLJvpZkC2TAg">EAST</a>，将它们放在 <code>pths/</code> 文件夹中</li>
+</ol>
+<p><img src="P3.png" alt="png"></p>
+<center>下载并放置预训练好的模型</center>
+
+<ol>
+<li>从 <a target="_blank" rel="noopener" href="https://rrc.cvc.uab.es/?ch=4&amp;com=downloads">Downloads - Incidental Scene Text - Robust Reading Competition (uab.es)</a> 下载好 ICDAR 2015 Challenge 4 数据集，解压并按规则放在对应的文件夹中（原项目想放到工程外面，我改到了工程里面）</li>
+</ol>
+<p><img src="P4_1.png" alt="png"></p>
+<center>数据集官网</center>
+
+<p><img src="P4_2.png" alt="png"></p>
+<center>下载出这么四个压缩包</center>
+
+<p><img src="P4_3.png" alt="png"></p>
+<center>设置数据集地址</center>
+
+<p><img src="P4_4.png" alt="png"></p>
+<center>修改路径</center>
+
+<ol>
+<li>开跑 <code>detect.py</code>！</li>
+</ol>
+<p><img src="P5.png" alt="png"></p>
+<ol>
+<li><p>开跑 <code>train.py</code>！喜提错误：<font color="red">UnicodeDecodeError: ‘gbk’ codec can’t decode byte 0xbf in position 2: illegal multibyte sequence</font>！在 <code>dataset.py</code> 中的第 382 行 <code>with open(self.gt_files[index], &#39;r&#39;) as f:</code> 改成 <code>with open(self.gt_files[index], &#39;r&#39;, encoding=&#39;utf-8&#39;) as f:</code> 填之。</p>
+</li>
+<li><p>开跑 <code>train.py</code>！喜提错误：<font color="red">torch.cuda.OutOfMemoryError: CUDA out of memory. Tried to allocate 1.50 GiB (GPU 0; 8.00 GiB total capacity; 3.14 GiB already allocated; 2.79 GiB free; 3.15 GiB reserved in total by PyTorch) If reserved memory is &gt;&gt; allocated memory try setting max_split_size_mb to avoid fragmentation.  See documentation for Memory Management and PYTORCH_CUDA_ALLOC_CONF</font>！在<code>train.py</code> 里把 <code>batch_size = 24</code> 改成 <code>batch_size = 4</code> 填之。</p>
+</li>
+<li>开跑 <code>train.py</code>！能跑了！</li>
+</ol>
+<h2><span id="mindspore">MindSpore</span></h2><ol>
+<li>变更一个 mindspore 2.0 的镜像，太旧的 mindspore 会寄</li>
+</ol>
+<p><img src="M1.png" alt="png"></p>
+<ol>
+<li>从 <a target="_blank" rel="noopener" href="https://gitee.com/mindspore/models/tree/master/research/cv/east">EAST for Ascend - Gitee.com</a> 把仓库整下来，最好整到 <code>work/</code> 文件夹里，这样服务器重启过后数据还能保留。训练这玩意还需要：</li>
+</ol>
+<ul>
+<li><p>Dataset: ICDAR 2015: Focused Scene Text，这个数据集，1000 张训练集，500 张测试集</p>
+<ul>
+<li><p>从 <a target="_blank" rel="noopener" href="https://rrc.cvc.uab.es/?ch=4&amp;com=downloads">Downloads - Incidental Scene Text - Robust Reading Competition (uab.es)</a> 里下</p>
+<p><img src="M2_1.png" alt="png"></p>
+</li>
+</ul>
+</li>
+<li><p>The <code>pretrained_path</code> should be a checkpoint of vgg16 trained on Imagenet2012. vgg 在 Imagenet2012 里预训练过的模型，它还不给下载地址，让我找老半天，哼</p>
+<ul>
+<li><p>从 <a target="_blank" rel="noopener" href="https://mindspore.cn/">MindSpore官网</a> - 资源 - Hub 搜索 <code>vgg16</code>，找到 <a target="_blank" rel="noopener" href="https://mindspore.cn/resources/hub/details?MindSpore/1.9/vgg16_imagenet2012">下载地址</a>，下载 <code>vgg16_ascend_v190_imagenet2012_official_cv_top1acc73.49_top5acc91.56.ckpt</code></p>
+<p><img src="M2_2.png" alt="png"></p>
+</li>
+</ul>
+</li>
+</ul>
+<ol>
+<li>调整仓库里的 parser 参数、数据集的位置和预训练模型的位置，使得路径对应一致。</li>
+</ol>
+<blockquote>
+<p>In this project, the file organization is recommended as below:</p>
+<figure class="highlight routeros"><table><tr><td class="code"><pre><code class="hljs routeros">.<br>└─data<br>  ├─icdar2015<br>    ├─Training                           # Training <span class="hljs-built_in">set</span><br>      ├─image                            # Images <span class="hljs-keyword">in</span> training <span class="hljs-built_in">set</span><br>      ├─groundTruth                      # GT <span class="hljs-keyword">in</span> training <span class="hljs-built_in">set</span><br>    └─Test                               # Test <span class="hljs-built_in">set</span><br>      ├─image                            # Images <span class="hljs-keyword">in</span> training <span class="hljs-built_in">set</span><br>      ├─groundTruth                      # GT <span class="hljs-keyword">in</span> training set<br></code></pre></td></tr></table></figure>
+</blockquote>
+<p><img src="M3.png" alt="png"></p>
+<ol>
+<li>安装环境一条龙！<code>requirements.txt</code> 里面的玩意着实难装，还是手动装好了……</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="code"><pre><code class="hljs shell">source activate base  # 第一次进服务器激活需要 activate base<br>python -c &quot;import mindspore;mindspore.run_check()&quot;  # 查看 mindspore 版本<br>conda create -n east --clone base  # 克隆 base 环境<br>conda activate east  # 激活 east 环境<br>pip install numpy<br>pip install opencv-python<br>pip install shapely<br>pip install pillow<br>pip install lanms-neo<br>pip install polygon<br>pip install onnxruntime<br></code></pre></td></tr></table></figure>
+<p>装好环境后可以保存一下镜像，这样下次重开服务器的时候就会保留之前安装好的环境：</p>
+<p><img src="M4.png" alt="png"></p>
+<ol>
+<li>切到仓库目录，开跑！</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="code"><pre><code class="hljs shell">cd /home/ma-user/work/east/<br>python3 train.py<br></code></pre></td></tr></table></figure>
+<p><img src="M5_1.png" alt="png"></p>
+<p>显示完超参数后，等呗。</p>
+<p><img src="M5_2.png" alt="png"></p>
+
+  </div>
+  <div id="gitalk-container"></div>
+</div>
+
+<script>
+  
+Fancybox.bind('[data-fancybox="fancybox-gallery-img"]', {
+  dragToClose: true,
+  Toolbar: true,
+  closeButton: "top",
+  Image: {
+    zoom: true,
+  },
+  on: {
+    initCarousel: (fancybox) => {
+      const slide = fancybox.Carousel.slides[fancybox.Carousel.page];
+      fancybox.$container.style.setProperty(
+        "--bg-image",
+        `url("${slide.$thumb.src}")`
+      );
+    },
+    "Carousel.change": (fancybox, carousel, to, from) => {
+      const slide = carousel.slides[to];
+      fancybox.$container.style.setProperty(
+        "--bg-image",
+        `url("${slide.$thumb.src}")`
+      );
+    },
+  },
+});
+</script>
+
+<style>
+    #noneimg img {
+        display: none;
+        z-index: 9999;
+        /* width: 600px !important; */
+        min-width: 0%;
+        max-width: 90%;
+        max-height: 80%;
+        border-radius: 0px;
+        position: fixed;
+        box-shadow: 0 0 0px #c3c3c300 !important;
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        margin: auto !important;
+    }
+
+    @media screen and (max-width:600px) {
+        #noneimg img {
+            max-width: 88%
+        }
+    }
+</style>
+
+    <div class="post-paging">
+    
+
+    
+    <a href="/2023/05/11/Diary-%E6%A2%85%E5%BC%80%E4%BA%8C%E5%BA%A6%E7%9A%84%E7%AC%AC%2011%20%E5%91%A8%E5%92%8C%E7%AC%AC%2012%20%E5%91%A8/">
+        <div class="post-paging-next">
+            <span>下一篇</span>
+            <p>Diary-梅开二度的第 11 周和第 12 周</p>
+        </div>
+    </a>
+    
+</div>
+</div>
+		
+<div class="footer">
+	<div class="Copyright">
+		©2023 By Zi-Zi. 主题：<a
+			style="text-decoration: none;display: contents; color: #898F9F;"
+			target="_blank" rel="noopener" href="https://github.com/79e/hexo-theme-quiet">Quiet</a>
+	</div>
+	<div class="contact">
+		
+		<a target="_blank" rel="noopener" href="https://weibo.com/u/5020307235">
+			<img src="/image/Weibo.png" alt="Quiet主题">
+		</a>
+		
+		<a target="_blank" rel="noopener" href="https://tieba.baidu.com/home/main?id=tb.1.ff6d2775.vFH7wrdW2ZjPCmyBHJcjnA">
+			<img src="/image/Tieba.png" alt="Quiet主题">
+		</a>
+		
+		<a target="_blank" rel="noopener" href="https://space.bilibili.com/11547880">
+			<img src="/image/Bilibili.png" alt="Quiet主题">
+		</a>
+		
+		<a target="_blank" rel="noopener" href="https://github.com/GZ-Metal-Cell">
+			<img src="/image/github.png" alt="Quiet主题">
+		</a>
+		
+	</div>
+</div>
+
+<script src="/js/gotop.js"></script>
+
+
+<style type="text/css">
+    @media screen and (min-width: 600px) {
+        .goTop>span {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            opacity: 0.8;
+            background: rgba(18, 24, 58, 0.06);
+            text-align: center;
+            transition: border .5s;
+            border: 1px solid rgba(18, 24, 58, 0.06);
+
+            -moz-transition: border .5s;
+            /* Firefox 4 */
+            -webkit-transition: border .5s;
+            /* Safari 和 Chrome */
+            -o-transition: border .5s;
+            /* Opera */
+        }
+
+        .goTop>span:hover {
+            border: 1px solid #6680B3;
+        }
+
+
+        .goTop {
+            position: fixed;
+            right: 30px;
+            bottom: 80px;
+        }
+
+        .goTop>span>svg {
+            width: 20px;
+            height: 20px;
+            opacity: 0.7;
+        }
+
+    }
+
+    @media screen and (max-width: 600px) {
+        .goTop {
+            display: none;
+        }
+    }
+</style>
+<div class="goTop" id="js-go_top">
+    <span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+            <g>
+                <path d="M13 12v8h-2v-8H4l8-8 8 8z"></path>
+            </g>
+        </svg>
+    </span>
+</div>
+<script>
+    $( '#js-go_top' )
+	.gotoTop( {
+		offset: 500,
+		speed: 300,
+		animationShow: {
+			'transform': 'translate(0,0)',
+			'transition': 'transform .5s ease-in-out'
+		},
+		animationHide: {
+			'transform': 'translate(100px,0)',
+			'transition': 'transform .5s ease-in-out'
+		}
+	} );
+</script>
+
+
+    <script src="/js/md5.min.js"></script>
+    <!-- Gitalk -->
+    <script>
+        const data = '{"clientID":"f3a4ea928b90c73f66d4","clientSecret":"d697ef6f42e83e83c49ff8d19e753f36bc375015","repo":"GZ-Metal-Cell.github.io","owner":"GZ-Metal-Cell","admin":"GZ-Metal-Cell"}'
+        const gitalk = new Gitalk({
+            ...JSON.parse( data),
+            id:md5(location.pathname), //  location.pathname,
+            distractionFreeMode:false
+        })
+        
+        if(Boolean('true')){
+            gitalk.render('gitalk-container')
+        }
+    </script>
+
+<script>
+	console.log('\n %c Hexo-Quiet 主题 %c https://github.com/79e/hexo-theme-quiet \n', 'color: #fadfa3; background: #030307; padding:5px 0;', 'background: #fadfa3; padding:5px 0;')
+</script>
+	</body>
+</html>
+
