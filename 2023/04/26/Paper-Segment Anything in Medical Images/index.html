@@ -335,7 +335,21 @@
 <li><a href="#笔记">笔记</a></li>
 <li><a href="#代码">代码</a><ul>
 <li><a href="#配置">配置</a></li>
-<li><a href="#在自定义数据集上微调-sam">在自定义数据集上微调 SAM</a></li>
+<li><a href="#在自定义数据集上微调-sam">在自定义数据集上微调 SAM</a><ul>
+<li><a href="#3d">3D</a></li>
+<li><a href="#2d">2D</a></li>
+</ul>
+</li>
+<li><a href="#看代码">看代码</a><ul>
+<li><a href="#pre_grey_rgb2dpy">pre_grey_rgb2D.py</a><ul>
+<li><a href="#set-up-the-parser">set up the parser</a></li>
+<li><a href="#set-up-the-model">set up the model</a></li>
+<li><a href="#convert-2d-grey-or-rgb-images-to-npz-file">convert 2d grey or rgb images to npz file</a></li>
+<li><a href="#save-all-2d-images-as-one-npz-file-ori_imgs-ori_gts-img_embeddings">save all 2D images as one npz file: ori_imgs, ori_gts, img_embeddings</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -552,17 +566,135 @@
 <li>下载 <a target="_blank" rel="noopener" href="https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth">sam_vit_b_01ec64.pth</a> 并将其放置在 <code>work_dir/SAM/</code> 中：</li>
 </ol>
 <p><img src="C2.png" alt="png"></p>
-<ol>
+<h4><span id="3d">3D</span></h4><ol>
 <li>下载 <a target="_blank" rel="noopener" href="https://zenodo.org/record/7860267">FLARE22Train.zip</a> 并将其解压，放置在 <code>data/</code> 中：</li>
 </ol>
 <p><img src="C3.png" alt="png"></p>
 <blockquote>
 <p>该数据集包含 50 个腹部 CT 扫描，每个扫描包含一个包含 13 个器官的注释面罩。器官标签的名称可在 <a target="_blank" rel="noopener" href="https://flare22.grand-challenge.org/">MICCAI FLARE2022</a> 上找到。 在本教程中，我们将微调 SAM 以进行胆囊 (gallbladder) 分割。</p>
+<p>nii.gz 是一种常见的医学影像数据格式。它是基于 NIfTI（Neuroimaging Informatics Technology Initiative）格式的一种压缩文件，通常用于存储头颅和身体的 MRI 和 CT 数据。该格式包含图像的三维体积数据，以及与图像相关的元数据信息，如图像分辨率、采集参数等。nii.gz 文件可以通过各种软件进行读取、编辑和处理，如 FSL、SPM、ANTs 等。</p>
 </blockquote>
 <ol>
-<li>开跑！</li>
+<li><p>开跑 <code>pre_CT.py</code> 这只是个预处理！</p>
+<ul>
+<li><p>拆分数据集：80% 用于训练，20% 用于测试</p>
+</li>
+<li><p>图像归一化</p>
+</li>
+<li><p>预计算图像嵌入</p>
+</li>
+<li><p>将归一化图像 <code>imgs.npy</code>、真实情况掩码 <code>gts.npy</code> 和图像 <code>img_embeddings.npy</code> 嵌入另存为文件 <code>npz</code></p>
+</li>
+</ul>
+</li>
 </ol>
+<blockquote>
+<p><strong>npy</strong> 文件是 numpy 保存单个数组的一种二进制文件格式，它可以包含一个 numpy 数组，这个数组的维度和类型等信息都可以被存储在这个文件中。npy 文件通过使用 numpy 库中的 load() 和 save() 函数进行读写。</p>
+<p>相比于 txt、csv 这样的文本型数据文件，npy 文件具有更好的性能和可靠性。因为文本型数据需要进行字符串转化和解析等操作，在面对大量数据时会出现读写速度较慢的情况，并且数据解析容易受到不同系统和软件的影响而出现错误。而 npy 文件采用二进制存储，可以直接将内存中的二进制数组写入文件，不需要转化和解析字符串，性能更高，同时因为没有转化字符类型，也不存在因不同系统和软件的影响而出现的数据解析错误。</p>
+<p><strong>npz</strong> 是 numpy 保存数组的一种格式，它是一种压缩文件格式，可以将多个 numpy 数组打包存放在一个文件中，其压缩率较高。使用 np.savez_compressed() 函数可以生成 .npz 文件，使用 np.load() 函数可以读取 .npz 文件中的数组。相比其他文件格式（如 .txt、.csv 等），.npz 文件可以更方便地用于存储和加载大型数组数据集，因为它可以使用 numpy 库提供的高效的加载和存储方法。此外，.npz 文件还可以轻松地传递和共享数组数据集，并且不像其他文件格式那样需要手动编写 IO 操作代码来读取和写入数据。</p>
+</blockquote>
 <p><img src="C4.png" alt="png"></p>
+<ol>
+<li>然后就可以跑 <code>finetune_and_inference_tutorial_3D_dataset.ipynb</code>！</li>
+</ol>
+<h4><span id="2d">2D</span></h4><ol>
+<li>从 <a target="_blank" rel="noopener" href="https://drive.google.com/file/d/18GhVEODbTi17jSeBXdeLQ7vHPdtlTYXK/view">MedSAMDemo_2D.zip - Google Drive</a> 下载 2D 数据集，放置在 <code>data/</code> 中：</li>
+</ol>
+<p><img src="C5.png" alt="png"></p>
+<p><img src="C6.png" alt="png"></p>
+<p><img src="C7.png" alt="png"></p>
+<ol>
+<li><p>开跑 <code>pre_grey_rgb2D.py</code> 这只是个预处理！</p>
+</li>
+<li><p>然后就可以跑 <code>finetune_and_inference_tutorial_2D_dataset.ipynb</code>！</p>
+</li>
+</ol>
+<h3><span id="看代码">看代码</span></h3><h4><span id="pre_grey_rgb2dpy">pre_grey_rgb2D.py</span></h4><p>这个代码主要是对数据集进行预处理。</p>
+<h5><span id="set-up-the-parser">set up the parser</span></h5><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>type</th>
+<th>default</th>
+<th>help</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>-i, —img_path</td>
+<td>str</td>
+<td>data/MedSAMDemo_2D/train/images</td>
+<td>path to the <strong>images</strong></td>
+</tr>
+<tr>
+<td>-gt, —gt_path</td>
+<td>str</td>
+<td>data/MedSAMDemo_2D/train/labels</td>
+<td>path to the <strong>ground truth (gt)</strong></td>
+</tr>
+<tr>
+<td>-o, —npz_path</td>
+<td>str</td>
+<td>data/demo2D</td>
+<td>path to save the <strong>npz</strong> files</td>
+</tr>
+<tr>
+<td>—data_name</td>
+<td>str</td>
+<td>demo2d</td>
+<td><strong>dataset name</strong>; used to name the final npz file, e.g., <code>demo2d.npz</code></td>
+</tr>
+<tr>
+<td>—image_size</td>
+<td>int</td>
+<td>256</td>
+<td>image <strong>size</strong></td>
+</tr>
+<tr>
+<td>—img_name_suffix</td>
+<td>str</td>
+<td>.png</td>
+<td>image name <strong>suffix</strong></td>
+</tr>
+<tr>
+<td>—label_id</td>
+<td>int</td>
+<td>255</td>
+<td>label <strong>id</strong></td>
+</tr>
+<tr>
+<td>—model_type</td>
+<td>str</td>
+<td>vit_b</td>
+<td>model type</td>
+</tr>
+<tr>
+<td>—checkpoint</td>
+<td>str</td>
+<td>work_dir/SAM/sam_vit_b_01ec64.pth</td>
+<td>checkpoint</td>
+</tr>
+<tr>
+<td>—device</td>
+<td>str</td>
+<td>cuda:0</td>
+<td>device</td>
+</tr>
+<tr>
+<td>—seed</td>
+<td>int</td>
+<td>2023</td>
+<td>random seed</td>
+</tr>
+</tbody>
+</table>
+</div>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># 获取 args.gt_path 目录下所有文件名，并按字典序排序，将结果赋值给 names</span><br>names = <span class="hljs-built_in">sorted</span>(os.listdir(args.gt_path))<br><span class="hljs-comment"># 将 args.npz_path 和 args.model_type 拼接成一个新路径名 save_path</span><br>save_path = args.npz_path + <span class="hljs-string">&#x27;_&#x27;</span> + args.model_type<br><span class="hljs-comment"># 创建新的目录save_path。如果该目录已经存在，则不做任何操作。如果不存在，则新建该目录及其所有上级目录</span><br>os.makedirs(save_path, exist_ok=<span class="hljs-literal">True</span>)<br><span class="hljs-comment"># 打印输出 names 列表的长度即图片数量</span><br><span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;image number:&#x27;</span>, <span class="hljs-built_in">len</span>(names))<br></code></pre></td></tr></table></figure>
+<h5><span id="set-up-the-model">set up the model</span></h5><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># 初始化模型，设置好 args.model_type、args.checkpoint、args.device</span><br>sam_model = sam_model_registry[args.model_type](checkpoint=args.checkpoint).to(args.device)<br></code></pre></td></tr></table></figure>
+<h5><span id="convert-2d-grey-or-rgb-images-to-npz-file">convert 2d grey or rgb images to npz file</span></h5><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">imgs = []  <span class="hljs-comment"># 图片（images）</span><br>gts =  []  <span class="hljs-comment"># 标签（labels）</span><br>img_embeddings = []  <span class="hljs-comment"># 图片嵌入信息</span><br><br><span class="hljs-comment"># 遍历 ground truth 文件夹, names 默认为 args.gt_path（&#x27;data/MedSAMDemo_2D/train/labels&#x27;）下排序好的文件列表</span><br><span class="hljs-keyword">for</span> gt_name <span class="hljs-keyword">in</span> tqdm(names):<br>    image_name = gt_name.split(<span class="hljs-string">&#x27;.&#x27;</span>)[<span class="hljs-number">0</span>] + args.img_name_suffix  <span class="hljs-comment"># 获得文件名称 + 后缀名</span><br>    gt_data = io.imread(join(args.gt_path, gt_name))  <span class="hljs-comment"># 获得 ground truth 数据</span><br>    <span class="hljs-keyword">if</span> <span class="hljs-built_in">len</span>(gt_data.shape)==<span class="hljs-number">3</span>:  <span class="hljs-comment"># 如果 gt_data 是三维的，则只取第一个通道（灰度图）</span><br>        gt_data = gt_data[:,:,<span class="hljs-number">0</span>]<br>    <span class="hljs-keyword">assert</span> <span class="hljs-built_in">len</span>(gt_data.shape)==<span class="hljs-number">2</span>, <span class="hljs-string">&#x27;ground truth should be 2D&#x27;</span>  <span class="hljs-comment"># 确保分割标签是二维的（高和宽）</span><br>    <span class="hljs-comment"># 这行代码的作用是将分割标签（即 gt_data）缩放到指定大小（args.image_size），并将其值转换为二进制形式（0 和 1）。</span><br>    <span class="hljs-comment"># 具体来说，它会将分割标签中所有等于 args.label_id 的像素点设置为 1，其余像素点设置为 0，然后将结果缩放到指定大小。</span><br>    <span class="hljs-comment"># 这里使用了 scikit-image 库的 transform.resize 函数，</span><br>    <span class="hljs-comment"># 并指定了 order=0 表示使用最近邻插值法，</span><br>    <span class="hljs-comment"># preserve_range=True 表示保持输入图像的范围不变（即值仍在 0 到 1 之间），</span><br>    <span class="hljs-comment"># mode=&#x27;constant&#x27; 表示在缩放后填充常数值的方式为使用边界值填充。</span><br>    <span class="hljs-comment"># 最终得到的结果是一个二值图像，即只包含 0 和 1 两种像素值的图像。</span><br>    gt_data = transform.resize(gt_data==args.label_id, (args.image_size, args.image_size), order=<span class="hljs-number">0</span>, preserve_range=<span class="hljs-literal">True</span>, mode=<span class="hljs-string">&#x27;constant&#x27;</span>)<br>    <span class="hljs-comment"># 将gt_data值转换为 8 位无符号整数</span><br>    gt_data = np.uint8(gt_data)<br><br>    <span class="hljs-comment"># exclude tiny objects 如果分割标签中包含的像素点数大于 100，则执行以下操作(对源图像进行预处理，加入最终的数据集中)</span><br>    <span class="hljs-keyword">if</span> np.<span class="hljs-built_in">sum</span>(gt_data)&gt;<span class="hljs-number">100</span>:  <br>        <span class="hljs-comment"># 最大值是 1，就两种像素点。确保分割标签是二值图</span><br>        <span class="hljs-keyword">assert</span> np.<span class="hljs-built_in">max</span>(gt_data)==<span class="hljs-number">1</span> <span class="hljs-keyword">and</span> np.unique(gt_data).shape[<span class="hljs-number">0</span>]==<span class="hljs-number">2</span>, <span class="hljs-string">&#x27;ground truth should be binary&#x27;</span><br>        <span class="hljs-comment"># 获得图像数据</span><br>        image_data = io.imread(join(args.img_path, image_name))<br>        <span class="hljs-comment"># 如果图像包含透明度通道，则只取前三个通道，即 RGB 通道</span><br>        <span class="hljs-keyword">if</span> image_data.shape[-<span class="hljs-number">1</span>]&gt;<span class="hljs-number">3</span> <span class="hljs-keyword">and</span> <span class="hljs-built_in">len</span>(image_data.shape)==<span class="hljs-number">3</span>:<br>            image_data = image_data[:,:,:<span class="hljs-number">3</span>]<br>        <span class="hljs-comment"># 如果图像只有一个通道，则将其复制三次，即得到一个 RGB 图像</span><br>        <span class="hljs-keyword">if</span> <span class="hljs-built_in">len</span>(image_data.shape)==<span class="hljs-number">2</span>:<br>            image_data = np.repeat(image_data[:,:,<span class="hljs-literal">None</span>], <span class="hljs-number">3</span>, axis=-<span class="hljs-number">1</span>)<br>        <span class="hljs-comment"># nii preprocess start</span><br>        <span class="hljs-comment"># 计算图像的亮度范围，即确定合适的像素值下限和上限</span><br>        <span class="hljs-comment"># 使用 np.percentile 函数分别计算了图像中像素值从小到大排列后第 0.5% 和第 99.5% 的值，</span><br>        <span class="hljs-comment"># 将其作为下限和上限，用于后续的像素值标准化处理</span><br>        lower_bound, upper_bound = np.percentile(image_data, <span class="hljs-number">0.5</span>), np.percentile(image_data, <span class="hljs-number">99.5</span>)<br>        <span class="hljs-comment"># 将图像中的像素值限制在 lower_bound 和 upper_bound 之间</span><br>        image_data_pre = np.clip(image_data, lower_bound, upper_bound)<br>        <span class="hljs-comment"># 将调整后的图像进行标准化，方法是先将图像中所有像素值减去最小值，然后除以像素值范围（即最大值减去最小值），最后乘以255，使像素值缩放到0-255的范围。</span><br>        <span class="hljs-comment"># 这样做的目的是为了使得图像不受亮度范围的影响，并且方便后续模型的处理，因为很多模型输入都需要归一化的图像数据</span><br>        image_data_pre = (image_data_pre - np.<span class="hljs-built_in">min</span>(image_data_pre))/(np.<span class="hljs-built_in">max</span>(image_data_pre)-np.<span class="hljs-built_in">min</span>(image_data_pre))*<span class="hljs-number">255.0</span><br>        <span class="hljs-comment"># 将背景像素（黑色）设置为 0</span><br>        image_data_pre[image_data==<span class="hljs-number">0</span>] = <span class="hljs-number">0</span><br>        <span class="hljs-comment"># 调整图像大小，并使用三次样条插值方法进行重采样，使得图像更加平滑，并保持图像的范围不变</span><br>        image_data_pre = transform.resize(image_data_pre, (args.image_size, args.image_size), order=<span class="hljs-number">3</span>, preserve_range=<span class="hljs-literal">True</span>, mode=<span class="hljs-string">&#x27;constant&#x27;</span>, anti_aliasing=<span class="hljs-literal">True</span>)<br>        <span class="hljs-comment"># 将图像像素值转换为 8 位无符号整数</span><br>        image_data_pre = np.uint8(image_data_pre)<br>        <br>        <span class="hljs-comment"># 将处理后的图像添加到 imgs 列表中</span><br>        imgs.append(image_data_pre)<br>        <span class="hljs-comment"># 确保分割标签中包含的像素点数大于100（这里为啥又问一遍？闻到了屎山的味道）</span><br>        <span class="hljs-keyword">assert</span> np.<span class="hljs-built_in">sum</span>(gt_data)&gt;<span class="hljs-number">100</span>, <span class="hljs-string">&#x27;ground truth should have more than 100 pixels&#x27;</span><br>        <span class="hljs-comment"># 将处理后的分割标签添加到gts列表中</span><br>        gts.append(gt_data)<br>        <span class="hljs-comment"># resize image to 3*1024*1024</span><br>        <span class="hljs-comment"># 创建一个 ResizeLongestSide 对象</span><br>        <span class="hljs-comment"># ResizeLongestSide 的类，用于将图像和坐标进行长边缩放。</span><br>        <span class="hljs-comment"># 具体来说，该类实现了 apply_image 和 apply_coords 两个方法，分别用于处理图像和坐标</span><br>        sam_transform = ResizeLongestSide(sam_model.image_encoder.img_size)<br>        <span class="hljs-comment"># 将该 ResizeLongestSide 对象应用于 image_data_pre 图像，重新调整大小并返回新的图像 resize_img</span><br>        resize_img = sam_transform.apply_image(image_data_pre)<br>        <span class="hljs-comment"># 将 numpy 数组 resize_img 转换为 PyTorch 张量，同时将其移动到 GPU</span><br>        resize_img_tensor = torch.as_tensor(resize_img.transpose(<span class="hljs-number">2</span>, <span class="hljs-number">0</span>, <span class="hljs-number">1</span>)).to(args.device)<br>        <span class="hljs-comment"># 对图像进行预处理，例如减去均值、除以标准差等</span><br>        input_image = sam_model.preprocess(resize_img_tensor[<span class="hljs-literal">None</span>,:,:,:]) <span class="hljs-comment"># (1, 3, 1024, 1024)</span><br>        <span class="hljs-keyword">assert</span> input_image.shape == (<span class="hljs-number">1</span>, <span class="hljs-number">3</span>, sam_model.image_encoder.img_size, sam_model.image_encoder.img_size), <span class="hljs-string">&#x27;input image should be resized to 1024*1024&#x27;</span><br>        <span class="hljs-comment"># pre-compute the image embedding</span><br>        <span class="hljs-comment"># 对输入图像进行特征提取，得到图片的 embedding</span><br>        <span class="hljs-keyword">with</span> torch.no_grad():<br>            embedding = sam_model.image_encoder(input_image)<br>            img_embeddings.append(embedding.cpu().numpy()[<span class="hljs-number">0</span>])<br></code></pre></td></tr></table></figure>
+<h5><span id="save-all-2d-images-as-one-npz-file-ori_imgs-ori_gts-img_embeddings">save all 2D images as one npz file: ori_imgs, ori_gts, img_embeddings</span></h5><p><strong>stack the list to array</strong></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># 将所有2D图像以及它们的相关信息（如 ground truth 和 image embedding）保存成一个 npz 文件</span><br><span class="hljs-keyword">if</span> <span class="hljs-built_in">len</span>(imgs)&gt;<span class="hljs-number">1</span>:<br>    imgs = np.stack(imgs, axis=<span class="hljs-number">0</span>) <span class="hljs-comment"># (n, 256, 256, 3) 表示 n 张 256x256 的 RGB 图像</span><br>    gts = np.stack(gts, axis=<span class="hljs-number">0</span>) <span class="hljs-comment"># (n, 256, 256) 表示 n 张 256x256 的灰度图像</span><br>    img_embeddings = np.stack(img_embeddings, axis=<span class="hljs-number">0</span>) <span class="hljs-comment"># (n, 1, 256, 64, 64) 将每张图像转换为了1个256x64x64的图像embedding</span><br>    <span class="hljs-comment"># 使用np.savez_compressed函数将这三个numpy数组保存成一个npz文件，其中imgs、gts和img_embeddings分别对应三个关键字参数</span><br>    np.savez_compressed(join(save_path, args.data_name + <span class="hljs-string">&#x27;.npz&#x27;</span>), imgs=imgs, gts=gts, img_embeddings=img_embeddings)<br>    <span class="hljs-comment"># save an example image for sanity check 随机选择一个图像进行可视化检查</span><br>    idx = np.random.randint(imgs.shape[<span class="hljs-number">0</span>])  <span class="hljs-comment"># 随机生成一个索引 idx</span><br>    <span class="hljs-comment"># 从 imgs、gts 和 img_embeddings 中提取出该索引对应的图像</span><br>    <span class="hljs-comment"># img_idx、ground truth gt_idx 和 image embedding img_emb_idx</span><br>    img_idx = imgs[idx,:,:,:]<br>    gt_idx = gts[idx,:,:]<br>    <span class="hljs-comment"># 代码使用scikit-image库的find_boundaries函数找到gt_idx中每个目标的边缘位置，并将img_idx中边缘位置的像素设为红色</span><br>    bd = segmentation.find_boundaries(gt_idx, mode=<span class="hljs-string">&#x27;inner&#x27;</span>)<br>    <span class="hljs-comment"># 将边缘设为红色</span><br>    img_idx[bd, :] = [<span class="hljs-number">255</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>]<br>    <span class="hljs-comment"># 使用io.imsave函数将处理后的img_idx保存成png文件，以便进一步进行可视化检查</span><br>    io.imsave(save_path + <span class="hljs-string">&#x27;.png&#x27;</span>, img_idx, check_contrast=<span class="hljs-literal">False</span>)<br></code></pre></td></tr></table></figure>
 
   </div>
   <div id="gitalk-container"></div>
