@@ -474,7 +474,20 @@
 </table>
 </div>
 <h2><span id="资源">资源</span></h2><p>原文档：<a target="_blank" rel="noopener" href="https://github.com/Unity-Technologies/com.unity.perception/blob/main/com.unity.perception/Documentation~/Features/index.md">com.unity.perception/index.md at main · Unity-Technologies/com.unity.perception · GitHub</a></p>
-<h2><span id="labeling"></span></h2><h2><span id="label-config"></span></h2><h2><span id="bounding-box-2d-labeler"></span></h2><h2><span id="hierarchical-bounding-boxes"></span></h2><h2><span id="bounding-box-3d-labeler"></span></h2><h2><span id="keypoint-labeler"></span></h2><h2><span id="metadata-labeler"></span></h2><h2><span id="randomization"></span></h2><h2><span id="scenarios"></span></h2><p>预先定义好的 <code>Fixed Length Scenario</code> 加载在场景的一个空对象中：</p>
+<h2><span id="labeling"></span></h2><h2><span id="label-config"></span></h2><h2><span id="bounding-box-2d-labeler"></span></h2><h2><span id="hierarchical-bounding-boxes"></span></h2><h2><span id="bounding-box-3d-labeler"></span></h2><h2><span id="keypoint-labeler"></span></h2><h2><span id="metadata-labeler"></span></h2><h2><span id="randomization"></span></h2><p>Randomization 工具集集成了合成数据集中随机化的功能：</p>
+<ol>
+<li>提供了用于随机化的 Parameters</li>
+<li>提供了从 Parameters 中挑选随机值的 Samplers</li>
+<li>提供了协调完整随机化过程的 Scenarios</li>
+</ol>
+<p>随机化的步骤：</p>
+<ol>
+<li>创建 Scenario</li>
+<li>定义 Randomizers 并将其添加到 Scenario 中</li>
+<li>在 Randomizers 里设置好 Parameters 和 Samplers</li>
+<li>生成用于 CV 的随机化训练数据</li>
+</ol>
+<h2><span id="scenarios"></span></h2><p>预先定义好的 <code>Fixed Length Scenario</code> 加载在场景的一个空对象中：</p>
 <p><img src="S2.jpg" alt="jpg"></p>
 <p>Scenarios 有三个任务：</p>
 <ol>
@@ -527,10 +540,113 @@
 </ol>
 <h3><span id="randomizer-coding-example">Randomizer Coding Example</span></h3><p>以下是 Perception 软件包中包含的 rotation Randomizer 示例的代码：</p>
 <figure class="highlight c#"><table><tr><td class="code"><pre><code class="hljs C#">[<span class="hljs-meta">Serializable</span>]<br>[<span class="hljs-meta">AddRandomizerMenu(<span class="hljs-string">&quot;Perception/Rotation Randomizer&quot;</span>)</span>]<br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">RotationRandomizer</span> : <span class="hljs-title">Randomizer</span><br>&#123;<br>    <span class="hljs-keyword">public</span> Vector3Parameter rotation = <span class="hljs-keyword">new</span> Vector3Parameter();<br><br>    <span class="hljs-function"><span class="hljs-keyword">protected</span> <span class="hljs-keyword">override</span> <span class="hljs-keyword">void</span> <span class="hljs-title">OnIterationStart</span>()</span><br>    &#123;<br>        <span class="hljs-keyword">var</span> taggedObjects = tagManager.Query&lt;RotationRandomizerTag&gt;();<br>        <span class="hljs-keyword">foreach</span> (<span class="hljs-keyword">var</span> taggedObject <span class="hljs-keyword">in</span> taggedObjects)<br>            taggedObject.transform.rotation = Quaternion.Euler(rotation.Sample());<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h3><span id="randomizer-library">Randomizer Library</span></h3><hr>
+<p><strong>Light Randomizer</strong>：以所有绑定 <code>Light RandomizerTag</code> 的对象为目标。</p>
+<p><strong>Light Randomizer Tag</strong>：必须绑定在有 <code>Light</code> 组件的 <code>GameObject</code> 上。</p>
+<p>可以随机化的参数：</p>
+<ol>
+<li>可以开关的可能性</li>
+<li>灯光强度</li>
+<li>灯光温度</li>
+<li>灯光颜色</li>
+</ol>
+<hr>
+<p><strong>Material Property Randomizer（材质特性随机化器）</strong>: 以所有绑定 <code>Material Property Randomizer Tag</code> 的对象为目标。</p>
+<p><strong>Material Property Randomizer Tag</strong>: 必须绑定在有一种 <code>Renderer</code>（MeshRenderer, BillboardRenderer 等）组件的 <code>GameObject</code> 上。</p>
+<p>对于选定材质的着色器，指定要修改哪些着色器属性以及在哪些范围之间进行修改。</p>
+<hr>
+<p><strong>Material Swapper</strong>：以所有绑定 <code>Material Swapper Tag</code> 的对象为目标。</p>
+<p><strong>Material Swapper Tag</strong>: 必须绑定在有 <code>Material</code> 组件的 <code>GameObject</code> 上。</p>
+<p>给定一个材质列表，在每次迭代中，将给定 GameObject 的材质与列表中的一个采样材质进行交换。</p>
+<hr>
+<p><strong>Scene Randomizer</strong>：给定一个场景列表，每 <code>n</code> 次迭代从列表中加载一个场景。</p>
+<p>列表中的任何 scenes 都不应具有 scenario 组件，因为一次只能有一个 scenario 组件处于活动状态。启动组件的 scenario 中指定的随机化器将持续存在，并作用于新加载的场景中的对象。</p>
+<hr>
+<p><strong>Sky Randomizer</strong>: 以所有绑定 <code>Skybox Randomizer Tag</code> 的对象为目标。</p>
+<p><strong>Sky Randomizer Tag</strong>: 必须绑定在有 <code>Volume</code> 组件（？）的 <code>GameObject</code> 上。</p>
+<hr>
+<p><strong>Substance Randomizer</strong>：以所有绑定 <code>Substance Randomizer Tag</code> 的对象为目标。</p>
+<p><strong>Substance Randomizer Tag</strong>：必须绑定在有 <code>SubstanceGraph</code> 组件的 <code>GameObject</code> 上。</p>
+<p>好像很高级，还不太稳定，少用吧。（没有接触过 <code>SubstanceGraph</code> 这个组件）</p>
+<hr>
+<p><strong>Transform Randomizer</strong>：以所有绑定 <code>Transform Randomizer Tag</code> 的对象为目标。</p>
+<p><strong>Transform Randomizer Tag</strong>：任何 <code>GameObject</code> 上都可绑定。</p>
+<ol>
+<li>Translation 平移<ol>
+<li>是否启用</li>
+<li>平移范围</li>
+<li>平移是相对平移还是绝对平移（直接设置坐标值）</li>
+</ol>
+</li>
+<li>Rotation 旋转<ol>
+<li>是否启用</li>
+<li>旋转范围</li>
+<li>旋转是相对旋转还是绝对旋转（直接设置旋转角）</li>
+</ol>
+</li>
+<li>Scale 缩放<ol>
+<li>是否启用</li>
+<li>缩放范围</li>
+<li>Uniformly scaled？（是否所有轴都具有相同的随机化值）</li>
+<li>缩放是相对缩放还是绝对缩放（直接设置缩放值）</li>
+</ol>
+</li>
+</ol>
+<hr>
+<p><strong>Volume Randomizer</strong>：以所有绑定 <code>Volume Randomizer Tag</code> 的对象为目标。</p>
+<p><strong>Volume Randomizer Tag</strong>：必须绑定在有 <code>Volume</code> 组件的 <code>GameObject</code> 上。</p>
+<hr>
+<p>从可用的后处理效果列表中，可以随机化哪些效果以及每个后处理效果的特定参数。</p>
+<ol>
+<li><p><strong>Bloom</strong>–阈值、强度、散射</p>
+</li>
+<li><p><strong>曝光 Exposure</strong>–补偿</p>
+</li>
+<li><strong>景深 Depth of Field</strong>–近焦起点和终点，远焦起点和末端</li>
+<li><strong>相机类型 Camera Type</strong>–相机规格列表（焦距、传感器尺寸、镜头偏移、门配合等）</li>
+<li><strong>运动模糊 Motion Blur</strong>–强度、最小速度、最大速度</li>
+<li><strong>镜头失真 Lens Distortion</strong>–强度、X和Y倍增、中心、比例</li>
+</ol>
 <h2><span id="randomizer-tags"></span></h2><p><strong>RandomizerTags</strong> 是随机化器查询游戏对象的某个子集以在模拟中随机化的主要机制。更具体地说，RandomizerTags 是可以添加到 <code>GameObjects</code> 的组件，以便在活动场景的 TagManager 中注册它们。该 TagManager 可以识别场景中所有带有标记的对象，并且可以查询以查找包含特定标记的所有 GameObjects。下面是一个简单的示例，<code>ColorRandomizer</code> 使用 <code>ColorRandomizerTag</code> 查询所有游戏对象，它将对其应用随机材质基础颜色：</p>
 <figure class="highlight c#"><table><tr><td class="code"><pre><code class="hljs C#">[<span class="hljs-meta">Serializable</span>]<br>[<span class="hljs-meta">AddRandomizerMenu(<span class="hljs-string">&quot;Perception/Color Randomizer&quot;</span>)</span>]<br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">ColorRandomizer</span> : <span class="hljs-title">Randomizer</span><br>&#123;<br>    <span class="hljs-keyword">static</span> <span class="hljs-keyword">readonly</span> <span class="hljs-built_in">int</span> k_BaseColor = Shader.PropertyToID(<span class="hljs-string">&quot;_BaseColor&quot;</span>);<br><br>    <span class="hljs-keyword">public</span> ColorHsvaParameter colorParameter;<br><br>    <span class="hljs-function"><span class="hljs-keyword">protected</span> <span class="hljs-keyword">override</span> <span class="hljs-keyword">void</span> <span class="hljs-title">OnIterationStart</span>()</span><br>    &#123;<br>        <span class="hljs-keyword">var</span> taggedObjects = tagManager.Query&lt;ColorRandomizerTag&gt;();<br>        <span class="hljs-keyword">foreach</span> (<span class="hljs-keyword">var</span> taggedObject <span class="hljs-keyword">in</span> taggedObjects)<br>        &#123;<br>            <span class="hljs-keyword">var</span> renderer = taggedObject.GetComponent&lt;MeshRenderer&gt;();<br>            renderer.material.SetColor(k_BaseColor, colorParameter.Sample());<br>        &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>RandomizerTag 还可以用于自定义随机化器如何将其随机化应用于特定游戏对象。</p>
-<h2><span id="parameters"></span></h2><h2><span id="samplers"></span></h2><h2><span id="perception-camera"></span></h2><p><code>Perception Camera</code> 组件是绑在 <code>Camera</code> 上的：</p>
+<h2><span id="parameters"></span></h2><p>Parameters 通常被定义为 Randomizer 类的字段，但它们也可以像任何其他 C# 类一样实例化：</p>
+<figure class="highlight c#"><table><tr><td class="code"><pre><code class="hljs C#"><span class="hljs-comment">// Create a color Parametervar</span><br><span class="hljs-keyword">var</span> colorParameter = <span class="hljs-keyword">new</span> HsvaColorParameter();<br><span class="hljs-comment">// Generate one color sample</span><br><span class="hljs-keyword">var</span> color = colorParameter.Sample();<br></code></pre></td></tr></table></figure>
+<p>请注意，Parameters 与 Samplers 一样，为 <code>Sample()</code> 方法的每次调用生成新的随机值：</p>
+<figure class="highlight c#"><table><tr><td class="code"><pre><code class="hljs C#"><span class="hljs-keyword">var</span> color1 = colorParameter.Sample();<br><span class="hljs-keyword">var</span> color2 = colorParameter.Sample();<br>Assert.AreNotEqual(color1, color2);<br></code></pre></td></tr></table></figure>
+<p>所有参数都派生自 <code>Parameter</code> 抽象类。此外，Perception 软件包类型中包含的参数源自两个专门的参数基类：</p>
+<ol>
+<li><code>CategoricalParameter</code> 类别参数</li>
+<li><code>`CategoricalParameter</code> 数值参数</li>
+</ol>
+<p><strong>在 Randomizers 以外使用 Parameters（MonoBehaviours and ScriptableObjects）: </strong>将公共参数字段添加到 <code>MonoBehavior</code> 或 <code>ScriptableObject</code> 后，您可能已经注意到参数的 UI 看起来与添加到随机化器时不同。这是因为大多数 Perception 随机化组件的 Inspector UI 都是使用 Unity 相对较新的 UI Elements 框架编写的，尽管在默认情况下，Unity 使用旧的 IMGUI 框架来呈现默认的检查器编辑器。</p>
+<p>假设您有以下具有公共 <code>GameObjectParameter</code> 字段的 <code>CustomMonoBehavior</code>：</p>
+<figure class="highlight c#"><table><tr><td class="code"><pre><code class="hljs C#"><span class="hljs-keyword">using</span> UnityEngine;<br><span class="hljs-keyword">using</span> UnityEngine.Perception.Randomization.Parameters;<br><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">CustomMonoBehaviour</span> : <span class="hljs-title">MonoBehaviour</span><br>&#123;<br>    <span class="hljs-keyword">public</span> GameObjectParameter prefabs;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p><strong>Categorical Parameters: </strong>Categorical Parameters 从没有内在排序的选项列表中选择一个值。例如，材质参数从材质选项列表中随机选择，但材质选项列表本身可以按任何特定顺序重新排列，而不会影响选定材质的分布。</p>
+<p><strong>Numeric Parameters: </strong>Numeric Parameters 使用采样器生成随机化结构。查看Perception包中包含的 <code>ColorHsvaParameter</code> 类，了解如何实现 Numeric Parameters 的示例。</p>
+<h2><span id="samplers"></span></h2><p><code>Perception</code> 包中的采样器是根据有界概率分布确定地生成随机浮点值的类。尽管 <code>Samplers</code> 通常与 <code>Parameters</code> 一起用于生成类型化随机值的数组，但采样器可以从任何普通脚本中实例化和使用。<code>Perception</code> 软件包中包含了一些采样器。</p>
+<hr>
+<p><strong>Constant Sampler: </strong>生成一个常数：</p>
+<figure class="highlight c#"><table><tr><td class="code"><pre><code class="hljs C#"><span class="hljs-keyword">var</span> sampler = <span class="hljs-keyword">new</span> ConstantSampler();<br><br><span class="hljs-comment">// set sampled value to be 25</span><br>sampler.<span class="hljs-keyword">value</span> = <span class="hljs-number">25</span>;<br><br><span class="hljs-comment">// Generate a sample</span><br><span class="hljs-keyword">var</span> sample = sampler.Sample(); <span class="hljs-comment">// returns 25</span><br><span class="hljs-keyword">var</span> sample2 = sampler.Sample(); <span class="hljs-comment">// returns 25</span><br><span class="hljs-keyword">var</span> sample3 = sampler.Sample(); <span class="hljs-comment">// returns 25</span><br></code></pre></td></tr></table></figure>
+<hr>
+<p><strong>Uniform Sampler: </strong>均匀分布：</p>
+<figure class="highlight c#"><table><tr><td class="code"><pre><code class="hljs C#"><span class="hljs-keyword">var</span> sampler = <span class="hljs-keyword">new</span> UniformSampler();<br><br><span class="hljs-comment">// generate values between the range 5 and 15</span><br>sampler.range = <span class="hljs-keyword">new</span> FloatRange(<span class="hljs-number">5</span>, <span class="hljs-number">15</span>);<br><br><span class="hljs-comment">// Generate a sample</span><br><span class="hljs-keyword">var</span> sample = sampler.Sample(); <span class="hljs-comment">// value between 5 and 15</span><br></code></pre></td></tr></table></figure>
+<p><img src="SA1.png" alt="png"></p>
+<hr>
+<p><strong>Normal Sampler: </strong>正态分布：</p>
+<p>从由指定范围限定的截断正态分布生成随机样本。</p>
+<figure class="highlight c#"><table><tr><td class="code"><pre><code class="hljs C#"><span class="hljs-keyword">var</span> sampler = <span class="hljs-keyword">new</span> NormalSampler();<br><br><span class="hljs-comment">// in statistics, often denoted by µ 均值</span><br>sampler.mean = <span class="hljs-number">10</span>;<br><span class="hljs-comment">// in statistics, often denoted by σ 标准差</span><br>sampler.stdDev = <span class="hljs-number">2</span>;<br><span class="hljs-comment">// cut-off values below -20 and above 20 截断</span><br>sampler.range = <span class="hljs-keyword">new</span> FloatRange(<span class="hljs-number">-20</span>, <span class="hljs-number">20</span>);<br><br><span class="hljs-comment">// Generate a sample</span><br><span class="hljs-keyword">var</span> sample = sampler.Sample();<br></code></pre></td></tr></table></figure>
+<p><img src="SA2.png" alt="png"></p>
+<hr>
+<p><strong>Animation Curve Sampler: </strong></p>
+<p>Animation Curve 是 Unity 的内置功能，而不是 Perception 里的内容。</p>
+<p>根据用户提供的“Animation Curve”表示的范围和概率分布对值进行采样。动画曲线的 X 轴对应于该采样器将从中拾取的值，而 Y 轴对应于这些值的相对概率。相对概率（Y 轴）不需要在 1 时最大化，因为只有曲线的形状才重要。然而，Y 值不能为负（即可能为负的值）。</p>
+<figure class="highlight c#"><table><tr><td class="code"><pre><code class="hljs C#"><span class="hljs-keyword">var</span> sampler = <span class="hljs-keyword">new</span> AnimationCurveSampler();<br><br><span class="hljs-comment">// create an animation curve programattically</span><br>sampler.distributionCurve = AnimationCurve.EaseInOut(<span class="hljs-number">0</span>, <span class="hljs-number">1</span>, <span class="hljs-number">1</span>, <span class="hljs-number">100</span>);<br><br><span class="hljs-comment">// Generate a sample</span><br><span class="hljs-keyword">var</span> sample = sampler.Sample();<br></code></pre></td></tr></table></figure>
+<p>通过在 Inspector 中公开上面的 Sampler 变量并使用 Unity 的 UI 在曲线上添加和编辑点，可以更容易地创建动画曲线。</p>
+<figure class="highlight c#"><table><tr><td class="code"><pre><code class="hljs C#"><span class="hljs-comment">// Unity UI handles curve creation</span><br><span class="hljs-keyword">public</span> AnimationCurve myDistributionCurve;<br><br>... <br><br><span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">myFunction</span>()</span> &#123;<br>  <span class="hljs-keyword">var</span> sampler = <span class="hljs-keyword">new</span> AnimationCurveSampler();<br>  <br>  <span class="hljs-comment">// public variable containing the AnimationCurve</span><br>  sampler.distributionCurve = myDistributionCurve;<br>  <br>  <span class="hljs-comment">// Generate a sample</span><br>  <span class="hljs-keyword">var</span> sample = sampler.Sample();<br>&#125;<br></code></pre></td></tr></table></figure>
+<hr>
+<p><code>Sampler</code> 生成由活动场景的当前随机状态设定种子的随机值。更改场景的随机种子将导致 <code>Sampler</code> 生成不同的值。更改 <code>Sampler</code>、<code>Parameters</code>  或<code>Randomizers</code>的顺序也会导致在模拟过程中采样不同的值。建议用户不要在模拟中使用 <code>UnityEngine.Rom</code> 类或 <code>System.random</code> 类生成随机值，因为这两个类都可能生成不确定或种子不正确的随机值。仅使用 <code>Perception</code> 采样器生成随机值将有助于确保 <code>Perception</code> 模拟在本地执行期间和云中的 <code>Unity</code> 模拟上生成一致的结果。</p>
+<h2><span id="perception-camera"></span></h2><p><code>Perception Camera</code> 组件是绑在 <code>Camera</code> 上的：</p>
 <p><img src="PC1.jpg" alt="jpg"></p>
 <h3><span id="properties">Properties</span></h3><div class="table-container">
 <table>
@@ -746,7 +862,7 @@
 <li><p>继承 <em>LabelMetadataTag</em></p>
 </li>
 <li><p>实现所需的抽象方法</p>
-<p>2.1 键-序列化JSON文件中对象的名称</p>
+<p>2.1 键-序列化 JSON 文件中对象的名称</p>
 <p>2.2 GetReportedValues（IMessageBuilder-builder）-通过 _builder 将此处所需的任何信息添加到 <em>builder</em> 中。add(“object_name”，data_to_be_addd&gt;_)。将组件添加到带有标签的 GameObject 组件</p>
 </li>
 <li><p>将组件添加到带有标签的 GameObject 组件</p>
@@ -758,7 +874,20 @@
 <li>Unity 不运行顶点和几何体着色器</li>
 <li>Unity 不会运行后处理效果，HDRP 中的内置镜头失真除外</li>
 </ul>
-<h2><span id="dataset-capture"></span></h2><h2><span id="output-endpoint"></span></h2><h2><span id="metadata-labeler"></span></h2>
+<h2><span id="dataset-capture"></span></h2><p><code>DatasetCapture</code> 跟踪 <code>sensors</code>，<code>annotations</code>，<code>metrics</code>，并将数据传递到激活的 <code>endpoint</code>。它还控制每帧经过的模拟时间，以适应激活的 <code>sensors</code>。</p>
+<hr>
+<p>这段代码是一个自定义的相机标记器 <code>CameraLabeler</code>，用于在场景中添加标记 <code>labels</code> 和测量 <code>metrics</code> ，以用于训练和评估模型。</p>
+<blockquote>
+<p>在 Perception Camera 中，Label 通常用于标记场景中的物体，如人、车、建筑等，以及它们的属性，如类别、大小、颜色等等。这些信息可以通过标记器（labeler）进行添加或修改，并且可以用于训练和评估机器学习模型。</p>
+<p>而 Metric 则是用于测量场景中某些物理量或者训练和评估过程中的指标，如灯光的位置、物体的速度、模型的精度等等。这些信息可以被记录下来，以便后续对场景展开更深入的数据分析和挖掘。相比于 Label，Metric 更关注于数值上的精确度和可重复性，可以帮助开发者更好地分析和改进算法表现。</p>
+<p>总之，Label 是场景中物体的标记，而 Metric 是场景中物理量或者模型性能的测量。两者各有不同的应用场景和意义，但都可以作为机器学习和计算机视觉任务的关键信息来源。</p>
+</blockquote>
+<figure class="highlight c#"><table><tr><td class="code"><pre><code class="hljs C#"><span class="hljs-keyword">using</span> System;<br><span class="hljs-keyword">using</span> UnityEngine;<br><span class="hljs-keyword">using</span> UnityEngine.Perception.GroundTruth;<br><span class="hljs-keyword">using</span> UnityEngine.Perception.GroundTruth.DataModel;<br><span class="hljs-keyword">using</span> UnityEngine.Rendering;<br><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">CustomLabeler</span> : <span class="hljs-title">CameraLabeler</span>  <span class="hljs-comment">// 定义了 CustomLabeler 类，继承自 CameraLabeler</span><br>&#123;<br>    <span class="hljs-comment">// 重写了 description、labelerId 和 supportsVisualization 属性</span><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">override</span> <span class="hljs-built_in">string</span> description =&gt; <span class="hljs-string">&quot;Demo labeler&quot;</span>;<br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">override</span> <span class="hljs-built_in">string</span> labelerId =&gt; <span class="hljs-string">&quot;Demo labeler&quot;</span>;<br>    <span class="hljs-keyword">protected</span> <span class="hljs-keyword">override</span> <span class="hljs-built_in">bool</span> supportsVisualization =&gt; <span class="hljs-literal">false</span>;<br><br>    <span class="hljs-comment">// 创建了一个公共的 GameObject 类型的变量 targetLight 和 target，分别表示需要标记的灯光和物体的信息</span><br>    <span class="hljs-keyword">public</span> GameObject targetLight;<br>    <span class="hljs-keyword">public</span> GameObject target;<br><br>    <span class="hljs-comment">// 定义了一个 MetricDefinition 类型的变量 lightMetricDefinition 和一个 AnnotationDefinition 类型的变量 targetPositionDef，分别表示灯光的度量标准和物体位置的注释定义</span><br>    MetricDefinition lightMetricDefinition;<br>    AnnotationDefinition targetPositionDef;<br><br>    <span class="hljs-comment">// 新定义了一个 AnnotationDefinition 子类 TargetPositionDef，用于表示物体在相机空间中的位置</span><br>    <span class="hljs-keyword">class</span> <span class="hljs-title">TargetPositionDef</span> : <span class="hljs-title">AnnotationDefinition</span><br>    &#123;<br>        <span class="hljs-comment">// 构造函数：接受一个字符串类型的 ID 作为参数，用于初始化注释定义实例</span><br>        <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">TargetPositionDef</span>(<span class="hljs-params"><span class="hljs-built_in">string</span> id</span>)</span><br><span class="hljs-function">            : <span class="hljs-title">base</span>(<span class="hljs-params">id</span>)</span> &#123; &#125;<br><br>        <span class="hljs-comment">// 成员变量 modelType：表示注释定义所属的模型类型，是一个只读字符串属性，该属性指定了该注释定义的类型</span><br>        <span class="hljs-keyword">public</span> <span class="hljs-keyword">override</span> <span class="hljs-built_in">string</span> modelType =&gt; <span class="hljs-string">&quot;targetPosDef&quot;</span>;<br>        <span class="hljs-comment">// 成员变量 description：表示注释定义的描述信息，是一个只读字符串属性，该属性描述了注释定义的用途和含义</span><br>        <span class="hljs-keyword">public</span> <span class="hljs-keyword">override</span> <span class="hljs-built_in">string</span> description =&gt; <span class="hljs-string">&quot;The position of the target in the camera&#x27;s local space&quot;</span>;<br>    &#125;<br><br>    <span class="hljs-comment">// 定义了一个序列化的 TargetPosition 类，其中包括物体的注释信息以及其在相机空间中的位置</span><br>    [<span class="hljs-meta">Serializable</span>]<br>    <span class="hljs-keyword">class</span> <span class="hljs-title">TargetPosition</span> : <span class="hljs-title">Annotation</span><br>    &#123;<br>        <span class="hljs-comment">// 构造函数：</span><br>        <span class="hljs-comment">// 接受注释定义（AnnotationDefinition）实例</span><br>        <span class="hljs-comment">// 感知传感器 ID（sensorId）</span><br>        <span class="hljs-comment">// 物体在相机空间中的位置信息（pos）</span><br>        <span class="hljs-comment">// 调用基类的构造函数进行初始化</span><br>        <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">TargetPosition</span>(<span class="hljs-params">AnnotationDefinition definition, <span class="hljs-built_in">string</span> sensorId, Vector3 pos</span>)</span><br><span class="hljs-function">            : <span class="hljs-title">base</span>(<span class="hljs-params">definition, sensorId</span>)</span><br>        &#123;<br>            position = pos;<br>        &#125;<br><br>        <span class="hljs-comment">// 成员变量 position：表示物体在相机空间中的位置，类型为 Vector3</span><br>        <span class="hljs-keyword">public</span> Vector3 position;<br><br>        <span class="hljs-comment">// 方法 ToMessage()：将该注释实例转换为消息格式，方便传输和分析。</span><br>        <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">override</span> <span class="hljs-keyword">void</span> <span class="hljs-title">ToMessage</span>(<span class="hljs-params">IMessageBuilder builder</span>)</span><br>        &#123;<br>            <span class="hljs-keyword">base</span>.ToMessage(builder);<br>            <span class="hljs-comment">// 使用 IMessageBuilder 接口的 AddFloatArray() 方法将 position 转换为浮点数数组，并添加到消息体中去</span><br>            builder.AddFloatArray(<span class="hljs-string">&quot;position&quot;</span>, MessageBuilderUtils.ToFloatVector(position));<br>        &#125;<br><br>        <span class="hljs-comment">// 检查该注释实例是否合法，始终返回 true</span><br>        <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">override</span> <span class="hljs-built_in">bool</span> <span class="hljs-title">IsValid</span>()</span> =&gt; <span class="hljs-literal">true</span>;<br><br>    &#125;<br><br>    <span class="hljs-comment">// 在 Setup() 方法中，注册度量标准 lightMetricDefinition 和注释定义 targetPositionDef</span><br>    <span class="hljs-function"><span class="hljs-keyword">protected</span> <span class="hljs-keyword">override</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Setup</span>()</span><br>    &#123;<br>        <span class="hljs-comment">// 创建了一个名为 lightMetricDefinition 的 MetricDefinition 类实例，该实例表示灯光在世界空间中的位置度量。</span><br>        <span class="hljs-comment">// 使用 MetricDefinition 构造函数传入三个字符串类型的参数：ID、名称和描述，</span><br>        <span class="hljs-comment">// 分别指定度量定义的唯一标识符、度量定义的名称和作用。</span><br>        lightMetricDefinition =<br>            <span class="hljs-keyword">new</span> MetricDefinition(<br>                <span class="hljs-string">&quot;LightMetric&quot;</span>,<br>                <span class="hljs-string">&quot;lightMetric1&quot;</span>,<br>                <span class="hljs-string">&quot;The world-space position of the light&quot;</span>);<br>        <span class="hljs-comment">// 通过 DatasetCapture 类的 RegisterMetric() 方法注册了上述定义的度量定义，将其添加到场景捕捉器中。</span><br>        DatasetCapture.RegisterMetric(lightMetricDefinition);<br><br>        <span class="hljs-comment">// 创建了一个名为 targetPositionDef 的 TargetPositionDef 类实例，</span><br>        <span class="hljs-comment">// 该实例表示场景中某个目标物体相对于相机的位置注释。</span><br>        <span class="hljs-comment">// 使用 TargetPositionDef 构造函数传入一个字符串 ID 参数，用于初始化注释定义实例。</span><br>        targetPositionDef = <span class="hljs-keyword">new</span> TargetPositionDef(<span class="hljs-string">&quot;target1&quot;</span>);<br>        <span class="hljs-comment">// 通过 DatasetCapture 类的 RegisterAnnotationDefinition() 方法注册了上述定义的注释定义，</span><br>        <span class="hljs-comment">// 将其添加到场景捕捉器中。</span><br>        DatasetCapture.RegisterAnnotationDefinition(targetPositionDef);<br>    &#125;<br><br>    <span class="hljs-comment">// 在 OnBeginRendering() 方法中，获取灯光位置并报告度量；计算物体在相机空间中的位置并报告注释</span><br>    <span class="hljs-comment">// 这段代码出现在某个类的 OnBeginRendering() 方法中，在场景渲染之前被调用。</span><br>    <span class="hljs-function"><span class="hljs-keyword">protected</span> <span class="hljs-keyword">override</span> <span class="hljs-keyword">void</span> <span class="hljs-title">OnBeginRendering</span>(<span class="hljs-params">ScriptableRenderContext scriptableRenderContext</span>)</span><br>    &#123;<br>        <span class="hljs-comment">// 获取灯光的世界空间位置，并使用 GenericMetric 类创建一个度量对象，</span><br>        <span class="hljs-comment">// 并将其位置信息添加到 JSON 数组字符串中，将度量对象报告给 DatasetCapture，以记录灯光的位置信息。</span><br>        <span class="hljs-comment">// Report the light&#x27;s position by manually creating the json array string.</span><br>        <span class="hljs-keyword">var</span> lightPos = targetLight.transform.position;<br>        <span class="hljs-keyword">var</span> metric = <span class="hljs-keyword">new</span> GenericMetric(<span class="hljs-keyword">new</span>[] &#123; lightPos.x, lightPos.y, lightPos.z &#125;, lightMetricDefinition);<br>        DatasetCapture.ReportMetric(lightMetricDefinition, metric);<br><br>        <span class="hljs-comment">// 计算目标物体相对于相机的本地位置，并使用 TargetPosition 类创建一个注释对象，</span><br>        <span class="hljs-comment">// 其中包括注释的类型（即 targetPositionDef）、传感器 ID 和目标物体的本地位置信息。</span><br>        <span class="hljs-comment">// compute the location of the object in the camera&#x27;s local space</span><br>        Vector3 targetPos = perceptionCamera.transform.worldToLocalMatrix * target.transform.position;<br><br>        <span class="hljs-comment">// 使用 PerceptionCamera 的 SensorHandle 类报告上述注释对象，并将其添加到 DatasetCapture 中。</span><br>        <span class="hljs-comment">// Report using the PerceptionCamera&#x27;s SensorHandle if scheduled this frame</span><br>        <span class="hljs-keyword">var</span> sensorHandle = perceptionCamera.SensorHandle;<br><br>        <span class="hljs-keyword">if</span> (sensorHandle.ShouldCaptureThisFrame)<br>        &#123;<br>            <span class="hljs-keyword">var</span> annotation = <span class="hljs-keyword">new</span> TargetPosition(targetPositionDef, sensorHandle.Id, targetPos);<br>            sensorHandle.ReportAnnotation(targetPositionDef, annotation);<br>        &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p><strong>Example metric that is added each frame in the dataset:</strong></p>
+<figure class="highlight json"><table><tr><td class="code"><pre><code class="hljs json"><span class="hljs-punctuation">&#123;</span><br>  <span class="hljs-attr">&quot;capture_id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-keyword">null</span><span class="hljs-punctuation">,</span><br>  <span class="hljs-attr">&quot;annotation_id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-keyword">null</span><span class="hljs-punctuation">,</span><br>  <span class="hljs-attr">&quot;sequence_id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;9768671e-acea-4c9e-a670-0f2dba5afe12&quot;</span><span class="hljs-punctuation">,</span><br>  <span class="hljs-attr">&quot;step&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">1</span><span class="hljs-punctuation">,</span><br>  <span class="hljs-attr">&quot;metric_definition&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;lightMetric1&quot;</span><span class="hljs-punctuation">,</span><br>  <span class="hljs-attr">&quot;values&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><br>      <span class="hljs-number">96.1856</span><span class="hljs-punctuation">,</span><br>      <span class="hljs-number">192.675964</span><span class="hljs-punctuation">,</span><br>      <span class="hljs-number">-193.838638</span><br>   <span class="hljs-punctuation">]</span><br><span class="hljs-punctuation">&#125;</span><span class="hljs-punctuation">,</span><br></code></pre></td></tr></table></figure>
+<p><strong>Example annotation that is added to each capture in the dataset: </strong></p>
+<figure class="highlight json"><table><tr><td class="code"><pre><code class="hljs json"><span class="hljs-punctuation">&#123;</span><br>    <span class="hljs-attr">&quot;annotation_id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;target1&quot;</span><span class="hljs-punctuation">,</span><br>    <span class="hljs-attr">&quot;model_type&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;targetPosDef&quot;</span><span class="hljs-punctuation">,</span><br>    <span class="hljs-attr">&quot;description&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;The position of the target in the camera&#x27;s local space&quot;</span><span class="hljs-punctuation">,</span><br>    <span class="hljs-attr">&quot;sensor_id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;camera&quot;</span><span class="hljs-punctuation">,</span><br>    <span class="hljs-attr">&quot;id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;target1&quot;</span><span class="hljs-punctuation">,</span><br>    <span class="hljs-attr">&quot;position&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><br>        <span class="hljs-number">1.85350215</span><span class="hljs-punctuation">,</span><br>        <span class="hljs-number">-0.253945172</span><span class="hljs-punctuation">,</span><br>        <span class="hljs-number">-5.015307</span><br>    <span class="hljs-punctuation">]</span><br><span class="hljs-punctuation">&#125;</span><br></code></pre></td></tr></table></figure>
+<h2><span id="output-endpoint"></span></h2><h2><span id="metadata-labeler"></span></h2>
   </div>
   <div id="gitalk-container"></div>
 </div>
