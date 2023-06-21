@@ -402,6 +402,9 @@
 <li>在 C# 中创建自定义随机化器，以满足更复杂/特定的随机化需求</li>
 </ol>
 </blockquote>
+<hr>
+<p><code>MyLightRandomizerTag.cs</code> 完整代码：</p>
+<figure class="highlight c#"><table><tr><td class="code"><pre><code class="hljs C#"><span class="hljs-keyword">using</span> System;<br><span class="hljs-keyword">using</span> UnityEngine;<br><span class="hljs-keyword">using</span> UnityEngine.Perception.Randomization.Parameters;<br><span class="hljs-keyword">using</span> UnityEngine.Perception.Randomization.Randomizers;<br><span class="hljs-keyword">using</span> UnityEngine.Perception.Randomization.Samplers;<br><br><span class="hljs-comment">// Can only attach to GameObjects which also have a Light component attached</span><br><span class="hljs-comment">// 连接且仅能连接到含有 Light 组件的 GameObject</span><br>[<span class="hljs-meta">RequireComponent(typeof(Light))</span>]<br><span class="hljs-comment">// This tag is used to &quot;target&quot; which objects in the scene will be randomized</span><br><span class="hljs-comment">// MyLightRandomizerTag 是一个标记类，用于指定哪些物体可以被随机化器控制</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">MyLightRandomizerTag</span> : <span class="hljs-title">RandomizerTag</span><br>&#123;<br>    <span class="hljs-keyword">public</span> <span class="hljs-built_in">float</span> minIntensity;  <span class="hljs-comment">// 光源强度的最小值</span><br>    <span class="hljs-keyword">public</span> <span class="hljs-built_in">float</span> maxIntensity;  <span class="hljs-comment">// 光源强度的最大值</span><br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">SetIntensity</span>(<span class="hljs-params"><span class="hljs-built_in">float</span> rawIntensity</span>)</span><br>    &#123;<br>        <span class="hljs-keyword">var</span> tagLight = GetComponent&lt;Light&gt;();<br>        <span class="hljs-comment">// 接受一个原始强度值（rawIntensity），并按比例将其缩放到 [minIntensity, maxIntensity] 区间内的一个值</span><br>        <span class="hljs-comment">// 使用该值设置该游戏对象所连接的 Light 组件的强度</span><br>        <span class="hljs-keyword">var</span> scaledIntensity = rawIntensity * (maxIntensity - minIntensity) + minIntensity;<br>        <span class="hljs-comment">// 使用该值设置该游戏对象所连接的 Light 组件的强度</span><br>        tagLight.intensity = scaledIntensity;<br>    &#125;<br>&#125;<br><br>[<span class="hljs-meta">Serializable</span>]<br><span class="hljs-comment">// MyLightRandomizer 是一个随机化器类，用于在运行时间随机化物体属性。</span><br><span class="hljs-comment">// 它使用 [AddRandomizerMenu(&quot;MyLightRandomizer&quot;)] 标签在 Perception 插件菜单中注册自己。</span><br>[<span class="hljs-meta">AddRandomizerMenu(<span class="hljs-string">&quot;MyLightRandomizer&quot;</span>)</span>]<br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">MyLightRandomizer</span> : <span class="hljs-title">Randomizer</span><br>&#123;<br>    <span class="hljs-comment">// A parameter whose value uniformly ranges from 2 to 10 when sampled</span><br>    <span class="hljs-comment">// 采样时其值统一在2到10之间的参数</span><br>    <span class="hljs-comment">// 变量 lightIntensity 声明了一个名为 lightIntensity 的 FloatParameter 对象，</span><br>    <span class="hljs-comment">// 它将在随机化过程中表示光强度值，并且可以设置默认值。</span><br>    <span class="hljs-comment">// 其中，这个值的分布由 UniformSampler（均匀采样器）控制，范围是0~1。</span><br>    <span class="hljs-keyword">public</span> FloatParameter lightIntensity = <span class="hljs-keyword">new</span>() &#123; <span class="hljs-keyword">value</span> = <span class="hljs-keyword">new</span> UniformSampler(<span class="hljs-number">0</span>, <span class="hljs-number">1</span>) &#125;;<br>    <span class="hljs-keyword">public</span> ColorRgbParameter color;<br><br>    <span class="hljs-comment">// Run this every randomization iteration</span><br>    <span class="hljs-comment">// 每次随机化迭代都运行此操作</span><br>    <span class="hljs-function"><span class="hljs-keyword">protected</span> <span class="hljs-keyword">override</span> <span class="hljs-keyword">void</span> <span class="hljs-title">OnIterationStart</span>()</span><br>    &#123;<br>        <span class="hljs-comment">// Get all MyLightRandomizerTag&#x27;s in the scene</span><br>        <span class="hljs-comment">// 获取场景中所有的 MyLightRandomizerTag</span><br>        <span class="hljs-keyword">var</span> tags = tagManager.Query&lt;MyLightRandomizerTag&gt;();<br>        <span class="hljs-keyword">foreach</span> (<span class="hljs-keyword">var</span> tag <span class="hljs-keyword">in</span> tags)<br>        &#123;<br>            <span class="hljs-comment">// Get the light attached to the object</span><br>            <span class="hljs-comment">// 获得其 Light 组件</span><br>            <span class="hljs-keyword">var</span> tagLight = tag.GetComponent&lt;Light&gt;();<br>            tagLight.color = color.Sample();<br>            <span class="hljs-comment">// Call the SetIntensity function we defined in the tag instead!</span><br>            tag.SetIntensity(lightIntensity.Sample());<br>        &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 
   </div>
   <div id="gitalk-container"></div>
@@ -604,21 +607,6 @@ Fancybox.bind('[data-fancybox="fancybox-gallery-img"]', {
 <script>
 	console.log('\n %c Hexo-Quiet 主题 %c https://github.com/79e/hexo-theme-quiet \n', 'color: #fadfa3; background: #030307; padding:5px 0;', 'background: #fadfa3; padding:5px 0;')
 </script>
-	<script type="text/x-mathjax-config">
-    MathJax.Hub.Config({
-        tex2jax: {
-            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
-            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
-            processEscapes: true
-        }
-    });
-    MathJax.Hub.Queue(function() {
-        var all = MathJax.Hub.getAllJax();
-        for (var i = 0; i < all.length; ++i)
-            all[i].SourceElement().parentNode.className += ' has-jax';
-    });
-</script>
-<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-</body>
+	</body>
 </html>
 
