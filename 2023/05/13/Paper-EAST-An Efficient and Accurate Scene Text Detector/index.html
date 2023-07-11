@@ -12,7 +12,7 @@
 
 
 
-<meta name="keywords" content="Python,论文,Pytorch,MindSpore,代码复现,文本检测,">
+<meta name="keywords" content="Python,论文,Pytorch,MindSpore,代码复现,文本检测,实验相关,">
 <meta name="description" content="">
 
 
@@ -309,6 +309,8 @@
                 
                     <li><a href="/tags/文本检测">文本检测</a></li>
                 
+                    <li><a href="/tags/实验相关">实验相关</a></li>
+                
             
         </ul>
         
@@ -344,7 +346,11 @@
 <li><a href="#资源">资源</a></li>
 <li><a href="#正文">正文</a></li>
 <li><a href="#代码">代码</a><ul>
-<li><a href="#pytorch">Pytorch</a></li>
+<li><a href="#pytorch">Pytorch</a><ul>
+<li><a href="#windows">Windows</a></li>
+<li><a href="#wsl2">WSL2</a></li>
+</ul>
+</li>
 <li><a href="#mindspore">MindSpore</a><ul>
 <li><a href="#读代码">读代码</a><ul>
 <li><a href="#trainpy">train.py</a><ul>
@@ -525,7 +531,7 @@ branch，特征合并分支</font>
 <li>将所述检测器与文本识别器集成；</li>
 <li>将该思想扩展到通用对象检测。</li>
 </ul>
-<h2><span id="代码">代码</span></h2><h3><span id="pytorch">Pytorch</span></h3><ol>
+<h2><span id="代码">代码</span></h2><h3><span id="pytorch">Pytorch</span></h3><h4><span id="windows">Windows</span></h4><ol>
 <li>从 <a target="_blank" rel="noopener" href="https://github.com/SakuraRiven/EAST">SakuraRiven/EAST: PyTorch Re-Implementation of EAST: An Efficient and Accurate Scene Text Detector (github.com)</a> 加载仓库：</li>
 </ol>
 <p><img src="P1.png" alt="png"></p>
@@ -537,11 +543,14 @@ branch，特征合并分支</font>
 <li>pytorch</li>
 <li>shapely</li>
 <li>opencv-python 4.0.0.21</li>
-<li>lanms，巨难装，用 <code>pip install lanms-neo==1.0.2 -i https://pypi.tuna.tsinghua.edu.cn/simple</code></li>
+<li>lanms，巨难装，用 <code>pip install lanms-neo==1.0.2 -i https://pypi.tuna.tsinghua.edu.cn/simple</code><ul>
+<li>如果是 wsl2 的 ubuntu，<code>pip install lanms-proper</code></li>
 </ul>
-<p>设置好解释器</p>
+</li>
+</ul>
 </li>
 </ol>
+<p>   设置好解释器</p>
 <p><img src="P2.png" alt="png"></p>
 <center>设置解释器</center>
 
@@ -579,6 +588,20 @@ branch，特征合并分支</font>
 </li>
 <li>开跑 <code>train.py</code>！能跑了！</li>
 </ol>
+<h4><span id="wsl2">WSL2</span></h4><p>装好环境</p>
+<figure class="highlight sh"><table><tr><td class="code"><pre><code class="hljs sh">conda create -n EAST python=3.7<br>conda activate EAST<br>pip install shapely<br>pip install opencv-python==4.0.0.21<br>pip install lanms-proper<br></code></pre></td></tr></table></figure>
+<p>开跑！</p>
+<figure class="highlight sh"><table><tr><td class="code"><pre><code class="hljs sh">python3 train.py<br></code></pre></td></tr></table></figure>
+<p>喜提错误：</p>
+<figure class="highlight stata"><table><tr><td class="code"><pre><code class="hljs stata">  <span class="hljs-keyword">File</span> <span class="hljs-string">&quot;/home/gz/anaconda3/envs/EAST/lib/python3.7/site-packages/cv2/__init__.py&quot;</span>, <span class="hljs-keyword">line</span> 3, <span class="hljs-keyword">in</span> &lt;module&gt;<br>    from .cv2 import *<br>ImportError: libSM.<span class="hljs-keyword">so</span>.6: cannot <span class="hljs-keyword">open</span> shared object <span class="hljs-keyword">file</span>: <span class="hljs-keyword">No</span> such <span class="hljs-keyword">file</span> or directory<br></code></pre></td></tr></table></figure>
+<p>填：</p>
+<figure class="highlight sh"><table><tr><td class="code"><pre><code class="hljs sh">sudo apt update<br>sudo apt install libsm6<br></code></pre></td></tr></table></figure>
+<p>喜提错误：</p>
+<figure class="highlight stata"><table><tr><td class="code"><pre><code class="hljs stata">Could not load library libcudnn_cnn_infer.<span class="hljs-keyword">so</span>.8. <span class="hljs-keyword">Error</span>: libcuda.<span class="hljs-keyword">so</span>: cannot <span class="hljs-keyword">open</span> shared object <span class="hljs-keyword">file</span>: <span class="hljs-keyword">No</span> such <span class="hljs-keyword">file</span> or directory<br>Please make sure libcudnn_cnn_infer.<span class="hljs-keyword">so</span>.8 is <span class="hljs-keyword">in</span> your library path!<br></code></pre></td></tr></table></figure>
+<p>安装 CUDNN：</p>
+<figure class="highlight cmake"><table><tr><td class="code"><pre><code class="hljs cmake">sudo apt <span class="hljs-keyword">install</span> nvidia-cuda-toolkit<br></code></pre></td></tr></table></figure>
+<p>开跑！</p>
+<figure class="highlight maxima"><table><tr><td class="code"><pre><code class="hljs maxima">/home/gz/anaconda3/envs/EAST/lib/python3<span class="hljs-number">.7</span>/site-packages/torch/optim/lr_scheduler.py:<span class="hljs-number">143</span>: UserWarning: Detected call of `lr_scheduler.<span class="hljs-keyword">step</span>()` before `optimizer.<span class="hljs-keyword">step</span>()`. In PyTorch <span class="hljs-number">1.1</span><span class="hljs-number">.0</span> <span class="hljs-keyword">and</span> later, you should call them <span class="hljs-keyword">in</span> the opposite order: `optimizer.<span class="hljs-keyword">step</span>()` before `lr_scheduler.<span class="hljs-keyword">step</span>()`.  Failure to <span class="hljs-keyword">do</span> this will result <span class="hljs-keyword">in</span> PyTorch skipping the <span class="hljs-built_in">first</span> value of the learning rate schedule. See more details <span class="hljs-built_in">at</span> https://pytorch.org/docs/stable/optim.html#how-to-adjust-learning-rate<br>  <span class="hljs-string">&quot;https://pytorch.org/docs/stable/optim.html#how-to-adjust-learning-rate&quot;</span>, UserWarning)<br>/home/gz/anaconda3/envs/EAST/lib/python3<span class="hljs-number">.7</span>/site-packages/shapely/set_operations.py:<span class="hljs-number">133</span>: RuntimeWarning: invalid value encountered <span class="hljs-keyword">in</span> <span class="hljs-built_in">intersection</span><br>  <span class="hljs-built_in">return</span> lib.<span class="hljs-built_in">intersection</span>(a, b, **kwargs)<br>/home/gz/anaconda3/envs/EAST/lib/python3<span class="hljs-number">.7</span>/site-packages/shapely/set_operations.py:<span class="hljs-number">133</span>: RuntimeWarning: invalid value encountered <span class="hljs-keyword">in</span> <span class="hljs-built_in">intersection</span><br>  <span class="hljs-built_in">return</span> lib.<span class="hljs-built_in">intersection</span>(a, b, **kwargs)<br>/home/gz/anaconda3/envs/EAST/lib/python3<span class="hljs-number">.7</span>/site-packages/shapely/set_operations.py:<span class="hljs-number">133</span>: RuntimeWarning: invalid value encountered <span class="hljs-keyword">in</span> <span class="hljs-built_in">intersection</span><br>  <span class="hljs-built_in">return</span> lib.<span class="hljs-built_in">intersection</span>(a, b, **kwargs)<br>/home/gz/anaconda3/envs/EAST/lib/python3<span class="hljs-number">.7</span>/site-packages/shapely/set_operations.py:<span class="hljs-number">133</span>: RuntimeWarning: invalid value encountered <span class="hljs-keyword">in</span> <span class="hljs-built_in">intersection</span><br>  <span class="hljs-built_in">return</span> lib.<span class="hljs-built_in">intersection</span>(a, b, **kwargs)<br>classify loss <span class="hljs-built_in">is</span> <span class="hljs-number">0.98071122</span>, angle loss <span class="hljs-built_in">is</span> <span class="hljs-number">0.68633509</span>, iou loss <span class="hljs-built_in">is</span> <span class="hljs-number">5.08373260</span><br>Epoch <span class="hljs-built_in">is</span> [<span class="hljs-number">1</span>/<span class="hljs-number">600</span>], mini-<span class="hljs-built_in">batch</span> <span class="hljs-built_in">is</span> [<span class="hljs-number">1</span>/<span class="hljs-number">250</span>], <span class="hljs-built_in">time</span> consumption <span class="hljs-built_in">is</span> <span class="hljs-number">8.06183171</span>, batch_loss <span class="hljs-built_in">is</span> <span class="hljs-number">12.92779446</span><br>classify loss <span class="hljs-built_in">is</span> <span class="hljs-number">0.99145019</span>, angle loss <span class="hljs-built_in">is</span> <span class="hljs-number">0.75015461</span>, iou loss <span class="hljs-built_in">is</span> <span class="hljs-number">4.81786251</span><br>Epoch <span class="hljs-built_in">is</span> [<span class="hljs-number">1</span>/<span class="hljs-number">600</span>], mini-<span class="hljs-built_in">batch</span> <span class="hljs-built_in">is</span> [<span class="hljs-number">2</span>/<span class="hljs-number">250</span>], <span class="hljs-built_in">time</span> consumption <span class="hljs-built_in">is</span> <span class="hljs-number">0.21901011</span>, batch_loss <span class="hljs-built_in">is</span> <span class="hljs-number">13.31085873</span><br>classify loss <span class="hljs-built_in">is</span> <span class="hljs-number">0.99974638</span>, angle loss <span class="hljs-built_in">is</span> <span class="hljs-number">0.74429435</span>, iou loss <span class="hljs-built_in">is</span> <span class="hljs-number">5.48675823</span><br>Epoch <span class="hljs-built_in">is</span> [<span class="hljs-number">1</span>/<span class="hljs-number">600</span>], mini-<span class="hljs-built_in">batch</span> <span class="hljs-built_in">is</span> [<span class="hljs-number">3</span>/<span class="hljs-number">250</span>], <span class="hljs-built_in">time</span> consumption <span class="hljs-built_in">is</span> <span class="hljs-number">0.21214652</span>, batch_loss <span class="hljs-built_in">is</span> <span class="hljs-number">13.92944813</span><br>classify loss <span class="hljs-built_in">is</span> <span class="hljs-number">0.99397326</span>, angle loss <span class="hljs-built_in">is</span> <span class="hljs-number">0.60727608</span>, iou loss <span class="hljs-built_in">is</span> <span class="hljs-number">3.27876091</span><br>Epoch <span class="hljs-built_in">is</span> [<span class="hljs-number">1</span>/<span class="hljs-number">600</span>], mini-<span class="hljs-built_in">batch</span> <span class="hljs-built_in">is</span> [<span class="hljs-number">4</span>/<span class="hljs-number">250</span>], <span class="hljs-built_in">time</span> consumption <span class="hljs-built_in">is</span> <span class="hljs-number">0.22212124</span>, batch_loss <span class="hljs-built_in">is</span> <span class="hljs-number">10.34549522</span><br>classify loss <span class="hljs-built_in">is</span> <span class="hljs-number">0.99331516</span>, angle loss <span class="hljs-built_in">is</span> <span class="hljs-number">0.67070889</span>, iou loss <span class="hljs-built_in">is</span> <span class="hljs-number">3.67775035</span><br>Epoch <span class="hljs-built_in">is</span> [<span class="hljs-number">1</span>/<span class="hljs-number">600</span>], mini-<span class="hljs-built_in">batch</span> <span class="hljs-built_in">is</span> [<span class="hljs-number">5</span>/<span class="hljs-number">250</span>], <span class="hljs-built_in">time</span> consumption <span class="hljs-built_in">is</span> <span class="hljs-number">0.23853326</span>, batch_loss <span class="hljs-built_in">is</span> <span class="hljs-number">11.37815380</span><br>classify loss <span class="hljs-built_in">is</span> <span class="hljs-number">0.98511696</span>, angle loss <span class="hljs-built_in">is</span> <span class="hljs-number">0.73328424</span>, iou loss <span class="hljs-built_in">is</span> <span class="hljs-number">3.17167139</span><br>Epoch <span class="hljs-built_in">is</span> [<span class="hljs-number">1</span>/<span class="hljs-number">600</span>], mini-<span class="hljs-built_in">batch</span> <span class="hljs-built_in">is</span> [<span class="hljs-number">6</span>/<span class="hljs-number">250</span>], <span class="hljs-built_in">time</span> consumption <span class="hljs-built_in">is</span> <span class="hljs-number">0.20371103</span>, batch_loss <span class="hljs-built_in">is</span> <span class="hljs-number">11.48963070</span><br>classify loss <span class="hljs-built_in">is</span> <span class="hljs-number">0.99793059</span>, angle loss <span class="hljs-built_in">is</span> <span class="hljs-number">0.60213274</span>, iou loss <span class="hljs-built_in">is</span> <span class="hljs-number">4.67736626</span><br>...<br></code></pre></td></tr></table></figure>
 <h3><span id="mindspore">MindSpore</span></h3><h4><span id="读代码">读代码</span></h4><h5><span id="trainpy">train.py</span></h5><p>好像跟其他的<code>train.py</code>差不多，设置完各种参数然后加载模型和优化器，开跑！</p>
 <p>各种细节都在<code>src/</code>里。</p>
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> src.util <span class="hljs-keyword">import</span> AverageMeter, get_param_groups<br><span class="hljs-keyword">from</span> src.east <span class="hljs-keyword">import</span> EAST, EastWithLossCell<br><span class="hljs-keyword">from</span> src.logger <span class="hljs-keyword">import</span> get_logger<br><span class="hljs-keyword">from</span> src.initializer <span class="hljs-keyword">import</span> default_recurisive_init<br><span class="hljs-keyword">from</span> src.dataset <span class="hljs-keyword">import</span> create_east_dataset<br><span class="hljs-keyword">from</span> src.lr_scheduler <span class="hljs-keyword">import</span> get_lr<br></code></pre></td></tr></table></figure>
