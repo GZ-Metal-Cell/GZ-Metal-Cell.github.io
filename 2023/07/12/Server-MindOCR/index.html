@@ -339,7 +339,15 @@
 <li><a href="#创建环境">创建环境</a></li>
 <li><a href="#安装环境">安装环境</a></li>
 <li><a href="#转换数据集totaltext">转换数据集（TotalText）</a></li>
-<li><a href="#训练">训练</a></li>
+<li><a href="#训练dbtotaltext">训练（DB+TotalText）</a><ul>
+<li><a href="#单卡训练">单卡训练</a></li>
+<li><a href="#断点续训">断点续训</a></li>
+<li><a href="#分析训练结果">分析训练结果</a></li>
+<li><a href="#分布式训练">分布式训练</a></li>
+</ul>
+</li>
+<li><a href="#转换数据集scut-ctw1500">转换数据集（SCUT-CTW1500）</a></li>
+<li><a href="#训练dbctw1500">训练（DB+CTW1500）</a></li>
 </ul>
 </li>
 </ul>
@@ -384,15 +392,159 @@
 <figure class="highlight pgsql"><table><tr><td class="code"><pre><code class="hljs pgsql"><span class="hljs-built_in">Warning</span> img664.jpg: skipping invalid <span class="hljs-type">polygon</span> [[<span class="hljs-number">5</span>, <span class="hljs-number">340</span>]]<br><span class="hljs-keyword">Conversion</span> complete.<br>Result saved <span class="hljs-keyword">in</span> ./data/ocr_datasets/totaltext/test_det_gt.txt<br></code></pre></td></tr></table></figure>
 <p>这样就可得到预期格式的数据集：</p>
 <figure class="highlight stylus"><table><tr><td class="code"><pre><code class="hljs stylus">totaltext<br> ├── Images<br> │   ├── Train<br> │   │   ├── img1001<span class="hljs-selector-class">.jpg</span><br> │   │   ├── img1002<span class="hljs-selector-class">.jpg</span><br> │   │   ├── ...<br> │   ├── Test<br> │   │   ├── img1<span class="hljs-selector-class">.jpg</span><br> │   │   ├── img2<span class="hljs-selector-class">.jpg</span><br> │   │   ├── ...<br> ├── test_det_gt<span class="hljs-selector-class">.txt</span><br> ├── train_det_gt.txt<br></code></pre></td></tr></table></figure>
-<h3><span id="训练">训练</span></h3><p>先修改 <code>config configs/det/dbnet/db_r18_totaltext.yaml</code> 里的数据集路径（我本来不想修改的，结果发现它默认是个绝对路径且不在 <code>work</code> 中，那必须改了）</p>
+<h3><span id="训练dbtotaltext">训练（DB+TotalText）</span></h3><p>先修改 <code>config configs/det/dbnet/db_r18_totaltext.yaml</code> 里的数据集路径（我本来不想修改的，结果发现它默认是个绝对路径且不在 <code>work</code> 中，那必须改了）</p>
 <p>将 <code>train: dataset:</code> 和 <code>test: dataset:</code> 下的 <code>dataset_root</code> 调整为自己的数据集路径，我这里是：</p>
 <figure class="highlight awk"><table><tr><td class="code"><pre><code class="hljs awk">dataset_root: .<span class="hljs-regexp">/data/</span>ocr_datasets<br></code></pre></td></tr></table></figure>
-<blockquote>
-<p>单卡训练（请确保 yaml 文件中的 <code>distribute</code> 参数为False。）</p>
+<h4><span id="单卡训练">单卡训练</span></h4><blockquote>
+<p>单卡训练（请确保 yaml 文件中的 <code>distribute</code> 参数为 False。（emmmm 但好像 True 也不会影响。））</p>
 </blockquote>
 <figure class="highlight awk"><table><tr><td class="code"><pre><code class="hljs awk"><span class="hljs-comment"># train dbnet on totaltext dataset</span><br>python tools<span class="hljs-regexp">/train.py --config configs/</span>det<span class="hljs-regexp">/dbnet/</span>db_r18_totaltext.yaml<br></code></pre></td></tr></table></figure>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><code class="hljs yaml"><br>[<span class="hljs-number">2023-07-12 16:40:01</span>] <span class="hljs-attr">mindocr.train INFO - Standalone training. Device id:</span> <span class="hljs-number">0</span><span class="hljs-string">,</span> <span class="hljs-string">specified</span> <span class="hljs-string">by</span> <span class="hljs-string">system.device_id</span> <span class="hljs-string">in</span> <span class="hljs-string">yaml</span> <span class="hljs-string">config</span> <span class="hljs-string">file</span> <span class="hljs-string">or</span> <span class="hljs-string">is</span> <span class="hljs-string">default</span> <span class="hljs-string">value</span> <span class="hljs-number">0</span><span class="hljs-string">.</span><br>[<span class="hljs-number">2023-07-12 16:40:07</span>] <span class="hljs-string">mindocr.data.builder</span> <span class="hljs-string">INFO</span> <span class="hljs-bullet">-</span> <span class="hljs-string">Creating</span> <span class="hljs-string">dataloader</span> <span class="hljs-string">(training=True)</span> <span class="hljs-attr">for device 0. Number of data samples:</span> <span class="hljs-number">1255</span><br>[<span class="hljs-number">2023-07-12 16:40:10</span>] <span class="hljs-string">mindocr.data.builder</span> <span class="hljs-string">INFO</span> <span class="hljs-bullet">-</span> <span class="hljs-string">Creating</span> <span class="hljs-string">dataloader</span> <span class="hljs-string">(training=False)</span> <span class="hljs-attr">for device 0. Number of data samples:</span> <span class="hljs-number">300</span><br>[<span class="hljs-number">2023-07-12 16:40:13</span>] <span class="hljs-attr">mindocr.models.backbones.mindcv_models.utils INFO - Finish loading model checkpoint from:</span> <span class="hljs-string">/home/ma-user/.mindspore/models/resnet18-1e65cd21.ckpt</span><br>[<span class="hljs-number">2023-07-12 16:40:13</span>] <span class="hljs-string">mindocr.models.utils.load_model</span> <span class="hljs-string">INFO</span> <span class="hljs-bullet">-</span> <span class="hljs-string">Finish</span> <span class="hljs-string">loading</span> <span class="hljs-string">model</span> <span class="hljs-string">checkoint</span> <span class="hljs-string">from</span> <span class="hljs-string">https://download.mindspore.cn/toolkits/mindocr/dbnet/dbnet_resnet18_synthtext-251ef3dd.ckpt.</span> <span class="hljs-string">If</span> <span class="hljs-literal">no</span> <span class="hljs-string">parameter</span> <span class="hljs-string">fail-load</span> <span class="hljs-string">warning</span> <span class="hljs-string">displayed,</span> <span class="hljs-string">all</span> <span class="hljs-string">checkpoint</span> <span class="hljs-string">params</span> <span class="hljs-string">have</span> <span class="hljs-string">been</span> <span class="hljs-string">successfully</span> <span class="hljs-string">loaded.</span><br>[<span class="hljs-number">2023-07-12 16:40:13</span>] <span class="hljs-string">mindocr.optim.param_grouping</span> <span class="hljs-string">INFO</span> <span class="hljs-bullet">-</span> <span class="hljs-literal">no</span> <span class="hljs-string">parameter</span> <span class="hljs-string">grouping</span> <span class="hljs-string">is</span> <span class="hljs-string">applied.</span><br>[<span class="hljs-number">2023-07-12 16:40:20</span>] <span class="hljs-string">mindocr.train</span> <span class="hljs-string">INFO</span> <span class="hljs-bullet">-</span><br><span class="hljs-string">========================================</span><br><span class="hljs-attr">Distribute:</span> <span class="hljs-literal">False</span><br><span class="hljs-attr">Model:</span> <span class="hljs-string">det_resnet18-DBFPN-DBHead</span><br><span class="hljs-attr">Total number of parameters:</span> <span class="hljs-number">12351042</span><br><span class="hljs-attr">Total number of trainable parameters:</span> <span class="hljs-number">12340930</span><br><span class="hljs-attr">Data root:</span> <span class="hljs-string">./data/ocr_datasets</span><br><span class="hljs-attr">Optimizer:</span> <span class="hljs-string">SGD</span><br><span class="hljs-attr">Weight decay:</span> <span class="hljs-number">0.0001</span><br><span class="hljs-attr">Batch size:</span> <span class="hljs-number">20</span><br><span class="hljs-attr">Num devices:</span> <span class="hljs-number">1</span><br><span class="hljs-attr">Gradient accumulation steps:</span> <span class="hljs-number">1</span><br><span class="hljs-attr">Global batch size:</span> <span class="hljs-string">20x1x1=20</span><br><span class="hljs-attr">LR:</span> <span class="hljs-number">0.007</span><br><span class="hljs-attr">Scheduler:</span> <span class="hljs-string">polynomial_decay</span><br><span class="hljs-attr">Steps per epoch:</span> <span class="hljs-number">62</span><br><span class="hljs-attr">Num epochs:</span> <span class="hljs-number">1200</span><br><span class="hljs-attr">Clip gradient:</span> <span class="hljs-literal">False</span><br><span class="hljs-attr">EMA:</span> <span class="hljs-literal">True</span><br><span class="hljs-attr">AMP level:</span> <span class="hljs-string">O0</span><br><span class="hljs-attr">Loss scaler:</span> &#123;<span class="hljs-attr">&#x27;type&#x27;:</span> <span class="hljs-string">&#x27;dynamic&#x27;</span>, <span class="hljs-attr">&#x27;loss_scale&#x27;:</span> <span class="hljs-number">512</span>, <span class="hljs-attr">&#x27;scale_factor&#x27;:</span> <span class="hljs-number">2</span>, <span class="hljs-attr">&#x27;scale_window&#x27;:</span> <span class="hljs-number">1000</span>&#125;<br><span class="hljs-attr">Drop overflow update:</span> <span class="hljs-literal">False</span><br><span class="hljs-string">========================================</span><br><br><span class="hljs-string">Start</span> <span class="hljs-string">training...</span> <span class="hljs-string">(The</span> <span class="hljs-string">first</span> <span class="hljs-string">epoch</span> <span class="hljs-string">takes</span> <span class="hljs-string">longer,</span> <span class="hljs-string">please</span> <span class="hljs-string">wait...)</span><br><br>[<span class="hljs-number">2023-07-12 16:42:13</span>] <span class="hljs-attr">mindocr.utils.callbacks INFO - epoch:</span> [<span class="hljs-number">1</span><span class="hljs-string">/1200</span>]<span class="hljs-string">,</span> <span class="hljs-attr">loss:</span> <span class="hljs-number">2.851490</span><span class="hljs-string">,</span> <span class="hljs-attr">epoch time:</span> <span class="hljs-number">113.039</span> <span class="hljs-string">s,</span> <span class="hljs-attr">per step time:</span> <span class="hljs-number">1823.213 </span><span class="hljs-string">ms,</span> <span class="hljs-attr">fps per card:</span> <span class="hljs-number">10.97</span> <span class="hljs-string">img/s</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><code class="hljs yaml">[<span class="hljs-number">2023-07-12 16:40:01</span>] <span class="hljs-attr">mindocr.train INFO - Standalone training. Device id:</span> <span class="hljs-number">0</span><span class="hljs-string">,</span> <span class="hljs-string">specified</span> <span class="hljs-string">by</span> <span class="hljs-string">system.device_id</span> <span class="hljs-string">in</span> <span class="hljs-string">yaml</span> <span class="hljs-string">config</span> <span class="hljs-string">file</span> <span class="hljs-string">or</span> <span class="hljs-string">is</span> <span class="hljs-string">default</span> <span class="hljs-string">value</span> <span class="hljs-number">0</span><span class="hljs-string">.</span><br>[<span class="hljs-number">2023-07-12 16:40:07</span>] <span class="hljs-string">mindocr.data.builder</span> <span class="hljs-string">INFO</span> <span class="hljs-bullet">-</span> <span class="hljs-string">Creating</span> <span class="hljs-string">dataloader</span> <span class="hljs-string">(training=True)</span> <span class="hljs-attr">for device 0. Number of data samples:</span> <span class="hljs-number">1255</span><br>[<span class="hljs-number">2023-07-12 16:40:10</span>] <span class="hljs-string">mindocr.data.builder</span> <span class="hljs-string">INFO</span> <span class="hljs-bullet">-</span> <span class="hljs-string">Creating</span> <span class="hljs-string">dataloader</span> <span class="hljs-string">(training=False)</span> <span class="hljs-attr">for device 0. Number of data samples:</span> <span class="hljs-number">300</span><br>[<span class="hljs-number">2023-07-12 16:40:13</span>] <span class="hljs-attr">mindocr.models.backbones.mindcv_models.utils INFO - Finish loading model checkpoint from:</span> <span class="hljs-string">/home/ma-user/.mindspore/models/resnet18-1e65cd21.ckpt</span><br>[<span class="hljs-number">2023-07-12 16:40:13</span>] <span class="hljs-string">mindocr.models.utils.load_model</span> <span class="hljs-string">INFO</span> <span class="hljs-bullet">-</span> <span class="hljs-string">Finish</span> <span class="hljs-string">loading</span> <span class="hljs-string">model</span> <span class="hljs-string">checkoint</span> <span class="hljs-string">from</span> <span class="hljs-string">https://download.mindspore.cn/toolkits/mindocr/dbnet/dbnet_resnet18_synthtext-251ef3dd.ckpt.</span> <span class="hljs-string">If</span> <span class="hljs-literal">no</span> <span class="hljs-string">parameter</span> <span class="hljs-string">fail-load</span> <span class="hljs-string">warning</span> <span class="hljs-string">displayed,</span> <span class="hljs-string">all</span> <span class="hljs-string">checkpoint</span> <span class="hljs-string">params</span> <span class="hljs-string">have</span> <span class="hljs-string">been</span> <span class="hljs-string">successfully</span> <span class="hljs-string">loaded.</span><br>[<span class="hljs-number">2023-07-12 16:40:13</span>] <span class="hljs-string">mindocr.optim.param_grouping</span> <span class="hljs-string">INFO</span> <span class="hljs-bullet">-</span> <span class="hljs-literal">no</span> <span class="hljs-string">parameter</span> <span class="hljs-string">grouping</span> <span class="hljs-string">is</span> <span class="hljs-string">applied.</span><br>[<span class="hljs-number">2023-07-12 16:40:20</span>] <span class="hljs-string">mindocr.train</span> <span class="hljs-string">INFO</span> <span class="hljs-bullet">-</span><br><span class="hljs-string">========================================</span><br><span class="hljs-attr">Distribute:</span> <span class="hljs-literal">False</span><br><span class="hljs-attr">Model:</span> <span class="hljs-string">det_resnet18-DBFPN-DBHead</span><br><span class="hljs-attr">Total number of parameters:</span> <span class="hljs-number">12351042</span><br><span class="hljs-attr">Total number of trainable parameters:</span> <span class="hljs-number">12340930</span><br><span class="hljs-attr">Data root:</span> <span class="hljs-string">./data/ocr_datasets</span><br><span class="hljs-attr">Optimizer:</span> <span class="hljs-string">SGD</span><br><span class="hljs-attr">Weight decay:</span> <span class="hljs-number">0.0001</span><br><span class="hljs-attr">Batch size:</span> <span class="hljs-number">20</span><br><span class="hljs-attr">Num devices:</span> <span class="hljs-number">1</span><br><span class="hljs-attr">Gradient accumulation steps:</span> <span class="hljs-number">1</span><br><span class="hljs-attr">Global batch size:</span> <span class="hljs-string">20x1x1=20</span><br><span class="hljs-attr">LR:</span> <span class="hljs-number">0.007</span><br><span class="hljs-attr">Scheduler:</span> <span class="hljs-string">polynomial_decay</span><br><span class="hljs-attr">Steps per epoch:</span> <span class="hljs-number">62</span><br><span class="hljs-attr">Num epochs:</span> <span class="hljs-number">1200</span><br><span class="hljs-attr">Clip gradient:</span> <span class="hljs-literal">False</span><br><span class="hljs-attr">EMA:</span> <span class="hljs-literal">True</span><br><span class="hljs-attr">AMP level:</span> <span class="hljs-string">O0</span><br><span class="hljs-attr">Loss scaler:</span> &#123;<span class="hljs-attr">&#x27;type&#x27;:</span> <span class="hljs-string">&#x27;dynamic&#x27;</span>, <span class="hljs-attr">&#x27;loss_scale&#x27;:</span> <span class="hljs-number">512</span>, <span class="hljs-attr">&#x27;scale_factor&#x27;:</span> <span class="hljs-number">2</span>, <span class="hljs-attr">&#x27;scale_window&#x27;:</span> <span class="hljs-number">1000</span>&#125;<br><span class="hljs-attr">Drop overflow update:</span> <span class="hljs-literal">False</span><br><span class="hljs-string">========================================</span><br><br><span class="hljs-string">Start</span> <span class="hljs-string">training...</span> <span class="hljs-string">(The</span> <span class="hljs-string">first</span> <span class="hljs-string">epoch</span> <span class="hljs-string">takes</span> <span class="hljs-string">longer,</span> <span class="hljs-string">please</span> <span class="hljs-string">wait...)</span><br><br>[<span class="hljs-number">2023-07-12 16:42:13</span>] <span class="hljs-attr">mindocr.utils.callbacks INFO - epoch:</span> [<span class="hljs-number">1</span><span class="hljs-string">/1200</span>]<span class="hljs-string">,</span> <span class="hljs-attr">loss:</span> <span class="hljs-number">2.851490</span><span class="hljs-string">,</span> <span class="hljs-attr">epoch time:</span> <span class="hljs-number">113.039</span> <span class="hljs-string">s,</span> <span class="hljs-attr">per step time:</span> <span class="hljs-number">1823.213 </span><span class="hljs-string">ms,</span> <span class="hljs-attr">fps per card:</span> <span class="hljs-number">10.97</span> <span class="hljs-string">img/s</span><br></code></pre></td></tr></table></figure>
 <p>妈了个巴子，README.md 写的不清不楚的,终于能跑了。不过这个 <strong>first epoch takes longer</strong> 真的够 <strong>longer</strong>……</p>
+<h4><span id="断点续训">断点续训</span></h4><p>训练到一半 Moba 居然还崩溃了？还得整个断点续训orz：<a target="_blank" rel="noopener" href="https://gitee.com/mindspore-lab/mindocr/blob/main/docs/cn/tutorials/advanced_train.md">docs/cn/tutorials/advanced_train.md · MindSpore Lab/mindocr - Gitee.com</a></p>
+<p>往 <code>db_r18_totaltext.yaml</code> 里的 <code>model:</code> 下添加： </p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><code class="hljs yaml"><span class="hljs-attr">resume:</span> <span class="hljs-literal">True</span><br></code></pre></td></tr></table></figure>
+<p><img src="C2.png" alt="png"></p>
+<p>然后再：</p>
+<figure class="highlight sh"><table><tr><td class="code"><pre><code class="hljs sh">python tools/train.py --config configs/det/dbnet/db_r18_totaltext.yaml<br></code></pre></td></tr></table></figure>
+<p>会提示：</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><code class="hljs yaml"><span class="hljs-attr">Resume train from epoch:</span> <span class="hljs-number">1049</span><br></code></pre></td></tr></table></figure>
+<p>就可以继续了！</p>
+<h4><span id="分析训练结果">分析训练结果</span></h4><p>最后结果：</p>
+<figure class="highlight awk"><table><tr><td class="code"><pre><code class="hljs awk">[<span class="hljs-number">2023</span>-<span class="hljs-number">07</span>-<span class="hljs-number">14</span> <span class="hljs-number">10</span>:<span class="hljs-number">27</span>:<span class="hljs-number">56</span>] mindocr.utils.callbacks INFO - =&gt; Best f-score: <span class="hljs-number">0.8407643312101911</span><br>Training completed!<br>[<span class="hljs-number">2023</span>-<span class="hljs-number">07</span>-<span class="hljs-number">14</span> <span class="hljs-number">10</span>:<span class="hljs-number">27</span>:<span class="hljs-number">56</span>] mindocr.utils.callbacks INFO - Top K checkpoints:<br>f-score checkpoint<br><span class="hljs-number">0.8408</span>  .<span class="hljs-regexp">/tmp_det/</span>e1110.ckpt<br><span class="hljs-number">0.8401</span>  .<span class="hljs-regexp">/tmp_det/</span>e1090.ckpt<br><span class="hljs-number">0.8397</span>  .<span class="hljs-regexp">/tmp_det/</span>e1086.ckpt<br><span class="hljs-number">0.8397</span>  .<span class="hljs-regexp">/tmp_det/</span>e1089.ckpt<br><span class="hljs-number">0.8394</span>  .<span class="hljs-regexp">/tmp_det/</span>e1126.ckpt<br><span class="hljs-number">0.8392</span>  .<span class="hljs-regexp">/tmp_det/</span>e1132.ckpt<br><span class="hljs-number">0.8392</span>  .<span class="hljs-regexp">/tmp_det/</span>e1149.ckpt<br><span class="hljs-number">0.8390</span>  .<span class="hljs-regexp">/tmp_det/</span>e1152.ckpt<br><span class="hljs-number">0.8389</span>  .<span class="hljs-regexp">/tmp_det/</span>e1129.ckpt<br><span class="hljs-number">0.8389</span>  .<span class="hljs-regexp">/tmp_det/</span>e1139.ckpt<br></code></pre></td></tr></table></figure>
+<p>从 <code>tmp_dbt/</code> 中可以看到输出的结果，炼出的丹，日志信息等。</p>
+<p>第 1110 个 epoch 的丹性能最好！</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>Epoch</th>
+<th>Loss</th>
+<th>Recall</th>
+<th>Precision</th>
+<th>F-score</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1110</td>
+<td>1.139845</td>
+<td>83.43%</td>
+<td>84.73%</td>
+<td>84.08%</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>emmmm官网的最终效果为：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th><strong>模型</strong></th>
+<th><strong>环境配置</strong></th>
+<th><strong>骨干网络</strong></th>
+<th><strong>预训练数据集</strong></th>
+<th><strong>Recall</strong></th>
+<th><strong>Precision</strong></th>
+<th><strong>F-score</strong></th>
+<th><strong>训练时间</strong></th>
+<th><strong>吞吐量</strong></th>
+<th><strong>配置文件</strong></th>
+<th><strong>模型权重下载</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DBNet</td>
+<td>D910x1-MS2.0-G</td>
+<td>ResNet-18</td>
+<td>SynthText</td>
+<td>83.66%</td>
+<td>87.65%</td>
+<td>85.61%</td>
+<td>12.9 s/epoch</td>
+<td>96.9 img/s</td>
+<td><a href="db_r18_totaltext.yaml">yaml</a></td>
+<td><a target="_blank" rel="noopener" href="https://download.mindspore.cn/toolkits/mindocr/dbnet/dbnet_resnet18_totaltext-fb456ff4.ckpt">ckpt</a></td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+<p>用 python 读取 <code>result.log</code> 并画出图表：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> matplotlib.pyplot <span class="hljs-keyword">as</span> plt<br><br>data = [[], [], [], [], [], []]<br>epochs = <span class="hljs-number">0</span><br><span class="hljs-keyword">with</span> <span class="hljs-built_in">open</span>(<span class="hljs-string">&#x27;result.log&#x27;</span>, <span class="hljs-string">&#x27;r&#x27;</span>) <span class="hljs-keyword">as</span> file:<br>    lines = file.readlines()<br>    epochs = <span class="hljs-built_in">len</span>(lines) - <span class="hljs-number">1</span><br>    <span class="hljs-keyword">for</span> line <span class="hljs-keyword">in</span> lines[<span class="hljs-number">1</span>:]:<br>        <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">1</span>, <span class="hljs-built_in">len</span>(line.strip().split())):<br>            data[i-<span class="hljs-number">1</span>].append(line.strip().split()[i])<br><br>fig, axs = plt.subplots(nrows=<span class="hljs-number">2</span>, ncols=<span class="hljs-number">3</span>)<br><br><span class="hljs-keyword">for</span> i, ax <span class="hljs-keyword">in</span> <span class="hljs-built_in">enumerate</span>(axs.flat):<br>    ax.plot(<span class="hljs-built_in">range</span>(<span class="hljs-number">1</span>, epochs + <span class="hljs-number">1</span>), df[attribute_list[i]].tolist())<br>    ax.set_xticks([<span class="hljs-number">0</span>, epochs * <span class="hljs-number">1</span> / <span class="hljs-number">3</span>, epochs * <span class="hljs-number">2</span> / <span class="hljs-number">3</span>, epochs])<br>    ax.set_title(attribute_list[i])<br>    ax.set_xlabel(<span class="hljs-string">&#x27;Epoch&#x27;</span>)<br>    ax.set_ylabel(<span class="hljs-string">&#x27;&#x27;</span>)<br><br>plt.tight_layout()<br><br>plt.show()<br></code></pre></td></tr></table></figure>
+<p><img src="C5.png" alt="png"></p>
+<p>可以看到</p>
+<ul>
+<li><strong>loss</strong> 逐渐下降</li>
+<li><strong>recall</strong> 逐渐接近于 1</li>
+<li><strong>precision</strong> 逐渐下降？这好吗（ChatGPT 说这是正常的）</li>
+</ul>
+<blockquote>
+<p>在训练深度神经网络时，precision（精确度）和 f-score（F1 分数）是衡量分类模型性能的指标。</p>
+<ul>
+<li>精确度（precision）是指被正确预测为正例的样本数占所有被预测为正例的样本数的比例。它衡量了模型在预测为正例时的准确性。</li>
+<li>F1 分数（F1-score）则是同时考虑了召回率（recall）和精确度的指标，它是精确度和召回率的调和平均值。F1 分数越接近于 1 表示模型在保持高精确度和高召回率方面表现良好。</li>
+</ul>
+<p>当训练过程中，随着训练的进行，精确度下降但是 F1 分数逐渐趋近于 1 的情况是可能存在的，尤其是当模型更注重于增加召回率（即尽可能捕捉到更多的正例）时。这种情况通常发生在数据标签不平衡、类别不均衡或存在较高的假阳性或假阴性的情况下。</p>
+<p>此时，模型可能会将更多的样本预测为正例，导致假阳性增加，从而降低了精确度。然而，由于模型的预测更加倾向于正例，它也能更好地捕捉到真正的正例，并提高召回率。因此，F1 分数可能会逐渐趋近于 1，指示模型在整体上仍然具有较好的分类性能。</p>
+<p>需要注意的是，对于具体的问题和数据集，还需要根据具体情况进行分析和评估，以确定模型的性能是否符合预期要求。</p>
+</blockquote>
+<ul>
+<li><p><strong>f-score</strong> 逐渐接近于 1</p>
+</li>
+<li><p>一开始 <strong>train_time</strong> 就会很慢，执行到 1049 的时候重启训练耗费了好多时间 orz</p>
+</li>
+</ul>
+<hr>
+<p>好家伙训练一个这玩意扣我665块钱……</p>
+<h4><span id="分布式训练">分布式训练</span></h4><p>还得装 <strong>openmpi 4.0.3</strong> (for distributed training/evaluation)</p>
+<p>下载 <a target="_blank" rel="noopener" href="https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.3.tar.gz">https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.3.tar.gz</a> 拷贝到服务器中，然后一阵操作：</p>
+<figure class="highlight sh"><table><tr><td class="code"><pre><code class="hljs sh">gunzip -c openmpi-4.0.3.tar.gz | tar xf -<br><span class="hljs-built_in">cd</span> openmpi-4.0.3<br>./configure --prefix=/usr/local<br>&lt;...lots of output...&gt;<br>make all install<br></code></pre></td></tr></table></figure>
+<h3><span id="转换数据集scut-ctw1500">转换数据集（SCUT-CTW1500）</span></h3><p>从 <a target="_blank" rel="noopener" href="https://github.com/Yuliang-Liu/Curve-Text-Detector">Yuliang-Liu/Curve-Text-Detector: This repository provides train＆test code, dataset, det.&amp;rec. annotation, evaluation script, annotation tool, and ranking. (github.com)</a> 下载压缩包并解压成如下形式：</p>
+<p><img src="C3.png" alt="png"></p>
+<figure class="highlight stylus"><table><tr><td class="code"><pre><code class="hljs stylus">ctw1500<br> ├── ctw1500_train_labels<br> │   ├── <span class="hljs-number">0001</span><span class="hljs-selector-class">.xml</span><br> │   ├── <span class="hljs-number">0002</span><span class="hljs-selector-class">.xml</span><br> │   ├── ...<br> ├── gt_ctw_1500<br> │   ├── <span class="hljs-number">0001001</span><span class="hljs-selector-class">.txt</span><br> │   ├── <span class="hljs-number">0001002</span><span class="hljs-selector-class">.txt</span><br> │   ├── ...<br> ├── test_images<br> │   ├── <span class="hljs-number">1001</span><span class="hljs-selector-class">.jpg</span><br> │   ├── <span class="hljs-number">1002</span><span class="hljs-selector-class">.jpg</span><br> │   ├── ...<br> ├── train_images<br> │   ├── <span class="hljs-number">0001</span><span class="hljs-selector-class">.jpg</span><br> │   ├── <span class="hljs-number">0002</span><span class="hljs-selector-class">.jpg</span><br> │   ├── ...<br></code></pre></td></tr></table></figure>
+<p>将文件夹 <code>ctw1500</code> 重新打包成 <code>ctw1500.zip</code>，放到服务器中，解压出来：</p>
+<p><img src="C4.png" alt="png"></p>
+<p><code>mindocr/</code> 下执行转换命令：</p>
+<ul>
+<li>Train</li>
+</ul>
+<figure class="highlight sh"><table><tr><td class="code"><pre><code class="hljs sh">python tools/dataset_converters/convert.py \<br>        --dataset_name ctw1500 \<br>        --task det \<br>        --image_dir ./data/ocr_datasets/ctw1500/train_images/ \<br>        --label_dir ./data/ocr_datasets/ctw1500/ctw1500_train_labels/ \<br>        --output_path ./data/ocr_datasets/ctw1500/train_det_gt.txt<br></code></pre></td></tr></table></figure>
+<ul>
+<li>Test</li>
+</ul>
+<figure class="highlight sh"><table><tr><td class="code"><pre><code class="hljs sh">python tools/dataset_converters/convert.py \<br>        --dataset_name ctw1500 \<br>        --task det \<br>        --image_dir ./data/ocr_datasets/ctw1500/test_images/ \<br>        --label_dir ./data/ocr_datasets/ctw1500/gt_ctw1500/ \<br>        --output_path ./data/ocr_datasets/ctw1500/test_det_gt.txt<br></code></pre></td></tr></table></figure>
+<h3><span id="训练dbctw1500">训练（DB+CTW1500）</span></h3><figure class="highlight sh"><table><tr><td class="code"><pre><code class="hljs sh">python tools/train.py --config configs/det/dbnet/db_r18_totaltext.yaml<br></code></pre></td></tr></table></figure>
+<p>先修改 <code>config configs/det/dbnet/db_r18_ctw1500.yaml</code> 里的数据集路径：</p>
+<p>将 <code>train: dataset:</code> 和 <code>test: dataset:</code> 下的 <code>dataset_root</code> 调整为自己的数据集路径：</p>
+<figure class="highlight awk"><table><tr><td class="code"><pre><code class="hljs awk">dataset_root: .<span class="hljs-regexp">/data/</span>ocr_datasets<br></code></pre></td></tr></table></figure>
+<p>开跑！</p>
+<figure class="highlight sh"><table><tr><td class="code"><pre><code class="hljs sh">python tools/train.py --config configs/det/dbnet/db_r18_ctw1500.yaml<br></code></pre></td></tr></table></figure>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><code class="hljs yaml">[<span class="hljs-number">2023-07-14 10:57:25</span>] <span class="hljs-string">mindocr.models.utils.load_model</span> <span class="hljs-string">INFO</span> <span class="hljs-bullet">-</span> <span class="hljs-string">Finish</span> <span class="hljs-string">loading</span> <span class="hljs-string">model</span> <span class="hljs-string">checkoint</span> <span class="hljs-string">fro</span>                                                                <span class="hljs-string">m</span> <span class="hljs-string">https://download.mindspore.cn/toolkits/mindocr/dbnet/dbnet_resnet18_synthtext-251ef3dd.ckpt.</span>                                                                 <span class="hljs-string">If</span> <span class="hljs-literal">no</span> <span class="hljs-string">parameter</span> <span class="hljs-string">fail-load</span> <span class="hljs-string">warning</span> <span class="hljs-string">displayed,</span> <span class="hljs-string">all</span> <span class="hljs-string">checkpoint</span> <span class="hljs-string">params</span> <span class="hljs-string">have</span> <span class="hljs-string">been</span> <span class="hljs-string">successfully</span> <span class="hljs-string">loade</span>                                                                <span class="hljs-string">d.</span><br>[<span class="hljs-number">2023-07-14 10:57:25</span>] <span class="hljs-string">mindocr.optim.param_grouping</span> <span class="hljs-string">INFO</span> <span class="hljs-bullet">-</span> <span class="hljs-literal">no</span> <span class="hljs-string">parameter</span> <span class="hljs-string">grouping</span> <span class="hljs-string">is</span> <span class="hljs-string">applied.</span><br>[<span class="hljs-number">2023-07-14 10:57:31</span>] <span class="hljs-string">mindocr.train</span> <span class="hljs-string">INFO</span> <span class="hljs-bullet">-</span><br><span class="hljs-string">========================================</span><br><span class="hljs-attr">Distribute:</span> <span class="hljs-literal">False</span><br><span class="hljs-attr">Model:</span> <span class="hljs-string">det_resnet18-DBFPN-DBHead</span><br><span class="hljs-attr">Total number of parameters:</span> <span class="hljs-number">12351042</span><br><span class="hljs-attr">Total number of trainable parameters:</span> <span class="hljs-number">12340930</span><br><span class="hljs-attr">Data root:</span> <span class="hljs-string">./data/ocr_datasets</span><br><span class="hljs-attr">Optimizer:</span> <span class="hljs-string">SGD</span><br><span class="hljs-attr">Weight decay:</span> <span class="hljs-number">0.0001</span><br><span class="hljs-attr">Batch size:</span> <span class="hljs-number">20</span><br><span class="hljs-attr">Num devices:</span> <span class="hljs-number">1</span><br><span class="hljs-attr">Gradient accumulation steps:</span> <span class="hljs-number">1</span><br><span class="hljs-attr">Global batch size:</span> <span class="hljs-string">20x1x1=20</span><br><span class="hljs-attr">LR:</span> <span class="hljs-number">0.007</span><br><span class="hljs-attr">Scheduler:</span> <span class="hljs-string">polynomial_decay</span><br><span class="hljs-attr">Steps per epoch:</span> <span class="hljs-number">50</span><br><span class="hljs-attr">Num epochs:</span> <span class="hljs-number">1200</span><br><span class="hljs-attr">Clip gradient:</span> <span class="hljs-literal">False</span><br><span class="hljs-attr">EMA:</span> <span class="hljs-literal">False</span><br><span class="hljs-attr">AMP level:</span> <span class="hljs-string">O0</span><br><span class="hljs-attr">Loss scaler:</span> &#123;<span class="hljs-attr">&#x27;type&#x27;:</span> <span class="hljs-string">&#x27;dynamic&#x27;</span>, <span class="hljs-attr">&#x27;loss_scale&#x27;:</span> <span class="hljs-number">512</span>, <span class="hljs-attr">&#x27;scale_factor&#x27;:</span> <span class="hljs-number">2</span>, <span class="hljs-attr">&#x27;scale_window&#x27;:</span> <span class="hljs-number">1000</span>&#125;<br><span class="hljs-attr">Drop overflow update:</span> <span class="hljs-literal">False</span><br><span class="hljs-string">========================================</span><br><br><span class="hljs-string">Start</span> <span class="hljs-string">training...</span> <span class="hljs-string">(The</span> <span class="hljs-string">first</span> <span class="hljs-string">epoch</span> <span class="hljs-string">takes</span> <span class="hljs-string">longer,</span> <span class="hljs-string">please</span> <span class="hljs-string">wait...)</span><br><br>[<span class="hljs-string">WARNING</span>] <span class="hljs-string">MD(9900,fffb197fa1e0,python):2023-07-14-10:58:45.969.430</span> [<span class="hljs-string">mindspore/ccsrc/minddata/da</span>                                                                <span class="hljs-string">taset/engine/datasetops/data_queue_op.cc:832</span>] <span class="hljs-string">DetectPerBatchTime]</span> <span class="hljs-string">Bad</span> <span class="hljs-string">performance</span> <span class="hljs-string">attention,</span> <span class="hljs-string">it</span>                                                                 <span class="hljs-string">takes</span> <span class="hljs-string">more</span> <span class="hljs-string">than</span> <span class="hljs-number">25</span> <span class="hljs-string">seconds</span> <span class="hljs-string">to</span> <span class="hljs-string">fetch</span> <span class="hljs-string">a</span> <span class="hljs-string">batch</span> <span class="hljs-string">of</span> <span class="hljs-string">data</span> <span class="hljs-string">from</span> <span class="hljs-string">dataset</span> <span class="hljs-string">pipeline,</span> <span class="hljs-string">which</span> <span class="hljs-string">might</span> <span class="hljs-string">result</span>                                                                 <span class="hljs-string">`GetNext`</span> <span class="hljs-string">timeout</span> <span class="hljs-string">problem.</span> <span class="hljs-string">You</span> <span class="hljs-string">may</span> <span class="hljs-string">test</span> <span class="hljs-string">dataset</span> <span class="hljs-string">processing</span> <span class="hljs-string">performance(with</span> <span class="hljs-string">creating</span> <span class="hljs-string">dataset</span> <span class="hljs-string">it</span>                                                                <span class="hljs-string">erator)</span> <span class="hljs-string">and</span> <span class="hljs-string">optimize</span> <span class="hljs-string">it.</span><br>[<span class="hljs-number">2023-07-14 10:59:43</span>] <span class="hljs-attr">mindocr.utils.callbacks INFO - epoch:</span> [<span class="hljs-number">1</span><span class="hljs-string">/1200</span>]<span class="hljs-string">,</span> <span class="hljs-attr">loss:</span> <span class="hljs-number">2.689226</span><span class="hljs-string">,</span> <span class="hljs-attr">epoch tim                                                                e:</span> <span class="hljs-number">132.242</span> <span class="hljs-string">s,</span> <span class="hljs-attr">per step time:</span> <span class="hljs-number">2644.840 </span><span class="hljs-string">ms,</span> <span class="hljs-attr">fps per card:</span> <span class="hljs-number">7.56</span> <span class="hljs-string">img/s</span><br><span class="hljs-number">100</span><span class="hljs-string">%|████████████████████████████████████████████████████████|</span> <span class="hljs-number">500</span><span class="hljs-string">/500</span> [<span class="hljs-number">00</span><span class="hljs-string">:59&lt;00:00</span>,  <span class="hljs-number">8.</span><span class="hljs-string">42it/s</span>]<br>[<span class="hljs-number">2023-07-14 11:00:43</span>] <span class="hljs-attr">mindocr.utils.callbacks INFO - Performance:</span> &#123;<span class="hljs-attr">&#x27;recall&#x27;:</span> <span class="hljs-number">0.8184523809523809</span>                                                                , <span class="hljs-attr">&#x27;precision&#x27;:</span> <span class="hljs-number">0.8520526723470179</span>, <span class="hljs-attr">&#x27;f-score&#x27;:</span> <span class="hljs-number">0.8349146110056926</span>&#125;<span class="hljs-string">,</span> <span class="hljs-attr">eval time:</span> <span class="hljs-number">59.41374802589416</span>                                                                <span class="hljs-number">5</span><br>[<span class="hljs-number">2023-07-14 11:00:43</span>] <span class="hljs-string">mindocr.utils.callbacks</span> <span class="hljs-string">INFO</span> <span class="hljs-bullet">-</span> <span class="hljs-string">=&gt;</span> <span class="hljs-attr">Best f-score:</span> <span class="hljs-number">0.8349146110056926</span><span class="hljs-string">,</span> <span class="hljs-string">check</span>                                                                <span class="hljs-string">point</span> <span class="hljs-string">saved.</span><br></code></pre></td></tr></table></figure>
+<p>可是我想整个服务器后台执行：</p>
+<figure class="highlight awk"><table><tr><td class="code"><pre><code class="hljs awk">nohup python tools<span class="hljs-regexp">/train.py --config configs/</span>det<span class="hljs-regexp">/dbnet/</span>db_r18_ctw1500.yaml &gt; test.log <span class="hljs-number">2</span>&gt;&amp;<span class="hljs-number">1</span> &amp;<br></code></pre></td></tr></table></figure>
+<blockquote>
+<ul>
+<li><p>最后一个“&amp;”表示后台运行程序</p>
+</li>
+<li><p>“nohup” 表示程序不被挂起</p>
+</li>
+<li>“python”表示执行 python 代码</li>
+<li>“-u”表示不启用缓存，实时输出打印信息到日志文件（如果不加 -u，则会导致日志文件不会实时刷新代码中的 print 函数的信息）</li>
+<li>“test.py”表示 python 的源代码文件（根据自己的文件修改）</li>
+<li>“test.log”表示输出的日志文件（自己修改，名字自定）</li>
+<li>“&gt;”表示将打印信息重定向到日志文件</li>
+<li>“2&gt;&amp;1”表示将标准错误输出转变化标准输出，可以将错误信息也输出到日志文件中（0-&gt; stdin, 1-&gt;stdout, 2-&gt;stderr）</li>
+</ul>
+</blockquote>
+<p>伟哥提示道：</p>
+<blockquote>
+<p>不过这种方法 你想中途终止的话 你只能用 kill 杀掉进程来解决了</p>
+<p>不然只能等到运行结束</p>
+</blockquote>
+<p>应该直接重启服务器也是可以的。</p>
 
   </div>
   <div id="gitalk-container"></div>
@@ -452,6 +604,13 @@ Fancybox.bind('[data-fancybox="fancybox-gallery-img"]', {
 </style>
 
     <div class="post-paging">
+    
+    <a href="/2023/07/13/Paper-Real-Time%20Scene%20Text%20Detection%20with%20Differentiable%20Binarization/">
+        <div class="post-paging-last">
+            <span>上一篇</span>
+            <p>Paper-Real-Time Scene Text Detection with Differentiable Binarization</p>
+        </div>
+    </a>
     
 
     

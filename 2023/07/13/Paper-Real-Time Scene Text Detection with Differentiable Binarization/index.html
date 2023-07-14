@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		
+<title>Paper-Real-Time Scene Text Detection with Differentiable Binarization-Zi-Zi's Journey</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="shortcut icon" type="image/x-icon" href="/image/favicon.ico">
+
+<link rel="stylesheet" href="/css/index.css">
+
+
+
+<meta name="keywords" content="Python,论文,MindSpore,代码复现,文本检测,实验相关,">
+<meta name="description" content="">
+
+
+<script src="/js/jquery.min.js"></script>
+
+
+<script src="/js/index.js"></script>
+
+
+<script src="/js/fancybox.umd.js"></script>
+
+
+<script src="/js/fancybox-images.js"></script>
+
+
+<script src="/js/gitalk.min.js"></script>
+
+
+<script src="/js/hljs.min.js"></script>
+ 
+
+	<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.1.0"></head>
+
+	<body>
+		
+	<div class="header">
+		<div class="header-top" id="header-top">
+			<div class="h-left">
+				<a href="/">
+					<img src="/image/logo.png" alt="Quiet">
+				</a>
+			</div>
+			<div class="h-right">
+				<ul>
+					
+						
+								<li>
+									<a href="/">
+										主页
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/archives">
+										统计
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/categories">
+										类别
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/tags">
+										标签
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/links">
+										链接
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/about">
+										关于
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+				</ul>
+			</div>
+			<div class="h-right-close">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+					<path fill="none" d="M0 0h24v24H0z" />
+					<path d="M3 4h18v2H3V4zm0 7h18v2H3v-2zm0 7h18v2H3v-2z" fill="rgba(68,68,68,1)" />
+				</svg>
+			</div>
+		</div>
+	</div>
+	<div class="sidebar">
+    <div class="topo">
+        <h2>Zi-Zi</h2>
+    </div>
+    <ul>
+        
+        <li>
+            <a href="/">主页</a>
+        </li>
+        
+        <li>
+            <a href="/archives">统计</a>
+        </li>
+        
+        <li>
+            <a href="/categories">类别</a>
+        </li>
+        
+        <li>
+            <a href="/tags">标签</a>
+        </li>
+        
+        <li>
+            <a href="/links">链接</a>
+        </li>
+        
+        <li>
+            <a href="/about">关于</a>
+        </li>
+        
+    </ul>
+    <div class="my_foot">
+        
+        <a target="_blank" rel="noopener" href="https://weibo.com/u/5020307235">
+            <img src="/image/Weibo.png" alt="Quiet主题">
+        </a>
+        
+        <a target="_blank" rel="noopener" href="https://tieba.baidu.com/home/main?id=tb.1.ff6d2775.vFH7wrdW2ZjPCmyBHJcjnA">
+            <img src="/image/Tieba.png" alt="Quiet主题">
+        </a>
+        
+        <a target="_blank" rel="noopener" href="https://space.bilibili.com/11547880">
+            <img src="/image/Bilibili.png" alt="Quiet主题">
+        </a>
+        
+        <a target="_blank" rel="noopener" href="https://github.com/GZ-Metal-Cell">
+            <img src="/image/github.png" alt="Quiet主题">
+        </a>
+        
+    </div>
+</div>
+<div class='shelter'>
+</div>
+<style>
+    .shelter{
+        background-color: #333;
+        opacity:0.5;
+        cursor: pointer;
+        display: none; 
+        position: fixed;
+        left: 0;
+        top: 0; 
+        right: 0;
+        bottom: 0;
+        z-index: 1998;
+    }
+    .sidebar {
+        width: 66%;
+        height: 100%;
+        position: fixed;
+        top: 0;
+        right: -100%;
+        bottom: 0;
+        background: #fff;
+        z-index: 1999;
+        text-align: center;
+        box-shadow: -6px 0 20px rgba(98, 94, 94, .815);
+    }
+
+    .topo {
+        width: 100%;
+        height: 200px;
+        background: url(https://api.ixiaowai.cn/gqapi/gqapi.php) no-repeat;
+        background-size: 100% 100%;
+        position: relative;
+        display: flex;
+        align-items: flex-end
+    }
+
+    .topo h2 {
+        color: #fff;
+        z-index: 1;
+        position: relative;
+        margin: 0 0 10px 10px;
+        font-size: 1.2em;
+        box-sizing: border-box
+    }
+
+    .topo:before {
+        content: '';
+        background-image: url(/image/pattern.png);
+        background-repeat: repeat;
+        height: 100%;
+        left: 0;
+        position: absolute;
+        top: 0;
+        width: 100%;
+        z-index: 1
+    }
+
+    .sidebar ul {
+        width: 100%;
+        margin-top: 50px
+    }
+
+    .sidebar ul li {
+        height: 50px;
+        list-style: none;
+        font-size: 1.2em;
+        text-align: right;
+        margin-right: 10px
+    }
+
+    .sidebar ul li a {
+        display: grid;
+        color: #5d606a;
+        text-overflow: ellipsis;
+        width: 100%;
+        text-decoration: none
+    }
+
+    .my_foot {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        position: absolute;
+        bottom: 0
+    }
+
+    .my_foot a {
+        text-decoration: none;
+        margin-right: 10px;
+        display: inline-block
+    }
+
+    .my_foot a img {
+        width: 30px;
+        height: 30px
+    }
+</style>
+
+<script>
+    $( function () {
+	$( '.h-right-close>svg' )
+		.click( function () {
+			$( '.sidebar' )
+				.animate( {
+					right: "0"
+				}, 500 );
+			$( '.shelter' )
+				.fadeIn( "slow" )
+		} );
+	$( '.shelter' )
+		.click( function ( e ) {
+			$( '.sidebar' )
+				.animate( {
+					right: "-100%"
+				}, 500 );
+			$( '.shelter' )
+				.fadeOut( "slow" )
+		} )
+} )
+
+</script>
+
+<div class="post">
+    <div class="post-header-background post-header-img"
+    style="background: url('https://api.ixiaowai.cn/gqapi/gqapi.php')" 
+>
+    <div class="post-header-background-content">
+        <ul class="post-header-tag">
+            
+                
+                    <li><a href="/tags/Python">Python</a></li>
+                
+                    <li><a href="/tags/论文">论文</a></li>
+                
+                    <li><a href="/tags/MindSpore">MindSpore</a></li>
+                
+                    <li><a href="/tags/代码复现">代码复现</a></li>
+                
+                    <li><a href="/tags/文本检测">文本检测</a></li>
+                
+                    <li><a href="/tags/实验相关">实验相关</a></li>
+                
+            
+        </ul>
+        
+        <h1>Paper-Real-Time Scene Text Detection with Differentiable Binarization</h1>
+        <div class="post-header-info">
+            <div class="post-header-info-author">
+                
+                    <svg t="1604839279282" class="icon" viewBox="0 0 1024 1024" version="1.1"
+                        xmlns="http://www.w3.org/2000/svg" p-id="2901" width="20" height="20">
+                        <path
+                            d="M513 956.3c-247.7 0-448-200.3-448-448S265.3 66.2 513 66.2s448 200.3 448 448-200.3 442.1-448 442.1z m0-830.9c-212.2 0-388.8 170.7-388.8 388.8C124.2 726.3 294.9 903 513 903c212.2 0 388.8-170.7 388.8-388.8S725.2 125.4 513 125.4z m0 430.2c-94.2 0-170.7-76.5-170.7-170.7S418.8 207.8 513 207.8s170.7 76.5 170.7 170.7S607.2 555.6 513 555.6z m0-289.1c-64.6 0-112 52.8-112 112s47.4 117.9 112 117.9 112-52.8 112-112-47.4-117.9-112-117.9z m0 689.8c-135.7 0-259-58.7-341.9-158.9l-11.8-17.8 11.8-17.8c76.5-117.9 206.2-188.5 347.8-188.5 135.7 0 265 64.6 341.9 182.6l11.8 17.8-11.8 17.8C778 897.1 648.7 956.3 513 956.3zM230.3 773.2C300.9 849.7 406.9 897 513 897c112 0 218.1-47.4 288.6-129.8-70.5-88.2-170.7-135.6-282.7-135.6s-218.1 53.3-288.6 141.6z"
+                            p-id="2902" fill="#ffffff"></path>
+                    </svg>
+                    
+                <span class="post-header-info-author-text"> <a href="../../about">Zi-Zi</a></span>
+                <div class="post-header-info-author-categories">
+                    
+                         <a href="/categories/学习" target="_blank" >学习</a>
+                    
+                </div>
+                <p>2023-07-13 14:04:00</p>
+            </div>
+        </div>
+    </div>
+</div>
+    <div class="post-content" id="content">
+  
+  <div id="article" class="post-content-info">
+    
+
+    <h2><span id="paper-real-time-scene-text-detection-with-differentiable-binarization">Paper-Real-Time Scene Text Detection with Differentiable Binarization</span></h2><h2><span id="目录">目录</span></h2><!-- toc -->
+<ul>
+<li><a href="#资源">资源</a></li>
+<li><a href="#正文">正文</a><ul>
+<li><a href="#abstract">Abstract</a></li>
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#related-work">Related Work</a></li>
+<li><a href="#methodology">Methodology</a><ul>
+<li><a href="#binarization">Binarization</a><ul>
+<li><a href="#standard-binarization">Standard binarization</a></li>
+<li><a href="#differentiable-binarization">Differentiable binarization</a></li>
+<li><a href="#adaptive-threshold">Adaptive threshold</a></li>
+<li><a href="#deformable-convolution">Deformable convolution</a></li>
+<li><a href="#label-generation">Label generation</a></li>
+<li><a href="#optimization">Optimization</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#experiments">Experiments</a><ul>
+<li><a href="#ablation-study">Ablation study</a></li>
+<li><a href="#comparisons-with-previous-methods">Comparisons with previous methods</a></li>
+<li><a href="#limitation">Limitation</a></li>
+<li><a href="#conclusion">Conclusion</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<!-- tocstop -->
+<h2><span id="资源">资源</span></h2><ul>
+<li><p>PaperWithCode：<a target="_blank" rel="noopener" href="https://paperswithcode.com/paper/real-time-scene-text-detection-with">Real-time Scene Text Detection with Differentiable Binarization | Papers With Code</a></p>
+</li>
+<li><p>Arxiv：<a target="_blank" rel="noopener" href="https://arxiv.org/abs/1911.08947">[1911.08947] Real-time Scene Text Detection with Differentiable Binarization (arxiv.org)</a></p>
+</li>
+<li>Gitee：<a href="https://gitee.com/mindspore-lab/mindocr/blob/main/configs/det/dbnet/README_CN.md#https://gitee.com/link?target=https%3A%2F%2Farxiv.org%2Fabs%2F1911.08947">configs/det/dbnet/README_CN.md · MindSpore Lab/mindocr - Gitee.com</a></li>
+</ul>
+<h2><span id="正文">正文</span></h2><h3><span id="abstract">Abstract</span></h3><ul>
+<li>基于分割的场景文本检测（可以获得像素级别的预测）可以更精确地描述曲线文本等各种形状的场景文本</li>
+<li>二值化的后处理对于基于分割的检测至关重要，该检测将分割方法产生的概率图转换为文本的边界框/区域</li>
+<li>提出了一个名为可微分二值化（DB）的模块，它可以在分割网络中执行二值化过程</li>
+<li>好使。</li>
+</ul>
+<h3><span id="introduction">Introduction</span></h3><p>&nbsp;&nbsp;&nbsp;&nbsp;本文的主要贡献是提出了可微的 DB 模块，它使二值化过程在 CNN 中可以端到端训练。</p>
+<h3><span id="related-work">Related Work</span></h3><p>&nbsp;&nbsp;&nbsp;&nbsp;最近的场景文本检测方法大致可以分为两类：基于回归（Regression-based）的方法和基于分割（Segmentation-based）的方法。</p>
+<ul>
+<li><p>基于<strong>回归 Regression</strong> 的方法是一系列直接回归文本实例的边界框的模型。</p>
+</li>
+<li><p>基于<strong>分割 Segmentation</strong> 的方法通常结合像素级预测和后处理算法来获得边界框</p>
+</li>
+<li><p><strong>快速的场景文本检测方法</strong>注重准确性和推理速度。</p>
+</li>
+</ul>
+<h3><span id="methodology">Methodology</span></h3><p><img src="P3.png" alt="png"></p>
+<ol>
+<li><p>将<strong>输入图像</strong>输入到 feature-pyramid back-bone 中</p>
+</li>
+<li><p>金字塔特征被上采样到相同的尺度并级联以产生<strong>特征</strong> $F$</p>
+</li>
+<li>特征 $F$ 被用于预测<strong>概率图 probability map</strong>  $P$ 和<strong>阈值图 threshold map</strong> $T$</li>
+<li>DB 通过 $P$ 和 $F$ 计算近似二值映射，得到<strong>近似二值图 approximate binary map</strong> $\hat B$</li>
+</ol>
+<ul>
+<li><p>在 train 期间，监督应用于 $P$、$T$ 和 $\hat B$，其中 $P$ 和 $\hat B$ 共享相同的监督</p>
+</li>
+<li><p>在 inference 期间，通过框公式化模块可以容易地从 $\hat B$ 或 $P$ 中获得边界框</p>
+</li>
+</ul>
+<h4><span id="binarization">Binarization</span></h4><h5><span id="standard-binarization">Standard binarization</span></h5><p>&nbsp;&nbsp;&nbsp;&nbsp;就是一刀切。</p>
+<script type="math/tex; mode=display">B_{i,j}=\left\{\begin{matrix} 1 & \mathrm{if}\ P_{i,j}>=t\\ 0 & \mathrm{otherwise.}\end{matrix}\right.</script><p>&nbsp;&nbsp;&nbsp;&nbsp;其中 $t$ 是预定义的阈值，$(i,j)$ 表示 map 中的坐标点。</p>
+<h5><span id="differentiable-binarization">Differentiable binarization</span></h5><p>&nbsp;&nbsp;&nbsp;&nbsp;上式不可微分，在 train 过程中就不可以与分割网络一起进行优化，因此，我们建议使用阶跃函数进行二值化：</p>
+<script type="math/tex; mode=display">\hat B_{i,j}=\frac{1}{1+e^{-k(P_{i,j}-T_{i,j})}}</script><p>&nbsp;&nbsp;&nbsp;&nbsp;其中 $\hat B$ 是近似二进制映射；$T$ 是从网络学习的自适应阈值映射；$k$ 表示放大因子。$k$ 根据经验设置为50。</p>
+<p><img src="P4.png" alt="png"></p>
+<center>DB 的 k 越大，越接近于 Standard Binarization</center>
+
+<h5><span id="adaptive-threshold">Adaptive threshold</span></h5><p>&nbsp;&nbsp;&nbsp;&nbsp;自适应阈值。</p>
+<h5><span id="deformable-convolution">Deformable convolution</span></h5><p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>可变形卷积可变形卷积</strong>可以为模型提供灵活的感受野，这对极端长宽比的文本实例尤其有益。接下来，在 ResNet-18 或 ResNet-50 主干中的 conv3、conv4 和 conv5 阶段，在所有 3×3 卷积层中应用调制可变形卷积。</p>
+<h5><span id="label-generation">Label generation</span></h5><p><img src="P5.png" alt="png"></p>
+<center>Label generation。文本多边形的注释以红线显示。收缩和展开的多边形分别显示为蓝线和绿线</center>
+
+<p>&nbsp;&nbsp;&nbsp;&nbsp;概率图的标签生成受到 PSENet 的启发。给定一个文本图像，其文本区域的每个多边形由一组线段描述：</p>
+<script type="math/tex; mode=display">G=\{S_k\}^n_{k=1}</script><p>&nbsp;&nbsp;&nbsp;&nbsp;$n$ 是顶点的数量，在不同的数据集中可能不同，例如，ICDAR 2015 数据集为 4（Karatzas 等人2015），CTW1500 数据集为 16。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;通过使用 Vatti剪裁算法将多边形 $G$ 缩小为 $G_s$ 来生成正区域。收缩的偏移量 $D$ 是根据原始多边形的周长 $L$ 和面积 $A$ 计算得出的：</p>
+<script type="math/tex; mode=display">D=\frac{A(1-r^2)}{L}</script><p>&nbsp;&nbsp;&nbsp;&nbsp;其中 $r$ 是收缩率，根据经验设置为 0.4。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;通过类似的过程，我们可以为阈值映射生成标签。首先，将文本多边形 $G$ 以与 $G_d$ 相同的偏移量 $D$ 展开。我们将 $G_s$ 和 $G_d$ 之间的间隙视为文本区域的边界，其中可以通过计算到 $G$ 中最近线段的距离来生成阈值图的标签。</p>
+<h5><span id="optimization">Optimization</span></h5><p>损失函数 $L$ 可以表示为概率映射 $L_s$ 的损失、二进制映射 $L_b$ 的损失和阈值映射 $L_t$ 的损失的加权和</p>
+<script type="math/tex; mode=display">L=L_s+\alpha\times L_b+\beta\times L_t</script><p>$\alpha$ 和 $\beta$ 分别取 1.0 和 10。 </p>
+<p>对 $L_s$ 和 $L_b$ 都应用了二进制交叉熵（BCE）损失：</p>
+<script type="math/tex; mode=display">L_s=L_b=\Sigma_{i\in S_l}y_i\log x_i+(1-y_i)\log(1-x_i)</script><p>$L_t$ 被计算为扩展文本多边形 $G_d$ 内的预测和标签之间的 $L_1$ 距离之和：</p>
+<script type="math/tex; mode=display">L_t=\Sigma_{i\in R_d}|y^*_i-x^*_i|</script><p>在推理阶段，我们可以使用概率图或近似二进制图来生成文本边界框，这会产生几乎相同的结果。</p>
+<script type="math/tex; mode=display">D'=\frac{A'\times r'}{L'}</script><p>其中 $A’$ 是收缩多边形的面积；$L’$ 是收缩多边形的周长；$r’$ 根据经验设定为 1.5。</p>
+<h3><span id="experiments">Experiments</span></h3><p><strong>SynthText</strong> 是一个由 800k 张图像组成的合成数据集。这些图像是从 8k 个背景图像合成的。此数据集仅用于预训练我们的模型。</p>
+<p>训练数据的数据扩充包括：</p>
+<ol>
+<li>角度范围为 $(-10^{\circ},10^{\circ})$ 的随机旋转</li>
+<li>随机裁剪</li>
+<li>随机翻转</li>
+<li>为了提高训练效率，所有处理后的图像都被重新调整为 640×640</li>
+</ol>
+<hr>
+<p>我们首先使用 SynthText 数据集对它们进行 100k 次迭代的<strong>预训练</strong>。然后，我们在 1200 个 epoch 的相应真实世界数据集上<strong>微调</strong>模型。训练批次大小设置为 16。我们遵循多学习率策略，其中当前迭代的学习率等于初始学习率乘以 $(1-\frac{iter}{max_iter})^{power}$，其中初始学习率设置为 0.007，$power$ 为 0.9。我们使用 0.0001 的重量衰减和 0.9 的动量。</p>
+<h4><span id="ablation-study">Ablation study</span></h4><p>证明各个模块都能提高性能。</p>
+<h4><span id="comparisons-with-previous-methods">Comparisons with previous methods</span></h4><p>P、R、F 三个指标都最佳。</p>
+<ul>
+<li>TP: true positive。实际为正，预测为正。</li>
+<li>FP: false positive。实际为负，预测为正。</li>
+<li>TN: true negative。实际为负，预测为负。</li>
+<li>FN: false negative。实际为正，预测为负。</li>
+</ul>
+<script type="math/tex; mode=display">P=\frac{TP}{TP+FP}</script><script type="math/tex; mode=display">R=\frac{TP}{TP+FN}</script><script type="math/tex; mode=display">F=\frac{2PR}{P+R}</script><h4><span id="limitation">Limitation</span></h4><p>我们的方法的一个局限性是它不能处理 “文本中的文本” 的情况，这意味着一个文本实例在另一个文本例子中。尽管收缩的文本区域在文本实例不在另一个文本实例的中心区域的情况下很有帮助，但当文本实例正好位于另一个文字实例的中心区时，它会失败。这是基于分割的场景文本检测器的常见限制。</p>
+<h4><span id="conclusion">Conclusion</span></h4><p>好使。</p>
+
+  </div>
+  <div id="gitalk-container"></div>
+</div>
+
+<script>
+  
+Fancybox.bind('[data-fancybox="fancybox-gallery-img"]', {
+  dragToClose: true,
+  Toolbar: true,
+  closeButton: "top",
+  Image: {
+    zoom: true,
+  },
+  on: {
+    initCarousel: (fancybox) => {
+      const slide = fancybox.Carousel.slides[fancybox.Carousel.page];
+      fancybox.$container.style.setProperty(
+        "--bg-image",
+        `url("${slide.$thumb.src}")`
+      );
+    },
+    "Carousel.change": (fancybox, carousel, to, from) => {
+      const slide = carousel.slides[to];
+      fancybox.$container.style.setProperty(
+        "--bg-image",
+        `url("${slide.$thumb.src}")`
+      );
+    },
+  },
+});
+</script>
+
+<style>
+    #noneimg img {
+        display: none;
+        z-index: 9999;
+        /* width: 600px !important; */
+        min-width: 0%;
+        max-width: 90%;
+        max-height: 80%;
+        border-radius: 0px;
+        position: fixed;
+        box-shadow: 0 0 0px #c3c3c300 !important;
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        margin: auto !important;
+    }
+
+    @media screen and (max-width:600px) {
+        #noneimg img {
+            max-width: 88%
+        }
+    }
+</style>
+
+    <div class="post-paging">
+    
+    <a href="/2023/07/14/Paper-Detecting%20Curve%20Text%20in%20the%20Wild-New%20Dataset%20and%20New%20Solution/">
+        <div class="post-paging-last">
+            <span>上一篇</span>
+            <p>Paper-Detecting Curve Text in the Wild-New Dataset and New Solution</p>
+        </div>
+    </a>
+    
+
+    
+    <a href="/2023/07/12/Server-MindOCR/">
+        <div class="post-paging-next">
+            <span>下一篇</span>
+            <p>Server-MindOCR</p>
+        </div>
+    </a>
+    
+</div>
+</div>
+		
+<div class="footer">
+	<div class="Copyright">
+		©2023 By Zi-Zi. 主题：<a
+			style="text-decoration: none;display: contents; color: #898F9F;"
+			target="_blank" rel="noopener" href="https://github.com/79e/hexo-theme-quiet">Quiet</a>
+	</div>
+	<div class="contact">
+		
+		<a target="_blank" rel="noopener" href="https://weibo.com/u/5020307235">
+			<img src="/image/Weibo.png" alt="Quiet主题">
+		</a>
+		
+		<a target="_blank" rel="noopener" href="https://tieba.baidu.com/home/main?id=tb.1.ff6d2775.vFH7wrdW2ZjPCmyBHJcjnA">
+			<img src="/image/Tieba.png" alt="Quiet主题">
+		</a>
+		
+		<a target="_blank" rel="noopener" href="https://space.bilibili.com/11547880">
+			<img src="/image/Bilibili.png" alt="Quiet主题">
+		</a>
+		
+		<a target="_blank" rel="noopener" href="https://github.com/GZ-Metal-Cell">
+			<img src="/image/github.png" alt="Quiet主题">
+		</a>
+		
+	</div>
+</div>
+
+<script src="/js/gotop.js"></script>
+
+
+<style type="text/css">
+    @media screen and (min-width: 600px) {
+        .goTop>span {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            opacity: 0.8;
+            background: rgba(18, 24, 58, 0.06);
+            text-align: center;
+            transition: border .5s;
+            border: 1px solid rgba(18, 24, 58, 0.06);
+
+            -moz-transition: border .5s;
+            /* Firefox 4 */
+            -webkit-transition: border .5s;
+            /* Safari 和 Chrome */
+            -o-transition: border .5s;
+            /* Opera */
+        }
+
+        .goTop>span:hover {
+            border: 1px solid #6680B3;
+        }
+
+
+        .goTop {
+            position: fixed;
+            right: 30px;
+            bottom: 80px;
+        }
+
+        .goTop>span>svg {
+            width: 20px;
+            height: 20px;
+            opacity: 0.7;
+        }
+
+    }
+
+    @media screen and (max-width: 600px) {
+        .goTop {
+            display: none;
+        }
+    }
+</style>
+<div class="goTop" id="js-go_top">
+    <span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+            <g>
+                <path d="M13 12v8h-2v-8H4l8-8 8 8z"></path>
+            </g>
+        </svg>
+    </span>
+</div>
+<script>
+    $( '#js-go_top' )
+	.gotoTop( {
+		offset: 500,
+		speed: 300,
+		animationShow: {
+			'transform': 'translate(0,0)',
+			'transition': 'transform .5s ease-in-out'
+		},
+		animationHide: {
+			'transform': 'translate(100px,0)',
+			'transition': 'transform .5s ease-in-out'
+		}
+	} );
+</script>
+
+
+    <script src="/js/md5.min.js"></script>
+    <!-- Gitalk -->
+    <script>
+        const data = '{"clientID":"f3a4ea928b90c73f66d4","clientSecret":"d697ef6f42e83e83c49ff8d19e753f36bc375015","repo":"GZ-Metal-Cell.github.io","owner":"GZ-Metal-Cell","admin":"GZ-Metal-Cell"}'
+        const gitalk = new Gitalk({
+            ...JSON.parse( data),
+            id:md5(location.pathname), //  location.pathname,
+            distractionFreeMode:false
+        })
+        
+        if(Boolean('true')){
+            gitalk.render('gitalk-container')
+        }
+    </script>
+
+<script>
+	console.log('\n %c Hexo-Quiet 主题 %c https://github.com/79e/hexo-theme-quiet \n', 'color: #fadfa3; background: #030307; padding:5px 0;', 'background: #fadfa3; padding:5px 0;')
+</script>
+	<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+</html>
+
