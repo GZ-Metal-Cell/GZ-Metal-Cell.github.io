@@ -375,6 +375,7 @@
 <li><p>Arxiv：<a target="_blank" rel="noopener" href="https://arxiv.org/abs/1911.08947">[1911.08947] Real-time Scene Text Detection with Differentiable Binarization (arxiv.org)</a></p>
 </li>
 <li>Gitee：<a href="https://gitee.com/mindspore-lab/mindocr/blob/main/configs/det/dbnet/README_CN.md#https://gitee.com/link?target=https%3A%2F%2Farxiv.org%2Fabs%2F1911.08947">configs/det/dbnet/README_CN.md · MindSpore Lab/mindocr - Gitee.com</a></li>
+<li>代码复现：<a href="https://gz-metal-cell.github.io/2023/07/12/Server-MindOCR/">Server-MindOCR-Zi-Zi’s Journey (gz-metal-cell.github.io)</a></li>
 </ul>
 <h2><span id="正文">正文</span></h2><h3><span id="abstract">Abstract</span></h3><ul>
 <li>基于分割的场景文本检测（可以获得像素级别的预测）可以更精确地描述曲线文本等各种形状的场景文本</li>
@@ -424,14 +425,14 @@
 <p>&nbsp;&nbsp;&nbsp;&nbsp;通过使用 Vatti剪裁算法将多边形 $G$ 缩小为 $G_s$ 来生成正区域。收缩的偏移量 $D$ 是根据原始多边形的周长 $L$ 和面积 $A$ 计算得出的：</p>
 <script type="math/tex; mode=display">D=\frac{A(1-r^2)}{L}</script><p>&nbsp;&nbsp;&nbsp;&nbsp;其中 $r$ 是收缩率，根据经验设置为 0.4。</p>
 <p>&nbsp;&nbsp;&nbsp;&nbsp;通过类似的过程，我们可以为阈值映射生成标签。首先，将文本多边形 $G$ 以与 $G_d$ 相同的偏移量 $D$ 展开。我们将 $G_s$ 和 $G_d$ 之间的间隙视为文本区域的边界，其中可以通过计算到 $G$ 中最近线段的距离来生成阈值图的标签。</p>
-<h5><span id="optimization">Optimization</span></h5><p>损失函数 $L$ 可以表示为概率映射 $L_s$ 的损失、二进制映射 $L_b$ 的损失和阈值映射 $L_t$ 的损失的加权和</p>
-<script type="math/tex; mode=display">L=L_s+\alpha\times L_b+\beta\times L_t</script><p>$\alpha$ 和 $\beta$ 分别取 1.0 和 10。 </p>
-<p>对 $L_s$ 和 $L_b$ 都应用了二进制交叉熵（BCE）损失：</p>
-<script type="math/tex; mode=display">L_s=L_b=\Sigma_{i\in S_l}y_i\log x_i+(1-y_i)\log(1-x_i)</script><p>$L_t$ 被计算为扩展文本多边形 $G_d$ 内的预测和标签之间的 $L_1$ 距离之和：</p>
-<script type="math/tex; mode=display">L_t=\Sigma_{i\in R_d}|y^*_i-x^*_i|</script><p>在推理阶段，我们可以使用概率图或近似二进制图来生成文本边界框，这会产生几乎相同的结果。</p>
-<script type="math/tex; mode=display">D'=\frac{A'\times r'}{L'}</script><p>其中 $A’$ 是收缩多边形的面积；$L’$ 是收缩多边形的周长；$r’$ 根据经验设定为 1.5。</p>
-<h3><span id="experiments">Experiments</span></h3><p><strong>SynthText</strong> 是一个由 800k 张图像组成的合成数据集。这些图像是从 8k 个背景图像合成的。此数据集仅用于预训练我们的模型。</p>
-<p>训练数据的数据扩充包括：</p>
+<h5><span id="optimization">Optimization</span></h5><p>&nbsp;&nbsp;&nbsp;&nbsp;损失函数 $L$ 可以表示为概率映射 $L_s$ 的损失、二进制映射 $L_b$ 的损失和阈值映射 $L_t$ 的损失的加权和</p>
+<script type="math/tex; mode=display">L=L_s+\alpha\times L_b+\beta\times L_t</script><p>&nbsp;&nbsp;&nbsp;&nbsp;$\alpha$ 和 $\beta$ 分别取 1.0 和 10。 </p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;对 $L_s$ 和 $L_b$ 都应用了二进制交叉熵（BCE）损失：</p>
+<script type="math/tex; mode=display">L_s=L_b=\Sigma_{i\in S_l}y_i\log x_i+(1-y_i)\log(1-x_i)</script><p>&nbsp;&nbsp;&nbsp;&nbsp;$L_t$ 被计算为扩展文本多边形 $G_d$ 内的预测和标签之间的 $L_1$ 距离之和：</p>
+<script type="math/tex; mode=display">L_t=\Sigma_{i\in R_d}|y^*_i-x^*_i|</script><p>&nbsp;&nbsp;&nbsp;&nbsp;在推理阶段，我们可以使用概率图或近似二进制图来生成文本边界框，这会产生几乎相同的结果。</p>
+<script type="math/tex; mode=display">D'=\frac{A'\times r'}{L'}</script><p>&nbsp;&nbsp;&nbsp;&nbsp;其中 $A’$ 是收缩多边形的面积；$L’$ 是收缩多边形的周长；$r’$ 根据经验设定为 1.5。</p>
+<h3><span id="experiments">Experiments</span></h3><p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>SynthText</strong> 是一个由 800k 张图像组成的合成数据集。这些图像是从 8k 个背景图像合成的。此数据集仅用于预训练我们的模型。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;训练数据的数据扩充包括：</p>
 <ol>
 <li>角度范围为 $(-10^{\circ},10^{\circ})$ 的随机旋转</li>
 <li>随机裁剪</li>
@@ -439,17 +440,82 @@
 <li>为了提高训练效率，所有处理后的图像都被重新调整为 640×640</li>
 </ol>
 <hr>
-<p>我们首先使用 SynthText 数据集对它们进行 100k 次迭代的<strong>预训练</strong>。然后，我们在 1200 个 epoch 的相应真实世界数据集上<strong>微调</strong>模型。训练批次大小设置为 16。我们遵循多学习率策略，其中当前迭代的学习率等于初始学习率乘以 $(1-\frac{iter}{max_iter})^{power}$，其中初始学习率设置为 0.007，$power$ 为 0.9。我们使用 0.0001 的重量衰减和 0.9 的动量。</p>
-<h4><span id="ablation-study">Ablation study</span></h4><p>证明各个模块都能提高性能。</p>
-<h4><span id="comparisons-with-previous-methods">Comparisons with previous methods</span></h4><p>P、R、F 三个指标都最佳。</p>
+<ul>
+<li>使用 SynthText 数据集对它们进行 100k 次迭代的<strong>预训练</strong>。</li>
+<li>在 <strong>1200</strong> 个 epoch 的相应真实世界数据集上<strong>微调</strong>模型。<ul>
+<li>训练批次大小设置为 16。我们遵循多学习率策略，当前迭代的学习率等于初始学习率乘以 $(1-\frac{iter}{max_iter})^{power}$<ul>
+<li>初始学习率设置为 0.007，$power$ 为 0.9</li>
+<li>使用 0.0001 的权重衰减和 0.9 的<strong>动量</strong>。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h4><span id="ablation-study">Ablation study</span></h4><p>&nbsp;&nbsp;&nbsp;&nbsp;证明各个模块都能提高性能。</p>
+<h4><span id="comparisons-with-previous-methods">Comparisons with previous methods</span></h4><p>&nbsp;&nbsp;&nbsp;&nbsp;P、R、F 三个指标都最佳。</p>
 <ul>
 <li>TP: true positive。实际为正，预测为正。</li>
 <li>FP: false positive。实际为负，预测为正。</li>
 <li>TN: true negative。实际为负，预测为负。</li>
 <li>FN: false negative。实际为正，预测为负。</li>
 </ul>
-<script type="math/tex; mode=display">P=\frac{TP}{TP+FP}</script><script type="math/tex; mode=display">R=\frac{TP}{TP+FN}</script><script type="math/tex; mode=display">F=\frac{2PR}{P+R}</script><h4><span id="limitation">Limitation</span></h4><p>我们的方法的一个局限性是它不能处理 “文本中的文本” 的情况，这意味着一个文本实例在另一个文本例子中。尽管收缩的文本区域在文本实例不在另一个文本实例的中心区域的情况下很有帮助，但当文本实例正好位于另一个文字实例的中心区时，它会失败。这是基于分割的场景文本检测器的常见限制。</p>
-<h4><span id="conclusion">Conclusion</span></h4><p>好使。</p>
+<script type="math/tex; mode=display">P=\frac{TP}{TP+FP}</script><script type="math/tex; mode=display">R=\frac{TP}{TP+FN}</script><script type="math/tex; mode=display">F=\frac{2PR}{P+R}</script><hr>
+<p>在 TotalText 下的训练结果：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>P</th>
+<th>R</th>
+<th>F</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DB-ResNet-18 (800)</td>
+<td><strong>88.3</strong></td>
+<td>77.9</td>
+<td>82.8</td>
+</tr>
+<tr>
+<td>DB-ResNet-50 (800)</td>
+<td>87.1</td>
+<td><strong>82.5</strong></td>
+<td><strong>84.7</strong></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>在 CTW1500 下的训练结果：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>P</th>
+<th>R</th>
+<th>F</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Ours-ResNet18 (1024)</td>
+<td>84.8</td>
+<td>77.5</td>
+<td>81.0</td>
+</tr>
+<tr>
+<td>Ours-ResNet50 (1024)</td>
+<td><strong>86.9</strong></td>
+<td>80.2</td>
+<td><strong>83.4</strong></td>
+</tr>
+</tbody>
+</table>
+</div>
+<h4><span id="limitation">Limitation</span></h4><p>&nbsp;&nbsp;&nbsp;&nbsp;我们的方法的一个局限性是它不能处理 “文本中的文本” 的情况，这意味着一个文本实例在另一个文本例子中。尽管收缩的文本区域在文本实例不在另一个文本实例的中心区域的情况下很有帮助，但当文本实例正好位于另一个文字实例的中心区时，它会失败。这是基于分割的场景文本检测器的常见限制。</p>
+<h4><span id="conclusion">Conclusion</span></h4><p>&nbsp;&nbsp;&nbsp;&nbsp;好使。</p>
 
   </div>
   <div id="gitalk-container"></div>

@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		
+<title>Paper-Shape Robust Text Detection With Progressive Scale Expansion Network-Zi-Zi's Journey</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="shortcut icon" type="image/x-icon" href="/image/favicon.ico">
+
+<link rel="stylesheet" href="/css/index.css">
+
+
+
+<meta name="keywords" content="Python,论文,Pytorch,MindSpore,代码复现,文本检测,实验相关,">
+<meta name="description" content="">
+
+
+<script src="/js/jquery.min.js"></script>
+
+
+<script src="/js/index.js"></script>
+
+
+<script src="/js/fancybox.umd.js"></script>
+
+
+<script src="/js/fancybox-images.js"></script>
+
+
+<script src="/js/gitalk.min.js"></script>
+
+
+<script src="/js/hljs.min.js"></script>
+ 
+
+	<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.1.0"></head>
+
+	<body>
+		
+	<div class="header">
+		<div class="header-top" id="header-top">
+			<div class="h-left">
+				<a href="/">
+					<img src="/image/logo.png" alt="Quiet">
+				</a>
+			</div>
+			<div class="h-right">
+				<ul>
+					
+						
+								<li>
+									<a href="/">
+										主页
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/archives">
+										统计
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/categories">
+										类别
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/tags">
+										标签
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/links">
+										链接
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/about">
+										关于
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+				</ul>
+			</div>
+			<div class="h-right-close">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+					<path fill="none" d="M0 0h24v24H0z" />
+					<path d="M3 4h18v2H3V4zm0 7h18v2H3v-2zm0 7h18v2H3v-2z" fill="rgba(68,68,68,1)" />
+				</svg>
+			</div>
+		</div>
+	</div>
+	<div class="sidebar">
+    <div class="topo">
+        <h2>Zi-Zi</h2>
+    </div>
+    <ul>
+        
+        <li>
+            <a href="/">主页</a>
+        </li>
+        
+        <li>
+            <a href="/archives">统计</a>
+        </li>
+        
+        <li>
+            <a href="/categories">类别</a>
+        </li>
+        
+        <li>
+            <a href="/tags">标签</a>
+        </li>
+        
+        <li>
+            <a href="/links">链接</a>
+        </li>
+        
+        <li>
+            <a href="/about">关于</a>
+        </li>
+        
+    </ul>
+    <div class="my_foot">
+        
+        <a target="_blank" rel="noopener" href="https://weibo.com/u/5020307235">
+            <img src="/image/Weibo.png" alt="Quiet主题">
+        </a>
+        
+        <a target="_blank" rel="noopener" href="https://tieba.baidu.com/home/main?id=tb.1.ff6d2775.vFH7wrdW2ZjPCmyBHJcjnA">
+            <img src="/image/Tieba.png" alt="Quiet主题">
+        </a>
+        
+        <a target="_blank" rel="noopener" href="https://space.bilibili.com/11547880">
+            <img src="/image/Bilibili.png" alt="Quiet主题">
+        </a>
+        
+        <a target="_blank" rel="noopener" href="https://github.com/GZ-Metal-Cell">
+            <img src="/image/github.png" alt="Quiet主题">
+        </a>
+        
+    </div>
+</div>
+<div class='shelter'>
+</div>
+<style>
+    .shelter{
+        background-color: #333;
+        opacity:0.5;
+        cursor: pointer;
+        display: none; 
+        position: fixed;
+        left: 0;
+        top: 0; 
+        right: 0;
+        bottom: 0;
+        z-index: 1998;
+    }
+    .sidebar {
+        width: 66%;
+        height: 100%;
+        position: fixed;
+        top: 0;
+        right: -100%;
+        bottom: 0;
+        background: #fff;
+        z-index: 1999;
+        text-align: center;
+        box-shadow: -6px 0 20px rgba(98, 94, 94, .815);
+    }
+
+    .topo {
+        width: 100%;
+        height: 200px;
+        background: url(https://api.ixiaowai.cn/gqapi/gqapi.php) no-repeat;
+        background-size: 100% 100%;
+        position: relative;
+        display: flex;
+        align-items: flex-end
+    }
+
+    .topo h2 {
+        color: #fff;
+        z-index: 1;
+        position: relative;
+        margin: 0 0 10px 10px;
+        font-size: 1.2em;
+        box-sizing: border-box
+    }
+
+    .topo:before {
+        content: '';
+        background-image: url(/image/pattern.png);
+        background-repeat: repeat;
+        height: 100%;
+        left: 0;
+        position: absolute;
+        top: 0;
+        width: 100%;
+        z-index: 1
+    }
+
+    .sidebar ul {
+        width: 100%;
+        margin-top: 50px
+    }
+
+    .sidebar ul li {
+        height: 50px;
+        list-style: none;
+        font-size: 1.2em;
+        text-align: right;
+        margin-right: 10px
+    }
+
+    .sidebar ul li a {
+        display: grid;
+        color: #5d606a;
+        text-overflow: ellipsis;
+        width: 100%;
+        text-decoration: none
+    }
+
+    .my_foot {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        position: absolute;
+        bottom: 0
+    }
+
+    .my_foot a {
+        text-decoration: none;
+        margin-right: 10px;
+        display: inline-block
+    }
+
+    .my_foot a img {
+        width: 30px;
+        height: 30px
+    }
+</style>
+
+<script>
+    $( function () {
+	$( '.h-right-close>svg' )
+		.click( function () {
+			$( '.sidebar' )
+				.animate( {
+					right: "0"
+				}, 500 );
+			$( '.shelter' )
+				.fadeIn( "slow" )
+		} );
+	$( '.shelter' )
+		.click( function ( e ) {
+			$( '.sidebar' )
+				.animate( {
+					right: "-100%"
+				}, 500 );
+			$( '.shelter' )
+				.fadeOut( "slow" )
+		} )
+} )
+
+</script>
+
+<div class="post">
+    <div class="post-header-background post-header-img"
+    style="background: url('https://api.ixiaowai.cn/gqapi/gqapi.php')" 
+>
+    <div class="post-header-background-content">
+        <ul class="post-header-tag">
+            
+                
+                    <li><a href="/tags/Python">Python</a></li>
+                
+                    <li><a href="/tags/论文">论文</a></li>
+                
+                    <li><a href="/tags/Pytorch">Pytorch</a></li>
+                
+                    <li><a href="/tags/MindSpore">MindSpore</a></li>
+                
+                    <li><a href="/tags/代码复现">代码复现</a></li>
+                
+                    <li><a href="/tags/文本检测">文本检测</a></li>
+                
+                    <li><a href="/tags/实验相关">实验相关</a></li>
+                
+            
+        </ul>
+        
+        <h1>Paper-Shape Robust Text Detection With Progressive Scale Expansion Network</h1>
+        <div class="post-header-info">
+            <div class="post-header-info-author">
+                
+                    <svg t="1604839279282" class="icon" viewBox="0 0 1024 1024" version="1.1"
+                        xmlns="http://www.w3.org/2000/svg" p-id="2901" width="20" height="20">
+                        <path
+                            d="M513 956.3c-247.7 0-448-200.3-448-448S265.3 66.2 513 66.2s448 200.3 448 448-200.3 442.1-448 442.1z m0-830.9c-212.2 0-388.8 170.7-388.8 388.8C124.2 726.3 294.9 903 513 903c212.2 0 388.8-170.7 388.8-388.8S725.2 125.4 513 125.4z m0 430.2c-94.2 0-170.7-76.5-170.7-170.7S418.8 207.8 513 207.8s170.7 76.5 170.7 170.7S607.2 555.6 513 555.6z m0-289.1c-64.6 0-112 52.8-112 112s47.4 117.9 112 117.9 112-52.8 112-112-47.4-117.9-112-117.9z m0 689.8c-135.7 0-259-58.7-341.9-158.9l-11.8-17.8 11.8-17.8c76.5-117.9 206.2-188.5 347.8-188.5 135.7 0 265 64.6 341.9 182.6l11.8 17.8-11.8 17.8C778 897.1 648.7 956.3 513 956.3zM230.3 773.2C300.9 849.7 406.9 897 513 897c112 0 218.1-47.4 288.6-129.8-70.5-88.2-170.7-135.6-282.7-135.6s-218.1 53.3-288.6 141.6z"
+                            p-id="2902" fill="#ffffff"></path>
+                    </svg>
+                    
+                <span class="post-header-info-author-text"> <a href="../../about">Zi-Zi</a></span>
+                <div class="post-header-info-author-categories">
+                    
+                         <a href="/categories/学习" target="_blank" >学习</a>
+                    
+                </div>
+                <p>2023-07-15 12:06:00</p>
+            </div>
+        </div>
+    </div>
+</div>
+    <div class="post-content" id="content">
+  
+  <div id="article" class="post-content-info">
+    
+
+    <h2><span id="paper-shape-robust-text-detection-with-progressive-scale-expansion-network">Paper-Shape Robust Text Detection With Progressive Scale Expansion Network</span></h2><h2><span id="目录">目录</span></h2><!-- toc -->
+<ul>
+<li><a href="#资源">资源</a></li>
+<li><a href="#全文">全文</a><ul>
+<li><a href="#abstract">Abstract</a></li>
+<li><a href="#1-introduction">1 Introduction</a></li>
+<li><a href="#2-related-work">2 Related Work</a></li>
+<li><a href="#3-proposed-method">3 Proposed Method</a><ul>
+<li><a href="#31-overall-pipeline">3.1 Overall Pipeline</a></li>
+<li><a href="#32-network-design">3.2 Network Design</a></li>
+<li><a href="#33-progressive-scale-expansion-algorithm">3.3. Progressive Scale Expansion Algorithm</a></li>
+<li><a href="#34-label-generation">3.4 Label Generation</a></li>
+<li><a href="#35-loss-function">3.5 Loss Function</a></li>
+</ul>
+</li>
+<li><a href="#4-experiment">4. Experiment</a><ul>
+<li><a href="#41-datasets">4.1. Datasets</a></li>
+<li><a href="#42-implementation-details">4.2. Implementation Details</a></li>
+<li><a href="#43-ablation-study">4.3. Ablation Study</a></li>
+<li><a href="#44-comparisons-with-state-of-the-art-methods">4.4. Comparisons with State-of-the-Art Methods</a></li>
+</ul>
+</li>
+<li><a href="#5-conclusion-and-future-work">5. Conclusion and Future Work</a></li>
+<li><a href="#6-acknowledgment">6. Acknowledgment</a></li>
+</ul>
+</li>
+</ul>
+<!-- tocstop -->
+<h2><span id="资源">资源</span></h2><ul>
+<li><p>Arxiv：<a target="_blank" rel="noopener" href="https://arxiv.org/abs/1903.12473">[1903.12473] Shape Robust Text Detection with Progressive Scale Expansion Network (arxiv.org)</a></p>
+</li>
+<li><p>CVPR：<a target="_blank" rel="noopener" href="https://openaccess.thecvf.com/content_CVPR_2019/html/Wang_Shape_Robust_Text_Detection_With_Progressive_Scale_Expansion_Network_CVPR_2019_paper.html">CVPR 2019 Open Access Repository (thecvf.com)</a></p>
+</li>
+<li><p>MindOCR：<a href="https://gitee.com/mindspore-lab/mindocr/blob/main/configs/det/psenet/README_CN.md#https://gitee.com/link?target=https%3A%2F%2Fopenaccess.thecvf.com%2Fcontent_CVPR_2019%2Fhtml%2FWang_Shape_Robust_Text_Detection_With_Progressive_Scale_Expansion_Network_CVPR_2019_paper.html">configs/det/psenet/README_CN.md · MindSpore Lab/mindocr - Gitee.com</a></p>
+</li>
+<li><p>PapersWithCode：<a target="_blank" rel="noopener" href="https://paperswithcode.com/paper/shape-robust-text-detection-with-progressive-1">Shape Robust Text Detection with Progressive Scale Expansion Network | Papers With Code</a></p>
+</li>
+</ul>
+<h2><span id="全文">全文</span></h2><h3><span id="abstract">Abstract</span></h3><p>场景文本识别目前仍存在两个挑战：</p>
+<ul>
+<li>大多数现有技术的算法都需要四边形边界框来准确定位任意形状的文本。</li>
+<li>彼此接近的两个文本实例可能导致覆盖这两个实例的错误检测。</li>
+</ul>
+<p>基于分割的方法可以缓解第一个问题，但通常无法解决第二个挑战。但是我们提出的渐进尺度扩展网络（PSENet）可以精确地检测任意形状的文本实例。</p>
+<h3><span id="1-introduction">1 Introduction</span></h3><p>场景文本识别现有两大方法：</p>
+<ul>
+<li>基于回归：文本目标通常以具有特定方向的矩形或四边形的形式表示，遇到曲线一般寄。</li>
+<li>基于分割：基于像素级分类来定位文本实例。然而，很难将彼此接近的文本实例分开。通常，可以基于基于分割的方法来预测覆盖彼此接近的所有文本实例的错误检测。</li>
+</ul>
+<p>本文提出了一种新的基于内核的框架，即<strong>渐进规模扩展网络（PSNet）</strong>。我们的 PSNet 有以下两个好处。首先，作为一种基于<strong>分割</strong>的方法，PSENet 进行像素级分割，能够精确定位任意形状的文本实例。其次，我们提出了一种<strong>渐进尺度扩展算法</strong>，使用该算法可以成功识别相邻的文本实例。</p>
+<p><img src="P1.png" alt="png"></p>
+<p>（a） 是<strong>原始图像</strong>。</p>
+<p>（b） 是指<strong>基于回归</strong>的方法的结果，该方法显示了令人失望的检测结果，因为红框覆盖了绿框中几乎一半以上的上下文。</p>
+<p>（c） 是<strong>传统语义分割</strong>的结果，它将 3 个文本实例误认为 1 个实例，因为它们的边界像素是部分连接的。（d） 是我们提出的 <strong>PSENet</strong> 的结果，它成功地识别和检测了 4 个唯一的文本实例。</p>
+<h3><span id="2-related-work">2 Related Work</span></h3><p>介绍了一下其它的场景文本识别的算法并分析其不足。</p>
+<h3><span id="3-proposed-method">3 Proposed Method</span></h3><h4><span id="31-overall-pipeline">3.1 Overall Pipeline</span></h4><p><img src="P3.png" alt="png"></p>
+<ul>
+<li><p>用 ResNet 作为 PSENet 的 backbone</p>
+</li>
+<li><p>将低级纹理特征与高级语义特征连接起来。这些图谱在 $F$ 中进一步融合，以编码具有各种接受观点的信息</p>
+</li>
+<li><p>这种融合很可能有助于产生各种规模的内核。然后将特征图 $F$ 投影到 $n$ 个分支中以产生多个分割结果 $S_1$、$S_2$、…，每个 $S_i$ 将是在一定尺度上用于所有文本实例的一个分割掩码</p>
+</li>
+<li><p>使用渐进尺度扩展算法将 $S_1$ 中的所有实例的核逐渐扩展到 $S_n$ 中的完整形状，并获得最终的检测结果作为 $R$</p>
+</li>
+</ul>
+<h4><span id="32-network-design">3.2 Network Design</span></h4><p>PSENet 的基本框架是从 FPN（特征金字塔） 中实现的。我们首先从主干中获得四个 256 通道的特征图（即 $P_2$、$P_3$、$P_4$、$P_5$）。为了进一步组合从低到高的语义特征，我们通过函数 $\mathbb C(·)$ 将四个特征图融合，得到具有 1024 个通道的特征图 $F$，如下所示：</p>
+<script type="math/tex; mode=display">F=\mathbb C(P_2,P_3,P_4,P_5)=P_2||\mathrm{Up}_{\times2}(P_3)||\mathrm{Up}_{\times4}(P_4)||\mathrm{Up}_{\times8}(P_5)</script><h4><span id="33-progressive-scale-expansion-algorithm">3.3. Progressive Scale Expansion Algorithm</span></h4><p>基于分段的方法很难分离彼此接近的文本实例。为了解决这个问题，我们提出了一种渐进的规模扩展算法。</p>
+<h4><span id="34-label-generation">3.4 Label Generation</span></h4><p><img src="P5.png" alt="png"></p>
+<p>标签生成的图示。</p>
+<ul>
+<li>（a） 包含 $d$、$p_i$ 和 $p_n$ 的注释</li>
+<li>（b）显示了原始文本实例</li>
+<li>（c） 显示了具有不同内核尺度的分割掩码</li>
+</ul>
+<h4><span id="35-loss-function">3.5 Loss Function</span></h4><script type="math/tex; mode=display">L=\lambda L_c+(1-\lambda)L_s</script><p>其中，$L_c$ 和 $L_s$ 分别表示完整文本实例和收缩文本实例的损失。</p>
+<h3><span id="4-experiment">4. Experiment</span></h3><p>在最近四个具有挑战性的公共基准上评估了所提出的 PSENet：</p>
+<ul>
+<li>CTW1500</li>
+<li>TotalText</li>
+<li>ICDAR 2015</li>
+<li>ICDAR 2017 MLT (IC17-MLT)：多语言，7200 训练集，1800 验证集，9000 测试集</li>
+</ul>
+<p>将 PSENet 与最先进的方法进行了比较。</p>
+<h4><span id="41-datasets">4.1. Datasets</span></h4><h4><span id="42-implementation-details">4.2. Implementation Details</span></h4><ul>
+<li><p>我们使用在 ImageNet 上<strong>预先训练</strong>的 ResNet 作为 backbone</p>
+</li>
+<li><p>利用<strong>随机梯度下降（SGD）</strong>对所有网络进行了优化</p>
+</li>
+<li><p>我们使用 7200 幅 IC17-MLT 训练图像和 1800 幅 IC17-MLT 验证图像来训练模型，并在 IC17-MLT 上报告结果。请注意，<strong>没有采用额外的数据</strong>，例如 SynthText 来训练 IC17-MLT</p>
+</li>
+<li><p>在 IC17-MLT 上训练 PSENet，在 4 个 GPU 上使用批量大小为 16 的 PSENet 进行 180K 迭代</p>
+</li>
+<li><p>初始学习率设置为 $1×10^{−3}$，在 60K 和 120K 次迭代时除以 10</p>
+</li>
+</ul>
+<hr>
+<p>其余数据集中采用了两种训练策略：</p>
+<ul>
+<li>从头开始训练<ul>
+<li>在 4 个 GPU 上训练批量大小为 16 的 PSENet 进行 36K 迭代，初始学习率设置为 $1×10^{−3}$，并在 12K 和 24K 迭代时除以 10。</li>
+</ul>
+</li>
+<li>对IC17MLT模型进行<strong>微调</strong>。当对 IC17-MLT 模型进行微调时，迭代次数为 24K，初始学习率为 1×10−4，在 12K 迭代时除以 10。</li>
+</ul>
+<p>在训练过程中，我们忽略了所有数据集中标记为“不在乎”的模糊文本区域。损耗平衡的 $\lambda$ 设置为 0.7。OHEM 的正负比设置为 3。</p>
+<hr>
+<p>训练数据的数据扩充如下：</p>
+<ul>
+<li>图像以 $\{0.5，1.0，2.0，3.0\}$ 的比率随机重新缩放</li>
+<li>图像在 $[-10^{\circ}, 10^{\circ}]$ 范围内水平翻转和旋转</li>
+<li>从变换后的图像中裁剪 640×640 个随机样本。对于四边形文本，我们计算最小面积矩形来提取边界框。对于曲线文本数据集，应用 PSE 的输出来产生最终结果。</li>
+</ul>
+<h4><span id="43-ablation-study">4.3. Ablation Study</span></h4><h4><span id="44-comparisons-with-state-of-the-art-methods">4.4. Comparisons with State-of-the-Art Methods</span></h4><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Ext</th>
+<th>P</th>
+<th>R</th>
+<th>F</th>
+<th>FPS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PSENet-1s</td>
+<td></td>
+<td>80.57</td>
+<td>75.55</td>
+<td>78.0</td>
+<td>3.9</td>
+</tr>
+<tr>
+<td>PSENet-1s</td>
+<td>是</td>
+<td>84.84</td>
+<td>79.73</td>
+<td><strong>82.2</strong></td>
+<td>3.9</td>
+</tr>
+<tr>
+<td>PSENet-4s</td>
+<td>是</td>
+<td>82.09</td>
+<td>77.84</td>
+<td>79.9</td>
+<td>8.4</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>CTW1500 上的结果。“P”、“R” 和 “F” 分别表示精度、召回率和 F-测度。“1s”和“4s”表示输出映射的宽度和高度分别为输入测试图像的 1/1 和 1/4。“Ext” 表示外部数据。</p>
+<hr>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Ext</th>
+<th>P</th>
+<th>R</th>
+<th>F</th>
+<th>FPS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PSENet-1s</td>
+<td></td>
+<td>81.77</td>
+<td>75.11</td>
+<td>78.3</td>
+<td>3.9</td>
+</tr>
+<tr>
+<td>PSENet-1s</td>
+<td>是</td>
+<td>84.02</td>
+<td>77.96</td>
+<td><strong>80.87</strong></td>
+<td>3.9</td>
+</tr>
+<tr>
+<td>PSENet-4s</td>
+<td>是</td>
+<td>84.54</td>
+<td>75.23</td>
+<td>79.61</td>
+<td>8.4</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>TotalText 的结果。</p>
+<h3><span id="5-conclusion-and-future-work">5. Conclusion and Future Work</span></h3><p>好使。</p>
+<h3><span id="6-acknowledgment">6. Acknowledgment</span></h3>
+  </div>
+  <div id="gitalk-container"></div>
+</div>
+
+<script>
+  
+Fancybox.bind('[data-fancybox="fancybox-gallery-img"]', {
+  dragToClose: true,
+  Toolbar: true,
+  closeButton: "top",
+  Image: {
+    zoom: true,
+  },
+  on: {
+    initCarousel: (fancybox) => {
+      const slide = fancybox.Carousel.slides[fancybox.Carousel.page];
+      fancybox.$container.style.setProperty(
+        "--bg-image",
+        `url("${slide.$thumb.src}")`
+      );
+    },
+    "Carousel.change": (fancybox, carousel, to, from) => {
+      const slide = carousel.slides[to];
+      fancybox.$container.style.setProperty(
+        "--bg-image",
+        `url("${slide.$thumb.src}")`
+      );
+    },
+  },
+});
+</script>
+
+<style>
+    #noneimg img {
+        display: none;
+        z-index: 9999;
+        /* width: 600px !important; */
+        min-width: 0%;
+        max-width: 90%;
+        max-height: 80%;
+        border-radius: 0px;
+        position: fixed;
+        box-shadow: 0 0 0px #c3c3c300 !important;
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        margin: auto !important;
+    }
+
+    @media screen and (max-width:600px) {
+        #noneimg img {
+            max-width: 88%
+        }
+    }
+</style>
+
+    <div class="post-paging">
+    
+    <a href="/2023/07/15/Paper-Real-Time%20Scene%20Text%20Detection%20with%20Differentiable%20Binarization%20and%20Adaptive%20Scale%20Fusion/">
+        <div class="post-paging-last">
+            <span>上一篇</span>
+            <p>Paper-Real-Time Scene Text Detection with Differentiable Binarization and Adaptive Scale Fusion</p>
+        </div>
+    </a>
+    
+
+    
+    <a href="/2023/07/14/Paper-Detecting%20Curve%20Text%20in%20the%20Wild-New%20Dataset%20and%20New%20Solution/">
+        <div class="post-paging-next">
+            <span>下一篇</span>
+            <p>Paper-Detecting Curve Text in the Wild-New Dataset and New Solution</p>
+        </div>
+    </a>
+    
+</div>
+</div>
+		
+<div class="footer">
+	<div class="Copyright">
+		©2023 By Zi-Zi. 主题：<a
+			style="text-decoration: none;display: contents; color: #898F9F;"
+			target="_blank" rel="noopener" href="https://github.com/79e/hexo-theme-quiet">Quiet</a>
+	</div>
+	<div class="contact">
+		
+		<a target="_blank" rel="noopener" href="https://weibo.com/u/5020307235">
+			<img src="/image/Weibo.png" alt="Quiet主题">
+		</a>
+		
+		<a target="_blank" rel="noopener" href="https://tieba.baidu.com/home/main?id=tb.1.ff6d2775.vFH7wrdW2ZjPCmyBHJcjnA">
+			<img src="/image/Tieba.png" alt="Quiet主题">
+		</a>
+		
+		<a target="_blank" rel="noopener" href="https://space.bilibili.com/11547880">
+			<img src="/image/Bilibili.png" alt="Quiet主题">
+		</a>
+		
+		<a target="_blank" rel="noopener" href="https://github.com/GZ-Metal-Cell">
+			<img src="/image/github.png" alt="Quiet主题">
+		</a>
+		
+	</div>
+</div>
+
+<script src="/js/gotop.js"></script>
+
+
+<style type="text/css">
+    @media screen and (min-width: 600px) {
+        .goTop>span {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            opacity: 0.8;
+            background: rgba(18, 24, 58, 0.06);
+            text-align: center;
+            transition: border .5s;
+            border: 1px solid rgba(18, 24, 58, 0.06);
+
+            -moz-transition: border .5s;
+            /* Firefox 4 */
+            -webkit-transition: border .5s;
+            /* Safari 和 Chrome */
+            -o-transition: border .5s;
+            /* Opera */
+        }
+
+        .goTop>span:hover {
+            border: 1px solid #6680B3;
+        }
+
+
+        .goTop {
+            position: fixed;
+            right: 30px;
+            bottom: 80px;
+        }
+
+        .goTop>span>svg {
+            width: 20px;
+            height: 20px;
+            opacity: 0.7;
+        }
+
+    }
+
+    @media screen and (max-width: 600px) {
+        .goTop {
+            display: none;
+        }
+    }
+</style>
+<div class="goTop" id="js-go_top">
+    <span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+            <g>
+                <path d="M13 12v8h-2v-8H4l8-8 8 8z"></path>
+            </g>
+        </svg>
+    </span>
+</div>
+<script>
+    $( '#js-go_top' )
+	.gotoTop( {
+		offset: 500,
+		speed: 300,
+		animationShow: {
+			'transform': 'translate(0,0)',
+			'transition': 'transform .5s ease-in-out'
+		},
+		animationHide: {
+			'transform': 'translate(100px,0)',
+			'transition': 'transform .5s ease-in-out'
+		}
+	} );
+</script>
+
+
+    <script src="/js/md5.min.js"></script>
+    <!-- Gitalk -->
+    <script>
+        const data = '{"clientID":"f3a4ea928b90c73f66d4","clientSecret":"d697ef6f42e83e83c49ff8d19e753f36bc375015","repo":"GZ-Metal-Cell.github.io","owner":"GZ-Metal-Cell","admin":"GZ-Metal-Cell"}'
+        const gitalk = new Gitalk({
+            ...JSON.parse( data),
+            id:md5(location.pathname), //  location.pathname,
+            distractionFreeMode:false
+        })
+        
+        if(Boolean('true')){
+            gitalk.render('gitalk-container')
+        }
+    </script>
+
+<script>
+	console.log('\n %c Hexo-Quiet 主题 %c https://github.com/79e/hexo-theme-quiet \n', 'color: #fadfa3; background: #030307; padding:5px 0;', 'background: #fadfa3; padding:5px 0;')
+</script>
+	<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+</html>
+
