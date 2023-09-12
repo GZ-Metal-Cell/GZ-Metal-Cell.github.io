@@ -431,7 +431,121 @@
 <li><a target="_blank" rel="noopener" href="https://github.com/DLR-RM/BlenderProc/blob/main/examples/datasets/front_3d/README.md">BlenderProc/examples/datasets/front_3d/README.md at main ·DLR-RM/BlenderProc (github.com)</a></li>
 </ul>
 <p>把数据集下好，用这个代码开跑：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> blenderproc <span class="hljs-keyword">as</span> bproc<br><span class="hljs-keyword">import</span> argparse<br><span class="hljs-keyword">import</span> os<br><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><br><br>parser = argparse.ArgumentParser()<br>parser.add_argument(<span class="hljs-string">&quot;front&quot;</span>, <span class="hljs-built_in">help</span>=<span class="hljs-string">&quot;Path to the 3D front file&quot;</span>)<br>parser.add_argument(<span class="hljs-string">&quot;future_folder&quot;</span>, <span class="hljs-built_in">help</span>=<span class="hljs-string">&quot;Path to the 3D Future Model folder.&quot;</span>)<br>parser.add_argument(<span class="hljs-string">&quot;front_3D_texture_path&quot;</span>, <span class="hljs-built_in">help</span>=<span class="hljs-string">&quot;Path to the 3D FRONT texture folder.&quot;</span>)<br>parser.add_argument(<span class="hljs-string">&quot;output_dir&quot;</span>, <span class="hljs-built_in">help</span>=<span class="hljs-string">&quot;Path to where the data should be saved&quot;</span>)<br>args = parser.parse_args()<br><br><span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> os.path.exists(args.front) <span class="hljs-keyword">or</span> <span class="hljs-keyword">not</span> os.path.exists(args.future_folder):<br>    <span class="hljs-keyword">raise</span> Exception(<span class="hljs-string">&quot;One of the two folders does not exist!&quot;</span>)<br><br>bproc.init()<br>mapping_file = bproc.utility.resolve_resource(os.path.join(<span class="hljs-string">&quot;front_3D&quot;</span>, <span class="hljs-string">&quot;3D_front_mapping.csv&quot;</span>))<br>mapping = bproc.utility.LabelIdMapping.from_csv(mapping_file)<br><br><span class="hljs-comment"># set the light bounces</span><br>bproc.renderer.set_light_bounces(diffuse_bounces=<span class="hljs-number">200</span>, glossy_bounces=<span class="hljs-number">200</span>, max_bounces=<span class="hljs-number">200</span>,<br>                                  transmission_bounces=<span class="hljs-number">200</span>, transparent_max_bounces=<span class="hljs-number">200</span>)<br><br><span class="hljs-comment"># load the front 3D objects</span><br>loaded_objects = bproc.loader.load_front3d(<br>    json_path=args.front,<br>    future_model_path=args.future_folder,<br>    front_3D_texture_path=args.front_3D_texture_path,<br>    label_mapping=mapping<br>)<br><br><span class="hljs-comment"># Init sampler for sampling locations inside the loaded front3D house</span><br>point_sampler = bproc.sampler.Front3DPointInRoomSampler(loaded_objects)<br><br><span class="hljs-comment"># Init bvh tree containing all mesh objects</span><br>bvh_tree = bproc.<span class="hljs-built_in">object</span>.create_bvh_tree_multi_objects([o <span class="hljs-keyword">for</span> o <span class="hljs-keyword">in</span> loaded_objects <span class="hljs-keyword">if</span> <span class="hljs-built_in">isinstance</span>(o, bproc.types.MeshObject)])<br><br>poses = <span class="hljs-number">0</span><br>tries = <span class="hljs-number">0</span><br><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">check_name</span>(<span class="hljs-params">name</span>):<br>    <span class="hljs-keyword">for</span> category_name <span class="hljs-keyword">in</span> [<span class="hljs-string">&quot;chair&quot;</span>, <span class="hljs-string">&quot;sofa&quot;</span>, <span class="hljs-string">&quot;table&quot;</span>, <span class="hljs-string">&quot;bed&quot;</span>]:<br>        <span class="hljs-keyword">if</span> category_name <span class="hljs-keyword">in</span> name.lower():<br>            <span class="hljs-keyword">return</span> <span class="hljs-literal">True</span><br>    <span class="hljs-keyword">return</span> <span class="hljs-literal">False</span><br><br><br><span class="hljs-comment"># filter some objects from the loaded objects, which are later used in calculating an interesting score</span><br>special_objects = [obj.get_cp(<span class="hljs-string">&quot;category_id&quot;</span>) <span class="hljs-keyword">for</span> obj <span class="hljs-keyword">in</span> loaded_objects <span class="hljs-keyword">if</span> check_name(obj.get_name())]<br><br>proximity_checks = &#123;<span class="hljs-string">&quot;min&quot;</span>: <span class="hljs-number">1.0</span>, <span class="hljs-string">&quot;avg&quot;</span>: &#123;<span class="hljs-string">&quot;min&quot;</span>: <span class="hljs-number">2.5</span>, <span class="hljs-string">&quot;max&quot;</span>: <span class="hljs-number">3.5</span>&#125;, <span class="hljs-string">&quot;no_background&quot;</span>: <span class="hljs-literal">True</span>&#125;<br><span class="hljs-keyword">while</span> tries &lt; <span class="hljs-number">10000</span> <span class="hljs-keyword">and</span> poses &lt; <span class="hljs-number">10</span>:<br>    <span class="hljs-comment"># Sample point inside house</span><br>    height = np.random.uniform(<span class="hljs-number">1.4</span>, <span class="hljs-number">1.8</span>)<br>    location = point_sampler.sample(height)<br>    <span class="hljs-comment"># Sample rotation (fix around X and Y axis)</span><br>    rotation = np.random.uniform([<span class="hljs-number">1.2217</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>], [<span class="hljs-number">1.338</span>, <span class="hljs-number">0</span>, np.pi * <span class="hljs-number">2</span>])<br>    cam2world_matrix = bproc.math.build_transformation_mat(location, rotation)<br><br>    <span class="hljs-comment"># Check that obstacles are at least 1 meter away from the camera and have an average distance between 2.5 and 3.5</span><br>    <span class="hljs-comment"># meters and make sure that no background is visible, finally make sure the view is interesting enough</span><br>    <span class="hljs-keyword">if</span> bproc.camera.scene_coverage_score(cam2world_matrix, special_objects, special_objects_weight=<span class="hljs-number">10.0</span>) &gt; <span class="hljs-number">0.8</span> \<br>            <span class="hljs-keyword">and</span> bproc.camera.perform_obstacle_in_view_check(cam2world_matrix, proximity_checks, bvh_tree):<br>        bproc.camera.add_camera_pose(cam2world_matrix)<br>        poses += <span class="hljs-number">1</span><br>    tries += <span class="hljs-number">1</span><br><br><span class="hljs-comment"># Also render normals</span><br>bproc.renderer.enable_normals_output()<br>bproc.renderer.enable_segmentation_output(map_by=[<span class="hljs-string">&quot;category_id&quot;</span>])<br><br><span class="hljs-comment"># render the whole pipeline</span><br>data = bproc.renderer.render()<br><br><span class="hljs-comment"># write the data to a .hdf5 container</span><br>bproc.writer.write_hdf5(args.output_dir, data)<br></code></pre></td></tr></table></figure>
+<hr>
+<ol>
+<li>导入相关的库：<ul>
+<li><code>blenderproc</code>：一个用于处理和渲染三维模型的库。</li>
+<li><code>argparse</code>：用于解析命令行参数。</li>
+<li><code>os</code>：用于文件和目录操作。</li>
+<li><code>numpy</code>：用于数值计算。</li>
+</ul>
+</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> blenderproc <span class="hljs-keyword">as</span> bproc<br><span class="hljs-keyword">import</span> argparse<br><span class="hljs-keyword">import</span> os<br><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br></code></pre></td></tr></table></figure>
+<ol>
+<li><p>解析命令行参数：</p>
+<ul>
+<li><p>使用 <code>argparse</code> 库创建一个参数解析器。</p>
+</li>
+<li><p>添加四个必需的参数：<code>front</code>，<code>future_folder</code>，<code>front_3D_texture_path</code> 和 <code>output_dir</code>。</p>
+</li>
+<li><p>解析命令行参数并存储在 <code>args</code> 变量中。</p>
+</li>
+</ul>
+</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">parser = argparse.ArgumentParser()<br>parser.add_argument(<span class="hljs-string">&quot;front&quot;</span>, <span class="hljs-built_in">help</span>=<span class="hljs-string">&quot;Path to the 3D front file&quot;</span>)<br>parser.add_argument(<span class="hljs-string">&quot;future_folder&quot;</span>, <span class="hljs-built_in">help</span>=<span class="hljs-string">&quot;Path to the 3D Future Model folder.&quot;</span>)<br>parser.add_argument(<span class="hljs-string">&quot;front_3D_texture_path&quot;</span>, <span class="hljs-built_in">help</span>=<span class="hljs-string">&quot;Path to the 3D FRONT texture folder.&quot;</span>)<br>parser.add_argument(<span class="hljs-string">&quot;output_dir&quot;</span>, <span class="hljs-built_in">help</span>=<span class="hljs-string">&quot;Path to where the data should be saved&quot;</span>)<br>args = parser.parse_args()<br></code></pre></td></tr></table></figure>
+<ol>
+<li><p>检查文件夹是否存在：</p>
+<ul>
+<li><p>使用 <code>os.path.exists()</code> 函数检查两个文件夹是否存在。</p>
+</li>
+<li><p>如果其中一个文件夹不存在，则抛出异常。</p>
+</li>
+</ul>
+</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> os.path.exists(args.front) <span class="hljs-keyword">or</span> <span class="hljs-keyword">not</span> os.path.exists(args.future_folder):<br>    <span class="hljs-keyword">raise</span> Exception(<span class="hljs-string">&quot;One of the two folders does not exist!&quot;</span>)<br></code></pre></td></tr></table></figure>
+<ol>
+<li>初始化：<ul>
+<li>使用 <code>bproc.init()</code> 进行初始化。</li>
+</ul>
+</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">bproc.init()<br></code></pre></td></tr></table></figure>
+<ol>
+<li><p>加载前景 3D 对象：</p>
+<ul>
+<li><p>使用 <code>bproc.loader.load_front3d()</code> 函数加载 FRONT-3D 对象。</p>
+</li>
+<li><p>传入前景文件路径(<code>json_path</code>)，未来模型文件夹路径（<code>future_model_path</code>），前景纹理文件夹路径（<code>front_3D_texture_path</code>）和标签映射（<code>label_mapping</code>）。</p>
+</li>
+<li><p>将加载的对象存储在 <code>loaded_objects</code> 变量中。</p>
+</li>
+</ul>
+</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">mapping_file = bproc.utility.resolve_resource(os.path.join(<span class="hljs-string">&quot;front_3D&quot;</span>, <span class="hljs-string">&quot;3D_front_mapping.csv&quot;</span>))<br>mapping = bproc.utility.LabelIdMapping.from_csv(mapping_file)<br><br><span class="hljs-comment"># set the light bounces 设置光线反射</span><br>bproc.renderer.set_light_bounces(diffuse_bounces=<span class="hljs-number">200</span>, glossy_bounces=<span class="hljs-number">200</span>, max_bounces=<span class="hljs-number">200</span>,<br>                                  transmission_bounces=<span class="hljs-number">200</span>, transparent_max_bounces=<span class="hljs-number">200</span>)<br><br><span class="hljs-comment"># load the front 3D objects 加载 FRONT-3D 对象</span><br>loaded_objects = bproc.loader.load_front3d(<br>    json_path=args.front,<br>    future_model_path=args.future_folder,<br>    front_3D_texture_path=args.front_3D_texture_path,<br>    label_mapping=mapping<br>)<br><br><span class="hljs-comment"># Init sampler for sampling locations inside the loaded front3D house</span><br><span class="hljs-comment"># 初始化采样器，用于加载的 FRONT-3D 房屋内的采样位置</span><br>point_sampler = bproc.sampler.Front3DPointInRoomSampler(loaded_objects)<br></code></pre></td></tr></table></figure>
+<ol>
+<li><p>初始化采样器和BVH树：</p>
+<ul>
+<li><p>使用 <code>bproc.sampler.Front3DPointInRoomSampler()</code> 初始化采样器，用于在加载的房间内采样点。</p>
+</li>
+<li><p>使用 <code>bproc.object.create_bvh_tree_multi_objects()</code> 函数创建包含所有网格对象的 BVH 树。</p>
+</li>
+</ul>
+</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># Init bvh tree containing all mesh objects 包含所有网格对象的初始化 bvh 树</span><br>bvh_tree = bproc.<span class="hljs-built_in">object</span>.create_bvh_tree_multi_objects([o <span class="hljs-keyword">for</span> o <span class="hljs-keyword">in</span> loaded_objects <span class="hljs-keyword">if</span> <span class="hljs-built_in">isinstance</span>(o, bproc.types.MeshObject)])<br></code></pre></td></tr></table></figure>
+<ol>
+<li><p>循环生成场景：</p>
+<ul>
+<li><p>设置最大尝试次数（<code>tries</code>）和生成的姿势数量（<code>poses</code>）的初始值。</p>
+</li>
+<li><p>通过循环生成不同的摄像机姿势。</p>
+</li>
+<li><p>随机采样摄像机高度和旋转角度，并使用这些参数构建世界坐标系到相机坐标系的变换矩阵（<code>cam2world_matrix</code>）。</p>
+</li>
+<li><p>检查生成的视图是否满足条件：场景覆盖分数高于 0.8，障碍物与相机至少 1 米远，障碍物的平均距离在 2.5 到 3.5 米之间，没有背景可见，并且视图足够有趣。</p>
+</li>
+<li><p>如果满足条件，则将该摄像机姿势添加到渲染管道中，并增加生成的姿势数量（<code>poses</code>）。</p>
+</li>
+<li><p>更新尝试次数（<code>tries</code>）</p>
+</li>
+</ul>
+</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">poses = <span class="hljs-number">0</span><br>tries = <span class="hljs-number">0</span><br><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">check_name</span>(<span class="hljs-params">name</span>):<br>    <span class="hljs-keyword">for</span> category_name <span class="hljs-keyword">in</span> [<span class="hljs-string">&quot;chair&quot;</span>, <span class="hljs-string">&quot;sofa&quot;</span>, <span class="hljs-string">&quot;table&quot;</span>, <span class="hljs-string">&quot;bed&quot;</span>]:<br>        <span class="hljs-keyword">if</span> category_name <span class="hljs-keyword">in</span> name.lower():<br>            <span class="hljs-keyword">return</span> <span class="hljs-literal">True</span><br>    <span class="hljs-keyword">return</span> <span class="hljs-literal">False</span><br><br><br><span class="hljs-comment"># filter some objects from the loaded objects, which are later used in calculating an interesting score</span><br><span class="hljs-comment"># 从加载的对象中过滤一些对象，这些对象稍后用于计算有趣的分数</span><br>special_objects = [obj.get_cp(<span class="hljs-string">&quot;category_id&quot;</span>) <span class="hljs-keyword">for</span> obj <span class="hljs-keyword">in</span> loaded_objects <span class="hljs-keyword">if</span> check_name(obj.get_name())]<br><br>proximity_checks = &#123;<span class="hljs-string">&quot;min&quot;</span>: <span class="hljs-number">1.0</span>, <span class="hljs-string">&quot;avg&quot;</span>: &#123;<span class="hljs-string">&quot;min&quot;</span>: <span class="hljs-number">2.5</span>, <span class="hljs-string">&quot;max&quot;</span>: <span class="hljs-number">3.5</span>&#125;, <span class="hljs-string">&quot;no_background&quot;</span>: <span class="hljs-literal">True</span>&#125;<br><span class="hljs-keyword">while</span> tries &lt; <span class="hljs-number">10000</span> <span class="hljs-keyword">and</span> poses &lt; <span class="hljs-number">10</span>:<br>    <span class="hljs-comment"># Sample point inside house 房屋内的采样点</span><br>    height = np.random.uniform(<span class="hljs-number">1.4</span>, <span class="hljs-number">1.8</span>)<br>    location = point_sampler.sample(height)<br>    <span class="hljs-comment"># Sample rotation (fix around X and Y axis) 样品旋转（围绕 X 轴和 Y 轴固定）</span><br>    rotation = np.random.uniform([<span class="hljs-number">1.2217</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>], [<span class="hljs-number">1.338</span>, <span class="hljs-number">0</span>, np.pi * <span class="hljs-number">2</span>])<br>    cam2world_matrix = bproc.math.build_transformation_mat(location, rotation)<br><br>    <span class="hljs-comment"># Check that obstacles are at least 1 meter away from the camera and have an average distance between 2.5 and 3.5 meters and make sure that no background is visible, finally make sure the view is interesting enough</span><br>    <span class="hljs-comment"># 检查障碍物是否距离相机至少 1 米，平均距离在 2.5 到 3.5 米之间，并确保没有可见的背景，最后确保视图足够有趣</span><br>    <span class="hljs-keyword">if</span> bproc.camera.scene_coverage_score(cam2world_matrix, special_objects, special_objects_weight=<span class="hljs-number">10.0</span>) &gt; <span class="hljs-number">0.8</span> \<br>            <span class="hljs-keyword">and</span> bproc.camera.perform_obstacle_in_view_check(cam2world_matrix, proximity_checks, bvh_tree):<br>        bproc.camera.add_camera_pose(cam2world_matrix)<br>        poses += <span class="hljs-number">1</span><br>    tries += <span class="hljs-number">1</span><br></code></pre></td></tr></table></figure>
+<ol>
+<li><p>配置渲染器：</p>
+<ul>
+<li><p>使用 <code>bproc.renderer.enable_normals_output()</code> 启用法线渲染输出。</p>
+</li>
+<li><p>使用 <code>bproc.renderer.enable_segmentation_output()</code> 启用分割图像输出，并根据类别 ID 进行映射。</p>
+</li>
+</ul>
+</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># Also render normals</span><br>bproc.renderer.enable_normals_output()<br>bproc.renderer.enable_segmentation_output(map_by=[<span class="hljs-string">&quot;category_id&quot;</span>])<br></code></pre></td></tr></table></figure>
+<ol>
+<li><p>渲染整个流程：</p>
+<ul>
+<li><p>使用 <code>bproc.renderer.render()</code> 函数渲染整个管道，包括场景和各种输出。</p>
+</li>
+<li><p>将渲染结果存储在 <code>data</code> 变量中</p>
+</li>
+</ul>
+</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># render the whole pipeline</span><br>data = bproc.renderer.render()<br></code></pre></td></tr></table></figure>
+<ol>
+<li>将数据写入.hdf5文件：<ul>
+<li>使用 <code>bproc.writer.write_hdf5()</code> 函数将渲染的数据写入一个.hdf5文件。</li>
+<li>指定输出路径为 <code>args.output_dir</code>。</li>
+</ul>
+</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># write the data to a .hdf5 container</span><br>bproc.writer.write_hdf5(args.output_dir, data)<br></code></pre></td></tr></table></figure>
 <p><img src="C1.jpg" alt="jpg"></p>
 <p>好像没什么卵用……</p>
 
@@ -493,6 +607,13 @@ Fancybox.bind('[data-fancybox="fancybox-gallery-img"]', {
 </style>
 
     <div class="post-paging">
+    
+    <a href="/2023/09/12/Paper-SynthText3D-Synthesizing%20Scene%20Text%20Images%20from%203D%20Virtual%20Worlds/">
+        <div class="post-paging-last">
+            <span>上一篇</span>
+            <p>Paper-SynthText3D-Synthesizing Scene Text Images from 3D Virtual Worlds</p>
+        </div>
+    </a>
     
 
     
