@@ -358,16 +358,35 @@
 </ul>
 </li>
 <li><a href="#代码">代码</a><ul>
-<li><a href="#main-camera">Main Camera</a></li>
-<li><a href="#wall">Wall</a></li>
-<li><a href="#simulation-scenario">Simulation Scenario</a></li>
+<li><a href="#main-camera">Main Camera</a><ul>
+<li><a href="#perception-camera">Perception Camera</a></li>
+<li><a href="#customannotationandmetricreporter">CustomAnnotationAndMetricReporter</a></li>
+<li><a href="#customcamerarandomizertag">CustomCameraRandomizerTag</a></li>
+</ul>
+</li>
+<li><a href="#wall">Wall</a><ul>
+<li><a href="#hueoffsetrandomizertag">HueOffsetRandomizerTag</a></li>
+<li><a href="#texturerandomizertag">TextureRandomizerTag</a></li>
+</ul>
+</li>
+<li><a href="#background-object">Background Object</a></li>
+<li><a href="#foreground-object">Foreground Object</a></li>
+<li><a href="#simulation-scenario">Simulation Scenario</a><ul>
+<li><a href="#fixed-length-scenario">Fixed Length Scenario</a><ul>
+<li><a href="#scenario-properties">Scenario Properties</a></li>
+<li><a href="#randomizers">Randomizers</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li><a href="#post-process-volume">Post Process Volume</a></li>
 <li><a href="#lights">Lights</a><ul>
 <li><a href="#directionallightsun">DirectionalLightSun</a></li>
-<li><a href="#pointlight1-6">PointLight1-6</a></li>
+<li><a href="#pointlight-1-6">PointLight (1-6)</a></li>
 <li><a href="#pointlightscenemoving">PointLightSceneMoving</a></li>
 </ul>
 </li>
+<li><a href="#数据统计">数据统计</a></li>
 </ul>
 </li>
 </ul>
@@ -540,7 +559,19 @@
 <h3><span id="6-conclusion-and-limitations">6 Conclusion and Limitations</span></h3><ul>
 <li>由于 RenderPeople 的再分配和许可政策，我们不提供对 3D 人力资产的直接访问；相反，我们提供了详细的说明和示例，用于采购和准备人力资产模拟。尽管预先制作的 PEOPLESANSPEOPLE 二进制文件无法实现复杂的资产结构化放置，但研究人员可以更新提供的随机化器，以允许不同的策略。</li>
 </ul>
-<h2><span id="代码">代码</span></h2><p>&nbsp;&nbsp;&nbsp;&nbsp;装一个 Unity 3.20f1，然后直接跑 <a target="_blank" rel="noopener" href="https://github.com/Unity-Technologies/PeopleSansPeople/tree/main/peoplesanspeople_unity_env">PeopleSansPeople/peoplesanspeople_unity_env at main · Unity-Technologies/PeopleSansPeople (github.com)</a>，但不知道是哪里有问题，加载得贼慢，还容易卡死。</p>
+<h2><span id="代码">代码</span></h2><blockquote>
+<p>该存储库提供了 <strong>PeopleSansPeople</strong> Unity 环境模板在 HDRP 中的版本。该项目包括自定义的随机化功能和一些由 Unity Technologies 提供的示例人类资源。</p>
+<p>该环境仍然提供了我们在论文中介绍的 <strong>PeopleSansPeople</strong> 的全部功能，以及我们提供的 Linux 和 macOS 二进制文件。鉴于我们没有重新分发许可证的第三方资产，我们提供以下示例资产/内容：</p>
+<ul>
+<li>4 个带有不同服装颜色但外观相同的 Unity 品牌资产。</li>
+<li>529 个 Unity 食品杂货纹理。</li>
+<li>8 个由 Unity 拥有的动画剪辑。</li>
+</ul>
+<p>该Unity环境的目的是使社区能够开始构建自己版本的以人为中心的数据生成器，降低进入门槛，并为他们提供与 <strong>PeopleSansPeople </strong>中存在的所有功能相同的功能。用户可以轻松地将该项目中的资产和内容与自己的资产进行替换，只要其属性与我们提供的示例资产相匹配即可。</p>
+</blockquote>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;装一个 Unity 3.20f1，然后直接跑 <a target="_blank" rel="noopener" href="https://github.com/Unity-Technologies/PeopleSansPeople/tree/main/peoplesanspeople_unity_env">PeopleSansPeople/peoplesanspeople_unity_env at main · Unity-Technologies/PeopleSansPeople (github.com)</a>，但不知道是哪里有问题，加载得贼慢，还容易卡死。emmmm</p>
+<p>第二天进来感觉正常了。</p>
+<p><img src="C9.jpg" alt="jpg"></p>
 <hr>
 <p>&nbsp;&nbsp;&nbsp;&nbsp;<code>HumanScene.unity</code> 中有如下对象：</p>
 <ul>
@@ -563,12 +594,270 @@
 </ul>
 <hr>
 <h3><span id="main-camera">Main Camera</span></h3><p><img src="C1.jpg" alt="jpg"></p>
+<h4><span id="perception-camera">Perception Camera</span></h4><ul>
+<li><p>First capture at 0 seconds and consecutive captures every 0.0166 seconds of simulation time.</p>
+<p>在 0 秒处首次捕获，每 0.0166 秒模拟时间连续捕获一次。</p>
+</li>
+<li><p>Camera Labelers</p>
+<p>标注的数据有</p>
+<ul>
+<li><p>BoundingBox2DLabeler</p>
+<p>2D 包围框</p>
+</li>
+<li><p>ObjectCountLabeler</p>
+<p>对象计数</p>
+</li>
+<li><p>RenderedObjectinfoLabeler</p>
+<p>渲染对象信息（这是干啥的？）</p>
+</li>
+<li><p>SemanticSegmentationLabeler</p>
+<p>语义分割</p>
+</li>
+<li><p>KeypointLabeler</p>
+<p>关键点</p>
+</li>
+<li><p>Animation Pose Configs</p>
+<p>动作动画</p>
+</li>
+<li><p>InstanceSegmentationLabeler</p>
+<p>实例分割</p>
+</li>
+</ul>
+</li>
+</ul>
+<h4><span id="customannotationandmetricreporter">CustomAnnotationAndMetricReporter</span></h4><p>&nbsp;&nbsp;&nbsp;&nbsp;这段代码是一个自定义的注解和指标报告器脚本，用于在 Unity 中使用 Perception 包合成数据集。下面是代码的主要含义：</p>
+<ol>
+<li>通过添加 <code>[RequireComponent(typeof(PerceptionCamera))]</code> 属性，确保脚本附加到了带有 PerceptionCamera 组件的游戏对象上。（说明所有跟输出数据标注有关的都与 PerceptionCamera 有关）</li>
+<li>定义了一些变量来存储指标的定义，例如光源位置、旋转、强度和颜色，以及摄像机位置、旋转、视野和焦距的指标定义。</li>
+<li>在 <code>Start()</code> 方法中，使用 <code>DatasetCapture.RegisterMetricDefinition()</code> 注册了所有的指标定义，并为每个指标定义分配了一个唯一的ID。</li>
+<li>在 <code>Update()</code> 方法中，通过遍历 <code>lightSources</code> 数组，报告了每个光源的位置、旋转、强度和颜色。这里使用了 <code>DatasetCapture.ReportMetric()</code> 方法来报告指标的值。</li>
+<li>还报告了摄像机的位置、旋转、视野和焦距。</li>
+<li>注释掉的代码是一个示例，展示了如何在相机的局部空间计算目标物体的位置，并使用 <code>GetComponent&lt;PerceptionCamera&gt;().SensorHandle</code> 和 <code>ReportAnnotationValues()</code> 方法报告注释值。</li>
+</ol>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;总之，这段代码的目的是在 Unity 中使用 Perception 包捕捉并报告指标和注释，其中包括光源和摄像机的位置、旋转、强度、颜色等信息，以及目标物体的边界框注释（注释部分被注释掉了）。</p>
+<h4><span id="customcamerarandomizertag">CustomCameraRandomizerTag</span></h4><p>&nbsp;&nbsp;&nbsp;&nbsp;相机随机化的标签。</p>
 <h3><span id="wall">Wall</span></h3><p><img src="C2.jpg" alt="jpg"></p>
+<h4><span id="hueoffsetrandomizertag">HueOffsetRandomizerTag</span></h4><p>色调偏移随机化的标签。</p>
+<h4><span id="texturerandomizertag">TextureRandomizerTag</span></h4><p>纹理随机化的标签。</p>
+<h3><span id="background-object">Background Object</span></h3><p>包含以下 Tag：</p>
+<ul>
+<li><p>CustomBackgroundOccluderScaleRandomizerTag</p>
+<p>比例随机化的标签</p>
+</li>
+<li><p>HueOffsetRandomizerTag</p>
+<p>色调偏移随机化的标签</p>
+</li>
+<li><p>TextureRandomizerTag</p>
+<p>纹理随机化的标签</p>
+</li>
+<li><p>RotationRandomizerTag</p>
+<p>旋转随机化的标签</p>
+</li>
+</ul>
+<h3><span id="foreground-object">Foreground Object</span></h3><p><img src="C8.jpg" alt="jpg"></p>
+<p>拥有：</p>
+<ul>
+<li><p>Shader Graph Texture Randomizer Tag</p>
+<p>着色器纹理随机化的标签</p>
+</li>
+<li><p>Rotation Randomizer Tag</p>
+<p>旋转随机化的标签</p>
+</li>
+<li><p>Custom Foreground Rotation Randomizer</p>
+<p>前景物体旋转随机化的标签（我觉得把上面那个标签给覆盖了）</p>
+</li>
+<li><p>Labeling</p>
+<ul>
+<li>挂着人物和动作的标签</li>
+</ul>
+</li>
+<li><p>Animation Randomizer Tag</p>
+<p>动画随机化的标签</p>
+</li>
+<li><p>CustomForegroundScaleRandomizerTag</p>
+<p>前景物体缩放随机化的标签</p>
+</li>
+<li><p>Keypoint Occlusion Overrides</p>
+<p>关键点遮挡覆盖</p>
+<ul>
+<li>Overrides the default occlusion distance values by a scalar. This is necessary for bodies with different body types (i.e. children should be less than one)</li>
+<li>用标量覆盖默认遮挡距离值。这对于不同体型的身体是必要的（即儿童应该小于一个）</li>
+</ul>
+</li>
+</ul>
 <h3><span id="simulation-scenario">Simulation Scenario</span></h3><p><img src="C3.jpg" alt="jpg"></p>
+<h4><span id="fixed-length-scenario">Fixed Length Scenario</span></h4><h5><span id="scenario-properties">Scenario Properties</span></h5><blockquote>
+<p>Scenario 通过应用随机化参数来控制模拟的执行流。确保场景中始终只有一个方案处于活动状态。</p>
+</blockquote>
+<h5><span id="randomizers">Randomizers</span></h5><blockquote>
+<p>Randomizers 按以下顺序执行。您可以通过使用手柄向上或向下拖动随机发生器来更改顺序。</p>
+</blockquote>
+<ul>
+<li><p>CustomBackgroundObjectPlacementRandomizer</p>
+<ul>
+<li>控制 background object 放置，X 轴和 Y 轴范围在 $[-7.5,7.5]$ 之间，Depth Vaule 即为 Z 轴，范围为 $[-10, 14]$。</li>
+<li>各个 background object 间隔不小于 $2.5$。</li>
+</ul>
+</li>
+<li><p>CustomBackgroundOccluderScaleRandomizer</p>
+<ul>
+<li>控制 background object 比例，范围在 $[1, 12]$ 之间。</li>
+</ul>
+</li>
+<li><p>CustomForegroundObjectPlacementRandomizer</p>
+<ul>
+<li>控制 foreground object 放置，X 轴和 Y 轴范围在 $[-7.5,7.5]$ 之间，Depth Vaule 即为 Z 轴，范围为 $[-9, 6]$。</li>
+<li>各个 foreground object 间隔不小于 3。</li>
+</ul>
+</li>
+<li><p>CustomForegroundScaleRandomizer</p>
+<ul>
+<li>控制 foreground object 比例，范围在 $[0.5, 3]$ 之间。</li>
+</ul>
+</li>
+<li><p>TextureRandomizer</p>
+<ul>
+<li>从列表中随机选一个纹理。</li>
+</ul>
+</li>
+<li><p>HueOffsetRandomizer</p>
+<ul>
+<li>色调偏移范围：$[-180, 180]$</li>
+</ul>
+</li>
+<li><p>RotationRandomizer</p>
+<ul>
+<li>XYZ 轴 $[0, 360]$ 随机乱转。</li>
+</ul>
+</li>
+<li><p>CustomForegroundRotationRandomizer</p>
+<ul>
+<li>限制了只有 Y 轴可以 $[0, 360]$ 随机乱转，大概是为了确保生成的图片中人的脚垂直向下。</li>
+</ul>
+</li>
+<li><p>SundayAngleRandomizer</p>
+<ul>
+<li>随机化太阳光的<ul>
+<li>小时</li>
+<li>日期</li>
+<li>纬度</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>AnimationRandomizer</p>
+<ul>
+<li>随机化动作，这里的相关逻辑写到了 <code>AnimationRandomizerTag.cs</code> 里？</li>
+</ul>
+</li>
+<li><p>ShaderGraphTextureRandomizer</p>
+<ul>
+<li><p>以下纹理 / 材质中从列表中随机选一项</p>
+<ul>
+<li><p>Albedo Texture</p>
+<p>反照率纹理</p>
+</li>
+<li><p>Normal Texture</p>
+<p>法线纹理</p>
+</li>
+<li><p>Mask Texture</p>
+<p>遮罩纹理</p>
+</li>
+<li><p>Character Material</p>
+<p>人物材质</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>CustomCameraRandomizer</p>
+<ul>
+<li><p>Camera Field Of View Parameter</p>
+<p>视野随机化范围 $[5, 50]$</p>
+</li>
+<li><p>Camera Focal Length Parameter</p>
+<p>焦距随机化范围 $[1, 23]$</p>
+</li>
+<li><p>Muliply Factor: $5$</p>
+<ul>
+<li><p>Change Camera Position: $1$</p>
+<p>与初始位置的位置偏移，XYZ 轴范围 $[-5, 5]$</p>
+</li>
+<li><p>Change Camera Rotation: $1$</p>
+<p>初始旋转的旋转偏移，XYZ 轴范围 $[-5, 5]$</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>CustomLightRandomizer</p>
+<ul>
+<li>Light Intensity Parameter<ul>
+<li>范围 $[0, 1]$ ，但是在 <code>CustomLightRandomizerTag</code>  里还要乘个系数，所以最终亮度范围是 $[5000, 20000]$</li>
+</ul>
+</li>
+<li>Light Color Parameter<ul>
+<li>RGB 范围 $[0, 1]$，不透明度 A 恒为 1</li>
+</ul>
+</li>
+<li>Aux Parameter<ul>
+<li>辅助参数，不知道干啥的，范围 $[0, 1]$</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>CustomLightPositionRotationRandomizer</p>
+<ul>
+<li>Multiply Factor: $5$</li>
+<li>Random Float: $[0, 1]$</li>
+<li>Change Light Position: $0.73$<ul>
+<li>灯光与初始位置的位置偏移：$[-3.65, 3.65]$（$5\times 0.73=3.65$）</li>
+</ul>
+</li>
+<li>Change Light Rotation: $10$<ul>
+<li>初始旋转的旋转偏移：$[-50, 50]$（$10\times5=50$）</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>CustomPostProcessVolumeRandomizer</p>
+<p>后期处理随机化器</p>
+<ul>
+<li><p>Vignette Intensity Parameter</p>
+<p>渐晕强度：$[0, 0.5]$</p>
+</li>
+<li><p>Fixed Exposure Parameter</p>
+<p>固定曝光：$[5, 10]$</p>
+</li>
+<li><p>White Balance Temperature Parameter</p>
+<p>白平衡色温：$[-20, 20]$</p>
+</li>
+<li><p>Film Grain Intensity Parameter</p>
+<p>薄膜颗粒强度参数：$[0, 1]$</p>
+</li>
+<li><p>Lens Distortion Intensity Parameter</p>
+<p>镜头畸变强度参数：$[-0.2, 0.2]$</p>
+</li>
+<li><p>Focus Distance Parameter</p>
+<p>景深焦距：$[0.1, 4]$</p>
+</li>
+<li><p>Contrast Parameter</p>
+<p>对比度：$[-30, 30]$</p>
+</li>
+<li><p>Saturation Parameter</p>
+<p>饱和度：$[-30, 30]$</p>
+</li>
+</ul>
+</li>
+</ul>
 <h3><span id="post-process-volume">Post Process Volume</span></h3><p><img src="C4.jpg" alt="jpg"></p>
 <h3><span id="lights">Lights</span></h3><h4><span id="directionallightsun">DirectionalLightSun</span></h4><p><img src="C6.jpg" alt="jpg"></p>
-<h4><span id="pointlight1-6">PointLight1-6</span></h4><p><img src="C7.jpg" alt="jpg"></p>
-<h4><span id="pointlightscenemoving">PointLightSceneMoving</span></h4><p>&nbsp;&nbsp;&nbsp;&nbsp;在 <code>PointLight</code> 上多了一个 <code>CustomLightPositionRotationRandomizerTag</code> 组件。</p>
+<h4><span id="pointlight-1-6">PointLight (1-6)</span></h4><p><img src="C7.jpg" alt="jpg"></p>
+<h4><span id="pointlightscenemoving">PointLightSceneMoving</span></h4><p>&nbsp;&nbsp;&nbsp;&nbsp;在 <code>PointLight</code> 的基础上多了一个 <code>CustomLightPositionRotationRandomizerTag</code> 组件。</p>
+<h3><span id="数据统计">数据统计</span></h3><ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/Unity-Technologies/datasetinsights">Unity-Technologies/datasetinsights: Synthetic Dataset Insights (github.com)</a></li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><code class="hljs shell">conda create -n Untiy python=3.7<br>conda activate Unity<br>pip install datasetinsights -i https://pypi.tuna.tsinghua.edu.cn/simple<br></code></pre></td></tr></table></figure>
 
   </div>
   <div id="gitalk-container"></div>
