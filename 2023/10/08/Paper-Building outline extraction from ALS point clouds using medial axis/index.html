@@ -369,32 +369,32 @@
 <li><a target="_blank" rel="noopener" href="https://blog.csdn.net/Subtlechange/article/details/110674800">Delaunay三角网 alpha shape 2D点集边缘线提取_alpha-shape delaunay-CSDN博客</a></li>
 <li><a target="_blank" rel="noopener" href="https://www.sciencedirect.com/science/article/pii/S0031320320302508">Building outline extraction from ALS point clouds using medial axis transform descriptors - ScienceDirect</a></li>
 </ul>
-<h2><span id="原文">原文</span></h2><h3><span id="abstract">Abstract</span></h3><p>由于建筑物出现的多样性和复杂性，从城市环境的机载激光雷达<strong>点云数据中自动提取和描绘建筑物</strong>仍然是一项具有挑战性的任务。中轴变换（MAT）能够描述对象的几何形状和拓扑结构，但从未应用于<strong>建筑屋顶轮廓提取</strong>。它通过对象的中心线或骨架结构而不是边界来表示对象的形状。</p>
-<p>我们提出了一种稳定的、基于 MAT 的方法来检测建筑 corner point，然后将这些 corner point 连接起来形成建筑边界多边形。</p>
+<h2><span id="原文">原文</span></h2><h3><span id="abstract">Abstract</span></h3><p>&nbsp;&nbsp;&nbsp;&nbsp;由于建筑物出现的多样性和复杂性，从城市环境的机载激光雷达<strong>点云数据中自动提取和描绘建筑物</strong>仍然是一项具有挑战性的任务。中轴变换（MAT）能够描述对象的几何形状和拓扑结构，但从未应用于<strong>建筑屋顶轮廓提取</strong>。它通过对象的中心线或骨架结构而不是边界来表示对象的形状。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;我们提出了一种稳定的、基于 MAT 的方法来检测建筑 corner point，然后将这些 corner point 连接起来形成建筑边界多边形。</p>
 <ul>
 <li>首先，我们对通过 alpha-shape 算法获取的一组建筑边缘点的 2D MAT 进行近似，以导出所谓的建筑屋顶骨架 (building roof skeleton)。</li>
 <li>然后，我们提出了一种分层的 corner point 感知分割方法，根据骨架点的特性，即所谓的分离角、最大内切圆的半径和定义边缘点索引，对骨架点进行聚类。</li>
 <li>从每个片段，通过基于片段内的骨架点位置外推零半径内切圆的位置来估计 corner point。</li>
 </ul>
-<p>结果表明，骨架化 (skeletonization) 是一种很有前途的工具，可以从远非完美的地理点云数据中提取建筑物轮廓的相关几何信息。</p>
-<h3><span id="1-introduction">1. Introduction</span></h3><p>绘制建筑屋顶轮廓，也称为建筑足迹，对于数字基础地图制图、规划、监控、基础设施管理和可持续城市设计至关重要。</p>
-<p>人造城市物体（建筑物、道路、运河）通常具有对称的形状，具有直线和锐角。这样的特性使得能够从ALS点云中自动提取边界轮廓。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;结果表明，骨架化 (skeletonization) 是一种很有前途的工具，可以从远非完美的地理点云数据中提取建筑物轮廓的相关几何信息。</p>
+<h3><span id="1-introduction">1. Introduction</span></h3><p>&nbsp;&nbsp;&nbsp;&nbsp;绘制建筑屋顶轮廓，也称为建筑足迹，对于数字基础地图制图、规划、监控、基础设施管理和可持续城市设计至关重要。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;人造城市物体（建筑物、道路、运河）通常具有对称的形状，具有直线和锐角。这样的特性使得能够从ALS点云中自动提取边界轮廓。</p>
 <p><img src="F1.png" alt="png"></p>
 <center>MAT 骨架（蓝线）直观地检测位于骨架和对象边界（黑线）相交处的角点（红点）。</center>
 
-<p><strong>中轴变换（MAT）</strong>是一种强大的形状提取技术，它提供了紧凑的几何表示，同时保留了输入形状的拓扑特性。MAT 由 Blum 引入，用于描述生物形状。<font color="#888">好家伙 1967 年的……</font>然而，MAT 有一个根本的缺点，那就是它对输入形状的小扰动的不稳定性，这可能会干扰 MAT 分支的拓扑。</p>
-<p>角是重要的局部特征，关于其位置的知识可以最大限度地减少进一步的数据处理，而不会丢失原始物体形状的特定特征。在给定城市地区的空中点云的情况下，我们提出了一种基于 MAT 描述符的精确屋顶角点自动提取建筑轮廓的方法。</p>
-<h3><span id="2-related-work">2. Related work</span></h3><p>随着人们对 GIS（地理信息系统）数字地图产品的兴趣增加，<strong>从各种遥感数据中提取建筑轮廓</strong>的开发工作也得到了加强。</p>
-<p>文献中发现的 MAT 或骨架的各种定义对应于计算 MAT 的不同方法，导致具有不同性质的不同结果。通常，<strong>MAT 算法通常侧重于推导表面中心线或中轴的几何位置</strong>，即所谓的<strong>骨架化</strong>。到目前为止，文献中有许多骨架化方法及其在二维和三维物体描述中的应用。现有的骨架化方法通常分为四种主要方法：</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>中轴变换（MAT）</strong>是一种强大的形状提取技术，它提供了紧凑的几何表示，同时保留了输入形状的拓扑特性。MAT 由 Blum 引入，用于描述生物形状。<font color="#888">好家伙 1967 年的……</font>然而，MAT 有一个根本的缺点，那就是它对输入形状的小扰动的不稳定性，这可能会干扰 MAT 分支的拓扑。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;角是重要的局部特征，关于其位置的知识可以最大限度地减少进一步的数据处理，而不会丢失原始物体形状的特定特征。在给定城市地区的空中点云的情况下，我们提出了一种基于 MAT 描述符的精确屋顶角点自动提取建筑轮廓的方法。</p>
+<h3><span id="2-related-work">2. Related work</span></h3><p>&nbsp;&nbsp;&nbsp;&nbsp;随着人们对 GIS（地理信息系统）数字地图产品的兴趣增加，<strong>从各种遥感数据中提取建筑轮廓</strong>的开发工作也得到了加强。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;文献中发现的 MAT 或骨架的各种定义对应于计算 MAT 的不同方法，导致具有不同性质的不同结果。通常，<strong>MAT 算法通常侧重于推导表面中心线或中轴的几何位置</strong>，即所谓的<strong>骨架化</strong>。到目前为止，文献中有许多骨架化方法及其在二维和三维物体描述中的应用。现有的骨架化方法通常分为四种主要方法：</p>
 <ul>
 <li>基于形态学细化的方法</li>
 <li>使用平面形状的中轴变换的基于几何的方法</li>
 <li>基于距离的函数</li>
 <li>由函数而不是使用距离函数生成的一般场函数</li>
 </ul>
-<p>Ma 等人使用基于最近邻居和法线的<strong>收缩球方法</strong>估计 3D 中轴点，收缩球算法不仅准确且计算高效，而且被认为是现有最简单、最快速的曲面骨架化方法。</p>
-<h3><span id="3-methodology">3. Methodology</span></h3><p>我们的研究重点是 MAT 的自适应，用于从地图和空间建模所需的噪声点云数据中提取建筑轮廓。我们扩展了<strong>迭代收缩球算法</strong>的工作，并开发了一种利用骨架特征的策略，以实现精确提取建筑轮廓的目标。</p>
-<p>本文还提出了一种新的<strong>骨骼点分割方法</strong>。所提出的方法在处理有噪声的表面边界和重建建筑轮廓方面达到了最先进的水平。通过优化基于骨架的特征的使用，它需要最少的人机交互。具体而言，我们的工作贡献如下：</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;Ma 等人使用基于最近邻居和法线的<strong>收缩球方法</strong>估计 3D 中轴点，收缩球算法不仅准确且计算高效，而且被认为是现有最简单、最快速的曲面骨架化方法。</p>
+<h3><span id="3-methodology">3. Methodology</span></h3><p>&nbsp;&nbsp;&nbsp;&nbsp;我们的研究重点是 MAT 的自适应，用于从地图和空间建模所需的噪声点云数据中提取建筑轮廓。我们扩展了<strong>迭代收缩球算法</strong>的工作，并开发了一种利用骨架特征的策略，以实现精确提取建筑轮廓的目标。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;本文还提出了一种新的<strong>骨骼点分割方法</strong>。所提出的方法在处理有噪声的表面边界和重建建筑轮廓方面达到了最先进的水平。通过优化基于骨架的特征的使用，它需要最少的人机交互。具体而言，我们的工作贡献如下：</p>
 <ul>
 <li>我们集成了骨架衍生特征和全局特征，以执行处理不同点密度和噪声水平的鲁棒骨架点（MAT）分割。</li>
 <li>我们结合有序的表面点索引和骨骼衍生特征来检测角点。</li>
@@ -403,7 +403,7 @@
 <p><img src="F2.png" alt="png"></p>
 <center>提出的提取建筑轮廓的方法学工作流程</center>
 
-<p>由于本研究需要在二维空间中使用 MAT，我们采用了 Ma 等人的二维收缩圆算法。我们提出的自动提取建筑屋顶轮廓的方法的一般工作流程由下面的主要步骤组成。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;由于本研究需要在二维空间中使用 MAT，我们采用了 Ma 等人的二维收缩圆算法。我们提出的自动提取建筑屋顶轮廓的方法的一般工作流程由下面的主要步骤组成。</p>
 <ul>
 <li>(<strong>b</strong>)，通过 <strong>alpha-shape 算法</strong>提取建筑物边界点。</li>
 <li>(<strong>c</strong>)，使用 <strong>2D 收缩圆算法</strong>将边界点转换为其 2D MAT 或骨架点。</li>
@@ -414,15 +414,15 @@
 <p><img src="F3.png" alt="png"></p>
 <center>矩形骨架（蓝线）及其相应的内切圆（灰色）和中轴点c（红色点）。</center>
 
-<p>本研究使用了扩展收缩圆方法，该方法实现了 Peters 提出的去噪启发式方法。我们将物体表面 $\mathbf S$ 的骨架定义为 $\mathbf S$ 中最大内切圆 $B(c，\rho )$ 的一组中心点 $c$，其中 $\rho$ 表示该圆的半径。</p>
-<p>2D 骨架点也称为中轴点。通过将圆半径 $\rho$ 函数与中轴点集相关联，我们获得了所谓的中轴变换（MAT）。</p>
-<p>如上图所示：</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;本研究使用了扩展收缩圆方法，该方法实现了 Peters 提出的去噪启发式方法。我们将物体表面 $\mathbf S$ 的骨架定义为 $\mathbf S$ 中最大内切圆 $B(c，\rho )$ 的一组中心点 $c$，其中 $\rho$ 表示该圆的半径。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;2D 骨架点也称为中轴点。通过将圆半径 $\rho$ 函数与中轴点集相关联，我们获得了所谓的中轴变换（MAT）。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;如上图所示：</p>
 <ul>
 <li>中轴点（红色点）形成矩形对象 $\mathbf S$ 的 MAT 骨架（蓝色线）。</li>
 <li>每个最大内切圆（灰色）至少接触 $\mathbf S$ （黑色轮廓）边界的两个点。</li>
 <li>任何非最大圆或未内切于 $\mathbf S$ （绿色圆）的圆心都将被忽略，不被视为中轴点。</li>
 </ul>
-<h4><span id="31-alpha-shape">3.1 Alpha-shape</span></h4><p><strong>给定分割的建筑点，创建建筑轮廓</strong>从 Edelsbruner 引入的 <font color="blue"><strong>alpha-shape 算法</strong></font>的边界点选择开始。众所周知， alpha-shape 能够以所需的细节水平保留有限点集的小形状细节。2D alpha 形状是基于输入点的 2D Delaunay 三角测量构建的。该方法识别根据参数 $\alpha\ge 0$ 定义的边界点，该参数控制边界形状的细节级别。给定平面上的一组点 $S$ 和 $\alpha$ 的值，该算法的工作原理如下：</p>
+<h4><span id="31-alpha-shape">3.1 Alpha-shape</span></h4><p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>给定分割的建筑点，创建建筑轮廓</strong>从 Edelsbruner 引入的 <font color="blue"><strong>alpha-shape 算法</strong></font>的边界点选择开始。众所周知， alpha-shape 能够以所需的细节水平保留有限点集的小形状细节。2D alpha 形状是基于输入点的 2D Delaunay 三角测量构建的。该方法识别根据参数 $\alpha\ge 0$ 定义的边界点，该参数控制边界形状的细节级别。给定平面上的一组点 $S$ 和 $\alpha$ 的值，该算法的工作原理如下：</p>
 <ol>
 <li><p>计算 $S$ 的 Delaunay 三角剖分 $DT(S)$。$DT(S)$中的所有边都是 alpha 形状 $S_\alpha$ 的候选边。</p>
 </li>
@@ -441,9 +441,9 @@
 </ol>
 </li>
 </ol>
-<p>$\alpha$ 的值是一个实数，$0\le \alpha\le\infty$。当 $\alpha$ 接近 $0$ 时，形状可能会收缩，形成孔洞，并可能变得不连续。在极端情况下，$\alpha=0$ 的值会导致数据点本身。当 $\alpha$ 向无穷大增加时，$\alpha$ 形状接近点集 $S$ 的凸包。</p>
-<p>在我们的研究领域，我们根据经验决定 $\alpha$ 值介于 $0.3$ 和 $0.5$。</p>
-<h4><span id="32-the-shrinking-circle-principles">3.2. The shrinking circle principles</span></h4><p>给定曲面 $S$ 上具有相应法向量 $N$ 的一组噪声边点 $V$。MAT 点被定义为 $S$ 中与边界 $S$ 相切的最大内切圆 $\mathbf B(c, \rho)$ 的中心 $c$ 和相应半径 $\rho$ 的集合。圆 $\mathbf B$ 和相应圆心 $c$ 分别表示为中间圆和中间轴点。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;$\alpha$ 的值是一个实数，$0\le \alpha\le\infty$。当 $\alpha$ 接近 $0$ 时，形状可能会收缩，形成孔洞，并可能变得不连续。在极端情况下，$\alpha=0$ 的值会导致数据点本身。当 $\alpha$ 向无穷大增加时，$\alpha$ 形状接近点集 $S$ 的凸包。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;在我们的研究领域，我们根据经验决定 $\alpha$ 值介于 $0.3$ 和 $0.5$。</p>
+<h4><span id="32-the-shrinking-circle-principles">3.2. The shrinking circle principles</span></h4><p>&nbsp;&nbsp;&nbsp;&nbsp;给定曲面 $S$ 上具有相应法向量 $N$ 的一组噪声边点 $V$。MAT 点被定义为 $S$ 中与边界 $S$ 相切的最大内切圆 $\mathbf B(c, \rho)$ 的中心 $c$ 和相应半径 $\rho$ 的集合。圆 $\mathbf B$ 和相应圆心 $c$ 分别表示为中间圆和中间轴点。</p>
 <p><img src="F5.png" alt="png"></p>
 <center>缩圆算法应用于有噪声建筑边缘的基本原理。</center>
 
@@ -456,7 +456,7 @@
 <li><p>中间圆是一个最大的空圆，这意味着它不包含任何表面点。</p>
 </li>
 </ol>
-<h4><span id="33-skeletal-points-extraction">3.3. Skeletal points extraction</span></h4><p>为了获得表面 $\mathbf S$ 的 <font color="blue"><strong>MAT</strong></font>，计算中轴点 $c(p)$。因此，通过以下步骤计算 $\mathbf S$ 中所有采样点 $p$ 的最大内切圆 $\mathbf B$：</p>
+<h4><span id="33-skeletal-points-extraction">3.3. Skeletal points extraction</span></h4><p>&nbsp;&nbsp;&nbsp;&nbsp;为了获得表面 $\mathbf S$ 的 <font color="blue"><strong>MAT</strong></font>，计算中轴点 $c(p)$。因此，通过以下步骤计算 $\mathbf S$ 中所有采样点 $p$ 的最大内切圆 $\mathbf B$：</p>
 <ol>
 <li><p>$p$ 的初始圆 $\mathbf B_{init}$ 是基于初始半径 $\rho_{init}$ 定义的。$\rho_{init}$ 值设置得足够大，例如等于两个输入点之间的最大距离。</p>
 </li>
@@ -474,37 +474,37 @@
 </li>
 </ol>
 <p><img src="F5A.png" alt="png"></p>
-<p>当找到步骤 (<strong>a</strong>) 中描述的中轴点时，迭代将停止。</p>
-<p>(<strong>a</strong>) 显示了在点 $p$ 处接触 $S$ 的圆的连续收缩，这在最后一次迭代中产生了中间圆 $B^i_p$ 和中间轴点 $c^i_p$。</p>
-<p>给定一个定义的内表面和外表面 $S$，MAT 由两个组成部分组成：</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;当找到步骤 (<strong>a</strong>) 中描述的中轴点时，迭代将停止。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;(<strong>a</strong>) 显示了在点 $p$ 处接触 $S$ 的圆的连续收缩，这在最后一次迭代中产生了中间圆 $B^i_p$ 和中间轴点 $c^i_p$。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;给定一个定义的内表面和外表面 $S$，MAT 由两个组成部分组成：</p>
 <ul>
 <li>一部分内表面 $\mathbf S(N_p)$，由所谓的内中轴点组成</li>
 <li>另一部分外表面 $\mathbf S(-N_p)$，外中轴点。</li>
 </ul>
-<p>对于每个 $p\in\mathbf S$，通过迭代步骤 2 到 4 来计算相应的内部和外部 MAT 点。向内法线 $N_p$ 用于内部 MAT 计算，而向外法线 $–N_p$ 用于外部MAT计算。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;对于每个 $p\in\mathbf S$，通过迭代步骤 2 到 4 来计算相应的内部和外部 MAT 点。向内法线 $N_p$ 用于内部 MAT 计算，而向外法线 $–N_p$ 用于外部MAT计算。</p>
 <ol>
 <li>$\cos\theta^{k+1}_p=\frac{N(p-q^{k+1})}{d(p, q^{k+1})}$</li>
 </ol>
 <p><img src="F5B.png" alt="png"></p>
-<p>图 (<strong>b</strong>) 显示了用于计算内圈（黑色箭头）和外圈（红色箭头）的中轴点 $c_p$ 和法向矢量 $N_p$ 的方向的几何结构。</p>
-<p>噪声处理是克服 MAT 对噪声边界的敏感性的重要步骤。在输入表面上存在小凸起或噪声的情况下，圆可能收缩过多，从而可能导致不期望的中轴点。这种过度收缩的圆通常具有较小的分离角 $\alpha$。分离角 $\alpha$（见 <strong>b</strong>）是线 $p-\mathbf c_{\mathbf p}$（连接点 $p$ 和中轴点 $\mathbf c_p$ 的线）和线 $q-\mathbf c_\mathbf p$（连接点 $q$ 和中轴点 $\mathbf c_\mathbf p$ 的线）之间的角度。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;图 (<strong>b</strong>) 显示了用于计算内圈（黑色箭头）和外圈（红色箭头）的中轴点 $c_p$ 和法向矢量 $N_p$ 的方向的几何结构。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;噪声处理是克服 MAT 对噪声边界的敏感性的重要步骤。在输入表面上存在小凸起或噪声的情况下，圆可能收缩过多，从而可能导致不期望的中轴点。这种过度收缩的圆通常具有较小的分离角 $\alpha$。分离角 $\alpha$（见 <strong>b</strong>）是线 $p-\mathbf c_{\mathbf p}$（连接点 $p$ 和中轴点 $\mathbf c_p$ 的线）和线 $q-\mathbf c_\mathbf p$（连接点 $q$ 和中轴点 $\mathbf c_\mathbf p$ 的线）之间的角度。</p>
 <p> $ \cos $ $ \alpha $ = $ \frac {\overrightarrow {c_ {p}p}.\overrightarrow {c_ {p}q}}{|\overrightarrow {c_ {p}p|}\cdot |\overrightarrow {c_ {p}}q|} $ </p>
-<p>在上述收缩方法期间。好圆被定义为收缩方法中分离角 $\alpha_k$ 大于分离角阈值 $\alpha_{min}$ 的最后一个圆。</p>
-<p>在这一步骤之后，每个中轴点 $\mathbf c_{\mathbf p}$ 都具有许多属性。每个 MAT 点 $\mathbf m_{\mathbf p}$ 的属性是中轴点 $c_p$、半径 $\rho$、分离角 $\alpha$、表面点 $p$ 和 $q$ 的索引以及法向量 $N_p$ 或 $-N_p$。从理论上讲，使用这些 MAT 属性，可以完全重建 $\mathbf S$ 的几何。</p>
-<h4><span id="34-mat-point-segmentation">3.4. MAT point segmentation</span></h4><p>MAT 属性提供了丰富的信息，可用于将 MAT 点分组为不同的内侧段或分支。</p>
-<p>为了进一步应用 MAT，识别 MAT 点连通性的两个有用观察结果如下：</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;在上述收缩方法期间。好圆被定义为收缩方法中分离角 $\alpha_k$ 大于分离角阈值 $\alpha_{min}$ 的最后一个圆。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;在这一步骤之后，每个中轴点 $\mathbf c_{\mathbf p}$ 都具有许多属性。每个 MAT 点 $\mathbf m_{\mathbf p}$ 的属性是中轴点 $c_p$、半径 $\rho$、分离角 $\alpha$、表面点 $p$ 和 $q$ 的索引以及法向量 $N_p$ 或 $-N_p$。从理论上讲，使用这些 MAT 属性，可以完全重建 $\mathbf S$ 的几何。</p>
+<h4><span id="34-mat-point-segmentation">3.4. MAT point segmentation</span></h4><p>&nbsp;&nbsp;&nbsp;&nbsp;MAT 属性提供了丰富的信息，可用于将 MAT 点分组为不同的内侧段或分支。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;为了进一步应用 MAT，识别 MAT 点连通性的两个有用观察结果如下：</p>
 <ul>
 <li>朝向同一转折点或拐角的 MAT 点被视为一个线段。下图中正方形 $\mathbf S$ 的精细采样表面点。产生精细 MAT 点，其中一些 MAT 点逐渐接近特定转折点。从这个意义上说，从最大内切圆创建的每个 MAT 点，在表面点 $p$ 和 $q$ 处接触，指定一个转折点，该转折点位于表面点 $p$ 与 $q$ 之间。如 (<strong>b</strong>) 所示，两个表面点 $p$、$q$（红色文本）的中值与角的索引（76）相似。</li>
 </ul>
 <p><img src="F6B.png" alt="png"></p>
 <ul>
-<li>MAT点的分离角 $\alpha$ 预计接近 $90^\circ$。如 (<strong>c</strong>) 所示，矩形的 MAT 点具有分布在 $90^\circ$ 左右的分离角。</li>
+<li>MAT 点的分离角 $\alpha$ 预计接近 $90^\circ$。如 (<strong>c</strong>) 所示，矩形的 MAT 点具有分布在 $90^\circ$ 左右的分离角。</li>
 </ul>
 <p><img src="F6C.png" alt="png"></p>
-<p>在实践中，表面点不是完美分布的、无噪声的，不像下图所示那样规则。(<strong>a</strong>) 表面边界上的小扰动会产生所谓的骨架噪声。在检测形状角点时，骨骼噪声可能会引起虚假片段，从而导致虚假角点。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;在实践中，表面点不是完美分布的、无噪声的，不像下图所示那样规则。(<strong>a</strong>) 表面边界上的小扰动会产生所谓的骨架噪声。在检测形状角点时，骨骼噪声可能会引起虚假片段，从而导致虚假角点。</p>
 <p><img src="F6A.png" alt="png"></p>
-<p>我们的分割标准依赖于边界点的转折点位置的接近度。直观地，彼此靠近并且具有相似特征值的 MAT 点被分组在一起。此外，我们预计半径 $\rho$ 将沿着线段分支逐渐变化。</p>
-<p>基于上述观察，我们使用三个全局阈值和四个 MAT 衍生特征来分割 MAT 点。全局阈值与 MAT 无关，定义全局阈值是为了提高分割精度。全局阈值为：</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;我们的分割标准依赖于边界点的转折点位置的接近度。直观地，彼此靠近并且具有相似特征值的 MAT 点被分组在一起。此外，我们预计半径 $\rho$ 将沿着线段分支逐渐变化。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;基于上述观察，我们使用三个全局阈值和四个 MAT 衍生特征来分割 MAT 点。全局阈值与 MAT 无关，定义全局阈值是为了提高分割精度。全局阈值为：</p>
 <ul>
 <li><p>G.1. 距离物体表面 $\mathbf S$ 的缓冲区距离 $bf$。只有位于指定缓冲区内的 MAT 点才会被考虑用于分割。该阈值用于排除由具有向外法线的两个边缘点的最大圆产生的不可用的外部 MAT 点。这些 MAT 点是远离曲面点的典型噪声。</p>
 </li>
@@ -523,7 +523,7 @@
 <p><img src="F7.png" alt="png"></p>
 <center>噪声点边缘可能指示错误的拐角。</center>
 
-<p>从 MAT 属性派生的自定义特征或 MAT 派生的特征描述如下：</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;从 MAT 属性派生的自定义特征或 MAT 派生的特征描述如下：</p>
 <ul>
 <li><p>F.1. 考虑分离角 $\alpha$ 接近 $90^\circ$ 的 MAT 点 $\mathbf m_{\mathbf p}$ 进行分割。这里的“闭合”由分离角差值阈值 $\partial \alpha$ 指定。给定的 $\partial \alpha$ 阈值之外的 MAT 点被视为骨架噪声。这意味着，如果 MAT 点 $\mathbf m_{\mathbf p}$ 的分离角 $α_\mathbf p$ 在 $90^\circ + \partial \alpha$ 和 $90^\circ - \partial \alpha$ 之间，则将考虑对其进行分割。</p>
 </li>
@@ -533,10 +533,10 @@
 </li>
 <li><p>F.3. 点 $p_i$ 的法线与上一点 $p_{i−1}$ 的法线和下一点 $p_{i+1}$ 的法线之间的法线角差 $\delta N$分别由（$|N_p−N_{p_{i−1}}|$）和（$|N_p−N_{p_{i+1}}|$）定义。</p>
 </li>
-<li><p>F.4. 最大中位指数差值阈值 $\part K_p$。此功能用于避免由于曲面上的扰动或噪声（特别是在拐角附近）而导致的伪拐角和附加分段。</p>
+<li><p>F.4. 最大中位指数差值阈值 $\partial K_p$。此功能用于避免由于曲面上的扰动或噪声（特别是在拐角附近）而导致的伪拐角和附加分段。</p>
 </li>
 </ul>
-<p>给定一组 MAT 点 $M=\{(c_p,\rho,\alpha,p,q,N)\}$，每个中轴点 $c_p$ 具有 6 个特征 $\rho,\alpha,p,q,N$，MAT 点分割工作如下：</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;给定一组 MAT 点 $M=\{(c_p,\rho,\alpha,p,q,N)\}$，每个中轴点 $c_p$ 具有 6 个特征 $\rho,\alpha,p,q,N$，MAT 点分割工作如下：</p>
 <ol>
 <li><p>使用全局阈值 G.1 选择位于距离物体表面 $\mathbf S$ $bf$ 的特定缓冲距离内的 MAT 点 $m_\mathbf p$。</p>
 </li>
@@ -553,28 +553,28 @@
 <li><p>如 G.2 中所定义，任何成员点少于 $minPts$ 的内侧节段 $\mathbf{Mseg}$ 都将被移除。该步骤将消除边缘出现缺陷时可能形成的假线段。</p>
 </li>
 </ol>
-<p>接下来使用内侧段来估计真实的角，其中一个内侧段对应于一个角。</p>
-<h4><span id="35-corner-point-estimation">3.5. Corner point estimation</span></h4><p>我们不是将边缘点指定为角，而是基于中轴点的位置及其相应的半径来估计角的位置。MAT 点的最大内切圆的半径 $\rho$ 将朝着拐角逐渐减小。</p>
-<h4><span id="36-building-outline-evaluation-metrics">3.6. Building outline evaluation metrics</span></h4><p>应用两种不同的评估指标来评估所提出的工作流在满足要求方面的性能。</p>
-<p>建筑外形规格：转角几何精度和转角检测精度。</p>
-<p>位置精度，也称为几何位置精度或位置精度，用作测量建筑物多边形在绝对地理参考系统中相对于其真实位置的定位情况的主要指标。</p>
-<p>我们使用 RMSE（均方根误差）来测量参考和结果中建筑转角位置（X 和 Y 坐标）之间的平方差的平均值。针对所有检测到的建筑转角，计算完整建筑相对于相应参考转角位置的 RMSE。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;接下来使用内侧段来估计真实的角，其中一个内侧段对应于一个角。</p>
+<h4><span id="35-corner-point-estimation">3.5. Corner point estimation</span></h4><p>&nbsp;&nbsp;&nbsp;&nbsp;我们不是将边缘点指定为角，而是基于中轴点的位置及其相应的半径来估计角的位置。MAT 点的最大内切圆的半径 $\rho$ 将朝着拐角逐渐减小。</p>
+<h4><span id="36-building-outline-evaluation-metrics">3.6. Building outline evaluation metrics</span></h4><p>&nbsp;&nbsp;&nbsp;&nbsp;应用两种不同的评估指标来评估所提出的工作流在满足要求方面的性能。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;建筑外形规格：转角几何精度和转角检测精度。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;位置精度，也称为几何位置精度或位置精度，用作测量建筑物多边形在绝对地理参考系统中相对于其真实位置的定位情况的主要指标。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;我们使用 RMSE（均方根误差）来测量参考和结果中建筑转角位置（X 和 Y 坐标）之间的平方差的平均值。针对所有检测到的建筑转角，计算完整建筑相对于相应参考转角位置的 RMSE。</p>
 <script type="math/tex; mode=display">RMSE_x=\frac{\sqrt{\Sigma(X_{res}-X_{ref})^2}}{n}</script><script type="math/tex; mode=display">RMSE_y=\frac{\sqrt{\Sigma(Y_{res}-Y_{ref})^2}}{n}</script><script type="math/tex; mode=display">RMSE_r=\sqrt{RMSEx^2+RMSEy^2}</script><p>$X_{res}$，$Y_{res}=$ 得到的角点坐标 </p>
 <p>$X_{ref}$, $Y_{ref}=$ 地面实况中角点的坐标</p>
 <p>$n=$ 角点总数</p>
-<p>由于某些建筑的复杂性，并不是所有的角落都能被完全检测到。因此，我们通过三种检索测量来评估拐角检测的准确性：召回率、精确度和 F1 分数。精确性用于衡量准确性或保真度，而回忆则用于衡量完整性。F1 分数是精确度和召回率的加权平均值。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;由于某些建筑的复杂性，并不是所有的角落都能被完全检测到。因此，我们通过三种检索测量来评估拐角检测的准确性：召回率、精确度和 F1 分数。精确性用于衡量准确性或保真度，而回忆则用于衡量完整性。F1 分数是精确度和召回率的加权平均值。</p>
 <script type="math/tex; mode=display">Perception = \frac{TP}{TP+FP}</script><script type="math/tex; mode=display">Recall=\frac{TP}{TP+FN}</script><script type="math/tex; mode=display">F1-score=\frac{2\cdot Percision\cdot Recall}{Percision+Recall}</script><p><img src="F10.png" alt="png"></p>
-<p>在上图中的建筑多边形中，正确角的数量（$TP$）为 4，而错误角的数量$FP$（绿色椭圆内）为 1，未检测到的角或偏移超过一米的角的数量 $FN$（如蓝色圆圈所示）为 2。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;在上图中的建筑多边形中，正确角的数量（$TP$）为 4，而错误角的数量$FP$（绿色椭圆内）为 1，未检测到的角或偏移超过一米的角的数量 $FN$（如蓝色圆圈所示）为 2。</p>
 <p>该配置的 $P=0.8$，$R=0.67$，$F1=0.73$。</p>
 <p><img src="F11.png" alt="png"></p>
-<h3><span id="4-results-and-discussions">4. Results and discussions</span></h3><h4><span id="41-experiments-of-the-study-areas">4.1. Experiments of the study areas</span></h4><p>在实验中，我们使用了三个具有不同景观特征和机载激光雷达点云规范的研究区域。</p>
+<h3><span id="4-results-and-discussions">4. Results and discussions</span></h3><h4><span id="41-experiments-of-the-study-areas">4.1. Experiments of the study areas</span></h4><p>&nbsp;&nbsp;&nbsp;&nbsp;在实验中，我们使用了三个具有不同景观特征和机载激光雷达点云规范的研究区域。</p>
 <h4><span id="42-general-overview">4.2. General overview</span></h4><p><img src="F12.png" alt="png"></p>
 <h4><span id="43-comparison-analysis">4.3. Comparison analysis</span></h4><p><img src="T1.png" alt="png"></p>
-<h4><span id="44-computational-and-complexity-analysis">4.4. Computational and complexity analysis</span></h4><p>分析时间复杂度。</p>
+<h4><span id="44-computational-and-complexity-analysis">4.4. Computational and complexity analysis</span></h4><p>&nbsp;&nbsp;&nbsp;&nbsp;分析时间复杂度。</p>
 <h3><span id="5-conclusions-and-recommendations">5. Conclusions and recommendations</span></h3><h2><span id="alpha-shape-算法">Alpha Shape 算法</span></h2><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">import</span> matplotlib.pyplot <span class="hljs-keyword">as</span> plt<br><span class="hljs-keyword">from</span> mpl_toolkits.mplot3d <span class="hljs-keyword">import</span> Axes3D<br><span class="hljs-keyword">from</span> scipy.spatial <span class="hljs-keyword">import</span> Delaunay<br><span class="hljs-keyword">from</span> sklearn.neighbors <span class="hljs-keyword">import</span> KDTree<br></code></pre></td></tr></table></figure>
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">plot_circle</span>(<span class="hljs-params">centers, rs, ax</span>):<br>    N = centers.shape[<span class="hljs-number">0</span>]<br>    <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(N):<br>        theta = np.arange(<span class="hljs-number">0</span>, <span class="hljs-number">2</span> * np.pi, <span class="hljs-number">0.01</span>)<br>        x = centers[i,<span class="hljs-number">0</span>] + rs[i] * np.cos(theta)<br>        y = centers[i,<span class="hljs-number">1</span>] + rs[i] * np.sin(theta)<br>        ax.plot(x, y, <span class="hljs-string">&#x27;b-&#x27;</span>, alpha=<span class="hljs-number">0.1</span>)<br></code></pre></td></tr></table></figure>
-<p>函数 <code>plot_circle</code> 用于绘制圆形。</p>
-<p>它接受三个参数：centers 表示圆心的坐标，rs 表示圆的半径，ax 为 matplotlib 中的 Axes 对象，用于绘图。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;函数 <code>plot_circle</code> 用于绘制圆形。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;它接受三个参数：centers 表示圆心的坐标，rs 表示圆的半径，ax 为 matplotlib 中的 Axes 对象，用于绘图。</p>
 <ul>
 <li><p>代码首先获取 centers 数组的形状，确定要绘制多少个圆。然后通过 for 循环遍历所有圆心。</p>
 </li>
@@ -589,11 +589,11 @@
 </ul>
 </li>
 </ul>
-<p>最后使用 <code>ax.plot</code> 绘制出这些点，连接成一个圆形曲线。参数 ‘b-‘ 表示蓝色实线，alpha=0.1 表示透明度为 0.1。</p>
-<p>这样，通过不同的圆心和半径，可以在图像上绘制出多个圆形。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;最后使用 <code>ax.plot</code> 绘制出这些点，连接成一个圆形曲线。参数 ‘b-‘ 表示蓝色实线，alpha=0.1 表示透明度为 0.1。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;这样，通过不同的圆心和半径，可以在图像上绘制出多个圆形。</p>
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">edge_check_vaild</span>(<span class="hljs-params">e, tree, r, err</span>):<br>    xp = e[<span class="hljs-number">0</span>]<br>    xq = e[<span class="hljs-number">1</span>]<br>    L = np.sqrt(np.dot(xq-xp, xq-xp))<br>    <span class="hljs-keyword">if</span> L &gt; <span class="hljs-number">2</span> * r:<br>        <span class="hljs-keyword">return</span> <span class="hljs-literal">False</span>, -<span class="hljs-number">1</span><br>    vec = (xq-xp) / L <span class="hljs-comment"># the vector from p to q</span><br>    normal = np.array([vec[<span class="hljs-number">1</span>],-vec[<span class="hljs-number">0</span>]])<br>    c1 = (xp + xq) / <span class="hljs-number">2</span> + normal * np.sqrt(r**<span class="hljs-number">2</span>-(L/<span class="hljs-number">2</span>)**<span class="hljs-number">2</span>)<br>    c2 = (xp + xq) / <span class="hljs-number">2</span> - normal * np.sqrt(r**<span class="hljs-number">2</span>-(L/<span class="hljs-number">2</span>)**<span class="hljs-number">2</span>)<br>    c = np.array([c1,c2])<br>    count = tree.query_radius(c, r=r+err, return_distance=<span class="hljs-literal">False</span>, count_only=<span class="hljs-literal">True</span>, sort_results=<span class="hljs-literal">False</span>)<br>    <span class="hljs-keyword">if</span> count[<span class="hljs-number">0</span>] &lt;= <span class="hljs-number">2</span>:<br>        <span class="hljs-keyword">return</span> <span class="hljs-literal">True</span>, c[<span class="hljs-number">0</span>]<br>    <span class="hljs-keyword">elif</span> count[<span class="hljs-number">1</span>] &lt;= <span class="hljs-number">2</span>:<br>        <span class="hljs-keyword">return</span> <span class="hljs-literal">True</span>, c[<span class="hljs-number">1</span>]<br>    <span class="hljs-keyword">else</span>:<br>        <span class="hljs-keyword">return</span> <span class="hljs-literal">False</span>, -<span class="hljs-number">1</span><br></code></pre></td></tr></table></figure>
-<p>函数 <code>edge_check_vaild</code> 用于检查边缘是否合法，也就是检查连接两点的线段是否符合圆的半径要求。</p>
-<p>它接受四个参数：e 表示边、tree 表示点云的 KDTree，r 表示圆的半径，err 表示检查误差。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;函数 <code>edge_check_vaild</code> 用于检查边缘是否合法，也就是检查连接两点的线段是否符合圆的半径要求。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;它接受四个参数：e 表示边、tree 表示点云的 KDTree，r 表示圆的半径，err 表示检查误差。</p>
 <ul>
 <li>代码首先提取出两个端点的坐标 xp 和 xq，然后计算出边的长度 L。如果 L 大于 2r，那么这条边一定无法构成圆形，因此直接返回 False。</li>
 <li>如果 L 小于等于 2r，那么说明这条边有可能是圆的一部分。可以根据端点的坐标计算出连接它们的单位向量 vec，以及垂直于该向量的法向量 normal。然后通过中垂线的方程，求得圆心 c1 和 c2。</li>
@@ -604,18 +604,18 @@
 </li>
 </ul>
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">boundary_extract</span>(<span class="hljs-params">points, alpha, err=<span class="hljs-number">10e-3</span></span>):<br>    <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">    Here, parameter err was place, because there are errors when calculating distance</span><br><span class="hljs-string">    meanwhile, this err was different for different scaling 2D point cloud</span><br><span class="hljs-string">    so, a parameter was placed here to considering the calculation errors</span><br><span class="hljs-string">    &quot;&quot;&quot;</span><br>    R = <span class="hljs-number">1</span> / alpha<br>    pts = np.copy(points)<br>    tree = KDTree(pts, leaf_size=<span class="hljs-number">2</span>)<br>    tri = Delaunay(pts)<br>    s = tri.simplices<br>    N = s.shape[<span class="hljs-number">0</span>]<br>    i = <span class="hljs-number">0</span><br>    edges = []<br>    centers = []<br>    <span class="hljs-keyword">while</span> i &lt;= N - <span class="hljs-number">1</span>:<br>        <span class="hljs-keyword">if</span> s[i,<span class="hljs-number">0</span>]==-<span class="hljs-number">1</span>:<br>            i = i + <span class="hljs-number">1</span><br>            <span class="hljs-keyword">continue</span><br>        p3 = s[i]<br>        e1 = np.array([points[p3[<span class="hljs-number">0</span>],:], points[p3[<span class="hljs-number">1</span>],:]])<br>        e2 = np.array([points[p3[<span class="hljs-number">1</span>],:], points[p3[<span class="hljs-number">2</span>],:]])<br>        e3 = np.array([points[p3[<span class="hljs-number">0</span>],:], points[p3[<span class="hljs-number">2</span>],:]])<br>        e = [e1,e2,e3]<br>        <span class="hljs-keyword">for</span> j <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">3</span>):<br>            flag, center = edge_check_vaild(e[j], tree, R, err)<br>            <span class="hljs-keyword">if</span> flag:<br>                edges.append(e[j])<br>                centers.append(center)<br>        nb = tri.neighbors[i]<br>        nb_valid = nb[nb!=-<span class="hljs-number">1</span>]<br>        i = i + <span class="hljs-number">1</span><br>    <span class="hljs-keyword">return</span> edges, centers<br></code></pre></td></tr></table></figure>
-<p>函数 <code>boundary_extract</code>用于从 2D 点云中提取边界。它接受三个参数：points 表示点的坐标数组，alpha 表示半径与平均边长比值的倒数，err 表示计算误差。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;函数 <code>boundary_extract</code>用于从 2D 点云中提取边界。它接受三个参数：points 表示点的坐标数组，alpha 表示半径与平均边长比值的倒数，err 表示计算误差。</p>
 <ul>
 <li>首先根据给定的点云数据构建 KDTree 和 Delaunay 三角剖分。然后遍历每个三角形，对于三角形的每条边，调用 <code>edge_check_valid</code> 函数检查它是否符合圆形要求，并将符合要求的边缘和圆心加入到 edges 和 centers 列表中。</li>
 <li>最后返回边缘列表和圆心列表。</li>
 </ul>
-<p>需要注意的是，这里的 err 参数是因为计算距离时可能存在误差。实际上，在某些情况下，由于计算精度问题，同样的点云数据、相同的参数 alpha 可能会得到不同的结果。因此，如果发现提取边界的结果与预期不符，可以尝试调整 err 参数或重新生成点云数据。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;需要注意的是，这里的 err 参数是因为计算距离时可能存在误差。实际上，在某些情况下，由于计算精度问题，同样的点云数据、相同的参数 alpha 可能会得到不同的结果。因此，如果发现提取边界的结果与预期不符，可以尝试调整 err 参数或重新生成点云数据。</p>
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">show_edge</span>(<span class="hljs-params">edges, points, circle=<span class="hljs-literal">None</span>, r=<span class="hljs-literal">None</span></span>):<br>    fig = plt.figure()<br>    ax = fig.add_subplot(<span class="hljs-number">111</span>)<br>    ax.scatter(*<span class="hljs-built_in">zip</span>(*points), s=<span class="hljs-number">4</span>, c=<span class="hljs-string">&#x27;k&#x27;</span>)<br>    <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-built_in">len</span>(edges)):<br>        ax.plot(*<span class="hljs-built_in">zip</span>(*edges[i]), <span class="hljs-string">&#x27;-r&#x27;</span>)<br>    <span class="hljs-keyword">if</span> circle <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span>:<br>        plot_circle(circle, r, ax)<br>    plt.show()<br></code></pre></td></tr></table></figure>
-<p>函数 <code>show_edge</code> 用于可视化提取的边缘。它接受四个参数：edges 表示边缘列表，points 表示点的坐标数组，circle 表示圆心坐标，r 表示圆的半径。</p>
-<p>函数首先创建一个新的图表，并使用 scatter 方法绘制出点云。然后遍历边缘列表，使用 plot 方法绘制出边缘。如果指定了圆心坐标和半径，调用 plot_circle 函数将圆形绘制出来。</p>
-<p>最后使用 show 方法展示图表。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;函数 <code>show_edge</code> 用于可视化提取的边缘。它接受四个参数：edges 表示边缘列表，points 表示点的坐标数组，circle 表示圆心坐标，r 表示圆的半径。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;函数首先创建一个新的图表，并使用 scatter 方法绘制出点云。然后遍历边缘列表，使用 plot 方法绘制出边缘。如果指定了圆心坐标和半径，调用 plot_circle 函数将圆形绘制出来。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;最后使用 show 方法展示图表。</p>
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">if</span> __name__ == <span class="hljs-string">&quot;__main__&quot;</span>:<br>    pts = np.random.rand(<span class="hljs-number">200</span>, <span class="hljs-number">2</span>) <span class="hljs-comment"># 随机生成 10 个 2 维点</span><br>    alpha = <span class="hljs-number">6</span><br>    edges, centers = boundary_extract(pts,alpha, err=<span class="hljs-number">10e-5</span>)<br>    show_edge(edges,pts,circle=np.array(centers), r=np.ones(<span class="hljs-built_in">len</span>(centers)) / alpha)<br></code></pre></td></tr></table></figure>
-<p>这段代码首先生成 200 个随机的 2D 点，然后调用 <code>boundary_extract</code> 函数从中提取出边界，并将 alpha 参数设置为 6,计算误差 err 为 10e-5。然后使用提取的边界和圆心，以及 points 数组调用 <code>show_edge</code> 函数进行展示。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;这段代码首先生成 200 个随机的 2D 点，然后调用 <code>boundary_extract</code> 函数从中提取出边界，并将 alpha 参数设置为 6,计算误差 err 为 10e-5。然后使用提取的边界和圆心，以及 points 数组调用 <code>show_edge</code> 函数进行展示。</p>
 
   </div>
   <div id="gitalk-container"></div>
@@ -811,21 +811,6 @@ Fancybox.bind('[data-fancybox="fancybox-gallery-img"]', {
 <script>
 	console.log('\n %c Hexo-Quiet 主题 %c https://github.com/79e/hexo-theme-quiet \n', 'color: #fadfa3; background: #030307; padding:5px 0;', 'background: #fadfa3; padding:5px 0;')
 </script>
-	<script type="text/x-mathjax-config">
-    MathJax.Hub.Config({
-        tex2jax: {
-            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
-            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
-            processEscapes: true
-        }
-    });
-    MathJax.Hub.Queue(function() {
-        var all = MathJax.Hub.getAllJax();
-        for (var i = 0; i < all.length; ++i)
-            all[i].SourceElement().parentNode.className += ' has-jax';
-    });
-</script>
-<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-</body>
+	</body>
 </html>
 
