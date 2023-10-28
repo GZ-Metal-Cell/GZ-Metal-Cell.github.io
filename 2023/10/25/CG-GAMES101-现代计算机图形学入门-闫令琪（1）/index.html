@@ -643,7 +643,7 @@
 </ul>
 <p><img src="4_2.png" alt="png"></p>
 <p><strong>Rodrigues’ Rotation Formula 罗德里格斯轮换公式</strong></p>
-<p>绕轴 $n$ 旋转角度 $\alpha$：</p>
+<p>绕轴 $n(n_x,n_y, n_z)$ 旋转角度 $\alpha$：</p>
 <script type="math/tex; mode=display">\mathbf{R}(\mathbf{n},\alpha)=\cos(\alpha)\mathbf{I}+(1-\cos(\alpha))\mathbf{n}\mathbf{n}^T+\sin(\alpha)\underbrace{\begin{pmatrix}0&-n_z&n_y\\n_z&0&-n_x\\-n_y&n_x&0\end{pmatrix}}_{\mathbf{N}}</script><p><strong>View / Camera Transformation 视图变换</strong></p>
 <ul>
 <li>What is view transformation? 什么是视图变换？</li>
@@ -743,18 +743,24 @@
 </li>
 </ul>
 <p>$r,l,t,b,n,f$ 的定义如下所示：</p>
+<p>$x$ 轴坐标范围：$[l,r]$</p>
+<p>$y$ 轴坐标范围：$[b,t]$</p>
+<p>$z$ 轴坐标范围：$[f,n]$</p>
 <p><img src="4_5.png" alt="png"></p>
 <ul>
 <li><p>Transformation matrix?</p>
 <ul>
-<li><p>Translate (center to origin) first, then scale (length/width/height to 2) 首先平移（中心到原点），然后缩放（长度/宽度/高度到 2）</p>
+<li><p>Translate (center to origin) first, then scale (length/width/height to 2) 首先平移（中心到原点）然后缩放（长度/宽度/高度到 2）</p>
 <p>$M_{ortho}=\begin{bmatrix}\frac2{r-l}&amp;0&amp;0&amp;0\\0&amp;\frac2{t-b}&amp;0&amp;0\\0&amp;0&amp;\frac2{n-f}&amp;0\\0&amp;0&amp;0&amp;1\end{bmatrix}\begin{bmatrix}1&amp;0&amp;0&amp;-\frac{r+l}2\\0&amp;1&amp;0&amp;-\frac{t+b}2\\0&amp;0&amp;1&amp;-\frac{n+f}2\\0&amp;0&amp;0&amp;1\end{bmatrix}$</p>
 </li>
 </ul>
 </li>
-<li><p>Caveat</p>
+<li><p>Caveat 警告</p>
 <ul>
-<li>Looking at / along $-Z$ is making near and far not intuitive ($n &gt; f$)  观察/沿着 $-Z$ 轴使远近不直观（$n&gt;f$）</li>
+<li>Looking at / along $-Z$ is making near and far not intuitive ($n &gt; f$)  观察/沿着 $-Z$ 轴使远近不直观（$n&gt;f$）<ul>
+<li>$n$ 和 $f$ 是负的，$|f|&gt;|ns’s’s’s’s’s|$。</li>
+</ul>
+</li>
 <li>FYI: that’s why OpenGL (a Graphics API) uses left hand coords. 仅供参考：这就是 OpenGL（图形 API）使用左手坐标的原因。</li>
 </ul>
 </li>
@@ -846,7 +852,7 @@
 <p>安装库：</p>
 <figure class="highlight shell"><table><tr><td class="code"><pre><code class="hljs shell">sudo apt update<br>sudo apt install g++ gdb cmake<br>sudo apt install libopencv-dev libeigen3-dev<br>sudo apt install libglu1-mesa-dev freeglut3-dev mesa-common-dev xorg-dev<br></code></pre></td></tr></table></figure>
 <p>Windows 下的 VSCode，安装 wsl 插件，点击左下角，连接 wsl。</p>
-<p><img src="/C:/Users/19048/AppData/Roaming/Typora/typora-user-images/image-20231027164805639.png" alt="image-20231027164805639"></p>
+<p><img src="HW0_3.png" alt="png"></p>
 <p>打开作业模板，有如下命令：</p>
 <ul>
 <li><code>mkdir build</code>: 创建名为 build 的文件夹。</li>
@@ -874,7 +880,45 @@
 <p>最终坐标为 $TRP$。</p>
 <figure class="highlight c++"><table><tr><td class="code"><pre><code class="hljs C++"><span class="hljs-meta">#<span class="hljs-keyword">include</span><span class="hljs-string">&lt;cmath&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span><span class="hljs-string">&lt;eigen3/Eigen/Core&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span><span class="hljs-string">&lt;eigen3/Eigen/Dense&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span><span class="hljs-string">&lt;iostream&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> PI 3.1415926535</span><br><span class="hljs-keyword">using</span> <span class="hljs-keyword">namespace</span> std;<br><span class="hljs-keyword">using</span> <span class="hljs-keyword">namespace</span> Eigen;<br><br><span class="hljs-function"><span class="hljs-type">int</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span><br><span class="hljs-function"></span>&#123;<br>    <span class="hljs-type">float</span> theta = PI / <span class="hljs-number">4.0f</span>;<br>    <span class="hljs-function">Vector3f <span class="hljs-title">P</span><span class="hljs-params">(<span class="hljs-number">2.0f</span>, <span class="hljs-number">1.0f</span>, <span class="hljs-number">1.0f</span>)</span></span>;<br>    Matrix3f R, T;<br>    R &lt;&lt; <br>        <span class="hljs-built_in">cos</span>(theta), -<span class="hljs-built_in">sin</span>(theta), <span class="hljs-number">0</span>,<br>        <span class="hljs-built_in">sin</span>(theta), <span class="hljs-built_in">cos</span>(theta), <span class="hljs-number">0</span>,<br>        <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">1</span>;<br>    T &lt;&lt;<br>        <span class="hljs-number">1</span>, <span class="hljs-number">0</span>, <span class="hljs-number">1</span>,<br>        <span class="hljs-number">0</span>, <span class="hljs-number">1</span>, <span class="hljs-number">2</span>,<br>        <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">1</span>;<br>    cout &lt;&lt; T * R * P &lt;&lt; endl;<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
 <figure class="highlight apache"><table><tr><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">1</span>.<span class="hljs-number">70711</span><br><span class="hljs-attribute">4</span>.<span class="hljs-number">12132</span><br>      <span class="hljs-attribute">1</span><br></code></pre></td></tr></table></figure>
-<h2><span id="hw1">HW1</span></h2>
+<h2><span id="hw1">HW1</span></h2><blockquote>
+<p>本次作业的任务是填写一个旋转矩阵和一个透视投影矩阵。给定三维下三个点 $v_0(2.0, 0.0,−2.0)$, $v_1(0.0, 2.0,−2.0)$, $v_2(−2.0, 0.0,−2.0)$, 你需要将这三个点的坐标变换为屏幕坐标并在屏幕上绘制出对应的线框三角形(在代码框架中，我们已经提供了draw_triangle 函数，所以你只需要去构建变换矩阵即可)。</p>
+</blockquote>
+<ul>
+<li><code>get_model_matrix(float rotation_angle)</code>: 逐个元素地构建模型变换矩阵并返回该矩阵。</li>
+</ul>
+<p>代公式：<script type="math/tex">\mathbf{R}_z(\alpha)=\begin{pmatrix}\cos\alpha&-\sin\alpha&0&0\\\sin\alpha&\cos\alpha&0&0\\0&0&1&0\\0&0&0&1\end{pmatrix}</script></p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><code class="hljs C++"><span class="hljs-function">Eigen::Matrix4f <span class="hljs-title">get_model_matrix</span><span class="hljs-params">(<span class="hljs-type">float</span> rotation_angle)</span></span><br><span class="hljs-function"></span>&#123;<br>    Eigen::Matrix4f model = Eigen::Matrix4f::<span class="hljs-built_in">Identity</span>();<br><br>    <span class="hljs-comment">// <span class="hljs-doctag">TODO:</span> Implement this function</span><br>    <span class="hljs-comment">// Create the model matrix for rotating the triangle around the Z axis.</span><br>    <span class="hljs-comment">// Then return it.</span><br><br>    <span class="hljs-type">float</span> angle = rotation_angle * MY_PI / <span class="hljs-number">180.0f</span>;<br><br>    Eigen::Matrix4f translate;<br>    translate &lt;&lt; std::<span class="hljs-built_in">cos</span>(angle), -std::<span class="hljs-built_in">sin</span>(angle), <span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<br>                 std::<span class="hljs-built_in">sin</span>(angle), std::<span class="hljs-built_in">cos</span>(angle), <span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<br>                 <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">1</span>, <span class="hljs-number">0</span>,<br>                 <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">1</span>;<br>    model = translate * model;<br>    <span class="hljs-keyword">return</span> model;<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>get_projection_matrix(float eye_fov, float aspect_ratio, float zNear, float zFar)</code>: 使用给定的参数逐个元素地构建透视投影矩阵并返回该矩阵。</li>
+</ul>
+<p>代公式：$\begin{aligned}M_{persp}=M_{ortho}M_{persp\to ortho}\end{aligned}$</p>
+<p>其中：</p>
+<p>$M_{persp\to ortho}$，映射到“规范(正则、规范、标准)” 的立方体 $[-1，1]^3$，因此：</p>
+<p>$M_{persp\to ortho}=\begin{bmatrix}\mathrm{zNear}&amp;0&amp;0&amp;0\\0&amp;\mathrm{zNear}&amp;0&amp;0\\0&amp;0&amp;\mathrm{zNear}<br>+\mathrm{zFar}&amp;-\mathrm{zNear}\times \mathrm{zFar}\\0&amp;0&amp;1&amp;0\end{bmatrix}$</p>
+<hr>
+<p>$M_{ortho}=\begin{bmatrix}\frac2{r-l}&amp;0&amp;0&amp;0\\0&amp;\frac2{t-b}&amp;0&amp;0\\0&amp;0&amp;\frac2{n-f}&amp;0\\0&amp;0&amp;0&amp;1\end{bmatrix}\begin{bmatrix}1&amp;0&amp;0&amp;-\frac{r+l}2\\0&amp;1&amp;0&amp;-\frac{t+b}2\\0&amp;0&amp;1&amp;-\frac{n+f}2\\0&amp;0&amp;0&amp;1\end{bmatrix}$</p>
+<p><img src="4_8.png" alt="png"></p>
+<p>具体地，如上图，zNear 即为 $n$，zFar 即为 $z$，$\frac yz=\tan{(\mathrm{eye_fov}/2)}$。</p>
+<p>由于右手坐标系 $n$ 和 $f$ 为负，因此：</p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><code class="hljs C++"><span class="hljs-type">float</span> angle = eye_fov * MY_PI / <span class="hljs-number">180.0f</span>;<br><span class="hljs-type">float</span> n = -zNear;<br><span class="hljs-type">float</span> f = -zFar;<br><span class="hljs-type">float</span> t = std::<span class="hljs-built_in">tan</span>(angle / <span class="hljs-number">2</span>) * n;<br><span class="hljs-type">float</span> b = -t;<br><span class="hljs-type">float</span> r = t * aspect_ratio;<br><span class="hljs-type">float</span> l = -r;<br></code></pre></td></tr></table></figure>
+<hr>
+<p>最后 $\begin{aligned}M_{persp}=M_{ortho}M_{persp\to ortho}\end{aligned}$ 即为所求。</p>
+<p>完整代码：</p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><code class="hljs C++"><span class="hljs-function">Eigen::Matrix4f <span class="hljs-title">get_projection_matrix</span><span class="hljs-params">(<span class="hljs-type">float</span> eye_fov, <span class="hljs-type">float</span> aspect_ratio,</span></span><br><span class="hljs-params"><span class="hljs-function">                                      <span class="hljs-type">float</span> zNear, <span class="hljs-type">float</span> zFar)</span></span><br><span class="hljs-function"></span>&#123;<br>    <span class="hljs-comment">// Students will implement this function</span><br><br>    Eigen::Matrix4f projection = Eigen::Matrix4f::<span class="hljs-built_in">Identity</span>();<br><br>    <span class="hljs-comment">// <span class="hljs-doctag">TODO:</span> Implement this function</span><br>    <span class="hljs-comment">// Create the projection matrix for the given parameters.</span><br>    <span class="hljs-comment">// Then return it.</span><br><br>    Eigen::Matrix4f M_P;<br>    M_P &lt;&lt; zNear, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<br>           <span class="hljs-number">0</span>, zNear, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<br>           <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, zNear + zFar, -(zNear * zFar),<br>           <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">1</span>, <span class="hljs-number">0</span>;<br><br>    <span class="hljs-type">float</span> angle = eye_fov * MY_PI / <span class="hljs-number">180.0f</span>;<br>    <span class="hljs-type">float</span> n = -zNear;<br>    <span class="hljs-type">float</span> f = -zFar;<br>    <span class="hljs-type">float</span> t = std::<span class="hljs-built_in">tan</span>(angle / <span class="hljs-number">2</span>) * n;<br>    <span class="hljs-type">float</span> b = -t;<br>    <span class="hljs-type">float</span> r = t * aspect_ratio;<br>    <span class="hljs-type">float</span> l = -r;<br><br>    Eigen::Matrix4f M_T;<br>    M_T &lt;&lt; <span class="hljs-number">1</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, -(r + l) / <span class="hljs-number">2</span>,<br>           <span class="hljs-number">0</span>, <span class="hljs-number">1</span>, <span class="hljs-number">0</span>, -(t + b) / <span class="hljs-number">2</span>,<br>           <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">1</span>, -(n + f) / <span class="hljs-number">2</span>,<br>           <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">1</span>;<br><br>    Eigen::Matrix4f M_S;<br>    M_S &lt;&lt; <span class="hljs-number">2</span> / (r - l), <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<br>           <span class="hljs-number">0</span>, <span class="hljs-number">2</span> / (t - b), <span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<br>           <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">2</span> / (n - f), <span class="hljs-number">0</span>,<br>           <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">1</span>;<br><br>    projection = M_T * M_S * M_P * projection;<br>    <span class="hljs-keyword">return</span> projection;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>运行时：</p>
+<ul>
+<li>n = -0.1</li>
+<li>f = -50</li>
+<li>t = -0.0414214</li>
+<li>b = 0.0414214</li>
+<li>r = -0.0414214</li>
+<li>l = 0.0414214</li>
+</ul>
+<hr>
+<p>提高项：在 <code>main.cpp</code> 中构造一个函数，该函数的作用是得到绕任意<br>过原点的轴的旋转变换矩阵。<code>Eigen::Matrix4f get_rotation(Vector3f axis, float angle)</code></p>
+<p>代公式：<script type="math/tex">\mathbf{R}(\mathbf{n},\alpha)=\cos(\alpha)\mathbf{I}+(1-\cos(\alpha))\mathbf{n}\mathbf{n}^T+\sin(\alpha)\underbrace{\begin{pmatrix}0&-n_z&n_y\\n_z&0&-n_x\\-n_y&n_x&0\end{pmatrix}}_{\mathbf{N}}</script></p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><code class="hljs C++"><span class="hljs-function">Eigen::Matrix4f <span class="hljs-title">get_rotation</span><span class="hljs-params">(Vector3f axis, <span class="hljs-type">float</span> angle)</span></span><br><span class="hljs-function"></span>&#123;<br>    Eigen::Matrix4f model = Eigen::Matrix4f::<span class="hljs-built_in">Identity</span>();<br><br>    <span class="hljs-type">float</span> alpha = angle * MY_PI / <span class="hljs-number">180.0f</span>;<br>    <span class="hljs-type">float</span> nx = axis[<span class="hljs-number">0</span>];<br>    <span class="hljs-type">float</span> ny = axis[<span class="hljs-number">1</span>];<br>    <span class="hljs-type">float</span> nz = axis[<span class="hljs-number">2</span>];<br>    Eigen::Matrix3f M;<br>    M &lt;&lt;<br>        <span class="hljs-number">0</span>, -nz, ny,<br>        nz, <span class="hljs-number">0</span>, -nx,<br>        -ny, nx, <span class="hljs-number">0</span>;<br>    Eigen::Matrix3f R = std::<span class="hljs-built_in">cos</span>(alpha) * Eigen::Matrix3f::<span class="hljs-built_in">Identity</span>() + (<span class="hljs-number">1</span> - std::<span class="hljs-built_in">cos</span>(alpha)) * axis * axis.<span class="hljs-built_in">transpose</span>() + std::<span class="hljs-built_in">sin</span>(alpha) * M;<br>    Eigen::Matrix4f translate = Eigen::Matrix4f::<span class="hljs-built_in">Identity</span>();<br>    translate.<span class="hljs-built_in">block</span>&lt;<span class="hljs-number">3</span>, <span class="hljs-number">3</span>&gt;(<span class="hljs-number">0</span>, <span class="hljs-number">0</span>) = R;<br><br>    model = translate * model;<br>    <span class="hljs-keyword">return</span> model;<br>&#125;<br></code></pre></td></tr></table></figure>
+
   </div>
   <div id="gitalk-container"></div>
 </div>
