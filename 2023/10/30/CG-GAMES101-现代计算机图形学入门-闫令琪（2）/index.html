@@ -335,6 +335,7 @@
 <ul>
 <li><a href="#资源">资源</a></li>
 <li><a href="#lecture-05-rasterization-1-triangles">Lecture 05 Rasterization 1 (Triangles)</a></li>
+<li><a href="#lecture-06-rasterization-2-antialiasing-and-z-buffering">Lecture 06 Rasterization 2 (Antialiasing and Z-Buffering)</a></li>
 </ul>
 <!-- tocstop -->
 <h2><span id="资源">资源</span></h2><ul>
@@ -548,6 +549,216 @@
 <p>假设显示像素发射正方形光</p>
 <p>LCD pixels do not actually emit light in a square of uniform color, but this approximation suffices for our current discussion</p>
 <p>*LCD 像素实际上并不以均匀颜色的正方形发光，但近似值足以应付我们目前的讨论</p>
+<h2><span id="lecture-06-rasterization-2-antialiasing-and-z-buffering">Lecture 06 Rasterization 2 (Antialiasing and Z-Buffering)</span></h2><p>上节课得出的三角形，会出现很多锯齿。</p>
+<p><strong>Sampling is Ubiquitous in Computer Graphics 采样在计算机图形学中无处不在</strong></p>
+<ul>
+<li><p>Rasterization = Sample 2D Positions 光栅化 = 采样 2D 位置</p>
+</li>
+<li><p>Photograph = Sample Image Sensor Plane 照片 = 样本图像传感器平面</p>
+</li>
+<li>Video = Sample Time 视频 = 采样时间</li>
+</ul>
+<p><strong>Sampling <font color="red">Artifacts</font> (Errors / Mistakes / Inaccuracies) in Computer Graphics 计算机图形学中的采样<font color="red">伪像</font>（错误/错误/不准确）</strong></p>
+<ul>
+<li>Jaggies (Staircase Pattern) （楼梯样式）</li>
+</ul>
+<p><img src="6_1.png" alt="png"></p>
+<ul>
+<li>Moiré Patterns in Imaging 成像中的莫尔条纹</li>
+</ul>
+<p><img src="6_2.png" alt="png"></p>
+<center>成像中跳过奇数的行和列</center>
+
+<ul>
+<li>Wagon Wheel Illusion (False Motion) 车轮错觉（假动作）<ul>
+<li>车轮转太快的时候，看起来像反着转。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<ul>
+<li>Behind the Aliasing Artifacts 混叠伪影的背后<ul>
+<li>Signals are <strong>changing too fast</strong> (high frequency), but <strong>sampled too slowly</strong> 信号<strong>变化过快</strong>（高频），但<strong>采样过慢</strong></li>
+</ul>
+</li>
+</ul>
+<p><strong>Antialiasing Idea: Blurring (Pre-Filtering) Before Sampling 抗锯齿思想：采样前模糊（预滤波）</strong></p>
+<ul>
+<li>Rasterization: Point Sampling in Space 栅格化：空间中的点采样</li>
+</ul>
+<p><img src="6_3.png" alt="png"></p>
+<p>Note jaggies in rasterized triangle where pixel values are <strong>pure red or white</strong></p>
+<p>注意光栅化三角形中像素值为<strong>纯红色或白色</strong>的锯齿</p>
+<p><strong>Rasterization: Antialiased Sampling 光栅化：抗锯齿采样</strong></p>
+<p><img src="6_4.png" alt="png"></p>
+<p>Note antialiased edges in rasterized triangle where pixel values take intermediate values 注意光栅化三角形中的抗锯齿边，其中像素值取中间值</p>
+<p><strong>Antialiasing vs Blurred Aliasing 消除混叠与模糊混叠</strong> </p>
+<p><img src="6_5.png" alt="png"></p>
+<p>先采样再模糊是不对的！</p>
+<p>But why? 但为什么呢？</p>
+<ol>
+<li>Why undersampling introduces aliasing? 为什么欠采样会引入混叠？</li>
+<li>Why pre-filtering then sampling can do antialiasing? 为什么先滤波后采样可以做抗锯齿？<br>Let’s dig into fundamental reasons 让我们深入探究根本原因<br>And look at how to implement antialiased rasterization 看看如何实现抗锯齿光栅化</li>
+</ol>
+<p><strong>Frequency Domain 频域</strong></p>
+<p>Fourier Transform Decomposes A Signal Into Frequencies 傅立叶变换将信号分解为频率（时域与频域相互转换）</p>
+<p><img src="6_6.png" alt="png"></p>
+<p>Higher Frequencies Need Faster Sampling 更高的频率需要更快的采样</p>
+<p><img src="6_7.png" alt="png"></p>
+<ul>
+<li><p>Low-frequency signal: sampled adequately for reasonable reconstruction</p>
+<p>低频信号：充分采样以进行合理重建</p>
+</li>
+<li><p>High-frequency signal is insufficiently sampled: reconstruction incorrectly appears to be from a low frequency signal</p>
+<p><strong>高频信号采样不足：重建错误地显示为来自低频信号</strong></p>
+</li>
+</ul>
+<p><strong>Undersampling Creates Frequency Aliases 欠采样创建频率混叠</strong></p>
+<ul>
+<li>High-frequency signal is insufficiently sampled: samples erroneously appear to be from a low-frequency signal<ul>
+<li>高频信号采样不足：样本错误地看起来来自低频信号</li>
+</ul>
+</li>
+<li>Two frequencies that are indistinguishable at a given sampling rate are called “aliases”<ul>
+<li>在给定的采样率下无法区分的两个频率被称为“别名”</li>
+</ul>
+</li>
+</ul>
+<p><strong>Filtering = <font color="red">Getting rid of</font> certain frequency contents 过滤 = <font color="red">去除</font>某些频率内容</strong></p>
+<p><img src="6_8.png" alt="png"></p>
+<p>对图像进行傅里叶变换。</p>
+<p><strong>Filter Out Low Frequencies Only (Edges) 仅滤除低频（边缘）</strong></p>
+<p><img src="6_9.png" alt="png"></p>
+<center>高通滤波</center>
+
+<p><strong>Filter Out High Frequencies (Blur) 滤除高频（模糊）</strong></p>
+<p><img src="6_10.png" alt="png"></p>
+<center>低通滤波</center>
+
+<p><strong>Filter Out Low and High Frequencies 滤除低频和高频</strong></p>
+<p><img src="6_11.png" alt="png"></p>
+<p><strong>Filter Out Low and High Frequencies 滤除低频和高频</strong></p>
+<p><img src="6_12.png" alt="png"></p>
+<p><strong>Filtering = Convolution (= Averaging) 滤波=卷积（=平均）</strong></p>
+<p>卷积定理</p>
+<p>Convolution Theorem</p>
+<p>空间域中的卷积<strong>等于频率域中的乘法</strong>，反之亦然</p>
+<p>Convolution in the spatial domain is <strong>equal to multiplication in the frequency domain</strong>, and vice versa </p>
+<p>Option 1: 选项 1：</p>
+<ul>
+<li><p>Filter by convolution in the spatial domain</p>
+<p>在空间域中通过卷积进行滤波</p>
+</li>
+</ul>
+<p>Option 2: 选项 2：</p>
+<ul>
+<li><p>Transform to frequency domain (Fourier transform) </p>
+<p>变换到频域（傅立叶变换）</p>
+</li>
+<li><p>Multiply by Fourier transform of convolution kernel</p>
+<p>乘以卷积核的傅立叶变换</p>
+</li>
+<li><p>Multiply by Fourier transform of convolution kernel</p>
+<p>转换回空间域（傅立叶逆变换）</p>
+</li>
+</ul>
+<p><img src="6_13.png" alt="png"></p>
+<ul>
+<li><p>Box Function = “Low Pass” Filter</p>
+<p>方框函数 = “低通”滤波器</p>
+</li>
+<li><p>Wider Filter Kernel = Lower Frequencies</p>
+<p>较宽滤波器内核 = 较低频率</p>
+</li>
+</ul>
+<p><strong>Sampling = Repeating Frequency Contents 采样 = 重复频率内容</strong></p>
+<p><img src="6_14.png" alt="png"></p>
+<p><strong>Aliasing = Mixed Frequency Contents 混叠 = 混合频率内容（这是不好的）</strong></p>
+<p><img src="6_15.png" alt="png"></p>
+<p><strong>Antialiasing 抗锯齿</strong></p>
+<p>How Can We Reduce Aliasing Error? 如何减少混叠错误？<br>Option 1: Increase sampling rate 选项 1：提高采样率</p>
+<ul>
+<li><p>Essentially increasing the distance between replicas in the  Fourier domain</p>
+<p>本质上增加了傅立叶域中副本之间的距离</p>
+</li>
+<li><p>Higher resolution displays, sensors, framebuffers…</p>
+<p>更高分辨率的显示器、传感器、帧缓冲区…</p>
+</li>
+<li><p>But: costly &amp; may need very high resolution</p>
+<p>但是：成本高昂，可能需要非常高的分辨率</p>
+</li>
+</ul>
+<p>Option 2: Antialiasing 选项 2：消除混叠</p>
+<ul>
+<li><p>Making Fourier contents “narrower” before repeating</p>
+<p>在重复之前使傅立叶内容“变窄”</p>
+</li>
+<li><p>i.e. Filtering out high frequencies before sampling</p>
+<p>即在采样前滤除高频</p>
+</li>
+</ul>
+<p><strong>Antialiasing = Limiting, then repeating 抗锯齿=限制，然后重复</strong></p>
+<p><img src="6_16.png" alt="png"></p>
+<p><strong>Antialiasing By Averaging Values in Pixel Area 通过平均像素区域中的值消除混叠</strong><br>Solution: 解决方案：</p>
+<ul>
+<li><p>Convolve $f(x,y)$ by a 1-pixel box-blur</p>
+<p>通过1像素框模糊对f（x，y）进行卷积</p>
+<ul>
+<li><p>Recall: convolving = filtering = averaging</p>
+<p>回想：卷积 = 滤波 = 平均</p>
+</li>
+</ul>
+</li>
+<li><p>Then sample at every pixel’s center</p>
+<p>然后在每个像素的中心进行采样</p>
+</li>
+</ul>
+<p><strong>Antialiasing by Computing Average Pixel Value 通过计算平均像素值消除混叠</strong><br>In rasterizing one triangle, the average value inside a pixel area of $f(x,y) = inside(triangle,x,y)$ is equal to the area of the pixel covered by the triangle.</p>
+<p>在光栅化一个三角形时，$f(x,y) = inside(triangle,x,y)$ 的像素区域内的平均值等于三角形覆盖的像素的面积。</p>
+<p><img src="6_17.png" alt="png"></p>
+<p><strong>Antialiasing By Supersampling (MSAA) 通过超级采样消除混叠（MSAA）</strong></p>
+<p>Supersampling 超采样<br>Approximate the effect of the 1-pixel box filter by sampling multiple locations within a pixel and averaging their values:</p>
+<p>通过对一个像素内的多个位置进行采样并对其值取平均值来近似 1 像素盒滤波器的效果：</p>
+<p><img src="6_18.png" alt="png"></p>
+<ul>
+<li><p>Take $N\times N$ samples in each pixel.</p>
+<p>在每个像素中取 $N\times N$ 个样本。</p>
+</li>
+<li><p>Average the $N\times N$ samples “inside” each pixel.</p>
+<p>平均每个像素“内部”的 $N\times N$ 个样本。</p>
+</li>
+<li><p>This is the corresponding signal emitted by the display</p>
+<p>最终结果如下：</p>
+</li>
+</ul>
+<p><img src="6_19.png" alt="png"></p>
+<p>Antialiasing Today 现在消除混叠的方法<br>No free lunch! </p>
+<ul>
+<li><p>What’s the cost of MSAA?</p>
+<p>MSAA的代价是什么？更高的计算量</p>
+</li>
+</ul>
+<p>Milestones (personal idea) </p>
+<ul>
+<li><p>FXAA (Fast Ap proximate AA)</p>
+<p>基于图像后处理的抗锯齿算法</p>
+</li>
+<li><p>TAA (Temporal AA) </p>
+<p>基于时序的抗锯齿算法</p>
+</li>
+</ul>
+<p>Super resolution / super sampling 超分辨率/超采样</p>
+<ul>
+<li><p>From low resolution to high resolution</p>
+<p>从低分辨率到高分辨率</p>
+</li>
+<li><p>Essentially still “not enough samples” problem</p>
+<p>本质上仍然存在“样本不足”的问题</p>
+</li>
+<li><p>DLSS (Deep Learning Super Sampling)</p>
+<p>DLSS（深度学习超级采样）</p>
+</li>
+</ul>
 
   </div>
   <div id="gitalk-container"></div>
