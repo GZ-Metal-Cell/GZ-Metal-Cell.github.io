@@ -333,6 +333,8 @@
 <ul>
 <li><a href="#preparation">Preparation</a><ul>
 <li><a href="#機器學習2021概述領域自適應-domain-adaptation">【機器學習2021】概述領域自適應 (Domain Adaptation)</a></li>
+<li><a href="#ml-lecture-19-transfer-learning">ML Lecture 19-Transfer Learning</a></li>
+<li><a href="#機器學習-2022惡搞自督導式學習模型-bert-的三個故事">【機器學習 2022】惡搞自督導式學習模型 BERT 的三個故事</a></li>
 </ul>
 </li>
 </ul>
@@ -404,6 +406,217 @@
 <p>关于 Domain Generalization 的研究：</p>
 <p>Training 域大，Testing 域小：<a target="_blank" rel="noopener" href="https://ieeexplore.ieee.org/document/8578664">Domain Generalization with Adversarial Feature Learning | IEEE Conference Publication | IEEE Xplore</a></p>
 <p>Training 域小，Testing 域大：<a target="_blank" rel="noopener" href="https://arxiv.org/abs/1409.7495">[1409.7495] Unsupervised Domain Adaptation by Backpropagation (arxiv.org)</a></p>
+<h3><span id="ml-lecture-19-transfer-learning">ML Lecture 19-Transfer Learning</span></h3><ul>
+<li><a target="_blank" rel="noopener" href="https://www.youtube.com/watch?v=qD6iD4TFsdQ&amp;ab_channel=Hung-yiLee">ML Lecture 19: Transfer Learning - YouTube</a></li>
+<li><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/34589303">学一学Transfer Learning - 知乎 (zhihu.com)</a></li>
+</ul>
+<p><img src="P2.1.png" alt="png"></p>
+<p>关于迁移学习 Transfer Learning，分为两种情况：</p>
+<ul>
+<li>Similar domain, different tasks 相似域，不同任务</li>
+<li>Different domains, same task 不同域，相同任务</li>
+</ul>
+<p><img src="P2.2.png" alt="png"></p>
+<p>迁移学习的应用：Speech Recognition、Image Recognition、Text Analysis</p>
+<p><img src="P2.3.png" alt="png"></p>
+<p>类比于研究生与漫画家：</p>
+<ul>
+<li>研究生 → 漫画家</li>
+<li>导师 → 责编</li>
+<li>跑实验 → 画分镜</li>
+<li>投稿期刊 → 投稿 jump</li>
+</ul>
+<p><img src="P2.28.png" alt="png"></p>
+<p>对于 Transfer Learning，根据 Source Data (not directly related to the task) 和 Target Data 的情况，共有如下策略：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>Target Data / Source Data</th>
+<th>labelled</th>
+<th>unlabeled</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>labelled</td>
+<td>Fine-tuning 微调<br>Multitask Learning 多任务学习</td>
+<td>Self-taught learning 自学习<br><a target="_blank" rel="noopener" href="https://ai.stanford.edu/~hllee/icml07-selftaughtlearning.pdf">icml07-selftaughtlearning.pdf (stanford.edu)</a></td>
+</tr>
+<tr>
+<td>unlabeled</td>
+<td>Domain-adversarial training 域对抗训练<br>Zero-shot learning 零次学习</td>
+<td>Self-taught Clustering 自学聚类算法<br><a target="_blank" rel="noopener" href="http://www.machinelearning.org/archive/icml2008/papers/432.pdf">icml.dvi (machinelearning.org)</a></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><img src="P2.4.png" alt="png"></p>
+<p>Model Fine-tuning</p>
+<ul>
+<li><p>Task description</p>
+<ul>
+<li>Target data: $(x^t,y^t)$, 数量少</li>
+<li>Source data: $(x^s,y^s)$, 数量多</li>
+</ul>
+</li>
+<li><p>Example: (supervised) speaker adaption</p>
+<p>示例：（监督）speaker 自适应</p>
+<ul>
+<li><p>Target data: audio data and its transcriptions of specificuser</p>
+<p>目标数据：特定用户的音频数据及其转录</p>
+</li>
+<li><p>Source data: audio data and transcriptions from many speakers</p>
+<p>来源数据：来自许多 speaker 的音频数据和转录</p>
+</li>
+</ul>
+</li>
+<li><p>ldea: training a model by source data, then fine-tune the model by target data</p>
+<p>ldea：根据源数据训练模型，然后根据目标数据微调模型</p>
+<ul>
+<li><p>Challenge: only limited target data, so be careful about overfitting</p>
+<p>挑战：只有有限的目标数据，所以要小心过度拟合</p>
+</li>
+</ul>
+</li>
+</ul>
+<p><img src="P2.5.png" alt="png"></p>
+<blockquote>
+<p>Conservative Training：</p>
+<ul>
+<li>我们先通过 Source data 去 train 一个 model</li>
+<li>然后通过并不是直接把这个 model 当做 pre-trained 的 model，去用少量的 target data 去训练一个新的 model</li>
+<li>而是加入一些正则化项，来保证新的 model 和旧的 model 在 input 相同的情况下，得到的 output 尽可能的相近。</li>
+<li>为什么要这样做呢？其实原因很简单，如果我们在 train 新的 model 的过程中，并不去加这个正则项（也叫限制项），那么如果我们将 source data 送进新的 model，我们会发现整个 model 彻底坏掉了，他已经不具备原先 model 对于 source data 的表现能力了，这也是在 ML 中经常出现的一个非常重要的问题：灾难性遗忘问题</li>
+</ul>
+</blockquote>
+<p><img src="P2.6.png" alt="png"></p>
+<blockquote>
+<p>Layer Transfer</p>
+<ul>
+<li>首先还是和Conservative Training一样，通过Source data去train一个model</li>
+<li>然后将该model中某些层的parameters直接复制进去新的model中</li>
+<li>对于新model中那些没有得到parameters的layer，我们固定其他层的参数，通过Source data对那些没有被transfer到parameter的layer进行训练</li>
+<li>最后，如果target data的数据量比较充足，那么我们就可以在对整个网络进行fine-tuning一下，可以进一步提升模型的性能。</li>
+</ul>
+</blockquote>
+<p><img src="P2.7.png" alt="png"></p>
+<ul>
+<li><p>对于 Speech 任务，通常 copy 最后几层</p>
+</li>
+<li><p>对于 Image 任务，通常 copy 头几层</p>
+</li>
+</ul>
+<p><img src="P2.8.png" alt="png"></p>
+<p>关于 Layer Transfer 的研究：</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/1411.1792">[1411.1792] How transferable are features in deep neural networks? (arxiv.org)</a></li>
+</ul>
+<p><img src="P2.9.png" alt="png"></p>
+<p><img src="P2.10.png" alt="png"></p>
+<blockquote>
+<p>Multitask Learning</p>
+<ul>
+<li>再来回顾下 fine-tuning 的过程，在做 fine-tuning 的时候，我们更加关注的是 model 在target domain 上做的好不好，至于在 source domain 上做的到底怎么样，哪怕是将 source data 输入进这个新的 model 中，model 都坏掉了，也不要紧。只要这个新的 model 在 target domain 上做的很出色就够了。</li>
+<li>而 multitask learning 和 fine-tuning 的过程就不同了，multitask 是说，<strong>不仅要求我们的最终 model 在 target domain 上表现的相当出色，而且在 source domain 上同样也要表现的相当出色。</strong></li>
+</ul>
+</blockquote>
+<p><img src="P2.11.png" alt="png"></p>
+<p>Multitask Learning 在多语言机器翻译上的研究：<a target="_blank" rel="noopener" href="https://aclanthology.org/P15-1166.pdf">Multi-Task Learning for Multiple Language Translation (aclanthology.org)</a></p>
+<p><img src="P2.12.png" alt="png"></p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://ieeexplore.ieee.org/document/6639081">Cross-language knowledge transfer using multilingual deep neural network with shared hidden layers | IEEE Conference Publication | IEEE Xplore</a></li>
+</ul>
+<p><img src="P2.13.png" alt="png"></p>
+<blockquote>
+<p>Progressive Neural Networks</p>
+<ul>
+<li>这篇网络中的方法还是比较新的，首先对于 task 1 来说，我们 train 出一个 model</li>
+<li>然后将 task 1 中的第 i 层的输出直接输入进 task 2 中的第 i 层的输出，作为第 i + 1 层的输入。</li>
+<li>然后后面如果有 k 个网络，就会应用到前 k-1 个网络的信息。</li>
+</ul>
+</blockquote>
+<p><img src="P2.14.png" alt="png"></p>
+<p>对于 Source data 和 Target data 处于不同域：mismatch 时</p>
+<p><img src="P2.15.png" alt="png"></p>
+<p>Domain-adversarial training: 设计一个 Domain classifier，迫使 feature extractor 提取出相同分布的特征。</p>
+<p><img src="P2.16.png" alt="png"></p>
+<blockquote>
+<p>Domain-adversarial training</p>
+<ul>
+<li>第一部分绿色的 feature extractor 其实要做的就是提取出 source data 和 target data 的 feature，然后使得最后在做 classification 的时候，通过这些提取出来的 feature，能够得到一个非常好的精确度。他还有尽可能让这些 mismatch 的 data 混在一起，以至于 domain classifier 不能够正确的判断他们是否混在一起。</li>
+<li>第二部分蓝色的 label predictor 做的是，能够尽可能大的输出 classification 的精度</li>
+<li>第三部分红色的 domain classifier 做的是，能够尽可能的将从 feature extractor 中提取出来的 feature 进行分开，将其各自归属到其所属的 domain 里。</li>
+</ul>
+<p>当然，关于这个网络的 train，讲起来很容易，实际操作起来，肯定会像 GAN 一样，涉及到很多的 trick。</p>
+</blockquote>
+<p><img src="P2.17.png" alt="png"></p>
+<ul>
+<li><p><a target="_blank" rel="noopener" href="https://arxiv.org/abs/1409.7495">[1409.7495] Unsupervised Domain Adaptation by Backpropagation (arxiv.org)</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://arxiv.org/abs/1505.07818">[1505.07818] Domain-Adversarial Training of Neural Networks (arxiv.org)</a></p>
+</li>
+</ul>
+<p><img src="P2.18.png" alt="png"></p>
+<p><img src="P2.19.png" alt="png"></p>
+<p>Zero-shot Learning: Source data 和 Target data 是不同的 tasks.</p>
+<p><img src="P2.20.png" alt="png"></p>
+<p><img src="P2.21.png" alt="png"></p>
+<p><img src="P2.22.png" alt="png"></p>
+<p>在 NLP 领域中比较常见，可以用 word embedding</p>
+<p><img src="P2.23.png" alt="png"></p>
+<p><img src="P2.24.png" alt="png"></p>
+<p><img src="P2.25.png" alt="png"></p>
+<p>有关 Zero-shot Learning 的实验：<a target="_blank" rel="noopener" href="https://arxiv.org/abs/1312.5650v3">[1312.5650v3] Zero-Shot Learning by Convex Combination of Semantic Embeddings (arxiv.org)</a></p>
+<p><img src="P2.26.png" alt="png"></p>
+<p><img src="P2.27.png" alt="png"></p>
+<p><img src="P2.29.png" alt="png"></p>
+<p>Self-taught learning 自学习</p>
+<ul>
+<li>Learning to extract better representation from the source data (unsupervised approach) 学习从源数据中提取更好的表示（无监督方法）</li>
+<li>Extracting better representation for target data 为目标数据提取更好的表示</li>
+</ul>
+<h3><span id="機器學習-2022惡搞自督導式學習模型-bert-的三個故事">【機器學習 2022】惡搞自督導式學習模型 BERT 的三個故事</span></h3><p><img src="C1.1.png" alt="png"></p>
+<p>How versatile are self-supervised models?</p>
+<p>自监督模型的通用性如何？</p>
+<p><img src="C1.2.png" alt="png"></p>
+<ul>
+<li>Cross-lingual 跨语言</li>
+<li>Cross-discipline 跨学科</li>
+<li>Pre-training with artificial data 使用人工数据进行预训练</li>
+</ul>
+<p><strong>Cross-lingual</strong></p>
+<p><img src="C1.3.png" alt="png"></p>
+<p><img src="C1.4.png" alt="png"></p>
+<p><img src="C1.5.png" alt="png"></p>
+<p><img src="C1.6.png" alt="png"></p>
+<p><img src="C1.7.png" alt="png"></p>
+<p><img src="C1.8.png" alt="png"></p>
+<p><img src="C1.9.png" alt="png"></p>
+<p><img src="C1.10.png" alt="png"></p>
+<p><img src="C1.11.png" alt="png"></p>
+<p><img src="C1.12.png" alt="png"></p>
+<p><img src="C1.13.png" alt="png"></p>
+<p><img src="C1.14.png" alt="png"></p>
+<p><img src="C1.15.png" alt="png"></p>
+<p><strong>Cross-discipline</strong></p>
+<p><img src="C1.16.png" alt="png"></p>
+<p>用 BERT 做 DNA 分类。</p>
+<p><img src="C1.17.png" alt="png"></p>
+<p><img src="C1.18.png" alt="png"></p>
+<p><img src="C1.19.png" alt="png"></p>
+<p><img src="C1.20.png" alt="png"></p>
+<p><img src="C1.21.png" alt="png"></p>
+<p><img src="C1.22.png" alt="png"></p>
+<p><img src="C1.23.png" alt="png"></p>
+<p><img src="C1.24.png" alt="png"></p>
+<p><img src="C1.25.png" alt="png"></p>
+<p><img src="C1.26.png" alt="png"></p>
+<p><img src="C1.27.png" alt="png"></p>
+<p><img src="C1.28.png" alt="png"></p>
+<p><strong>Pre-training with artificial data</strong> 使用人造数据进行预训练 BERT</p>
+<p><img src="C1.29.png" alt="png"></p>
+<p><img src="C1.30.png" alt="png"></p>
 
   </div>
   <div id="gitalk-container"></div>
