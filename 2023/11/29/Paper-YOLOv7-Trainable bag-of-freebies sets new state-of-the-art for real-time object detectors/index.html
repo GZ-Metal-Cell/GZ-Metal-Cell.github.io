@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		
+<title>Paper-YOLOv7-Trainable bag-of-freebies sets new state-of-the-art for real-time object detectors-Zi-Zi's Journey</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="shortcut icon" type="image/x-icon" href="/image/favicon.ico">
+
+<link rel="stylesheet" href="/css/index.css">
+
+
+
+<meta name="keywords" content="论文,目标检测,">
+<meta name="description" content="">
+
+
+<script src="/js/jquery.min.js"></script>
+
+
+<script src="/js/index.js"></script>
+
+
+<script src="/js/fancybox.umd.js"></script>
+
+
+<script src="/js/fancybox-images.js"></script>
+
+
+<script src="/js/gitalk.min.js"></script>
+
+
+<script src="/js/hljs.min.js"></script>
+ 
+
+	<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.1.0"></head>
+
+	<body>
+		
+	<div class="header">
+		<div class="header-top" id="header-top">
+			<div class="h-left">
+				<a href="/">
+					<img src="/image/logo.png" alt="Quiet">
+				</a>
+			</div>
+			<div class="h-right">
+				<ul>
+					
+						
+								<li>
+									<a href="/">
+										主页
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/archives">
+										统计
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/categories">
+										类别
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/tags">
+										标签
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/links">
+										链接
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/about">
+										关于
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+				</ul>
+			</div>
+			<div class="h-right-close">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+					<path fill="none" d="M0 0h24v24H0z" />
+					<path d="M3 4h18v2H3V4zm0 7h18v2H3v-2zm0 7h18v2H3v-2z" fill="rgba(68,68,68,1)" />
+				</svg>
+			</div>
+		</div>
+	</div>
+	<div class="sidebar">
+    <!-- <div class="topo">
+        <h2>Zi-Zi</h2>
+    </div> -->
+    <ul>
+        
+        <li>
+            <a href="/">主页</a>
+        </li>
+        
+        <li>
+            <a href="/archives">统计</a>
+        </li>
+        
+        <li>
+            <a href="/categories">类别</a>
+        </li>
+        
+        <li>
+            <a href="/tags">标签</a>
+        </li>
+        
+        <li>
+            <a href="/links">链接</a>
+        </li>
+        
+        <li>
+            <a href="/about">关于</a>
+        </li>
+        
+    </ul>
+    <div class="my_foot">
+        
+        <a target="_blank" rel="noopener" href="https://weibo.com/u/5020307235">
+            <img src="/image/Weibo.png" alt="Quiet主题">
+        </a>
+        
+        <a target="_blank" rel="noopener" href="https://tieba.baidu.com/home/main?id=tb.1.ff6d2775.vFH7wrdW2ZjPCmyBHJcjnA">
+            <img src="/image/Tieba.png" alt="Quiet主题">
+        </a>
+        
+        <a target="_blank" rel="noopener" href="https://space.bilibili.com/11547880">
+            <img src="/image/Bilibili.png" alt="Quiet主题">
+        </a>
+        
+        <a target="_blank" rel="noopener" href="https://github.com/GZ-Metal-Cell">
+            <img src="/image/github.png" alt="Quiet主题">
+        </a>
+        
+    </div>
+</div>
+<div class='shelter'>
+</div>
+<style>
+    .shelter{
+        background-color: #333;
+        opacity:0.5;
+        cursor: pointer;
+        display: none; 
+        position: fixed;
+        left: 0;
+        top: 0; 
+        right: 0;
+        bottom: 0;
+        z-index: 1998;
+    }
+    .sidebar {
+        width: 66%;
+        height: 100%;
+        position: fixed;
+        top: 0;
+        right: -100%;
+        bottom: 0;
+        background: #fff;
+        z-index: 1999;
+        text-align: center;
+        box-shadow: -6px 0 20px rgba(98, 94, 94, .815);
+    }
+
+    /* .topo {
+        width: 100%;
+        height: 200px;
+        background: url(https://tuapi.eees.cc/api.php?type=302&category=fengjing) no-repeat;
+        background-size: 100% 100%;
+        position: relative;
+        display: flex;
+        align-items: flex-end
+    }
+
+    .topo h2 {
+        color: #fff;
+        z-index: 1;
+        position: relative;
+        margin: 0 0 10px 10px;
+        font-size: 1.2em;
+        box-sizing: border-box
+    }
+
+    .topo:before {
+        content: '';
+        background-image: url(/image/pattern.png);
+        background-repeat: repeat;
+        height: 100%;
+        left: 0;
+        position: absolute;
+        top: 0;
+        width: 100%;
+        z-index: 1
+    } */
+
+    .sidebar ul {
+        width: 100%;
+        margin-top: 50px
+    }
+
+    .sidebar ul li {
+        height: 50px;
+        list-style: none;
+        font-size: 1.2em;
+        text-align: right;
+        margin-right: 10px
+    }
+
+    .sidebar ul li a {
+        display: grid;
+        color: #5d606a;
+        text-overflow: ellipsis;
+        width: 100%;
+        text-decoration: none
+    }
+
+    .my_foot {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        position: absolute;
+        bottom: 0
+    }
+
+    .my_foot a {
+        text-decoration: none;
+        margin-right: 10px;
+        display: inline-block
+    }
+
+    .my_foot a img {
+        width: 30px;
+        height: 30px
+    }
+</style>
+
+<script>
+    $( function () {
+	$( '.h-right-close>svg' )
+		.click( function () {
+			$( '.sidebar' )
+				.animate( {
+					right: "0"
+				}, 500 );
+			$( '.shelter' )
+				.fadeIn( "slow" )
+		} );
+	$( '.shelter' )
+		.click( function ( e ) {
+			$( '.sidebar' )
+				.animate( {
+					right: "-100%"
+				}, 500 );
+			$( '.shelter' )
+				.fadeOut( "slow" )
+		} )
+} )
+
+</script>
+
+<div class="post">
+    <div class="post-header-background post-header-img"
+    style="background: url('https://tuapi.eees.cc/api.php?type=302&category=fengjing')" 
+>
+    <div class="post-header-background-content">
+        <ul class="post-header-tag">
+            
+                
+                    <li><a href="/tags/论文">论文</a></li>
+                
+                    <li><a href="/tags/目标检测">目标检测</a></li>
+                
+            
+        </ul>
+        
+        <h1>Paper-YOLOv7-Trainable bag-of-freebies sets new state-of-the-art for real-time object detectors</h1>
+        <div class="post-header-info">
+            <div class="post-header-info-author">
+                
+                    <svg t="1604839279282" class="icon" viewBox="0 0 1024 1024" version="1.1"
+                        xmlns="http://www.w3.org/2000/svg" p-id="2901" width="20" height="20">
+                        <path
+                            d="M513 956.3c-247.7 0-448-200.3-448-448S265.3 66.2 513 66.2s448 200.3 448 448-200.3 442.1-448 442.1z m0-830.9c-212.2 0-388.8 170.7-388.8 388.8C124.2 726.3 294.9 903 513 903c212.2 0 388.8-170.7 388.8-388.8S725.2 125.4 513 125.4z m0 430.2c-94.2 0-170.7-76.5-170.7-170.7S418.8 207.8 513 207.8s170.7 76.5 170.7 170.7S607.2 555.6 513 555.6z m0-289.1c-64.6 0-112 52.8-112 112s47.4 117.9 112 117.9 112-52.8 112-112-47.4-117.9-112-117.9z m0 689.8c-135.7 0-259-58.7-341.9-158.9l-11.8-17.8 11.8-17.8c76.5-117.9 206.2-188.5 347.8-188.5 135.7 0 265 64.6 341.9 182.6l11.8 17.8-11.8 17.8C778 897.1 648.7 956.3 513 956.3zM230.3 773.2C300.9 849.7 406.9 897 513 897c112 0 218.1-47.4 288.6-129.8-70.5-88.2-170.7-135.6-282.7-135.6s-218.1 53.3-288.6 141.6z"
+                            p-id="2902" fill="#ffffff"></path>
+                    </svg>
+                    
+                <span class="post-header-info-author-text"> <a href="../../about">Zi-Zi</a></span>
+                <div class="post-header-info-author-categories">
+                    
+                         <a href="/categories/学习" target="_blank" >学习</a>
+                    
+                </div>
+                <p>2023-11-29 08:55:00</p>
+            </div>
+        </div>
+    </div>
+</div>
+    <div class="post-content" id="content">
+  
+  <div id="article" class="post-content-info">
+    
+
+    <h1><span id="paper-yolov7-trainable-bag-of-freebies-sets-new-state-of-the-art-for-real-time-object-detectors">Paper-YOLOv7-Trainable bag-of-freebies sets new state-of-the-art for real-time object detectors</span></h1><h2><span id="目录">目录</span></h2><!-- toc -->
+<ul>
+<li><a href="#资源">资源</a></li>
+<li><a href="#全文">全文</a><ul>
+<li><a href="#abstract">Abstract</a></li>
+<li><a href="#1-introduction">1. Introduction</a></li>
+<li><a href="#2-related-work">2. Related work</a><ul>
+<li><a href="#21-real-time-object-detectors">2.1. Real-time object detectors</a></li>
+<li><a href="#22-model-re-parameterization">2.2. Model re-parameterization</a></li>
+<li><a href="#23-model-scaling">2.3. Model scaling</a></li>
+</ul>
+</li>
+<li><a href="#3-architecture">3. Architecture</a><ul>
+<li><a href="#31-extended-efficient-layer-aggregation-networks">3.1. Extended efficient layer aggregation networks</a></li>
+<li><a href="#32-model-scaling-for-concatenation-based-models">3.2. Model scaling for concatenation-based models</a></li>
+</ul>
+</li>
+<li><a href="#4-trainable-bag-of-freebies">4. Trainable bag-of-freebies</a><ul>
+<li><a href="#41-planned-re-parameterized-convolution">4.1. Planned re-parameterized convolution</a></li>
+<li><a href="#42-coarse-for-auxiliary-and-fine-for-lead-loss">4.2. Coarse for auxiliary and fine for lead loss</a></li>
+<li><a href="#43-other-trainable-bag-of-freebies">4.3. Other trainable bag-of-freebies</a></li>
+</ul>
+</li>
+<li><a href="#5-experiments">5. Experiments</a><ul>
+<li><a href="#51-experimental-setup">5.1. Experimental setup</a></li>
+<li><a href="#52-baselines">5.2. Baselines</a></li>
+<li><a href="#53-comparison-with-state-of-the-arts">5.3. Comparison with state-of-the-arts</a></li>
+<li><a href="#54-ablation-study">5.4. Ablation study</a><ul>
+<li><a href="#541-proposed-compound-scaling-method">5.4.1 Proposed compound scaling method</a></li>
+<li><a href="#542-proposed-planned-re-parameterized-model">5.4.2 Proposed planned re-parameterized model</a></li>
+<li><a href="#543-proposed-assistant-loss-for-auxiliary-head">5.4.3 Proposed assistant loss for auxiliary head</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#6-conclusions">6. Conclusions</a></li>
+<li><a href="#7-acknowledgements">7. Acknowledgements</a></li>
+<li><a href="#8-more-comparison">8. More comparison</a></li>
+</ul>
+</li>
+</ul>
+<!-- tocstop -->
+<h2><span id="资源">资源</span></h2><ul>
+<li><p>Arxiv: <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2207.02696">[2207.02696] YOLOv7: Trainable bag-of-freebies sets new state-of-the-art for real-time object detectors (arxiv.org)</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://github.com/WongKinYiu/yolov7">WongKinYiu/yolov7: Implementation of paper - YOLOv7: Trainable bag-of-freebies sets new state-of-the-art for real-time object detectors (github.com)</a></p>
+</li>
+</ul>
+<h2><span id="全文">全文</span></h2><h3><span id="abstract">Abstract</span></h3><p>YOLOv7 效果好。</p>
+<h3><span id="1-introduction">1. Introduction</span></h3><p>介绍实时目标检测。</p>
+<p>针对不同的边缘设备，仍在开发实时目标检测器。</p>
+<p>本文提出的方法与目前主流的实时目标检测器的发展方向不同。除了架构优化，我们提出的方法还将侧重于训练过程的优化。我们的重点将放在一些优化的模块和优化方法上，这些模块和方法可能会增加训练成本，以提高目标检测的准确性，但不会增加推理成本。</p>
+<p>我们将所提出的模块和优化方法称为可训练的 bag-of-freebies。</p>
+<p><strong>模型重新参数化</strong>和<strong>动态标签分配</strong>已成为网络训练和对象检测中的重要课题。</p>
+<hr>
+<p>本文的贡献总结如下：</p>
+<ul>
+<li>我们设计了几种可训练的 bag-of-freebies 方法，使得实时目标检测可以在不增加推理成本的情况下大大提高检测精度；</li>
+<li>对于对象检测方法的发展，我们发现了两个新的问题，即重新参数化的模块如何替换原始模块，以及动态标签分配策略如何处理对不同输出层的分配。此外，我们还提出了解决这些问题所带来的困难的方法；</li>
+<li>针对实时目标检测器，我们提出了“扩展”和“复合缩放”方法，可以有效地利用参数和计算；</li>
+<li>我们提出的方法可以有效地减少现有实时目标检测器约 40% 的参数和 50% 的计算量，并且具有更快的推理速度和更高的检测精度。</li>
+</ul>
+<h3><span id="2-related-work">2. Related work</span></h3><h4><span id="21-real-time-object-detectors">2.1. Real-time object detectors</span></h4><p>目前最强的 real-time object detector: YOLO、FCOS。要成为最先进的实时物体探测器，通常需要以下特征：</p>
+<ol>
+<li>更快、更强的网络架构；</li>
+<li>一种更有效的特征集成方法；</li>
+<li>更准确的检测方法；</li>
+<li>更稳健的损失函数；</li>
+<li>一种更有效的标签分配方法]；</li>
+<li>更有效的训练方法。</li>
+</ol>
+<p>在本文中，我们不打算探索需要额外数据或大型模型的自我监督学习或知识提取方法。相反，我们将为从上述（4）、（5）和（6）相关的最先进方法中得出的问题设计新的可训练的 bag-of-freebies 方法。</p>
+<h4><span id="22-model-re-parameterization">2.2. Model re-parameterization</span></h4><p><strong>模型重新参数化技术</strong>在推理阶段将多个计算模块合并为一个。模型重新参数化技术可以看作是一种集成技术，我们可以将其分为两类，即模块级集成和模型级集成。</p>
+<h4><span id="23-model-scaling">2.3. Model scaling</span></h4><p><strong>模型缩放</strong>是一种放大或缩小已经设计好的模型并使其适合不同计算设备的方法。模型缩放方法通常使用不同的缩放因子，如分辨率（输入图像的大小）、深度（层数）、宽度（通道的数量）和阶段（特征金字塔的数量），以在网络参数的数量、计算、推理速度和精度方面实现良好的权衡。网络体系结构搜索（NAS）是常用的模型缩放方法之一。</p>
+<h3><span id="3-architecture">3. Architecture</span></h3><h4><span id="31-extended-efficient-layer-aggregation-networks">3.1. Extended efficient layer aggregation networks</span></h4><p>ELAN</p>
+<p><img src="F2.png" alt="png"></p>
+<center><b>扩展高效层聚合网络</b>。所提出的扩展ELAN（E-ELAN）根本没有改变原始架构的梯度传输路径，而是使用组卷积来增加添加特征的基数，并以洗牌和合并基数的方式组合不同组的特征。这种操作方式可以增强不同特征图所学习的特征，并改进参数和计算的使用。</center>
+
+
+<h4><span id="32-model-scaling-for-concatenation-based-models">3.2. Model scaling for concatenation-based models</span></h4><p>模型缩放的主要目的是调整模型的一些属性，生成不同规模的模型，以满足不同推理速度的需要。</p>
+<p><img src="F3.png" alt="png"></p>
+<center><b>基于级联的模型的模型缩放</b>。从（a）到（b），我们观察到，当在基于级联的模型上执行深度缩放时，计算块的输出宽度也增加。这种现象将导致后续传输层的输入宽度增加。因此，我们提出（c），即，当对基于级联的模型执行模型缩放时，只需要缩放计算块中的深度，而传输层的其余部分则使用相应的宽度缩放来执行。</center>
+
+<h3><span id="4-trainable-bag-of-freebies">4. Trainable bag-of-freebies</span></h3><h4><span id="41-planned-re-parameterized-convolution">4.1. Planned re-parameterized convolution</span></h4><p>我们使用<strong>梯度流传播路径</strong>来分析如何将重新参数化的卷积与不同的网络相结合。</p>
+<p>我们还相应地设计了有计划的<strong>重新参数化卷积</strong>。</p>
+<h4><span id="42-coarse-for-auxiliary-and-fine-for-lead-loss">4.2. Coarse for auxiliary and fine for lead loss</span></h4><p><strong>深度监督</strong>是一种经常用于训练深度网络的技术。其主要概念是在网络的中间层添加额外的辅助头部，并以辅助损失为导向对浅层网络进行加权。即使对于像 ResNet 和 DenseNet 这样通常收敛良好的架构，深度监督仍然可以显著提高模型在许多任务上的性能。</p>
+<h4><span id="43-other-trainable-bag-of-freebies">4.3. Other trainable bag-of-freebies</span></h4><p>在本节中，我们将列出一些可训练的免费包。这些免费赠品是我们在训练中使用的一些技巧，但最初的概念并不是我们提出的。这些免费赠品的训练细节将在附录中详细说明，包括：</p>
+<ul>
+<li>conv-bn-activation 拓扑中的批量归一化：这部分主要将批量归一化层直接连接到卷积层。这样做的目的是在推理阶段将批量归一化的均值和方差集成到卷积层的偏差和权重中。</li>
+<li>YOLOR 中的隐式知识以加法和乘法的方式与卷积特征图相结合：YOLOR 中的隐知识可以在推理阶段通过预计算简化为向量。该向量可以与先前或后续卷积层的偏差和权重相结合。</li>
+<li>EMA 模型：EMA 是均值教师中使用的一种技术，在我们的系统中，我们使用 EMA 模型纯粹作为最终推理模型。</li>
+</ul>
+<h3><span id="5-experiments">5. Experiments</span></h3><h4><span id="51-experimental-setup">5.1. Experimental setup</span></h4><p>我们使用 Microsoft COCO 数据集进行实验并验证我们的目标检测方法。我们所有的实验都没有使用预先训练过的模型。也就是说，所有的模型都是从零开始训练的。</p>
+<h4><span id="52-baselines">5.2. Baselines</span></h4><p>从结果中我们可以看出，如果与 YOLOv4 相比，YOLOv7 的参数减少了 75%，计算量减少了 36%，AP 增加了 1.5%。若和最先进的 YOLOR-CSP 相比，YOLOv7 的参数减少了 43%，计算量减少了 15%，AP 增加了 0.4%。在微小模型的性能方面，与 YOLOv4-tiny-31 相比，YOLOv7tiny 减少了 39% 的参数数量和 49% 的计算量，但保持了相同的AP。</p>
+<p>在云 GPU 模型上，我们的模型仍然可以具有更高的 AP，同时将参数数量减少 19%，计算量减少 33%。</p>
+<h4><span id="53-comparison-with-state-of-the-arts">5.3. Comparison with state-of-the-arts</span></h4><p>我们将所提出的方法与用于通用 GPU 和移动 GPU 的最先进的对象检测器进行了比较，我们知道所提出的方法具有最佳的速度-精度综合权衡。如果我们将 YOLOv7 微小 SiLU 与 YOLOv5-N（r6.1）进行比较，我们的方法在 AP 上的速度快 127 fps，准确率高 10.7%。此外，YOLOv7 在 161 帧/秒的帧速率下具有 51.4% 的 AP，而具有相同 AP 的 PPYOLOE-L 仅具有 78 帧/秒帧速率。在参数使用方面，YOLOv7 比 PPYOLOE-L 少 41%。如果将推理速度为 114 fps 的 YOLOv7-X 与推理速度为 99 fps 的 YOLOv5-L（r6.1）进行比较，YOLOv7-X 可以提高 3.9% 的 AP。此外，就参数和计算量而言，与 YOLOv5-X（r6.1）相比，YOLOv7-X 减少了 22% 的参数和 8% 的计算，但将 AP 提高了 2.2%。</p>
+<h4><span id="54-ablation-study">5.4. Ablation study</span></h4><h5><span id="541-proposed-compound-scaling-method">5.4.1 Proposed compound scaling method</span></h5><p>我们提出的复合缩放策略可以更有效地利用参数和计算。</p>
+<h5><span id="542-proposed-planned-re-parameterized-model">5.4.2 Proposed planned re-parameterized model</span></h5><p>为了验证我们提出的计划重新参数化模型的通用性，我们分别将其用于基于级联的模型和基于残差的模型进行验证。</p>
+<h5><span id="543-proposed-assistant-loss-for-auxiliary-head">5.4.3 Proposed assistant loss for auxiliary head</span></h5><p>在辅助头的辅助损失实验中，我们比较了引导头和辅助头的一般独立标签分配方法，并比较了两种提出的引导引导标签分配方法。</p>
+<h3><span id="6-conclusions">6. Conclusions</span></h3><p>在本文中，我们提出了一种新的实时目标检测器的结构和相应的模型缩放方法。此外，我们发现目标检测方法的发展过程产生了新的研究课题。在研究过程中，我们发现了重新参数化模块的替换问题和动态标签分配的分配问题。为了解决这个问题，我们提出了可训练的 bag-of-freebies 方法来提高目标检测的准确性。在此基础上，我们开发了YOLOv7系列目标检测系统，该系统获得了最先进的结果。</p>
+<h3><span id="7-acknowledgements">7. Acknowledgements</span></h3><h3><span id="8-more-comparison">8. More comparison</span></h3><p>YOLOv7 在 5 FPS 到 160 FPS 的速度和精度方面超过了所有已知的对象检测器，并且在 GPU V100 上具有 30 FPS 或更高的所有已知实时对象检测器中具有最高的精度 56.8%AP 测试 dev/56.8%AP min-val。YOLOv7-E6 对象检测器（56 FPS V100，55.9%AP）在速度和精度上均优于基于变换器的检测器 SWIN-L 级联掩码 R-CNN（9.2 FPS A100，53.9%AP）509% 和 2%，基于卷积的检测器 ConvNeXt XL 级联掩码 R-有线网络（8.6 FPS A100、55.2%AP）551% 和 0.7%AP，YOLOv7 的性能也优于：YOLOR、YOLOX、Scaled YOLOv4、YOLOv5、DETR，可变形 DETR、DINO-5scaleR50、ViT-Adapter-B 和许多其他物体探测器的速度和精度。此外，我们只在 MS COCO 数据集上从头开始训练YOLOv7，而不使用任何其他数据集或预先训练的权重。</p>
+
+  </div>
+  <div id="gitalk-container"></div>
+</div>
+
+<script>
+  
+Fancybox.bind('[data-fancybox="fancybox-gallery-img"]', {
+  dragToClose: true,
+  Toolbar: true,
+  closeButton: "top",
+  Image: {
+    zoom: true,
+  },
+  on: {
+    initCarousel: (fancybox) => {
+      const slide = fancybox.Carousel.slides[fancybox.Carousel.page];
+      fancybox.$container.style.setProperty(
+        "--bg-image",
+        `url("${slide.$thumb.src}")`
+      );
+    },
+    "Carousel.change": (fancybox, carousel, to, from) => {
+      const slide = carousel.slides[to];
+      fancybox.$container.style.setProperty(
+        "--bg-image",
+        `url("${slide.$thumb.src}")`
+      );
+    },
+  },
+});
+</script>
+
+<style>
+    #noneimg img {
+        display: none;
+        z-index: 9999;
+        /* width: 600px !important; */
+        min-width: 0%;
+        max-width: 90%;
+        max-height: 80%;
+        border-radius: 0px;
+        position: fixed;
+        box-shadow: 0 0 0px #c3c3c300 !important;
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        margin: auto !important;
+    }
+
+    @media screen and (max-width:600px) {
+        #noneimg img {
+            max-width: 88%
+        }
+    }
+</style>
+
+    <div class="post-paging">
+    
+
+    
+    <a href="/2023/11/25/ML-%E6%9D%8E%E5%AE%8F%E6%AF%85-Lecture%2012-Reinforcement%20Learning/">
+        <div class="post-paging-next">
+            <span>下一篇</span>
+            <p>ML-李宏毅-Lecture 12-Reinforcement Learning</p>
+        </div>
+    </a>
+    
+</div>
+</div>
+		
+<div class="footer">
+	<div class="Copyright">
+		©2023 By Zi-Zi. 主题：<a
+			style="text-decoration: none;display: contents; color: #898F9F;"
+			target="_blank" rel="noopener" href="https://github.com/79e/hexo-theme-quiet">Quiet</a>
+	</div>
+	<div class="contact">
+		
+		<a target="_blank" rel="noopener" href="https://weibo.com/u/5020307235">
+			<img src="/image/Weibo.png" alt="Quiet主题">
+		</a>
+		
+		<a target="_blank" rel="noopener" href="https://tieba.baidu.com/home/main?id=tb.1.ff6d2775.vFH7wrdW2ZjPCmyBHJcjnA">
+			<img src="/image/Tieba.png" alt="Quiet主题">
+		</a>
+		
+		<a target="_blank" rel="noopener" href="https://space.bilibili.com/11547880">
+			<img src="/image/Bilibili.png" alt="Quiet主题">
+		</a>
+		
+		<a target="_blank" rel="noopener" href="https://github.com/GZ-Metal-Cell">
+			<img src="/image/github.png" alt="Quiet主题">
+		</a>
+		
+	</div>
+</div>
+
+<script src="/js/gotop.js"></script>
+
+
+<style type="text/css">
+    @media screen and (min-width: 600px) {
+        .goTop>span {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            opacity: 0.8;
+            background: rgba(18, 24, 58, 0.06);
+            text-align: center;
+            transition: border .5s;
+            border: 1px solid rgba(18, 24, 58, 0.06);
+
+            -moz-transition: border .5s;
+            /* Firefox 4 */
+            -webkit-transition: border .5s;
+            /* Safari 和 Chrome */
+            -o-transition: border .5s;
+            /* Opera */
+        }
+
+        .goTop>span:hover {
+            border: 1px solid #6680B3;
+        }
+
+
+        .goTop {
+            position: fixed;
+            right: 30px;
+            bottom: 80px;
+        }
+
+        .goTop>span>svg {
+            width: 20px;
+            height: 20px;
+            opacity: 0.7;
+        }
+
+    }
+
+    @media screen and (max-width: 600px) {
+        .goTop {
+            display: none;
+        }
+    }
+</style>
+<div class="goTop" id="js-go_top">
+    <span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+            <g>
+                <path d="M13 12v8h-2v-8H4l8-8 8 8z"></path>
+            </g>
+        </svg>
+    </span>
+</div>
+<script>
+    $( '#js-go_top' )
+	.gotoTop( {
+		offset: 500,
+		speed: 300,
+		animationShow: {
+			'transform': 'translate(0,0)',
+			'transition': 'transform .5s ease-in-out'
+		},
+		animationHide: {
+			'transform': 'translate(100px,0)',
+			'transition': 'transform .5s ease-in-out'
+		}
+	} );
+</script>
+
+
+    <script src="/js/md5.min.js"></script>
+    <!-- Gitalk -->
+    <script>
+        const data = '{"clientID":"f3a4ea928b90c73f66d4","clientSecret":"d697ef6f42e83e83c49ff8d19e753f36bc375015","repo":"GZ-Metal-Cell.github.io","owner":"GZ-Metal-Cell","admin":"GZ-Metal-Cell"}'
+        const gitalk = new Gitalk({
+            ...JSON.parse( data),
+            id:md5(location.pathname), //  location.pathname,
+            distractionFreeMode:false
+        })
+        
+        if(Boolean('true')){
+            gitalk.render('gitalk-container')
+        }
+    </script>
+
+<script>
+	console.log('\n %c Hexo-Quiet 主题 %c https://github.com/79e/hexo-theme-quiet \n', 'color: #fadfa3; background: #030307; padding:5px 0;', 'background: #fadfa3; padding:5px 0;')
+</script>
+	<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+</html>
+
