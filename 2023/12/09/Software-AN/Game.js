@@ -3,7 +3,7 @@
 var p; // shortcut to reference prototypes
 var lib={};var ss={};var img={};
 lib.ssMetadata = [
-		{name:"Game_atlas_1", frames: [[1765,0,280,280],[0,905,303,303],[1158,563,416,416],[1347,0,416,416],[0,563,1156,340],[0,0,1345,561],[305,905,303,303],[610,905,269,269],[1576,418,416,416],[1576,836,416,416]]}
+		{crossOrigin :'Anonymous',name:"Game_atlas_1", frames: [[1765,0,280,280],[0,905,303,303],[1158,563,416,416],[1347,0,416,416],[0,563,1156,340],[0,0,1345,561],[305,905,303,303],[610,905,269,269],[1576,418,416,416],[1576,836,416,416]]}
 ];
 
 
@@ -1329,8 +1329,10 @@ an.makeResponsive = function(isResp, respDim, isScale, scaleType, domContainers)
 		domContainers[0].width = w * pRatio * sRatio;			
 		domContainers[0].height = h * pRatio * sRatio;
 		domContainers.forEach(function(container) {				
-			container.style.width = w * sRatio + 'px';				
-			container.style.height = h * sRatio + 'px';			
+			// container.style.width = w * sRatio + 'px';				
+			// container.style.height = h * sRatio + 'px';			
+			container.style.width = '100%';				
+			// container.style.height = '80%';			
 		});
 		stage.scaleX = pRatio*sRatio;			
 		stage.scaleY = pRatio*sRatio;
