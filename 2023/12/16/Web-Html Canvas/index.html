@@ -341,6 +341,12 @@
 <li><a href="#01-初识-canvas">01-初识 Canvas</a></li>
 <li><a href="#02-canvas上下文对象与浏览器支持">02-canvas上下文对象与浏览器支持</a></li>
 <li><a href="#03-canvas填充与路径绘制">03-Canvas填充与路径绘制</a></li>
+<li><a href="#04-canvas绘制圆弧与笑脸">04-canvas绘制圆弧与笑脸</a></li>
+<li><a href="#05-绘制折线线段">05-绘制折线线段</a></li>
+<li><a href="#06-actto绘制圆弧方式">06-actTo绘制圆弧方式</a></li>
+<li><a href="#07-二次贝塞尔曲线实现聊天气泡框">07-二次贝塞尔曲线实现聊天气泡框</a></li>
+<li><a href="#08-三次贝塞尔曲线实现献给朋友的爱心">08-三次贝塞尔曲线实现献给朋友的爱心</a></li>
+<li><a href="#09-封装路径path2d">09-封装路径Path2d</a></li>
 </ul>
 <!-- tocstop -->
 <h2><span id="资源">资源</span></h2><ul>
@@ -420,7 +426,125 @@
 <hr>
 <p><code>ctx.beginPath();</code> 和 <code>ctx.closePath();</code> 分别表示提笔和抬笔操作，这样绘制的时候不会覆盖之前定义的图形。（有种 Windows 程序设计的味道）</p>
 <figure class="highlight javascript"><table><tr><td class="code"><pre><code class="hljs javascript">ctx.<span class="hljs-title function_">beginPath</span>();<br>ctx.<span class="hljs-title function_">rect</span>(<span class="hljs-number">200</span>, <span class="hljs-number">150</span>, <span class="hljs-number">200</span>, <span class="hljs-number">100</span>);<br>ctx.<span class="hljs-title function_">stroke</span>();<br>ctx.<span class="hljs-title function_">closePath</span>();<br><br>ctx.<span class="hljs-title function_">beginPath</span>();<br>ctx.<span class="hljs-title function_">rect</span>(<span class="hljs-number">100</span>, <span class="hljs-number">200</span>, <span class="hljs-number">200</span>, <span class="hljs-number">100</span>);<br>ctx.<span class="hljs-title function_">fill</span>();<br>ctx.<span class="hljs-title function_">closePath</span>();<br></code></pre></td></tr></table></figure>
+<h2><span id="04-canvas绘制圆弧与笑脸">04-canvas绘制圆弧与笑脸</span></h2><ul>
+<li>arc 是绘制圆弧的方法。</li>
+<li>ctx.arc(圆心x, 圆心y, 半径, 开始的角度, 结束的角度, 逆时针（true）还是顺时针（false）);</li>
+</ul>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><code class="hljs javascript"><span class="hljs-keyword">var</span> c1 = <span class="hljs-variable language_">document</span>.<span class="hljs-title function_">getElementById</span>(<span class="hljs-string">&#x27;c1&#x27;</span>)<br><span class="hljs-keyword">var</span> ctx = c1.<span class="hljs-title function_">getContext</span>(<span class="hljs-string">&#x27;2d&#x27;</span>);<br><br>ctx.<span class="hljs-title function_">arc</span>(<span class="hljs-number">300</span>, <span class="hljs-number">200</span>, <span class="hljs-number">50</span>, <span class="hljs-number">0</span>, <span class="hljs-title class_">Math</span>.<span class="hljs-property">PI</span> / <span class="hljs-number">4</span>);<br>ctx.<span class="hljs-title function_">stroke</span>();<br></code></pre></td></tr></table></figure>
+<p>使用圆弧工具绘制一个笑脸，记得要分别使用 <code>ctx.beginPath();</code> 和 <code>ctx.closePath();</code> 提笔和抬笔，不然路径会相连。</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><code class="hljs javascript"><span class="hljs-comment">// 1. 找到画布</span><br><span class="hljs-keyword">var</span> c1 = <span class="hljs-variable language_">document</span>.<span class="hljs-title function_">getElementById</span>(<span class="hljs-string">&#x27;c1&#x27;</span>)<br><span class="hljs-comment">// 2. 获取画笔，上下文对象</span><br><span class="hljs-keyword">var</span> ctx = c1.<span class="hljs-title function_">getContext</span>(<span class="hljs-string">&#x27;2d&#x27;</span>);<br><span class="hljs-comment">// 绘制一张脸</span><br>ctx.<span class="hljs-title function_">beginPath</span>();<br>ctx.<span class="hljs-title function_">arc</span>(<span class="hljs-number">75</span>, <span class="hljs-number">75</span>, <span class="hljs-number">50</span>, <span class="hljs-number">0</span>, <span class="hljs-title class_">Math</span>.<span class="hljs-property">PI</span> * <span class="hljs-number">2</span>);<br>ctx.<span class="hljs-title function_">stroke</span>();<br>ctx.<span class="hljs-title function_">closePath</span>();<br><span class="hljs-comment">// 绘制嘴巴</span><br>ctx.<span class="hljs-title function_">beginPath</span>();<br>ctx.<span class="hljs-title function_">arc</span>(<span class="hljs-number">75</span>, <span class="hljs-number">75</span>, <span class="hljs-number">35</span>, <span class="hljs-number">0</span>, <span class="hljs-title class_">Math</span>.<span class="hljs-property">PI</span>);<br>ctx.<span class="hljs-title function_">stroke</span>();<br>ctx.<span class="hljs-title function_">closePath</span>();<br><span class="hljs-comment">// 绘制嘴巴</span><br>ctx.<span class="hljs-title function_">beginPath</span>();<br>ctx.<span class="hljs-title function_">arc</span>(<span class="hljs-number">60</span>, <span class="hljs-number">65</span>, <span class="hljs-number">5</span>, <span class="hljs-number">0</span>, <span class="hljs-title class_">Math</span>.<span class="hljs-property">PI</span> * <span class="hljs-number">2</span>);<br>ctx.<span class="hljs-title function_">stroke</span>();<br>ctx.<span class="hljs-title function_">closePath</span>();       <br><span class="hljs-comment">// 绘制右眼</span><br>ctx.<span class="hljs-title function_">beginPath</span>();<br>ctx.<span class="hljs-title function_">arc</span>(<span class="hljs-number">90</span>, <span class="hljs-number">65</span>, <span class="hljs-number">5</span>, <span class="hljs-number">0</span>, <span class="hljs-title class_">Math</span>.<span class="hljs-property">PI</span> * <span class="hljs-number">2</span>);<br>ctx.<span class="hljs-title function_">stroke</span>();<br>ctx.<span class="hljs-title function_">closePath</span>();<br></code></pre></td></tr></table></figure>
+<hr>
+<p>上述方法代码太繁琐，改用 moveTo 来移动点。</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><code class="hljs javascript"><span class="hljs-comment">// 1. 找到画布</span><br><span class="hljs-keyword">var</span> c1 = <span class="hljs-variable language_">document</span>.<span class="hljs-title function_">getElementById</span>(<span class="hljs-string">&#x27;c1&#x27;</span>)<br><span class="hljs-comment">// 2. 获取画笔，上下文对象</span><br><span class="hljs-keyword">var</span> ctx = c1.<span class="hljs-title function_">getContext</span>(<span class="hljs-string">&#x27;2d&#x27;</span>);<br>ctx.<span class="hljs-title function_">beginPath</span>();<br><span class="hljs-comment">// 绘制一张脸</span><br>ctx.<span class="hljs-title function_">arc</span>(<span class="hljs-number">75</span>, <span class="hljs-number">75</span>, <span class="hljs-number">50</span>, <span class="hljs-number">0</span>, <span class="hljs-title class_">Math</span>.<span class="hljs-property">PI</span> * <span class="hljs-number">2</span>);<br>ctx.<span class="hljs-title function_">moveTo</span>(<span class="hljs-number">110</span>, <span class="hljs-number">75</span>);<br><span class="hljs-comment">// 绘制嘴巴</span><br>ctx.<span class="hljs-title function_">arc</span>(<span class="hljs-number">75</span>, <span class="hljs-number">75</span>, <span class="hljs-number">35</span>, <span class="hljs-number">0</span>, <span class="hljs-title class_">Math</span>.<span class="hljs-property">PI</span>);<br>ctx.<span class="hljs-title function_">moveTo</span>(<span class="hljs-number">65</span>, <span class="hljs-number">65</span>);<br><span class="hljs-comment">// 绘制嘴巴</span><br>ctx.<span class="hljs-title function_">arc</span>(<span class="hljs-number">60</span>, <span class="hljs-number">65</span>, <span class="hljs-number">5</span>, <span class="hljs-number">0</span>, <span class="hljs-title class_">Math</span>.<span class="hljs-property">PI</span> * <span class="hljs-number">2</span>);<br>ctx.<span class="hljs-title function_">moveTo</span>(<span class="hljs-number">95</span>, <span class="hljs-number">65</span>);<br><span class="hljs-comment">// 绘制右眼</span><br>ctx.<span class="hljs-title function_">arc</span>(<span class="hljs-number">90</span>, <span class="hljs-number">65</span>, <span class="hljs-number">5</span>, <span class="hljs-number">0</span>, <span class="hljs-title class_">Math</span>.<span class="hljs-property">PI</span> * <span class="hljs-number">2</span>);<br>ctx.<span class="hljs-title function_">stroke</span>();<br>ctx.<span class="hljs-title function_">closePath</span>();<br></code></pre></td></tr></table></figure>
+<hr>
+<p>最终效果：</p>
+<div style="text-align: center;">
+<canvas id="c4" width="600" height="400"></canvas>
+<script>
+// 1. 找到画布
+var c4 = document.getElementById('c4')
+// 2. 获取画笔，上下文对象
+var ctx = c4.getContext('2d');
+ctx.beginPath();
+// 绘制一张脸
+ctx.arc(75, 75, 50, 0, Math.PI * 2);
+ctx.moveTo(110, 75);
+// 绘制嘴巴
+ctx.arc(75, 75, 35, 0, Math.PI);
+ctx.moveTo(65, 65);
+// 绘制嘴巴
+ctx.arc(60, 65, 5, 0, Math.PI * 2);
+ctx.moveTo(95, 65);
+// 绘制右眼
+ctx.arc(90, 65, 5, 0, Math.PI * 2);
+ctx.stroke();
+ctx.closePath();
+</script>
+</div>
 
+<h2><span id="05-绘制折线线段">05-绘制折线线段</span></h2><figure class="highlight javascript"><table><tr><td class="code"><pre><code class="hljs javascript">ctx.<span class="hljs-title function_">moveTo</span>(<span class="hljs-number">300</span>, <span class="hljs-number">200</span>);<br>ctx.<span class="hljs-title function_">lineTo</span>(<span class="hljs-number">350</span>, <span class="hljs-number">250</span>);<br></code></pre></td></tr></table></figure>
+<p>将画笔移动到 (300, 200)，然后划线至 (350, 250)。</p>
+<hr>
+<p>范例：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><code class="hljs javascript"><span class="hljs-comment">// 1. 找到画布</span><br><span class="hljs-keyword">var</span> c1 = <span class="hljs-variable language_">document</span>.<span class="hljs-title function_">getElementById</span>(<span class="hljs-string">&#x27;c1&#x27;</span>)<br><span class="hljs-comment">// 2. 获取画笔，上下文对象</span><br><span class="hljs-keyword">var</span> ctx = c1.<span class="hljs-title function_">getContext</span>(<span class="hljs-string">&#x27;2d&#x27;</span>);<br>ctx.<span class="hljs-title function_">beginPath</span>();<br>ctx.<span class="hljs-title function_">moveTo</span>(<span class="hljs-number">300</span>, <span class="hljs-number">200</span>);<br>ctx.<span class="hljs-title function_">lineTo</span>(<span class="hljs-number">350</span>, <span class="hljs-number">250</span>);<br>ctx.<span class="hljs-title function_">lineTo</span>(<span class="hljs-number">350</span>, <span class="hljs-number">200</span>);<br>ctx.<span class="hljs-title function_">lineTo</span>(<span class="hljs-number">300</span>, <span class="hljs-number">200</span>);<br>ctx.<span class="hljs-title function_">stroke</span>();<br>ctx.<span class="hljs-title function_">closePath</span>();<br><br>ctx.<span class="hljs-title function_">beginPath</span>();<br>ctx.<span class="hljs-title function_">moveTo</span>(<span class="hljs-number">200</span>, <span class="hljs-number">100</span>);<br>ctx.<span class="hljs-title function_">lineTo</span>(<span class="hljs-number">250</span>, <span class="hljs-number">150</span>);<br>ctx.<span class="hljs-title function_">lineTo</span>(<span class="hljs-number">250</span>, <span class="hljs-number">100</span>);<br>ctx.<span class="hljs-title function_">lineTo</span>(<span class="hljs-number">200</span>, <span class="hljs-number">100</span>);<br>ctx.<span class="hljs-title function_">fill</span>();<br>ctx.<span class="hljs-title function_">closePath</span>();<br></code></pre></td></tr></table></figure>
+<p>最终效果：</p>
+<div style="text-align: center;">
+<canvas id="c5" width="600" height="400"></canvas>
+<script>
+// 1. 找到画布
+var c5 = document.getElementById('c5')
+// 2. 获取画笔，上下文对象
+var ctx = c5.getContext('2d');
+ctx.beginPath();
+ctx.moveTo(300, 200);
+ctx.lineTo(350, 250);
+ctx.lineTo(350, 200);
+ctx.lineTo(300, 200);
+ctx.stroke();
+ctx.closePath();
+ctx.beginPath();
+ctx.moveTo(200, 100);
+ctx.lineTo(250, 150);
+ctx.lineTo(250, 100);
+ctx.lineTo(200, 100);
+ctx.fill();
+ctx.closePath();
+</script>
+</div>
+
+<h2><span id="06-actto绘制圆弧方式">06-actTo绘制圆弧方式</span></h2><ul>
+<li>actTo，用 3 个点控制一段圆弧。</li>
+</ul>
+<p><img src="06.1.png" alt="png"></p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><code class="hljs javascript"><span class="hljs-comment">// 1. 找到画布</span><br><span class="hljs-keyword">var</span> c1 = <span class="hljs-variable language_">document</span>.<span class="hljs-title function_">getElementById</span>(<span class="hljs-string">&#x27;c1&#x27;</span>)<br><span class="hljs-comment">// 2. 获取画笔，上下文对象</span><br><span class="hljs-keyword">var</span> ctx = c1.<span class="hljs-title function_">getContext</span>(<span class="hljs-string">&#x27;2d&#x27;</span>);<br>ctx.<span class="hljs-title function_">beginPath</span>();<br><span class="hljs-comment">// 第 1 个点</span><br>ctx.<span class="hljs-title function_">moveTo</span>(<span class="hljs-number">300</span>, <span class="hljs-number">200</span>);<br><span class="hljs-comment">// 第 2 个点和第 3 个点，以及圆弧的半径</span><br>ctx.<span class="hljs-title function_">arcTo</span>(<span class="hljs-number">300</span>, <span class="hljs-number">250</span>, <span class="hljs-number">250</span>, <span class="hljs-number">250</span>, <span class="hljs-number">50</span>);<br>ctx.<span class="hljs-title function_">stroke</span>();<br>ctx.<span class="hljs-title function_">closePath</span>();<br></code></pre></td></tr></table></figure>
+<p><img src="06.2.png" alt="png"></p>
+<h2><span id="07-二次贝塞尔曲线实现聊天气泡框">07-二次贝塞尔曲线实现聊天气泡框</span></h2><ul>
+<li><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/136647181">曲线篇: 贝塞尔曲线 - 知乎 (zhihu.com)</a></li>
+</ul>
+<p>使用 <code>ctx.quadraticCurveTo()</code> 可以绘制二次贝塞尔曲线。</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://www.w3school.com.cn/tags/canvas_quadraticcurveto.asp">HTML canvas quadraticCurveTo() 方法 (w3school.com.cn)</a></li>
+</ul>
+<p><img src="07.1.png" alt="png"></p>
+<ul>
+<li>开始点：moveTo(<code>20</code>,<code>20</code>)</li>
+<li>控制点：quadraticCurveTo(<code>20</code>,<code>100</code>,200,20)</li>
+<li>结束点：quadraticCurveTo(20,100,<code>200</code>,<code>20</code>)</li>
+</ul>
+<hr>
+<p>使用二次贝塞尔曲线画一个聊天气泡框：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><code class="hljs javascript"><span class="hljs-comment">// 1. 找到画布</span><br><span class="hljs-keyword">var</span> c1 = <span class="hljs-variable language_">document</span>.<span class="hljs-title function_">getElementById</span>(<span class="hljs-string">&#x27;c1&#x27;</span>)<br><span class="hljs-comment">// 2. 获取画笔，上下文对象</span><br><span class="hljs-keyword">var</span> ctx = c1.<span class="hljs-title function_">getContext</span>(<span class="hljs-string">&#x27;2d&#x27;</span>);<br>ctx.<span class="hljs-title function_">beginPath</span>();<br><br>ctx.<span class="hljs-title function_">moveTo</span>(<span class="hljs-number">200</span>, <span class="hljs-number">300</span>);<br>ctx.<span class="hljs-title function_">quadraticCurveTo</span>(<span class="hljs-number">150</span>, <span class="hljs-number">300</span>, <span class="hljs-number">150</span>, <span class="hljs-number">200</span>);<br>ctx.<span class="hljs-title function_">quadraticCurveTo</span>(<span class="hljs-number">150</span>, <span class="hljs-number">100</span>, <span class="hljs-number">300</span>, <span class="hljs-number">100</span>);<br>ctx.<span class="hljs-title function_">quadraticCurveTo</span>(<span class="hljs-number">450</span>, <span class="hljs-number">100</span>, <span class="hljs-number">450</span>, <span class="hljs-number">200</span>);<br>ctx.<span class="hljs-title function_">quadraticCurveTo</span>(<span class="hljs-number">450</span>, <span class="hljs-number">300</span>, <span class="hljs-number">250</span>, <span class="hljs-number">300</span>);<br>ctx.<span class="hljs-title function_">quadraticCurveTo</span>(<span class="hljs-number">250</span>, <span class="hljs-number">350</span>, <span class="hljs-number">150</span>, <span class="hljs-number">350</span>);<br>ctx.<span class="hljs-title function_">quadraticCurveTo</span>(<span class="hljs-number">200</span>, <span class="hljs-number">350</span>, <span class="hljs-number">200</span>, <span class="hljs-number">300</span>);<br>ctx.<span class="hljs-title function_">stroke</span>();<br><br>ctx.<span class="hljs-title function_">closePath</span>();<br></code></pre></td></tr></table></figure>
+<p><img src="07.2.png" alt="png"> </p>
+<h2><span id="08-三次贝塞尔曲线实现献给朋友的爱心">08-三次贝塞尔曲线实现献给朋友的爱心</span></h2><ul>
+<li><p><code>ctx.bezierCurveTo(控制点 1, 控制点 2, 终点)</code> 函数。</p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://www.w3school.com.cn/tags/canvas_beziercurveto.asp">HTML canvas bezierCurveTo() 方法 (w3school.com.cn)</a></p>
+</li>
+</ul>
+<p>代码：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><code class="hljs javascript"><span class="hljs-comment">// 1. 找到画布</span><br><span class="hljs-keyword">var</span> c1 = <span class="hljs-variable language_">document</span>.<span class="hljs-title function_">getElementById</span>(<span class="hljs-string">&#x27;c1&#x27;</span>)<br><span class="hljs-comment">// 2. 获取画笔，上下文对象</span><br><span class="hljs-keyword">var</span> ctx = c1.<span class="hljs-title function_">getContext</span>(<span class="hljs-string">&#x27;2d&#x27;</span>);<br>ctx.<span class="hljs-title function_">beginPath</span>();<br><br>ctx.<span class="hljs-title function_">moveTo</span>(<span class="hljs-number">300</span>, <span class="hljs-number">200</span>);<br>ctx.<span class="hljs-title function_">bezierCurveTo</span>(<span class="hljs-number">350</span>, <span class="hljs-number">150</span>, <span class="hljs-number">400</span>, <span class="hljs-number">200</span>, <span class="hljs-number">300</span>, <span class="hljs-number">250</span>);<br>ctx.<span class="hljs-title function_">bezierCurveTo</span>(<span class="hljs-number">200</span>, <span class="hljs-number">200</span>, <span class="hljs-number">250</span>, <span class="hljs-number">150</span>, <span class="hljs-number">300</span>, <span class="hljs-number">200</span>);<br>ctx.<span class="hljs-title function_">stroke</span>();<br><br>ctx.<span class="hljs-title function_">closePath</span>();<br></code></pre></td></tr></table></figure>
+<p><img src="08.png" alt="png"></p>
+<h2><span id="09-封装路径path2d">09-封装路径Path2d</span></h2><p>将之前所画的心形封装成一个路径：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><code class="hljs javascript"><span class="hljs-keyword">var</span> heartPath = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Path2D</span>();<br>heartPath.<span class="hljs-title function_">moveTo</span>(<span class="hljs-number">300</span>, <span class="hljs-number">200</span>);<br>heartPath.<span class="hljs-title function_">bezierCurveTo</span>(<span class="hljs-number">350</span>, <span class="hljs-number">150</span>, <span class="hljs-number">400</span>, <span class="hljs-number">200</span>, <span class="hljs-number">300</span>, <span class="hljs-number">250</span>);<br>heartPath.<span class="hljs-title function_">bezierCurveTo</span>(<span class="hljs-number">200</span>, <span class="hljs-number">200</span>, <span class="hljs-number">250</span>, <span class="hljs-number">150</span>, <span class="hljs-number">300</span>, <span class="hljs-number">200</span>);<br>ctx.<span class="hljs-title function_">stroke</span>(heartPath);<br></code></pre></td></tr></table></figure>
+<p>或是使用 svg 字符串创建一个路径：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><code class="hljs javascript"><span class="hljs-keyword">var</span> polyline = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Path2D</span>(<span class="hljs-string">&quot;M10 10 h 80 v 80 h -80 z&quot;</span>);<br>ctx.<span class="hljs-title function_">stroke</span>(polyline);<br></code></pre></td></tr></table></figure>
+<p>最终效果：</p>
+<div style="text-align: center;">
+<canvas id="c9" width="600" height="400"></canvas>
+<script>
+// 1. 找到画布
+var c9 = document.getElementById('c9')
+// 2. 获取画笔，上下文对象
+var ctx = c9.getContext('2d');
+var heartPath = new Path2D();
+heartPath.moveTo(300, 200);
+heartPath.bezierCurveTo(350, 150, 400, 200, 300, 250);
+heartPath.bezierCurveTo(200, 200, 250, 150, 300, 200);
+ctx.stroke(heartPath);
+var polyline = new Path2D("M10 10 h 80 v 80 h -80 z");
+ctx.stroke(polyline);
+</script>
+</div>
   </div>
   <div id="gitalk-container"></div>
 </div>
