@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		
+<title>Paper-Fourier Contour Embedding for Arbitrary-Shaped Text Detection-Zi-Zi's Journey</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="shortcut icon" type="image/x-icon" href="/image/favicon.ico">
+
+<link rel="stylesheet" href="/css/index.css">
+
+
+
+<meta name="keywords" content="Python,论文,文本检测,">
+<meta name="description" content="论文阅读。">
+
+
+<script src="/js/jquery.min.js"></script>
+
+
+<script src="/js/index.js"></script>
+
+
+<script src="/js/fancybox.umd.js"></script>
+
+
+<script src="/js/fancybox-images.js"></script>
+
+
+<script src="/js/gitalk.min.js"></script>
+
+
+<script src="/js/hljs.min.js"></script>
+ 
+
+	<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.1.0"></head>
+
+	<body>
+		
+	<div class="header">
+		<div class="header-top" id="header-top">
+			<div class="h-left">
+				<a href="/">
+					<img src="/image/logo.png" alt="Quiet">
+				</a>
+			</div>
+			<div class="h-right">
+				<ul>
+					
+						
+								<li>
+									<a href="/">
+										主页
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/archives">
+										统计
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/categories">
+										类别
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/tags">
+										标签
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/links">
+										链接
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+						
+								<li>
+									<a href="/about">
+										关于
+									</a>
+									<span class="dot"></span>
+								</li>
+								
+									
+				</ul>
+			</div>
+			<div class="h-right-close">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+					<path fill="none" d="M0 0h24v24H0z" />
+					<path d="M3 4h18v2H3V4zm0 7h18v2H3v-2zm0 7h18v2H3v-2z" fill="rgba(68,68,68,1)" />
+				</svg>
+			</div>
+		</div>
+	</div>
+	<div class="sidebar">
+    <!-- <div class="topo">
+        <h2>Zi-Zi</h2>
+    </div> -->
+    <ul>
+        
+        <li>
+            <a href="/">主页</a>
+        </li>
+        
+        <li>
+            <a href="/archives">统计</a>
+        </li>
+        
+        <li>
+            <a href="/categories">类别</a>
+        </li>
+        
+        <li>
+            <a href="/tags">标签</a>
+        </li>
+        
+        <li>
+            <a href="/links">链接</a>
+        </li>
+        
+        <li>
+            <a href="/about">关于</a>
+        </li>
+        
+    </ul>
+    <div class="my_foot">
+        
+        <a target="_blank" rel="noopener" href="https://weibo.com/u/5020307235">
+            <img src="/image/Weibo.png" alt="Quiet主题">
+        </a>
+        
+        <a target="_blank" rel="noopener" href="https://tieba.baidu.com/home/main?id=tb.1.ff6d2775.vFH7wrdW2ZjPCmyBHJcjnA">
+            <img src="/image/Tieba.png" alt="Quiet主题">
+        </a>
+        
+        <a target="_blank" rel="noopener" href="https://space.bilibili.com/11547880">
+            <img src="/image/Bilibili.png" alt="Quiet主题">
+        </a>
+        
+        <a target="_blank" rel="noopener" href="https://github.com/GZ-Metal-Cell">
+            <img src="/image/github.png" alt="Quiet主题">
+        </a>
+        
+    </div>
+</div>
+<div class='shelter'>
+</div>
+<style>
+    .shelter{
+        background-color: #333;
+        opacity:0.5;
+        cursor: pointer;
+        display: none; 
+        position: fixed;
+        left: 0;
+        top: 0; 
+        right: 0;
+        bottom: 0;
+        z-index: 1998;
+    }
+    .sidebar {
+        width: 66%;
+        height: 100%;
+        position: fixed;
+        top: 0;
+        right: -100%;
+        bottom: 0;
+        background: #fff;
+        z-index: 1999;
+        text-align: center;
+        box-shadow: -6px 0 20px rgba(98, 94, 94, .815);
+    }
+
+    /* .topo {
+        width: 100%;
+        height: 200px;
+        background: url(https://tuapi.eees.cc/api.php?type=302&category=fengjing) no-repeat;
+        background-size: 100% 100%;
+        position: relative;
+        display: flex;
+        align-items: flex-end
+    }
+
+    .topo h2 {
+        color: #fff;
+        z-index: 1;
+        position: relative;
+        margin: 0 0 10px 10px;
+        font-size: 1.2em;
+        box-sizing: border-box
+    }
+
+    .topo:before {
+        content: '';
+        background-image: url(/image/pattern.png);
+        background-repeat: repeat;
+        height: 100%;
+        left: 0;
+        position: absolute;
+        top: 0;
+        width: 100%;
+        z-index: 1
+    } */
+
+    .sidebar ul {
+        width: 100%;
+        margin-top: 50px
+    }
+
+    .sidebar ul li {
+        height: 50px;
+        list-style: none;
+        font-size: 1.2em;
+        text-align: right;
+        margin-right: 10px
+    }
+
+    .sidebar ul li a {
+        display: grid;
+        color: #5d606a;
+        text-overflow: ellipsis;
+        width: 100%;
+        text-decoration: none
+    }
+
+    .my_foot {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        position: absolute;
+        bottom: 0
+    }
+
+    .my_foot a {
+        text-decoration: none;
+        margin-right: 10px;
+        display: inline-block
+    }
+
+    .my_foot a img {
+        width: 30px;
+        height: 30px
+    }
+</style>
+
+<script>
+    $( function () {
+	$( '.h-right-close>svg' )
+		.click( function () {
+			$( '.sidebar' )
+				.animate( {
+					right: "0"
+				}, 500 );
+			$( '.shelter' )
+				.fadeIn( "slow" )
+		} );
+	$( '.shelter' )
+		.click( function ( e ) {
+			$( '.sidebar' )
+				.animate( {
+					right: "-100%"
+				}, 500 );
+			$( '.shelter' )
+				.fadeOut( "slow" )
+		} )
+} )
+
+</script>
+
+<div class="post">
+    <div class="post-header-background post-header-img"
+    style="background: url('https://tuapi.eees.cc/api.php?type=302&category=fengjing')" 
+>
+    <div class="post-header-background-content">
+        <ul class="post-header-tag">
+            
+                
+                    <li><a href="/tags/Python">Python</a></li>
+                
+                    <li><a href="/tags/论文">论文</a></li>
+                
+                    <li><a href="/tags/文本检测">文本检测</a></li>
+                
+            
+        </ul>
+        
+        <h1>Paper-Fourier Contour Embedding for Arbitrary-Shaped Text Detection</h1>
+        <div class="post-header-info">
+            <div class="post-header-info-author">
+                
+                    <svg t="1604839279282" class="icon" viewBox="0 0 1024 1024" version="1.1"
+                        xmlns="http://www.w3.org/2000/svg" p-id="2901" width="20" height="20">
+                        <path
+                            d="M513 956.3c-247.7 0-448-200.3-448-448S265.3 66.2 513 66.2s448 200.3 448 448-200.3 442.1-448 442.1z m0-830.9c-212.2 0-388.8 170.7-388.8 388.8C124.2 726.3 294.9 903 513 903c212.2 0 388.8-170.7 388.8-388.8S725.2 125.4 513 125.4z m0 430.2c-94.2 0-170.7-76.5-170.7-170.7S418.8 207.8 513 207.8s170.7 76.5 170.7 170.7S607.2 555.6 513 555.6z m0-289.1c-64.6 0-112 52.8-112 112s47.4 117.9 112 117.9 112-52.8 112-112-47.4-117.9-112-117.9z m0 689.8c-135.7 0-259-58.7-341.9-158.9l-11.8-17.8 11.8-17.8c76.5-117.9 206.2-188.5 347.8-188.5 135.7 0 265 64.6 341.9 182.6l11.8 17.8-11.8 17.8C778 897.1 648.7 956.3 513 956.3zM230.3 773.2C300.9 849.7 406.9 897 513 897c112 0 218.1-47.4 288.6-129.8-70.5-88.2-170.7-135.6-282.7-135.6s-218.1 53.3-288.6 141.6z"
+                            p-id="2902" fill="#ffffff"></path>
+                    </svg>
+                    
+                <span class="post-header-info-author-text"> <a href="../../about">Zi-Zi</a></span>
+                <div class="post-header-info-author-categories">
+                    
+                         <a href="/categories/学习" target="_blank" >学习</a>
+                    
+                </div>
+                <!-- 显示页面访问 pv 数 -->
+                <p>2023-12-20 15:34:00</p>
+                
+                    <span id="busuanzi_container_page_pv" style='display:none; color: white;font-size: 14px;'> 阅读数：<span id="busuanzi_value_page_pv" style='color: white;font-size: 14px;margin-left: 0px;'></span></span>
+                
+            </div>
+        </div>
+    </div>
+</div>
+    <div class="post-content" id="content">
+  
+  <div id="article" class="post-content-info">
+    
+
+    <h2><span id="paper-fourier-contour-embedding-for-arbitrary-shaped-text-detection">Paper-Fourier Contour Embedding for Arbitrary-Shaped Text Detection</span></h2><h2><span id="目录">目录</span></h2><!-- toc -->
+<ul>
+<li><a href="#资源">资源</a></li>
+<li><a href="#正文">正文</a><ul>
+<li><a href="#abstract">Abstract</a></li>
+<li><a href="#1-introduction">1. Introduction</a></li>
+<li><a href="#2-related-work">2. Related Work</a><ul>
+<li><a href="#21-segmentation-based-methods">2.1. Segmentation-Based Methods</a></li>
+<li><a href="#22-regression-based-methods">2.2. Regression-Based Methods</a></li>
+<li><a href="#23-explicit-vs-implicit-text-shape-representation">2.3. Explicit vs. Implicit Text Shape Representation</a></li>
+</ul>
+</li>
+<li><a href="#3-approach">3. Approach</a><ul>
+<li><a href="#31-fourier-contour-embedding">3.1. Fourier Contour Embedding</a></li>
+<li><a href="#32-fcenet">3.2. FCENet</a></li>
+</ul>
+</li>
+<li><a href="#4-experiments">4. Experiments</a><ul>
+<li><a href="#41-datasets">4.1. Datasets</a></li>
+<li><a href="#42-implementation-details">4.2. Implementation Details</a></li>
+<li><a href="#43-evaluation-of-fce">4.3. Evaluation of FCE</a></li>
+<li><a href="#44-evaluation-of-fcenet">4.4. Evaluation of FCENet</a></li>
+<li><a href="#45-evaluation-on-benchmark-datasets">4.5. Evaluation on Benchmark Datasets</a></li>
+<li><a href="#46-evaluation-on-highly-curved-subset">4.6. Evaluation on Highly-curved Subset</a></li>
+</ul>
+</li>
+<li><a href="#5-conclusion">5. Conclusion</a></li>
+</ul>
+</li>
+</ul>
+<!-- tocstop -->
+<h2><span id="资源">资源</span></h2><ul>
+<li><p>ParperWithCode: <a target="_blank" rel="noopener" href="https://paperswithcode.com/paper/fourier-contour-embedding-for-arbitrary">Fourier Contour Embedding for Arbitrary-Shaped Text Detection | Papers With Code</a></p>
+</li>
+<li><p>CVPR: <a target="_blank" rel="noopener" href="https://openaccess.thecvf.com/content/CVPR2021/html/Zhu_Fourier_Contour_Embedding_for_Arbitrary-Shaped_Text_Detection_CVPR_2021_paper.html">CVPR 2021 Open Access Repository (thecvf.com)</a></p>
+</li>
+</ul>
+<figure class="highlight latex"><table><tr><td class="code"><pre><code class="hljs latex">@inproceedings&#123;zhu2021fourier,<br>  title=&#123;Fourier contour embedding for arbitrary-shaped text detection&#125;,<br>  author=&#123;Zhu, Yiqin and Chen, Jianyong and Liang, Lingyu and Kuang, Zhanghui and Jin, Lianwen and Zhang, Wayne&#125;,<br>  booktitle=&#123;Proceedings of the IEEE/CVF conference on computer vision and pattern recognition&#125;,<br>  pages=&#123;3123--3131&#125;,<br>  year=&#123;2021&#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h2><span id="正文">正文</span></h2><h3><span id="abstract">Abstract</span></h3><p>&nbsp;&nbsp;&nbsp;&nbsp;对于 <strong>arbitrary-shaped text detection</strong>，现有方法大都通过笛卡尔坐标系或极坐标系中的掩模或轮廓点序列来对图像空间域中的文本实例进行建模。点序列表示可能对具有高度弯曲形状的文本建模的能力有限。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;为了解决这些问题，我们在傅立叶域中对文本实例进行建模，并提出了一种新的<strong>傅立叶轮廓嵌入（FCE）方法</strong>，将任意形状的文本轮廓表示为紧凑签名。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;我们进一步构建了具有<strong>骨干</strong>、<strong>特征金字塔网络（FPN）</strong>和具有<strong>傅立叶逆变换（IFT）</strong>和<strong>非最大值抑制（NMS）的简单后处理</strong>的  FCENet。与以往的方法不同，FCENet 首先预测文本实例的紧凑傅立叶特征，然后在测试过程中通过 IFT 和 NMS 重建文本轮廓。大量实验表明，即使在高度弯曲的形状下，FCE 也能准确、稳健地拟合场景文本的轮廓，并验证了 FCENet 在任意形状文本检测中的有效性和良好的泛化能力。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;在 CTW1500 和 TotalText 优于当前 SOTA！</p>
+<h3><span id="1-introduction">1. Introduction</span></h3><p>&nbsp;&nbsp;&nbsp;&nbsp;基于空间域的方法有明显的缺点。掩码表示可能导致本质上计算昂贵的后处理，并且经常需要大量的训练数据。轮廓点序列对高度弯曲的文本建模的能力可能有限。</p>
+<p><img src="F1.png" alt="png"></p>
+<center>这张图认为基于轮廓点序列（极坐标）建模的 TextRay 不能很好地对高度弯曲的文本进行建模。</center>
+
+<p>&nbsp;&nbsp;&nbsp;&nbsp;在本文中，我们通过傅立叶变换在傅立叶域而不是空间域中对文本实例轮廓进行建模，傅立叶变换可以以稳健而简单的方式通过渐进近似拟合任何闭合轮廓。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;为此，我们提出了<strong>傅立叶轮廓嵌入（FCE）方法</strong>，将点序列中的文本实例轮廓转换为傅立叶特征向量。</p>
+<ul>
+<li>首先，我们提出了一种重采样方案，以在每个文本轮廓上获得固定数量的密集点。为了保持生成的傅立叶签名向量的唯一性，我们将文本轮廓与通过文本中心点的水平线之间的最右侧交点设置为采样起点，将采样方向固定为顺时针方向，并保持沿文本轮廓的采样间隔不变。</li>
+<li>其次，通过傅立叶变换（FT）将空间域中轮廓的采样点序列嵌入到傅立叶域中。</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;FCE 用于文本实例表示的优势有三个方面：</p>
+<ul>
+<li><p><strong>Flexible</strong>：任何闭合的轮廓，包括极其复杂的形状，都可以精确地拟合；</p>
+</li>
+<li><p><strong>Compactness</strong>（紧凑性）：傅立叶特征向量是我们方法的紧凑性。在我们的实验中，傅立叶度K=5可以实现对文本的非常精确的近似。</p>
+</li>
+<li><p><strong>Simplicity</strong>：采样点序列和文本轮廓的傅立叶特征向量之间的转换被公式化为FT和逆FT。因此，FCE方法易于实现，无需引入复杂的后处理。</p>
+</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;配备了 FCE，我们进一步构建了用于任意形状文本检测的 <strong>FCENet</strong>。特别地，它由具有<strong>可变形卷积网络（DCN）</strong>、<strong>特征金字塔网络（FPN）</strong>和<strong>傅立叶预测报头的 ResNet50</strong> 的主干组成。收割台有两个单独的分支。即<strong>分类分支</strong>和<strong>回归分支</strong>。前者预测文本区域遮罩和文本中心区域遮罩。后者预测傅立叶域中的文本傅立叶特征向量，这些向量被馈送到傅立叶逆变换（IFT）中以重构文本轮廓点序列。地面实况文本轮廓点序列被用作监控信号。由于 FCE 的重采样方案，我们在回归分支中的损失在不同的数据集之间是兼容的，尽管 CTW1500 和 Total Text 等数据集对于每个文本实例具有不同数量的轮廓点。</p>
+<h3><span id="2-related-work">2. Related Work</span></h3><h4><span id="21-segmentation-based-methods">2.1. Segmentation-Based Methods</span></h4><p>&nbsp;&nbsp;&nbsp;&nbsp;基于分割的方法。</p>
+<h4><span id="22-regression-based-methods">2.2. Regression-Based Methods</span></h4><p>&nbsp;&nbsp;&nbsp;&nbsp;基于回归的方法。</p>
+<h4><span id="23-explicit-vs-implicit-text-shape-representation">2.3. Explicit vs. Implicit Text Shape Representation</span></h4><p>&nbsp;&nbsp;&nbsp;&nbsp;从文本形状表示的角度来看，目前的模型大致可以分为两类。</p>
+<ul>
+<li>通过每像素掩模或通过变换特征重建的掩模对文本形状进行隐式建模的方法。</li>
+<li>使用笛卡尔系统或极坐标系统中的轮廓点序列对文本形状显式建模的方法。</li>
+</ul>
+<h3><span id="3-approach">3. Approach</span></h3><h4><span id="31-fourier-contour-embedding">3.1. Fourier Contour Embedding</span></h4><p>&nbsp;&nbsp;&nbsp;&nbsp;我们用实变量 $t\in [0,1]$ 的一个复值函数 $f:\mathbb{R}\mapsto\mathbb{C}$ 表示任意文本封闭轮廓如下:</p>
+<script type="math/tex; mode=display">f(t)=x(t)+iy(t)</script><p>&nbsp;&nbsp;&nbsp;&nbsp;其中 $i$ 表示虚单位。$(x(t),y(t))$ 表示在特定时间 $t$ 的空间坐标。由于 $f$ 是闭合轮廓，因此 $f(t)＝f(t+1)$。$f(t)$ 可以通过傅立叶逆变换（IFT）重新表述为：</p>
+<script type="math/tex; mode=display">f(t)=f(t,\mathbf{c})=\sum_{k=-\infty}^{+\infty}\mathbf{c}_ke^{2\pi ikt}</script><p>&nbsp;&nbsp;&nbsp;&nbsp;其中 $k\in\mathbb Z$ 表示频率，$\mathbf c_k$ 是用于表征频率k的初始状态的复值傅立叶系数。上面方程中的每个分量 $\mathbf{c}_ke^{2\pi ikt}$ 表示具有给定初始手方向矢量 $\mathbf c_k$的固定频率 $k$ 的圆周运动。因此，轮廓可以被视为不同频繁圆周运动的组合，如下图中所示的粉红色圆圈。</p>
+<p><img src="F2.png" alt="png"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;由于在实际应用中我们无法获得文本轮廓函数 $f$ 的解析形式，因此我们可以将连续函数 $f$ 离散为 $N$ 个点，作为 $\left\{f\left(\frac{n}{N}\right)\right\}$，其中 $n\in [1,…,N]$。在这种情况下， $\mathbb c_k$ 可以通过傅立叶变换计算为：</p>
+<script type="math/tex; mode=display">\mathbf{c}_k=\frac1N\sum_{n=1}^Nf(\frac nN)e^{-2\pi ik\frac nN}</script><p>&nbsp;&nbsp;&nbsp;&nbsp;其中 $\mathbf c_k＝u_k+iv_k$，其中 $u_k$ 是复数的实部并且 $v_k$ 是复数的像部。特别地，当 $k=0$ 时，$\mathbf c_0=u_0+iv_0=\frac{1}{N}\sum_nf\left(\frac{n}{N}\right)$ 是轮廓的中心位置。对于任何文本轮廓 $f$，我们提出的傅立叶轮廓嵌入（FCE）方法可以在傅立叶域中将其表示为紧致的 $2(2K+1)$ 维向量 $[u_{−K},v_{−K},…,u_0,v_0,…,u_K,v_K]$，称为傅立叶签名向量。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;我们的 FCE 方法包括两个阶段。即重采样阶段和傅里叶变换阶段。具体来说，在重采样阶段，我们在文本轮廓上等距采样固定数目的N个点(实验中N = 400)，得到重采样点序列f。注意，这个重采样是必要的，由于不同的数据集具有不同数量的文本实例的基础真值点，并且它们相对较小。<br>&nbsp;&nbsp;&nbsp;&nbsp;例如，CTW1500 中有 14 个，而 Total-Text 中有 4 ~ 8 个。重采样策略使我们的 FCE 兼容所有具有相同设置的数据集。在傅里叶变换阶段，重采样的点序列被变换成其相应的傅里叶特征向量。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>傅立叶特征向量的唯一性</strong>。从 FCE 的上述过程中，很容易看出，即使对于相同的文本轮廓，不同的重采样点序列也会导致不同的傅立叶特征向量。为了使一个特定文本的特征向量唯一，并更稳定地进行网络训练，我们对 $f(t)$ 的起点、采样方向和移动速度进行了约束：</p>
+<ul>
+<li><strong>起点</strong>：我们将起点 $f(0)$（或 $f(1)$）设置为通过中心点 $(u_0,v0)$ 的水平线与文本轮廓之间的最右交点。</li>
+<li><p><strong>采样方向</strong>：我们总是顺时针方向沿着文本轮廓对点进行重新采样。</p>
+</li>
+<li><p><strong>匀速</strong>：我们在文本轮廓上均匀地重新采样点，并且每两个相邻点之间的距离保持不变，以确保匀速。</p>
+</li>
+</ul>
+<h4><span id="32-fcenet">3.2. FCENet</span></h4><p>&nbsp;&nbsp;&nbsp;&nbsp;配备了 FCE，我们进一步提出了用于任意形状文本检测的无锚网络 FCENet。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;网络体系结构。我们提出的 FCENet 采用自上而下的方案。它包含以 DCN 为主干，以 FPN 为颈部提取多尺度特征的 ResNet50 和傅立叶预测报头。我们对 FPN 的特征图 P3、P4 和 P5 进行预测。表头有两个分支，分别负责分类和回归。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;每个分支由三个 $3\times 3$ 卷积层和一个 $1\times 1$ 卷积层组成，每个卷积层后面都有一个 ReLU 非线性激活层。</p>
+<hr>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;损失函数：</p>
+<script type="math/tex; mode=display">\mathcal L=\mathcal L_{cls}+\lambda\mathcal L_{reg}</script><script type="math/tex; mode=display">\mathcal L_{cls}=\mathcal L_{tr}+\mathcal L_{tcr}</script><p>&nbsp;&nbsp;&nbsp;&nbsp;其中 $\mathcal L_{tr}$ 和 $\mathcal{L}_{tcr}$ 分别是文本区域（TR）和文本中心区域（TCR）的交叉熵损失。为了解决样本不平衡问题，$\mathcal L_{tr}$ 采用 OHEM，正负样本之比为 $3:1$。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;对于 $\mathcal L_{reg}$，我们不最小化预测的傅立叶特征向量与其相应的地面实况之间的距离。相反，我们在图像空间域中最小化它们重构的文本轮廓，这与文本检测质量更相关。正式地</p>
+<script type="math/tex; mode=display">\mathcal{L}_{reg}=\frac{1}{N^{'}}\sum_{i\in\mathcal{T}}\sum_{n=1}^{N^{'}}w_il_1(F^{-1}(\frac{n}{N^{'}},\bar{\mathbf{c}}_i),F^{-1}(\frac{n}{N^{'}},\hat{\mathbf{c}}_i))</script><p>&nbsp;&nbsp;&nbsp;&nbsp;其中 $l_1$ 是用于回归的光滑 $−l_1$ 损失，$F^{−1}(·)$ 是 IFT。$\mathcal T$ 是文本区域像素索引集。$\bar{\mathbf c}_i$ 和 $\hat{\mathbf c}_i$ 是文本真实傅立叶特征向量，并且如果像素i在其对应的文本中心区域中，则为像素 $i$ 的预测值 $w_i＝1$，而如果不是，则为 $0.5$。$N^t$ 是文本轮廓上的采样数。如果 $N^t$ 太小（通常 $N^t&lt;30$），可能会导致拟合过度。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;因此，我们在实验中固定了 $N^t=50$。</p>
+<h3><span id="4-experiments">4. Experiments</span></h3><h4><span id="41-datasets">4.1. Datasets</span></h4><ul>
+<li>CTW1500</li>
+<li>Total-Text</li>
+<li>ICDAR2015</li>
+</ul>
+<h4><span id="42-implementation-details">4.2. Implementation Details</span></h4><h4><span id="43-evaluation-of-fce">4.3. Evaluation of FCE</span></h4><h4><span id="44-evaluation-of-fcenet">4.4. Evaluation of FCENet</span></h4><h4><span id="45-evaluation-on-benchmark-datasets">4.5. Evaluation on Benchmark Datasets</span></h4><h4><span id="46-evaluation-on-highly-curved-subset">4.6. Evaluation on Highly-curved Subset</span></h4><h3><span id="5-conclusion">5. Conclusion</span></h3><p>&nbsp;&nbsp;&nbsp;&nbsp;本文主要研究任意形状文本检测的显式形状建模。我们提出了傅立叶轮廓嵌入方法，该方法可以精确地逼近任何闭合形状。然后，我们提出了 FCENet，它首先预测傅立叶域中文本实例的傅立叶特征向量，然后通过傅立叶逆变换重建图像空间域中的文本轮廓点序列。FCENet 可以以端到端的方式进行优化，并且无需任何复杂的后处理即可实现。对拟议的 FCE 和 FCENet 进行了广泛的评估。实验结果验证了 FCE 的表示能力，尤其是在高度弯曲的文本上，以及 FCENet 在小样本训练时的良好泛化能力。此外，FCENet 在 CTW1500、Total Text 上实现了 SOTA 性能，在 ICDAR2015 上取得了有竞争力的成绩。</p>
+
+  </div>
+  <div id="gitalk-container"></div>
+</div>
+
+<script>
+  
+Fancybox.bind('[data-fancybox="fancybox-gallery-img"]', {
+  dragToClose: true,
+  Toolbar: true,
+  closeButton: "top",
+  Image: {
+    zoom: true,
+  },
+  on: {
+    initCarousel: (fancybox) => {
+      const slide = fancybox.Carousel.slides[fancybox.Carousel.page];
+      fancybox.$container.style.setProperty(
+        "--bg-image",
+        `url("${slide.$thumb.src}")`
+      );
+    },
+    "Carousel.change": (fancybox, carousel, to, from) => {
+      const slide = carousel.slides[to];
+      fancybox.$container.style.setProperty(
+        "--bg-image",
+        `url("${slide.$thumb.src}")`
+      );
+    },
+  },
+});
+</script>
+
+<style>
+    #noneimg img {
+        display: none;
+        z-index: 9999;
+        /* width: 600px !important; */
+        min-width: 0%;
+        max-width: 90%;
+        max-height: 80%;
+        border-radius: 0px;
+        position: fixed;
+        box-shadow: 0 0 0px #c3c3c300 !important;
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        margin: auto !important;
+    }
+
+    @media screen and (max-width:600px) {
+        #noneimg img {
+            max-width: 88%
+        }
+    }
+</style>
+
+    <div class="post-paging">
+    
+    <a href="/2023/12/21/Diary-8-%E7%99%BD%E8%8C%AB%E8%8C%AB/">
+        <div class="post-paging-last">
+            <span>上一篇</span>
+            <p>Diary-8-白茫茫</p>
+        </div>
+    </a>
+    
+
+    
+    <a href="/2023/12/19/Server-%E6%B2%B3%E5%8C%97%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%E8%AE%A1%E7%AE%97%E4%B8%AD%E5%BF%83/">
+        <div class="post-paging-next">
+            <span>下一篇</span>
+            <p>Server-河北人工智能计算中心</p>
+        </div>
+    </a>
+    
+</div>
+</div>
+		<div class="footer">
+	<div class="Copyright">
+		©2023 By Zi-Zi. 主题：<a
+			style="text-decoration: none;display: contents; color: #898F9F;"
+			target="_blank" rel="noopener" href="https://github.com/79e/hexo-theme-quiet">Quiet</a>
+	</div>
+	<div class="contact">
+		
+		<a target="_blank" rel="noopener" href="https://weibo.com/u/5020307235">
+			<img src="/image/Weibo.png" alt="Quiet主题">
+		</a>
+		
+		<a target="_blank" rel="noopener" href="https://tieba.baidu.com/home/main?id=tb.1.ff6d2775.vFH7wrdW2ZjPCmyBHJcjnA">
+			<img src="/image/Tieba.png" alt="Quiet主题">
+		</a>
+		
+		<a target="_blank" rel="noopener" href="https://space.bilibili.com/11547880">
+			<img src="/image/Bilibili.png" alt="Quiet主题">
+		</a>
+		
+		<a target="_blank" rel="noopener" href="https://github.com/GZ-Metal-Cell">
+			<img src="/image/github.png" alt="Quiet主题">
+		</a>
+		
+	</div>
+</div>
+
+<script src="/js/gotop.js"></script>
+
+
+<style type="text/css">
+    @media screen and (min-width: 600px) {
+        .goTop>span {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            opacity: 0.8;
+            background: rgba(18, 24, 58, 0.06);
+            text-align: center;
+            transition: border .5s;
+            border: 1px solid rgba(18, 24, 58, 0.06);
+
+            -moz-transition: border .5s;
+            /* Firefox 4 */
+            -webkit-transition: border .5s;
+            /* Safari 和 Chrome */
+            -o-transition: border .5s;
+            /* Opera */
+        }
+
+        .goTop>span:hover {
+            border: 1px solid #6680B3;
+        }
+
+
+        .goTop {
+            position: fixed;
+            right: 30px;
+            bottom: 80px;
+        }
+
+        .goTop>span>svg {
+            width: 20px;
+            height: 20px;
+            opacity: 0.7;
+        }
+
+    }
+
+    @media screen and (max-width: 600px) {
+        .goTop {
+            display: none;
+        }
+    }
+</style>
+<div class="goTop" id="js-go_top">
+    <span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+            <g>
+                <path d="M13 12v8h-2v-8H4l8-8 8 8z"></path>
+            </g>
+        </svg>
+    </span>
+</div>
+<script>
+    $( '#js-go_top' )
+	.gotoTop( {
+		offset: 500,
+		speed: 300,
+		animationShow: {
+			'transform': 'translate(0,0)',
+			'transition': 'transform .5s ease-in-out'
+		},
+		animationHide: {
+			'transform': 'translate(100px,0)',
+			'transition': 'transform .5s ease-in-out'
+		}
+	} );
+</script>
+<!-- Analytics -->
+
+    
+        <!-- Busuanzi Analytics -->
+        <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    
+    
+        <!-- Baidu Analytics -->
+        <script defer>
+            var _hmt = _hmt || [];
+            (function () {
+                var hm = document.createElement("script");
+                hm.src = "https://hm.baidu.com/hm.js?e57cf62289f84322ebff116e8b3d343e";
+                var s = document.getElementsByTagName("script")[0];
+                s.parentNode.insertBefore(hm, s);
+            })();
+        </script>
+    
+
+
+    <script src="/js/md5.min.js"></script>
+    <!-- Gitalk -->
+    <script>
+        const data = '{"clientID":"f3a4ea928b90c73f66d4","clientSecret":"d697ef6f42e83e83c49ff8d19e753f36bc375015","repo":"GZ-Metal-Cell.github.io","owner":"GZ-Metal-Cell","admin":"GZ-Metal-Cell"}'
+        const gitalk = new Gitalk({
+            ...JSON.parse( data),
+            id:md5(location.pathname), //  location.pathname,
+            distractionFreeMode:false
+        })
+        
+        if(Boolean('true')){
+            gitalk.render('gitalk-container')
+        }
+    </script>
+
+<script>
+	console.log('\n %c Hexo-Quiet 主题 %c https://github.com/79e/hexo-theme-quiet \n', 'color: #fadfa3; background: #030307; padding:5px 0;', 'background: #fadfa3; padding:5px 0;')
+</script>
+	<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+</html>
+
