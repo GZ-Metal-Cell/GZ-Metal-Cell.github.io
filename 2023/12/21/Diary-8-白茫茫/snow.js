@@ -2,7 +2,7 @@ snowing = true;
 
 (function ($) {
     $.fn.snow = function (options) {
-        var $flake = $('<div id="snowbox" />').css({ 'position': 'fixed', 'z-index': '9999', 'top': '-50px', 'user-select': 'none'}).html('&#10052;'),
+        var $flake = $('<div id="snowbox" />').css({ 'position': 'fixed', 'z-index': '100', 'top': '-50px', 'user-select': 'none'}).html('&#10052;'),
             documentHeight = $(document).height(),
             documentWidth = $(document).width(),
             defaults = {
