@@ -1,3 +1,4 @@
+// search.js
 // A local search script with the help of hexo-generator-search
 // Copyright (C) 2015 
 // Joseph Pan <http://github.com/wzpan>
@@ -17,9 +18,55 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 // 02110-1301 USA
 // 
+console.log("search.js");
+// 获取按钮元素
+const searchButton = document.getElementById('search-button');
+const searchButtonSlider = document.getElementById('search-button-slider');
+const searchCloseButton = document.querySelector(".search-close-button");
+// 获取界面
+const pageHeader = document.querySelector(".page-header");
+const searchDialog = document.querySelector(".search-dialog");
+const searchMask = document.getElementById("search-mask");
+
+// 添加点击事件监听
+function onSearch() {
+    console.log("OnSearchButton");
+    document.querySelector('li.search').classList.add('select');
+    searchDialog.style.display = searchMask.style.display = "block";
+    searchDialog.style.animationPlayState = "running";
+    searchMask.style.animationPlayState = "running";
+    document.getElementsByTagName('body')[0].style.overflow = 'hidden';
+}
+
+if(searchButton)
+{
+    searchButton.addEventListener('click', onSearch);
+}
+if(searchButtonSlider)
+{
+    searchButtonSlider.addEventListener('click', onSearch);
+}
+
+function onSearchClose() {
+    console.log("OnSearchCloseButton");
+    document.querySelector('li.search').classList.remove('select');
+    searchDialog.style.display = searchMask.style.display = "none";
+    searchDialog.style.animationPlayState = "paused";
+    searchMask.style.animationPlayState = "paused";
+    document.getElementsByTagName('body')[0].style.overflow = 'auto';
+}
+
+if(searchCloseButton)
+{
+    searchCloseButton.addEventListener('click', onSearchClose);
+}
+if(searchMask)
+{
+    searchMask.addEventListener('click', onSearchClose);
+}
 
 var searchFunc = function (path, search_id, content_id) {
-    'use strict';
+    // 'use strict';
     // var BTN = "<i id='local-search-close'>x</i>";
     $.ajax({
         url: path,
