@@ -17,57 +17,8 @@
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 // 02110-1301 USA
-// 
-// console.log("search.js");
-// // 获取按钮元素
-// const searchButton = document.getElementById('search-button');
-// const searchButtonSlider = document.getElementById('search-button-slider');
-// const searchCloseButton = document.querySelector(".search-close-button");
-// // 获取界面
-// const pageHeader = document.querySelector(".page-header");
-// const searchDialog = document.querySelector(".search-dialog");
-// const searchMask = document.getElementById("search-mask");
 
-// // 添加点击事件监听
-// function onSearch() {
-//     console.log("OnSearchButton");
-//     document.querySelector('li.search').classList.add('select');
-//     searchDialog.style.display = searchMask.style.display = "block";
-//     searchDialog.style.animationPlayState = "running";
-//     searchMask.style.animationPlayState = "running";
-//     document.getElementsByTagName('body')[0].style.overflow = 'hidden';
-// }
-
-// if(searchButton)
-// {
-//     searchButton.addEventListener('click', onSearch);
-// }
-// if(searchButtonSlider)
-// {
-//     searchButtonSlider.addEventListener('click', onSearch);
-// }
-
-// function onSearchClose() {
-//     console.log("OnSearchCloseButton");
-//     document.querySelector('li.search').classList.remove('select');
-//     searchDialog.style.display = searchMask.style.display = "none";
-//     searchDialog.style.animationPlayState = "paused";
-//     searchMask.style.animationPlayState = "paused";
-//     document.getElementsByTagName('body')[0].style.overflow = 'auto';
-// }
-
-// if(searchCloseButton)
-// {
-//     searchCloseButton.addEventListener('click', onSearchClose);
-// }
-// if(searchMask)
-// {
-//     searchMask.addEventListener('click', onSearchClose);
-// }
-
-var searchFunc = function (path, search_id, content_id) {
-    // 'use strict';
-    // var BTN = "<i id='local-search-close'>x</i>";
+var searchFunc = function (path, search_id, content_id, match_count_id) {
     $.ajax({
         url: path,
         dataType: "xml",
@@ -80,21 +31,20 @@ var searchFunc = function (path, search_id, content_id) {
                     url: $("url", this).text()
                 };
             }).get();
-
             var $input = document.getElementById(search_id);
             var $resultContent = document.getElementById(content_id);
-
             $input.addEventListener('input', function () {
+                console.log("start_input");
                 var str = '<ul class=\"search-result-list\">';
                 var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
                 $resultContent.innerHTML = "";
                 if (this.value.trim().length <= 0) {
+                    document.getElementById(match_count_id).textContent = "";
                     return;
                 }
                 // perform local searching
                 datas.forEach(function (data) {
                     var isMatch = true;
-                    var content_index = [];
                     if (!data.title || data.title.trim() === '') {
                         data.title = "Untitled";
                     }
@@ -134,21 +84,16 @@ var searchFunc = function (path, search_id, content_id) {
                             // cut out 100 characters
                             var start = first_occur - 20;
                             var end = first_occur + 80;
-
                             if (start < 0) {
                                 start = 0;
                             }
-
                             if (start == 0) {
                                 end = 100;
                             }
-
                             if (end > content.length) {
                                 end = content.length;
                             }
-
                             var match_content = content.substr(start, end);
-
                             // highlight all keywords
                             keywords.forEach(function (keyword) {
                                 var regS = new RegExp(keyword, "gi");
@@ -156,7 +101,6 @@ var searchFunc = function (path, search_id, content_id) {
                                     "<em class=\"search-keyword\">" +
                                     keyword + "</em>");
                             });
-
                             str += "<p class=\"search-result\">" + match_content +
                                 "...</p>"
                         }
@@ -165,24 +109,15 @@ var searchFunc = function (path, search_id, content_id) {
                 });
                 str += "</ul>";
                 if (str.indexOf('<li>') === -1) {
-                    return $resultContent.innerHTML = /* BTN + */ "<ul><span class='local-search-empty'>没有找到内容，更换下搜索词试试吧~<span></ul>";
+                    document.getElementById(match_count_id).textContent = "";
+                    return $resultContent.innerHTML = "<ul><span class='local-search-empty'>没有找到内容，更换下搜索词试试吧~<span></ul>";
                 }
-                $resultContent.innerHTML = /* BTN + */ str;
+                else
+                {
+                    document.getElementById(match_count_id).innerHTML = "匹配到 <b><font size=\"5px\">" + str.match(/<li>/g).length + "</font></b> 个结果。";
+                }
+                $resultContent.innerHTML = str;
             });
         }
     });
-    $(document).on('click', '#local-search-close', function () {
-        $('#local-search-input').val('');
-        $('#local-search-result').html('');
-    });
-    // $(document).on('focus', '#local-search', function () {
-    //     $('#local-search-icon-search').html('');
-    //     $('#local-search-icon-search').attr('id', 'local-search-icon-close');
-    // });
-    // $(document).on('click', '#local-search-icon-close', function () {
-    //     $('#local-search-input').val('');
-    //     $('#local-search-result').html('');
-    //     $('#local-search-icon-close').html('🔍');
-    //     $('#local-search-icon-close').attr('id', 'local-search-icon-search');
-    // });
 }
