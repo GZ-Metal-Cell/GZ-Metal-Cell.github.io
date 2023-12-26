@@ -36,7 +36,7 @@ var searchFunc = function (path, search_id, content_id, match_count_id) {
             $input.addEventListener('input', function () {
                 console.log("start_input");
                 var str = '<ul class=\"search-result-list\">';
-                var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+                var keywords = this.value.trim().split(/[\s\-]+/);  // .toLowerCase().split(/[\s\-]+/);
                 $resultContent.innerHTML = "";
                 if (this.value.trim().length <= 0) {
                     document.getElementById(match_count_id).textContent = "";
@@ -48,8 +48,8 @@ var searchFunc = function (path, search_id, content_id, match_count_id) {
                     if (!data.title || data.title.trim() === '') {
                         data.title = "Untitled";
                     }
-                    var data_title = data.title.trim().toLowerCase();
-                    var data_content = data.content.trim().replace(/<[^>]+>/g, "").toLowerCase();
+                    var data_title = data.title.trim();//.toLowerCase();
+                    var data_content = data.content.trim().replace(/<[^>]+>/g, "");//.toLowerCase();
                     var data_url = data.url;
                     var index_title = -1;
                     var index_content = -1;
