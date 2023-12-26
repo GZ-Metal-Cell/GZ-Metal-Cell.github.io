@@ -13,7 +13,7 @@
 
 
 <meta name="keywords" content="Python,DigitalSreeni,">
-<meta name="description" content="学习自 Youtube 博主 DigitalSreeni。">
+<meta name="description" content="">
 
 
 <script src="/js/jquery.min.js"></script>
@@ -371,17 +371,8 @@
     </div>
 </div>
     <div class="post-content" id="content">
-  
   <div id="article" class="post-content-info">
-    
-
-    <h2><span id="dip-python-tutorials-for-image-processing-and-machine-learning68-svm">DIP-Python tutorials for image processing and machine learning(68)-SVM</span></h2><h2><span id="目录">目录</span></h2><!-- toc -->
-<ul>
-<li><a href="#68-quick-introduction-to-support-vector-machines-svm">68 - Quick introduction to Support Vector Machines -SVM</a></li>
-<li><a href="#68b-svm-vs-random-forest-for-image-segmentation">68b - SVM vs. Random Forest for image segmentation</a></li>
-</ul>
-<!-- tocstop -->
-<h2><span id="68-quick-introduction-to-support-vector-machines-svm">68 - Quick introduction to Support Vector Machines -SVM</span></h2><p><a target="_blank" rel="noopener" href="https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html">sklearn.svm.SVC — scikit-learn 1.2.0 documentation</a></p>
+    <h2 id="DIP-Python-tutorials-for-image-processing-and-machine-learning-68-SVM"><a href="#DIP-Python-tutorials-for-image-processing-and-machine-learning-68-SVM" class="headerlink" title="DIP-Python tutorials for image processing and machine learning(68)-SVM"></a>DIP-Python tutorials for image processing and machine learning(68)-SVM</h2><h2 id="68-Quick-introduction-to-Support-Vector-Machines-SVM"><a href="#68-Quick-introduction-to-Support-Vector-Machines-SVM" class="headerlink" title="68 - Quick introduction to Support Vector Machines -SVM"></a>68 - Quick introduction to Support Vector Machines -SVM</h2><p><a target="_blank" rel="noopener" href="https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html">sklearn.svm.SVC — scikit-learn 1.2.0 documentation</a></p>
 <p>C-Support Vector Classification.</p>
 <ul>
 <li><p>The implementation is based on libsvm. The fit time scales at least quadratically with the number of samples and may be impractical beyond tens of thousands of samples. For large datasets consider using <a target="_blank" rel="noopener" href="https://scikit-learn.org/stable/modules/generated/sklearn.svm.LinearSVC.html#sklearn.svm.LinearSVC"><code>LinearSVC</code></a> or <a target="_blank" rel="noopener" href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.SGDClassifier.html#sklearn.linear_model.SGDClassifier"><code>SGDClassifier</code></a> instead, possibly after a <a target="_blank" rel="noopener" href="https://scikit-learn.org/stable/modules/generated/sklearn.kernel_approximation.Nystroem.html#sklearn.kernel_approximation.Nystroem"><code>Nystroem</code></a> transformer.</p>
@@ -585,7 +576,7 @@
 </ul>
 <p><strong>probB_: ndarray of shape (n_classes * (n_classes - 1) / 2)</strong><br>Parameter learned in Platt scaling when probability=True.</p>
 <p><strong>shape_fit_: tuple of int of shape (n_dimensions_of_X,)</strong><br>Array dimensions of training vector X.</p>
-<h2><span id="68b-svm-vs-random-forest-for-image-segmentation">68b - SVM vs. Random Forest for image segmentation</span></h2><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">import</span> cv2<br><span class="hljs-keyword">import</span> pandas <span class="hljs-keyword">as</span> pd<br> <br>img = cv2.imread(<span class="hljs-string">&#x27;images/Train_images/Sandstone_Versa0000.tif&#x27;</span>)<br>img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  <br>img2 = img.reshape(-<span class="hljs-number">1</span>)<br>df = pd.DataFrame()<br>df[<span class="hljs-string">&#x27;Original Image&#x27;</span>] = img2<br><br><span class="hljs-comment"># Generate Gabor features</span><br>num = <span class="hljs-number">1</span><br>kernels = []<br><span class="hljs-keyword">for</span> theta <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">2</span>):<br>    theta = theta / <span class="hljs-number">4.</span> * np.pi<br>    <span class="hljs-keyword">for</span> sigma <span class="hljs-keyword">in</span> (<span class="hljs-number">1</span>, <span class="hljs-number">3</span>):<br>        <span class="hljs-keyword">for</span> lamda <span class="hljs-keyword">in</span> np.arange(<span class="hljs-number">0</span>, np.pi, np.pi / <span class="hljs-number">4</span>):<br>            <span class="hljs-keyword">for</span> gamma <span class="hljs-keyword">in</span> (<span class="hljs-number">0.05</span>, <span class="hljs-number">0.5</span>):  <br>                gabor_label = <span class="hljs-string">&#x27;Gabor&#x27;</span> + <span class="hljs-built_in">str</span>(num)<br>                ksize=<span class="hljs-number">9</span><br>                kernel = cv2.getGaborKernel((ksize, ksize), sigma, theta, lamda, gamma, <span class="hljs-number">0</span>, ktype=cv2.CV_32F)    <br>                kernels.append(kernel)<br>                fimg = cv2.filter2D(img2, cv2.CV_8UC3, kernel)<br>                filtered_img = fimg.reshape(-<span class="hljs-number">1</span>)<br>                df[gabor_label] = filtered_img<br>                num += <span class="hljs-number">1</span>           <br><span class="hljs-comment"># CANNY EDGE</span><br>edges = cv2.Canny(img, <span class="hljs-number">100</span>,<span class="hljs-number">200</span>)<br>edges1 = edges.reshape(-<span class="hljs-number">1</span>)<br>df[<span class="hljs-string">&#x27;Canny Edge&#x27;</span>] = edges1<br><br><span class="hljs-keyword">from</span> skimage.filters <span class="hljs-keyword">import</span> roberts, sobel, scharr, prewitt<br><br><span class="hljs-comment"># ROBERTS EDGE</span><br>edge_roberts = roberts(img)<br>edge_roberts1 = edge_roberts.reshape(-<span class="hljs-number">1</span>)<br>df[<span class="hljs-string">&#x27;Roberts&#x27;</span>] = edge_roberts1<br><br><span class="hljs-comment"># SOBEL</span><br>edge_sobel = sobel(img)<br>edge_sobel1 = edge_sobel.reshape(-<span class="hljs-number">1</span>)<br>df[<span class="hljs-string">&#x27;Sobel&#x27;</span>] = edge_sobel1<br><br><span class="hljs-comment"># SCHARR</span><br>edge_scharr = scharr(img)<br>edge_scharr1 = edge_scharr.reshape(-<span class="hljs-number">1</span>)<br>df[<span class="hljs-string">&#x27;Scharr&#x27;</span>] = edge_scharr1<br><br><span class="hljs-comment"># PREWITT</span><br>edge_prewitt = prewitt(img)<br>edge_prewitt1 = edge_prewitt.reshape(-<span class="hljs-number">1</span>)<br>df[<span class="hljs-string">&#x27;Prewitt&#x27;</span>] = edge_prewitt1<br><br><span class="hljs-comment"># GAUSSIAN with sigma=3</span><br><span class="hljs-keyword">from</span> scipy <span class="hljs-keyword">import</span> ndimage <span class="hljs-keyword">as</span> nd<br><br>gaussian_img = nd.gaussian_filter(img, sigma=<span class="hljs-number">3</span>)<br>gaussian_img1 = gaussian_img.reshape(-<span class="hljs-number">1</span>)<br>df[<span class="hljs-string">&#x27;Gaussian s3&#x27;</span>] = gaussian_img1<br><br><span class="hljs-comment"># GAUSSIAN with sigma=7</span><br>gaussian_img2 = nd.gaussian_filter(img, sigma=<span class="hljs-number">7</span>)<br>gaussian_img3 = gaussian_img2.reshape(-<span class="hljs-number">1</span>)<br>df[<span class="hljs-string">&#x27;Gaussian s7&#x27;</span>] = gaussian_img3<br><br><span class="hljs-comment"># MEDIAN with sigma=3</span><br>median_img = nd.median_filter(img, size=<span class="hljs-number">3</span>)<br>median_img1 = median_img.reshape(-<span class="hljs-number">1</span>)<br>df[<span class="hljs-string">&#x27;Median s3&#x27;</span>] = median_img1<br><br><span class="hljs-comment"># VARIANCE with size=3</span><br>variance_img = nd.generic_filter(img, np.var, size=<span class="hljs-number">3</span>)<br>variance_img1 = variance_img.reshape(-<span class="hljs-number">1</span>)<br>df[<span class="hljs-string">&#x27;Variance s3&#x27;</span>] = variance_img1<br><br><span class="hljs-comment">######################################                </span><br><br><span class="hljs-comment"># Now, add a column in the data frame for the Labels</span><br><span class="hljs-comment"># For this, we need to import the labeled image</span><br>labeled_img = cv2.imread(<span class="hljs-string">&#x27;images/Train_masks/Sandstone_Versa0000.tif&#x27;</span>)<br><span class="hljs-comment"># Remember that you can load an image with partial labels </span><br><span class="hljs-comment"># But, drop the rows with unlabeled data</span><br><br>labeled_img = cv2.cvtColor(labeled_img, cv2.COLOR_BGR2GRAY)<br>labeled_img1 = labeled_img.reshape(-<span class="hljs-number">1</span>)<br>df[<span class="hljs-string">&#x27;Labels&#x27;</span>] = labeled_img1<br><br><span class="hljs-comment">#########################################################</span><br><br><span class="hljs-comment"># Define the dependent variable that needs to be predicted (labels)</span><br>Y = df[<span class="hljs-string">&quot;Labels&quot;</span>].values<br><br><span class="hljs-comment"># Define the independent variables</span><br>X = df.drop(labels = [<span class="hljs-string">&quot;Labels&quot;</span>], axis=<span class="hljs-number">1</span>) <br><br><span class="hljs-comment"># Split data into train and test to verify accuracy after fitting the model. </span><br><span class="hljs-keyword">from</span> sklearn.model_selection <span class="hljs-keyword">import</span> train_test_split<br>X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=<span class="hljs-number">0.4</span>, random_state=<span class="hljs-number">20</span>)<br></code></pre></td></tr></table></figure>
+<h2 id="68b-SVM-vs-Random-Forest-for-image-segmentation"><a href="#68b-SVM-vs-Random-Forest-for-image-segmentation" class="headerlink" title="68b - SVM vs. Random Forest for image segmentation"></a>68b - SVM vs. Random Forest for image segmentation</h2><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">import</span> cv2<br><span class="hljs-keyword">import</span> pandas <span class="hljs-keyword">as</span> pd<br> <br>img = cv2.imread(<span class="hljs-string">&#x27;images/Train_images/Sandstone_Versa0000.tif&#x27;</span>)<br>img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  <br>img2 = img.reshape(-<span class="hljs-number">1</span>)<br>df = pd.DataFrame()<br>df[<span class="hljs-string">&#x27;Original Image&#x27;</span>] = img2<br><br><span class="hljs-comment"># Generate Gabor features</span><br>num = <span class="hljs-number">1</span><br>kernels = []<br><span class="hljs-keyword">for</span> theta <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">2</span>):<br>    theta = theta / <span class="hljs-number">4.</span> * np.pi<br>    <span class="hljs-keyword">for</span> sigma <span class="hljs-keyword">in</span> (<span class="hljs-number">1</span>, <span class="hljs-number">3</span>):<br>        <span class="hljs-keyword">for</span> lamda <span class="hljs-keyword">in</span> np.arange(<span class="hljs-number">0</span>, np.pi, np.pi / <span class="hljs-number">4</span>):<br>            <span class="hljs-keyword">for</span> gamma <span class="hljs-keyword">in</span> (<span class="hljs-number">0.05</span>, <span class="hljs-number">0.5</span>):  <br>                gabor_label = <span class="hljs-string">&#x27;Gabor&#x27;</span> + <span class="hljs-built_in">str</span>(num)<br>                ksize=<span class="hljs-number">9</span><br>                kernel = cv2.getGaborKernel((ksize, ksize), sigma, theta, lamda, gamma, <span class="hljs-number">0</span>, ktype=cv2.CV_32F)    <br>                kernels.append(kernel)<br>                fimg = cv2.filter2D(img2, cv2.CV_8UC3, kernel)<br>                filtered_img = fimg.reshape(-<span class="hljs-number">1</span>)<br>                df[gabor_label] = filtered_img<br>                num += <span class="hljs-number">1</span>           <br><span class="hljs-comment"># CANNY EDGE</span><br>edges = cv2.Canny(img, <span class="hljs-number">100</span>,<span class="hljs-number">200</span>)<br>edges1 = edges.reshape(-<span class="hljs-number">1</span>)<br>df[<span class="hljs-string">&#x27;Canny Edge&#x27;</span>] = edges1<br><br><span class="hljs-keyword">from</span> skimage.filters <span class="hljs-keyword">import</span> roberts, sobel, scharr, prewitt<br><br><span class="hljs-comment"># ROBERTS EDGE</span><br>edge_roberts = roberts(img)<br>edge_roberts1 = edge_roberts.reshape(-<span class="hljs-number">1</span>)<br>df[<span class="hljs-string">&#x27;Roberts&#x27;</span>] = edge_roberts1<br><br><span class="hljs-comment"># SOBEL</span><br>edge_sobel = sobel(img)<br>edge_sobel1 = edge_sobel.reshape(-<span class="hljs-number">1</span>)<br>df[<span class="hljs-string">&#x27;Sobel&#x27;</span>] = edge_sobel1<br><br><span class="hljs-comment"># SCHARR</span><br>edge_scharr = scharr(img)<br>edge_scharr1 = edge_scharr.reshape(-<span class="hljs-number">1</span>)<br>df[<span class="hljs-string">&#x27;Scharr&#x27;</span>] = edge_scharr1<br><br><span class="hljs-comment"># PREWITT</span><br>edge_prewitt = prewitt(img)<br>edge_prewitt1 = edge_prewitt.reshape(-<span class="hljs-number">1</span>)<br>df[<span class="hljs-string">&#x27;Prewitt&#x27;</span>] = edge_prewitt1<br><br><span class="hljs-comment"># GAUSSIAN with sigma=3</span><br><span class="hljs-keyword">from</span> scipy <span class="hljs-keyword">import</span> ndimage <span class="hljs-keyword">as</span> nd<br><br>gaussian_img = nd.gaussian_filter(img, sigma=<span class="hljs-number">3</span>)<br>gaussian_img1 = gaussian_img.reshape(-<span class="hljs-number">1</span>)<br>df[<span class="hljs-string">&#x27;Gaussian s3&#x27;</span>] = gaussian_img1<br><br><span class="hljs-comment"># GAUSSIAN with sigma=7</span><br>gaussian_img2 = nd.gaussian_filter(img, sigma=<span class="hljs-number">7</span>)<br>gaussian_img3 = gaussian_img2.reshape(-<span class="hljs-number">1</span>)<br>df[<span class="hljs-string">&#x27;Gaussian s7&#x27;</span>] = gaussian_img3<br><br><span class="hljs-comment"># MEDIAN with sigma=3</span><br>median_img = nd.median_filter(img, size=<span class="hljs-number">3</span>)<br>median_img1 = median_img.reshape(-<span class="hljs-number">1</span>)<br>df[<span class="hljs-string">&#x27;Median s3&#x27;</span>] = median_img1<br><br><span class="hljs-comment"># VARIANCE with size=3</span><br>variance_img = nd.generic_filter(img, np.var, size=<span class="hljs-number">3</span>)<br>variance_img1 = variance_img.reshape(-<span class="hljs-number">1</span>)<br>df[<span class="hljs-string">&#x27;Variance s3&#x27;</span>] = variance_img1<br><br><span class="hljs-comment">######################################                </span><br><br><span class="hljs-comment"># Now, add a column in the data frame for the Labels</span><br><span class="hljs-comment"># For this, we need to import the labeled image</span><br>labeled_img = cv2.imread(<span class="hljs-string">&#x27;images/Train_masks/Sandstone_Versa0000.tif&#x27;</span>)<br><span class="hljs-comment"># Remember that you can load an image with partial labels </span><br><span class="hljs-comment"># But, drop the rows with unlabeled data</span><br><br>labeled_img = cv2.cvtColor(labeled_img, cv2.COLOR_BGR2GRAY)<br>labeled_img1 = labeled_img.reshape(-<span class="hljs-number">1</span>)<br>df[<span class="hljs-string">&#x27;Labels&#x27;</span>] = labeled_img1<br><br><span class="hljs-comment">#########################################################</span><br><br><span class="hljs-comment"># Define the dependent variable that needs to be predicted (labels)</span><br>Y = df[<span class="hljs-string">&quot;Labels&quot;</span>].values<br><br><span class="hljs-comment"># Define the independent variables</span><br>X = df.drop(labels = [<span class="hljs-string">&quot;Labels&quot;</span>], axis=<span class="hljs-number">1</span>) <br><br><span class="hljs-comment"># Split data into train and test to verify accuracy after fitting the model. </span><br><span class="hljs-keyword">from</span> sklearn.model_selection <span class="hljs-keyword">import</span> train_test_split<br>X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=<span class="hljs-number">0.4</span>, random_state=<span class="hljs-number">20</span>)<br></code></pre></td></tr></table></figure>
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> sklearn.svm <span class="hljs-keyword">import</span> LinearSVC<br><br>model = LinearSVC(max_iter=<span class="hljs-number">100</span>)<br>model.fit(X_train, Y_train)<br>prediction_test = model.predict(X_test)<br></code></pre></td></tr></table></figure>
 <pre><code>C:\Users\gzjzx\anaconda3\lib\site-packages\sklearn\svm\_base.py:1225: ConvergenceWarning: Liblinear failed to converge, increase the number of iterations.
   warnings.warn(
@@ -603,56 +594,49 @@
 </div>
 
 <script>
-  
-Fancybox.bind('[data-fancybox="fancybox-gallery-img"]', {
-  dragToClose: true,
-  Toolbar: true,
-  closeButton: "top",
-  Image: {
-    zoom: true,
-  },
-  on: {
-    initCarousel: (fancybox) => {
-      const slide = fancybox.Carousel.slides[fancybox.Carousel.page];
-      fancybox.$container.style.setProperty(
-        "--bg-image",
-        `url("${slide.$thumb.src}")`
-      );
+  Fancybox.bind('[data-fancybox="fancybox-gallery-img"]', {
+    dragToClose: true,
+    Toolbar: true,
+    closeButton: 'top',
+    Image: {
+      zoom: true
     },
-    "Carousel.change": (fancybox, carousel, to, from) => {
-      const slide = carousel.slides[to];
-      fancybox.$container.style.setProperty(
-        "--bg-image",
-        `url("${slide.$thumb.src}")`
-      );
-    },
-  },
-});
+    on: {
+      initCarousel: (fancybox) => {
+        const slide = fancybox.Carousel.slides[fancybox.Carousel.page]
+        fancybox.$container.style.setProperty('--bg-image', `url("${slide.$thumb.src}")`)
+      },
+      'Carousel.change': (fancybox, carousel, to, from) => {
+        const slide = carousel.slides[to]
+        fancybox.$container.style.setProperty('--bg-image', `url("${slide.$thumb.src}")`)
+      }
+    }
+  })
 </script>
 
 <style>
+  #noneimg img {
+    display: none;
+    z-index: 9999;
+    /* width: 600px !important; */
+    min-width: 0%;
+    max-width: 90%;
+    max-height: 80%;
+    border-radius: 0px;
+    position: fixed;
+    box-shadow: 0 0 0px #c3c3c300 !important;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    margin: auto !important;
+  }
+  
+  @media screen and (max-width: 600px) {
     #noneimg img {
-        display: none;
-        z-index: 9999;
-        /* width: 600px !important; */
-        min-width: 0%;
-        max-width: 90%;
-        max-height: 80%;
-        border-radius: 0px;
-        position: fixed;
-        box-shadow: 0 0 0px #c3c3c300 !important;
-        left: 0;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        margin: auto !important;
+      max-width: 88%;
     }
-
-    @media screen and (max-width:600px) {
-        #noneimg img {
-            max-width: 88%
-        }
-    }
+  }
 </style>
 
     <div class="post-paging">
@@ -702,65 +686,28 @@ Fancybox.bind('[data-fancybox="fancybox-gallery-img"]', {
 	</div>
 </div>
 
+
+	<div style="bottom: 90px;" class="sidebar_button" id="js-toc">
+  <span>
+      <img style="width: 24px; height: 24px;" src="/image/toc.png" class="meat-type" alt="Icon">
+  </span>
+</div>
+
+<div id="post-toc" class="post-toc">
+    <span class="post-toc-title">文章目录</span>
+    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#DIP-Python-tutorials-for-image-processing-and-machine-learning-68-SVM"><span class="toc-text">DIP-Python tutorials for image processing and machine learning(68)-SVM</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#68-Quick-introduction-to-Support-Vector-Machines-SVM"><span class="toc-text">68 - Quick introduction to Support Vector Machines -SVM</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#68b-SVM-vs-Random-Forest-for-image-segmentation"><span class="toc-text">68b - SVM vs. Random Forest for image segmentation</span></a></li></ol>
+</div>
+
+
+<script src="/js/toc.js"></script>
+
+
+
 <script src="/js/gotop.js"></script>
 
-
-<style type="text/css">
-    @media screen and (min-width: 600px) {
-        .goTop>span {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 10px;
-            width: 40px;
-            height: 40px;
-            cursor: pointer;
-            opacity: 0.8;
-            background: rgba(18, 24, 58, 0.06);
-            text-align: center;
-            transition: border .5s;
-            border: 1px solid rgba(18, 24, 58, 0.06);
-
-            -moz-transition: border .5s;
-            /* Firefox 4 */
-            -webkit-transition: border .5s;
-            /* Safari 和 Chrome */
-            -o-transition: border .5s;
-            /* Opera */
-        }
-
-        .goTop>span:hover {
-            border: 1px solid #6680B3;
-        }
-
-
-        .goTop {
-            position: fixed;
-            right: 30px;
-            bottom: 80px;
-        }
-
-        .goTop>span>svg {
-            width: 20px;
-            height: 20px;
-            opacity: 0.7;
-        }
-
-    }
-
-    @media screen and (max-width: 600px) {
-        .goTop {
-            display: none;
-        }
-    }
-</style>
-<div class="goTop" id="js-go_top">
+<div style="bottom: 40px;" class="sidebar_button" id="js-go_top">
     <span>
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-            <g>
-                <path d="M13 12v8h-2v-8H4l8-8 8 8z"></path>
-            </g>
-        </svg>
+        <img style="width: 24px; height: 24px;" src="/image/go_top.png" class="meat-type" alt="Icon">
     </span>
 </div>
 <script>
@@ -813,6 +760,7 @@ Fancybox.bind('[data-fancybox="fancybox-gallery-img"]', {
         }
     </script>
 
+  
 <script>
 	console.log('\n %c Hexo-Quiet 主题 %c https://github.com/79e/hexo-theme-quiet \n', 'color: #fadfa3; background: #030307; padding:5px 0;', 'background: #fadfa3; padding:5px 0;')
 </script>

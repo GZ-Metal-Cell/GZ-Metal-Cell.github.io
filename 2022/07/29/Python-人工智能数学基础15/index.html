@@ -13,7 +13,7 @@
 
 
 <meta name="keywords" content="Python,唐宇迪,">
-<meta name="description" content="唐宇迪《人工智能数学基础》学习笔记第 15 章。">
+<meta name="description" content="">
 
 
 <script src="/js/jquery.min.js"></script>
@@ -371,56 +371,8 @@
     </div>
 </div>
     <div class="post-content" id="content">
-  
   <div id="article" class="post-content-info">
-    
-
-    <h2><span id="python-人工智能数学基础15">Python-人工智能数学基础15</span></h2><h2><span id="目录">目录</span></h2><!-- toc -->
-<ul>
-<li><a href="#15-方差分析">15 方差分析</a><ul>
-<li><a href="#151-方差分析概述">15.1 方差分析概述</a></li>
-<li><a href="#152-方差的比较">15.2 方差的比较</a></li>
-<li><a href="#153-方差分析">15.3 方差分析</a><ul>
-<li><a href="#1531-单因素方差分析">15.3.1 单因素方差分析</a></li>
-<li><a href="#与方差分析相关的统计量">与方差分析相关的统计量:</a><ul>
-<li><a href="#1-水平总体的均值">1 水平(总体)的均值</a></li>
-<li><a href="#2-全部观察值的总均值">2 全部观察值的总均值</a></li>
-<li><a href="#3-总离差平方和sst">3 总离差平方和(SST)</a></li>
-<li><a href="#4-水平项平方和ssa">4 水平项平方和(SSA)</a></li>
-<li><a href="#5-误差项平方和sse">5 误差项平方和(SSE)</a></li>
-<li><a href="#6-总离差平方和的分解">6 总离差平方和的分解</a></li>
-<li><a href="#7-各自由度">7 各自由度</a></li>
-<li><a href="#8-各误差的均方差msa和mse">8 各误差的均方差MSA和MSE</a></li>
-</ul>
-</li>
-<li><a href="#设置检验统计量">设置检验统计量</a></li>
-<li><a href="#1532-方差分析中的多重比较">15.3.2 方差分析中的多重比较</a><ul>
-<li><a href="#例152">例15.2</a></li>
-</ul>
-</li>
-<li><a href="#1533-多因素方差分析">15.3.3 多因素方差分析</a></li>
-<li><a href="#1533-多因素方差分析-1">15.3.3 多因素方差分析</a></li>
-<li><a href="#1533-多因素方差分析-2">15.3.3 多因素方差分析</a><ul>
-<li><a href="#例-153">例 15.3</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a href="#154-综合实例连锁餐饮用户评级分析">15.4 综合实例——连锁餐饮用户评级分析</a><ul>
-<li><a href="#1541-单因素方差实例分析">15.4.1 单因素方差实例分析</a><ul>
-<li><a href="#方法1-使用scipystatsf_oneway方法">方法1 使用scipy.stats.f_oneway()方法</a></li>
-<li><a href="#方法2-利用statsmodels库函数中包含的anova_lm模型-使用线性olsmodel进行方差分析">方法2 利用statsmodels库函数中包含的anova_lm模型, 使用线性OLSModel进行方差分析</a></li>
-<li><a href="#3-手动计算各误差值-实现单因素方差分析">3 手动计算各误差值, 实现单因素方差分析</a></li>
-</ul>
-</li>
-<li><a href="#1542-多因素方差分析实例">15.4.2 多因素方差分析实例</a></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<!-- tocstop -->
-<h3><span id="15-方差分析">15 方差分析</span></h3><h4><span id="151-方差分析概述">15.1 方差分析概述</span></h4><p>通过对实验数据进行分析, 检验方差<font color="red">相同</font>的多个正态总体<font color="red">均值</font>是否相等</p>
+    <h2 id="Python-人工智能数学基础15"><a href="#Python-人工智能数学基础15" class="headerlink" title="Python-人工智能数学基础15"></a>Python-人工智能数学基础15</h2><h3 id="15-方差分析"><a href="#15-方差分析" class="headerlink" title="15 方差分析"></a>15 方差分析</h3><h4 id="15-1-方差分析概述"><a href="#15-1-方差分析概述" class="headerlink" title="15.1 方差分析概述"></a>15.1 方差分析概述</h4><p>通过对实验数据进行分析, 检验方差<font color="red">相同</font>的多个正态总体<font color="red">均值</font>是否相等</p>
 <p>实例: 为了对几个行业的服务质量进行评价, 消费者协会在4个行业中分别抽取了不同的企业作为样本.最近一年中消费者总共对23家企业投诉的次数如下表所示</p>
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">import</span> pandas <span class="hljs-keyword">as</span> pd<br><br>data = np.array([[<span class="hljs-number">57</span>, <span class="hljs-number">68</span>, <span class="hljs-number">31</span>, <span class="hljs-number">44</span>],<br>                 [<span class="hljs-number">66</span>, <span class="hljs-number">39</span>, <span class="hljs-number">49</span>, <span class="hljs-number">51</span>],<br>                 [<span class="hljs-number">49</span>, <span class="hljs-number">29</span>, <span class="hljs-number">21</span>, <span class="hljs-number">65</span>],<br>                 [<span class="hljs-number">40</span>, <span class="hljs-number">45</span>, <span class="hljs-number">34</span>, <span class="hljs-number">77</span>],<br>                 [<span class="hljs-number">34</span>, <span class="hljs-number">56</span>, <span class="hljs-number">40</span>, <span class="hljs-number">58</span>],<br>                 [<span class="hljs-number">53</span>, <span class="hljs-number">51</span>, <span class="hljs-literal">None</span>, <span class="hljs-literal">None</span>],<br>                 [<span class="hljs-number">44</span>, <span class="hljs-literal">None</span>, <span class="hljs-literal">None</span>, <span class="hljs-literal">None</span>]])<br>df = pd.DataFrame(data, index=<span class="hljs-built_in">range</span>(<span class="hljs-number">1</span>, <span class="hljs-number">8</span>), columns=[<span class="hljs-string">&quot;零售业&quot;</span>, <span class="hljs-string">&quot;旅游业&quot;</span>, <span class="hljs-string">&quot;航空业&quot;</span>, <span class="hljs-string">&quot;家电制造业&quot;</span>])<br>df.index.name = <span class="hljs-string">&quot;观测值&quot;</span><br>df<br></code></pre></td></tr></table></figure>
 <div>
@@ -518,7 +470,7 @@
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> matplotlib.pyplot <span class="hljs-keyword">as</span> plt<br><br><span class="hljs-comment"># 解决中文显示问题</span><br>plt.rcParams[<span class="hljs-string">&#x27;font.sans-serif&#x27;</span>]=[<span class="hljs-string">&#x27;SimHei&#x27;</span>]<br>plt.rcParams[<span class="hljs-string">&#x27;axes.unicode_minus&#x27;</span>] = <span class="hljs-literal">False</span><br><br>plt.figure()<br><span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(data.shape[<span class="hljs-number">1</span>]):<br>    plt.scatter(i * np.ones(data.shape[<span class="hljs-number">0</span>]), data.T[i])<br>plt.xticks(<span class="hljs-built_in">range</span>(data.shape[<span class="hljs-number">1</span>]), (<span class="hljs-string">&#x27;零售业&#x27;</span>, <span class="hljs-string">&#x27;旅游业&#x27;</span>, <span class="hljs-string">&#x27;航空业&#x27;</span>, <span class="hljs-string">&#x27;家电制造业&#x27;</span>))<br>plt.ylabel(<span class="hljs-string">&#x27;被投诉次数&#x27;</span>)  <span class="hljs-comment"># 设置坐标轴名称</span><br>plt.xlabel(<span class="hljs-string">&#x27;行业&#x27;</span>)<br>plt.show()<br></code></pre></td></tr></table></figure>
 <p><img src="15.1.png" alt="png"></p>
 <p>从散点图中可以看出, 不同行业被投诉的次数的均值是有差异的, 但这种差异也可能是由抽样的<font color="red">随机性</font>造成的, 需要有更准确的方法来检验这种差异是否显著</p>
-<h4><span id="152-方差的比较">15.2 方差的比较</span></h4><ul>
+<h4 id="15-2-方差的比较"><a href="#15-2-方差的比较" class="headerlink" title="15.2 方差的比较"></a>15.2 方差的比较</h4><ul>
 <li><p>组内方差: 某一因素的<font color="red">同一</font>水平(同一个总体)下样本数据的方差, 例如, 零售业被投诉次数的方差. 组内方差只包含<font color="red">随机误差</font></p>
 </li>
 <li><p>组间方差: 某一因素的<font color="red">不同</font>水平(不同总体)下个样本之间的方差, 例如, 4个行业被投诉次数之间的方差. 组间方差既包含<font color="red">随机误差</font>, 也包含<font color="red">系统误差</font></p>
@@ -526,27 +478,27 @@
 </ul>
 <p>如果不同行业对投诉次数没有影响, 则组间误差中<font color="red">只</font>包含随机误差, 没有系统误差, 此时组件误差与组内误差经过平均后的数值很接近, 它们的比值会接近于1</p>
 <p>如果不同行业对投诉次数有影响, 在组间误差中除包含随机误差之外, <font color="red">还</font>会包含系统误差, 此时它们的比值会大于1</p>
-<h4><span id="153-方差分析">15.3 方差分析</span></h4><h5><span id="1531-单因素方差分析">15.3.1 单因素方差分析</span></h5><h5><span id="与方差分析相关的统计量">与方差分析相关的统计量:</span></h5><h6><span id="1-水平总体的均值">1 水平(总体)的均值</span></h6><script type="math/tex; mode=display">\bar X_i=\frac{1}{n_i}\Sigma^{n_i}_{j=1}X_{ij}, i=1,...,k</script><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">X_bar = []<br><span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(data.shape[<span class="hljs-number">1</span>]):<br>    X_bar.append(data.T[i][data.T[i] != np.array(<span class="hljs-literal">None</span>)].mean())<br>X_bar<br></code></pre></td></tr></table></figure>
+<h4 id="15-3-方差分析"><a href="#15-3-方差分析" class="headerlink" title="15.3 方差分析"></a>15.3 方差分析</h4><h5 id="15-3-1-单因素方差分析"><a href="#15-3-1-单因素方差分析" class="headerlink" title="15.3.1 单因素方差分析"></a>15.3.1 单因素方差分析</h5><h5 id="与方差分析相关的统计量"><a href="#与方差分析相关的统计量" class="headerlink" title="与方差分析相关的统计量:"></a>与方差分析相关的统计量:</h5><h6 id="1-水平-总体-的均值"><a href="#1-水平-总体-的均值" class="headerlink" title="1 水平(总体)的均值"></a>1 水平(总体)的均值</h6><script type="math/tex; mode=display">\bar X_i=\frac{1}{n_i}\Sigma^{n_i}_{j=1}X_{ij}, i=1,...,k</script><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">X_bar = []<br><span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(data.shape[<span class="hljs-number">1</span>]):<br>    X_bar.append(data.T[i][data.T[i] != np.array(<span class="hljs-literal">None</span>)].mean())<br>X_bar<br></code></pre></td></tr></table></figure>
 <pre><code>[49.0, 48.0, 35.0, 59.0]
-</code></pre><h6><span id="2-全部观察值的总均值">2 全部观察值的总均值</span></h6><p>全部观察值$X_ij$的总和 除以 观察值的个数</p>
+</code></pre><h6 id="2-全部观察值的总均值"><a href="#2-全部观察值的总均值" class="headerlink" title="2 全部观察值的总均值"></a>2 全部观察值的总均值</h6><p>全部观察值$X_ij$的总和 除以 观察值的个数</p>
 <script type="math/tex; mode=display">\bar{\bar{X}}=\frac{1}{n}\Sigma^k_{i=1}\Sigma^{n_i}_{j=1}X_{ij}=\frac{1}{n}\Sigma^k_{i=1}n_i\bar{X_i}</script><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">X_bar_bar = data.T[data.T != np.array(<span class="hljs-literal">None</span>)].mean()  <span class="hljs-comment"># 不知道咋念...</span><br>X_bar_bar<br></code></pre></td></tr></table></figure>
 <pre><code>47.869565217391305
-</code></pre><h6><span id="3-总离差平方和sst">3 总离差平方和(SST)</span></h6><p>样本全部观察值$X_{ij}$与总平均值$\bar{\bar X}$的离差平方和, 反映全部观察值的离散情况.</p>
+</code></pre><h6 id="3-总离差平方和-SST"><a href="#3-总离差平方和-SST" class="headerlink" title="3 总离差平方和(SST)"></a>3 总离差平方和(SST)</h6><p>样本全部观察值$X_{ij}$与总平均值$\bar{\bar X}$的离差平方和, 反映全部观察值的离散情况.</p>
 <script type="math/tex; mode=display">SST=\Sigma^k_{i=1}\Sigma^{n_i}_{j=1}(X_{ij}- \bar{\bar X})^2</script><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">SST = ((data.T[data.T != np.array(<span class="hljs-literal">None</span>)] - X_bar_bar) ** <span class="hljs-number">2</span>).<span class="hljs-built_in">sum</span>()<br>SST<br></code></pre></td></tr></table></figure>
 <pre><code>4164.608695652174
-</code></pre><h6><span id="4-水平项平方和ssa">4 水平项平方和(SSA)</span></h6><p>各个水平$A_i$下样本均值$\bar X_i$与样本总平均$\bar{\bar X}$的偏差平方和, 它在一定程度上反映了各总体均值$\mu_j$之间的差异引起的波动, 又称组间平方和, 该平方和既包括随机误差, 也包括系统误差</p>
+</code></pre><h6 id="4-水平项平方和-SSA"><a href="#4-水平项平方和-SSA" class="headerlink" title="4 水平项平方和(SSA)"></a>4 水平项平方和(SSA)</h6><p>各个水平$A_i$下样本均值$\bar X_i$与样本总平均$\bar{\bar X}$的偏差平方和, 它在一定程度上反映了各总体均值$\mu_j$之间的差异引起的波动, 又称组间平方和, 该平方和既包括随机误差, 也包括系统误差</p>
 <script type="math/tex; mode=display">SSA=\Sigma^k_{i=1}\Sigma^{n_i}_{j=1}(\bar X_i-\bar{\bar X})^2=\Sigma^k_{i=1}n_i(\bar X_i-\bar{\bar X})^2</script><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">SSA = <span class="hljs-number">0</span><br><span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(data.shape[<span class="hljs-number">1</span>]):<br>    SSA += <span class="hljs-built_in">len</span>(data.T[i][data.T[i] != np.array(<span class="hljs-literal">None</span>)]) *\<br>    (data.T[i][data.T[i] != np.array(<span class="hljs-literal">None</span>)].mean() - X_bar_bar) ** <span class="hljs-number">2</span><br>SSA<br></code></pre></td></tr></table></figure>
 <pre><code>1456.608695652174
-</code></pre><h6><span id="5-误差项平方和sse">5 误差项平方和(SSE)</span></h6><p>在各个总体$A_i$下, 样本数据$X_{ij}$与其总体均值$\bar X_i$的偏差平方和反映了抽样的随机性引起的样本数据$X_{ij}$的波动, 又称组内平方和, 该平方和反映的是随机误差的大小</p>
+</code></pre><h6 id="5-误差项平方和-SSE"><a href="#5-误差项平方和-SSE" class="headerlink" title="5 误差项平方和(SSE)"></a>5 误差项平方和(SSE)</h6><p>在各个总体$A_i$下, 样本数据$X_{ij}$与其总体均值$\bar X_i$的偏差平方和反映了抽样的随机性引起的样本数据$X_{ij}$的波动, 又称组内平方和, 该平方和反映的是随机误差的大小</p>
 <script type="math/tex; mode=display">SSE=\Sigma^k_{i=1}\Sigma^{n_i}_{j=1}(X_{ij}-\bar{X_i})^2</script><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">SSE = <span class="hljs-number">0</span><br><span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(data.shape[<span class="hljs-number">1</span>]):<br>    <span class="hljs-keyword">for</span> j <span class="hljs-keyword">in</span> data.T[i][data.T[i] != np.array(<span class="hljs-literal">None</span>)]:<br>        SSE += (j - X_bar[i]) ** <span class="hljs-number">2</span><br>SSE<br></code></pre></td></tr></table></figure>
 <pre><code>2708.0
-</code></pre><h6><span id="6-总离差平方和的分解">6 总离差平方和的分解</span></h6><script type="math/tex; mode=display">SST=SSE+SSA</script><h6><span id="7-各自由度">7 各自由度</span></h6><p>$SST$的自由度为$n-1$, 其中$n$为全部观察值的个数</p>
+</code></pre><h6 id="6-总离差平方和的分解"><a href="#6-总离差平方和的分解" class="headerlink" title="6 总离差平方和的分解"></a>6 总离差平方和的分解</h6><script type="math/tex; mode=display">SST=SSE+SSA</script><h6 id="7-各自由度"><a href="#7-各自由度" class="headerlink" title="7 各自由度"></a>7 各自由度</h6><p>$SST$的自由度为$n-1$, 其中$n$为全部观察值的个数</p>
 <p>误差项离差平方和($SSE$)的自由度为$k-1$, 其中$k$为因素水平(总体)的个数</p>
 <p>水平项离差平方和($SSA$)的自由度为$n-k$</p>
-<h6><span id="8-各误差的均方差msa和mse">8 各误差的均方差MSA和MSE</span></h6><p>组间方差$SSA$的均方差记为$MSA$</p>
+<h6 id="8-各误差的均方差MSA和MSE"><a href="#8-各误差的均方差MSA和MSE" class="headerlink" title="8 各误差的均方差MSA和MSE"></a>8 各误差的均方差MSA和MSE</h6><p>组间方差$SSA$的均方差记为$MSA$</p>
 <p>组内方差$SSE$的均方差记为$MSE$</p>
 <p>计算方法是用误差平方 除以 相应的自由度</p>
-<h5><span id="设置检验统计量">设置检验统计量</span></h5><script type="math/tex; mode=display">F=\frac{SSA/(k-1)}{SSE/(n-k)}=\frac{MSA}{MSE}F(k-1, n-k)</script><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">k = <span class="hljs-built_in">len</span>(data[<span class="hljs-number">1</span>])<br>n = <span class="hljs-built_in">len</span>(data[data!= np.array(<span class="hljs-literal">None</span>)])<br>F = (SSA / (k - <span class="hljs-number">1</span>)) / (SSE / (n - k))<br>F<br></code></pre></td></tr></table></figure>
+<h5 id="设置检验统计量"><a href="#设置检验统计量" class="headerlink" title="设置检验统计量"></a>设置检验统计量</h5><script type="math/tex; mode=display">F=\frac{SSA/(k-1)}{SSE/(n-k)}=\frac{MSA}{MSE}F(k-1, n-k)</script><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">k = <span class="hljs-built_in">len</span>(data[<span class="hljs-number">1</span>])<br>n = <span class="hljs-built_in">len</span>(data[data!= np.array(<span class="hljs-literal">None</span>)])<br>F = (SSA / (k - <span class="hljs-number">1</span>)) / (SSE / (n - k))<br>F<br></code></pre></td></tr></table></figure>
 <pre><code>3.4066426904716036
 </code></pre><p>上述分析的结果可排成表格的形式, 称为单因素实验方差分析表: </p>
 <table>
@@ -579,11 +531,11 @@
 
 
 
-<h5><span id="1532-方差分析中的多重比较">15.3.2 方差分析中的多重比较</span></h5><p>为了进一步了解因素A的各个总体对观测变量的具体影响效果</p>
+<h5 id="15-3-2-方差分析中的多重比较"><a href="#15-3-2-方差分析中的多重比较" class="headerlink" title="15.3.2 方差分析中的多重比较"></a>15.3.2 方差分析中的多重比较</h5><p>为了进一步了解因素A的各个总体对观测变量的具体影响效果</p>
 <p>多重比较检验就是通过对各个总体观测变量均值的<font color="red">逐对</font>比较, 来进一步检验到底哪些均值之间存在差异, 并找出最优水平.</p>
 <p>如果原假设$H_0:\mu_i=\mu_j,i,j=1,2,…,r,i\ne j$成立, 检验统计量应较小, 因此拒绝域为$|\bar X_i-\bar X_j|&gt;t_{\alpha/2}\sqrt{MSE(\frac{1}{n<br>_i}+\frac{1}{n_j})}$</p>
 <p>如果满足拒绝域条件, 则认为$\mu_i$与$\mu_j$有显著性差异, 否则认为它们之间没有显著性差异</p>
-<h6><span id="例152">例15.2</span></h6><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> pandas <span class="hljs-keyword">as</span> pd<br><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><br>data = np.array([[<span class="hljs-number">26.5</span>, <span class="hljs-number">31.2</span>, <span class="hljs-number">27.9</span>, <span class="hljs-number">30.8</span>],<br>                [<span class="hljs-number">28.7</span>, <span class="hljs-number">28.3</span>, <span class="hljs-number">25.1</span>, <span class="hljs-number">29.6</span>],<br>                [<span class="hljs-number">25.1</span>, <span class="hljs-number">30.8</span>, <span class="hljs-number">28.5</span>, <span class="hljs-number">32.4</span>],<br>                [<span class="hljs-number">29.1</span>, <span class="hljs-number">27.9</span>, <span class="hljs-number">24.2</span>, <span class="hljs-number">31.7</span>],<br>                [<span class="hljs-number">27.2</span>, <span class="hljs-number">29.6</span>, <span class="hljs-number">26.5</span>, <span class="hljs-number">32.8</span>]])<br>df = pd.DataFrame(data, index=<span class="hljs-built_in">range</span>(<span class="hljs-number">1</span>, <span class="hljs-number">6</span>), columns=[<span class="hljs-string">&quot;无色&quot;</span>, <span class="hljs-string">&quot;粉色&quot;</span>, <span class="hljs-string">&quot;橘黄色&quot;</span>, <span class="hljs-string">&quot;绿色&quot;</span>])<br>df.index.name = <span class="hljs-string">&quot;样本&quot;</span><br>df<br></code></pre></td></tr></table></figure>
+<h6 id="例15-2"><a href="#例15-2" class="headerlink" title="例15.2"></a>例15.2</h6><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> pandas <span class="hljs-keyword">as</span> pd<br><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><br>data = np.array([[<span class="hljs-number">26.5</span>, <span class="hljs-number">31.2</span>, <span class="hljs-number">27.9</span>, <span class="hljs-number">30.8</span>],<br>                [<span class="hljs-number">28.7</span>, <span class="hljs-number">28.3</span>, <span class="hljs-number">25.1</span>, <span class="hljs-number">29.6</span>],<br>                [<span class="hljs-number">25.1</span>, <span class="hljs-number">30.8</span>, <span class="hljs-number">28.5</span>, <span class="hljs-number">32.4</span>],<br>                [<span class="hljs-number">29.1</span>, <span class="hljs-number">27.9</span>, <span class="hljs-number">24.2</span>, <span class="hljs-number">31.7</span>],<br>                [<span class="hljs-number">27.2</span>, <span class="hljs-number">29.6</span>, <span class="hljs-number">26.5</span>, <span class="hljs-number">32.8</span>]])<br>df = pd.DataFrame(data, index=<span class="hljs-built_in">range</span>(<span class="hljs-number">1</span>, <span class="hljs-number">6</span>), columns=[<span class="hljs-string">&quot;无色&quot;</span>, <span class="hljs-string">&quot;粉色&quot;</span>, <span class="hljs-string">&quot;橘黄色&quot;</span>, <span class="hljs-string">&quot;绿色&quot;</span>])<br>df.index.name = <span class="hljs-string">&quot;样本&quot;</span><br>df<br></code></pre></td></tr></table></figure>
 <div>
 <style scoped>
     .dataframe tbody tr th:only-of-type {
@@ -684,7 +636,7 @@
 </code></pre><p>依据上面结果可得出相应的影响效果, </p>
 <p>如$|\bar X_1 - \bar X_2|&gt;2.095$, 则说明$X_1$和$X_2$有显著性差异, 也就是说明无色和粉色对产品销售的影响有显著性差异</p>
 <p>$|\bar X_2 - \bar X_4|&lt;2.095$, 说明$X_2$和$X_4$没有显著性差异, 也就是说粉色和绿色对产品销售的影响没有显著性差异</p>
-<h5><span id="1533-多因素方差分析">15.3.3 多因素方差分析</span></h5><ul>
+<h5 id="15-3-3-多因素方差分析"><a href="#15-3-3-多因素方差分析" class="headerlink" title="15.3.3 多因素方差分析"></a>15.3.3 多因素方差分析</h5><ul>
 <li><p><font color="red">无</font>交互效应的双因素离差平法和分解: $SST=SSA+SSB+SSE$</p>
 </li>
 <li><p><font color="red">有</font>交互效应的双因素离差平方和分解: $SST=SSA+SSB+SSAB+SSE$</p>
@@ -755,7 +707,7 @@
 </tbody>
 </table>
 </div>
-<h5><span id="1533-多因素方差分析">15.3.3 多因素方差分析</span></h5><ul>
+<h5 id="15-3-3-多因素方差分析-1"><a href="#15-3-3-多因素方差分析-1" class="headerlink" title="15.3.3 多因素方差分析"></a>15.3.3 多因素方差分析</h5><ul>
 <li><p><font color="red">无</font>交互效应的双因素离差平法和分解: $SST=SSA+SSB+SSE$</p>
 </li>
 <li><p><font color="red">有</font>交互效应的双因素离差平方和分解: $SST=SSA+SSB+SSAB+SSE$</p>
@@ -826,7 +778,7 @@
 </tbody>
 </table>
 </div>
-<h5><span id="1533-多因素方差分析">15.3.3 多因素方差分析</span></h5><ul>
+<h5 id="15-3-3-多因素方差分析-2"><a href="#15-3-3-多因素方差分析-2" class="headerlink" title="15.3.3 多因素方差分析"></a>15.3.3 多因素方差分析</h5><ul>
 <li><p><font color="red">无</font>交互效应的双因素离差平法和分解: $SST=SSA+SSB+SSE$</p>
 </li>
 <li><p><font color="red">有</font>交互效应的双因素离差平方和分解: $SST=SSA+SSB+SSAB+SSE$</p>
@@ -906,7 +858,7 @@
 </table>
 </div>
 <p>m为试验次数($\ge2$)</p>
-<h6><span id="例-153">例 15.3</span></h6><p>有$s=4$个品牌的彩电在$r=5$个地区销售, 为分析品牌和地区对销售量是否有影响, 每个品牌在各个地区的销售量如下, 试分析品牌和地区对销售量是否有显著影响?$(\alpha=0.05)$</p>
+<h6 id="例-15-3"><a href="#例-15-3" class="headerlink" title="例 15.3"></a>例 15.3</h6><p>有$s=4$个品牌的彩电在$r=5$个地区销售, 为分析品牌和地区对销售量是否有影响, 每个品牌在各个地区的销售量如下, 试分析品牌和地区对销售量是否有显著影响?$(\alpha=0.05)$</p>
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">import</span> pandas <span class="hljs-keyword">as</span> pd<br><br>data = np.array([[<span class="hljs-number">365</span>, <span class="hljs-number">350</span>, <span class="hljs-number">343</span>, <span class="hljs-number">340</span>, <span class="hljs-number">323</span>],<br>                 [<span class="hljs-number">345</span>, <span class="hljs-number">368</span>, <span class="hljs-number">363</span>, <span class="hljs-number">330</span>, <span class="hljs-number">333</span>],<br>                 [<span class="hljs-number">358</span>, <span class="hljs-number">323</span>, <span class="hljs-number">353</span>, <span class="hljs-number">343</span>, <span class="hljs-number">308</span>],<br>                 [<span class="hljs-number">288</span>, <span class="hljs-number">280</span>, <span class="hljs-number">298</span>, <span class="hljs-number">260</span>, <span class="hljs-number">298</span>]])<br>df = pd.DataFrame(data, columns=[<span class="hljs-string">&quot;B1&quot;</span>, <span class="hljs-string">&quot;B2&quot;</span>, <span class="hljs-string">&quot;B3&quot;</span>, <span class="hljs-string">&quot;B4&quot;</span>, <span class="hljs-string">&quot;B5&quot;</span>],<br>                  index=[<span class="hljs-string">&quot;A1&quot;</span>, <span class="hljs-string">&quot;A2&quot;</span>, <span class="hljs-string">&quot;A3&quot;</span>, <span class="hljs-string">&quot;A4&quot;</span>])<br>df.index.name = <span class="hljs-string">&quot;品牌销售表(因素A)&quot;</span><br>df.columns.name = <span class="hljs-string">&quot;销售地区(因素B)&quot;</span><br>df<br></code></pre></td></tr></table></figure>
 <div>
 <style scoped>
@@ -1044,7 +996,7 @@
 <li><p>由于$F_B=2.101&lt;F_{0.95}(4, 12)=3.26$, 说明销售地区对彩电的销售没有显著影响</p>
 </li>
 </ul>
-<h4><span id="154-综合实例连锁餐饮用户评级分析">15.4 综合实例——连锁餐饮用户评级分析</span></h4><h5><span id="1541-单因素方差实例分析">15.4.1 单因素方差实例分析</span></h5><p>某连锁餐饮在3个城市用户评分资料如表所示，已知各城市用户评分的分布近似与正态等方差，是以95%的可靠性判断城市对用户评分是否有显著影响？</p>
+<h4 id="15-4-综合实例——连锁餐饮用户评级分析"><a href="#15-4-综合实例——连锁餐饮用户评级分析" class="headerlink" title="15.4 综合实例——连锁餐饮用户评级分析"></a>15.4 综合实例——连锁餐饮用户评级分析</h4><h5 id="15-4-1-单因素方差实例分析"><a href="#15-4-1-单因素方差实例分析" class="headerlink" title="15.4.1 单因素方差实例分析"></a>15.4.1 单因素方差实例分析</h5><p>某连锁餐饮在3个城市用户评分资料如表所示，已知各城市用户评分的分布近似与正态等方差，是以95%的可靠性判断城市对用户评分是否有显著影响？</p>
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> scipy.stats <span class="hljs-keyword">import</span> f_oneway<br><span class="hljs-keyword">import</span> scipy.stats <span class="hljs-keyword">as</span> stats<br><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">import</span> pandas <span class="hljs-keyword">as</span> pd<br><span class="hljs-keyword">from</span> statsmodels.formula.api <span class="hljs-keyword">import</span> ols<br><span class="hljs-keyword">from</span> statsmodels.stats.anova <span class="hljs-keyword">import</span> anova_lm<br><br>cityA = [<span class="hljs-number">10</span>,<span class="hljs-number">9</span>,<span class="hljs-number">9</span>,<span class="hljs-number">8</span>,<span class="hljs-number">8</span>,<span class="hljs-number">7</span>,<span class="hljs-number">7</span>,<span class="hljs-number">8</span>,<span class="hljs-number">8</span>,<span class="hljs-number">9</span>]<br>cityB = [<span class="hljs-number">10</span>,<span class="hljs-number">8</span>,<span class="hljs-number">9</span>,<span class="hljs-number">8</span>,<span class="hljs-number">7</span>,<span class="hljs-number">7</span>,<span class="hljs-number">7</span>,<span class="hljs-number">8</span>,<span class="hljs-number">9</span>,<span class="hljs-number">9</span>]<br>cityC = [<span class="hljs-number">9</span>,<span class="hljs-number">9</span>,<span class="hljs-number">8</span>,<span class="hljs-number">8</span>,<span class="hljs-number">8</span>,<span class="hljs-number">7</span>,<span class="hljs-number">6</span>,<span class="hljs-number">9</span>,<span class="hljs-number">8</span>,<span class="hljs-number">9</span>]<br>df = pd.DataFrame(np.vstack((cityA, cityB, cityC)), index=[<span class="hljs-string">&#x27;A&#x27;</span>, <span class="hljs-string">&#x27;B&#x27;</span>, <span class="hljs-string">&#x27;C&#x27;</span>])<br>df.columns.name = <span class="hljs-string">&quot;用户评分&quot;</span><br>df.index.name = <span class="hljs-string">&quot;城市&quot;</span><br>df<br></code></pre></td></tr></table></figure>
 <div>
 <style scoped>
@@ -1139,10 +1091,10 @@
 
 
 
-<h6><span id="方法1-使用scipystatsf_oneway方法">方法1 使用scipy.stats.f_oneway()方法</span></h6><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># 首先检查方差是否相等, 在使用 f_oneway 函数之前需要先检验方差齐性, 这里使用了 levene 方差齐性检验</span><br><span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">scipy.stats.levene(*samples, center=&#x27;median&#x27;, proportiontocut=0.05)</span><br><span class="hljs-string">对等方差执行 Levene 检验。</span><br><span class="hljs-string">小的 p-value 表明总体没有相等的方差。</span><br><span class="hljs-string">&quot;&quot;&quot;</span><br>(W, p) = stats.levene(cityA, cityB, cityC)<br><span class="hljs-keyword">if</span> p &lt; <span class="hljs-number">0.05</span>:<br>    <span class="hljs-built_in">print</span>((<span class="hljs-string">&#x27;Warning: the p-value of the Levene test is &lt;0.05: p = &#123;0&#125;&#x27;</span>.<span class="hljs-built_in">format</span>(p)))<br></code></pre></td></tr></table></figure>
+<h6 id="方法1-使用scipy-stats-f-oneway-方法"><a href="#方法1-使用scipy-stats-f-oneway-方法" class="headerlink" title="方法1 使用scipy.stats.f_oneway()方法"></a>方法1 使用scipy.stats.f_oneway()方法</h6><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># 首先检查方差是否相等, 在使用 f_oneway 函数之前需要先检验方差齐性, 这里使用了 levene 方差齐性检验</span><br><span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">scipy.stats.levene(*samples, center=&#x27;median&#x27;, proportiontocut=0.05)</span><br><span class="hljs-string">对等方差执行 Levene 检验。</span><br><span class="hljs-string">小的 p-value 表明总体没有相等的方差。</span><br><span class="hljs-string">&quot;&quot;&quot;</span><br>(W, p) = stats.levene(cityA, cityB, cityC)<br><span class="hljs-keyword">if</span> p &lt; <span class="hljs-number">0.05</span>:<br>    <span class="hljs-built_in">print</span>((<span class="hljs-string">&#x27;Warning: the p-value of the Levene test is &lt;0.05: p = &#123;0&#125;&#x27;</span>.<span class="hljs-built_in">format</span>(p)))<br></code></pre></td></tr></table></figure>
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># 单因素方差分析</span><br><span class="hljs-comment"># 第一种方法</span><br>F_statistic, pVal = stats.f_oneway(cityA, cityB, cityC)<br><span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;单因素方差分析结果（f_oneway）: F = &#123;0&#125;, and p = &#123;1&#125;&#x27;</span>.<span class="hljs-built_in">format</span>(F_statistic, pVal))<br><span class="hljs-keyword">if</span> pVal &lt; <span class="hljs-number">0.05</span>:<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;One of the groups is significantly different.&#x27;</span>)<br></code></pre></td></tr></table></figure>
 <pre><code>单因素方差分析结果（f_oneway）: F = 0.10150375939849626, and p = 0.9038208903685354
-</code></pre><h6><span id="方法2-利用statsmodels库函数中包含的anova_lm模型-使用线性olsmodel进行方差分析">方法2 利用statsmodels库函数中包含的anova_lm模型, 使用线性OLSModel进行方差分析</span></h6><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># 单因素方差分析</span><br><span class="hljs-comment"># 第二种方法 statsmodel 库函数</span><br><span class="hljs-comment"># 将数据存入 dataframe 中</span><br>df = pd.DataFrame()<br>names = <span class="hljs-built_in">locals</span>()<br><span class="hljs-keyword">for</span> city <span class="hljs-keyword">in</span> [<span class="hljs-string">&#x27;A&#x27;</span>,<span class="hljs-string">&#x27;B&#x27;</span>,<span class="hljs-string">&#x27;C&#x27;</span>]:<br>    s = names[<span class="hljs-string">&#x27;city%c&#x27;</span> % city]<br>    df_temp = pd.DataFrame(&#123;<span class="hljs-string">&#x27;city&#x27;</span>:city[-<span class="hljs-number">1</span>], <span class="hljs-string">&#x27;S&#x27;</span>:s&#125;)<br>    df = pd.concat([df, df_temp], ignore_index=<span class="hljs-literal">True</span>)<br><span class="hljs-comment"># 使用线性 OLSModel 进行方差分析</span><br>model = ols(<span class="hljs-string">&#x27;S ~ city&#x27;</span>, df).fit()<br>anovaResults = anova_lm(model)<br><span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;单因素方差分析结果（anova_lm）:&#x27;</span>)<br><span class="hljs-built_in">print</span>(anovaResults)<br>df<br></code></pre></td></tr></table></figure>
+</code></pre><h6 id="方法2-利用statsmodels库函数中包含的anova-lm模型-使用线性OLSModel进行方差分析"><a href="#方法2-利用statsmodels库函数中包含的anova-lm模型-使用线性OLSModel进行方差分析" class="headerlink" title="方法2 利用statsmodels库函数中包含的anova_lm模型, 使用线性OLSModel进行方差分析"></a>方法2 利用statsmodels库函数中包含的anova_lm模型, 使用线性OLSModel进行方差分析</h6><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># 单因素方差分析</span><br><span class="hljs-comment"># 第二种方法 statsmodel 库函数</span><br><span class="hljs-comment"># 将数据存入 dataframe 中</span><br>df = pd.DataFrame()<br>names = <span class="hljs-built_in">locals</span>()<br><span class="hljs-keyword">for</span> city <span class="hljs-keyword">in</span> [<span class="hljs-string">&#x27;A&#x27;</span>,<span class="hljs-string">&#x27;B&#x27;</span>,<span class="hljs-string">&#x27;C&#x27;</span>]:<br>    s = names[<span class="hljs-string">&#x27;city%c&#x27;</span> % city]<br>    df_temp = pd.DataFrame(&#123;<span class="hljs-string">&#x27;city&#x27;</span>:city[-<span class="hljs-number">1</span>], <span class="hljs-string">&#x27;S&#x27;</span>:s&#125;)<br>    df = pd.concat([df, df_temp], ignore_index=<span class="hljs-literal">True</span>)<br><span class="hljs-comment"># 使用线性 OLSModel 进行方差分析</span><br>model = ols(<span class="hljs-string">&#x27;S ~ city&#x27;</span>, df).fit()<br>anovaResults = anova_lm(model)<br><span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;单因素方差分析结果（anova_lm）:&#x27;</span>)<br><span class="hljs-built_in">print</span>(anovaResults)<br>df<br></code></pre></td></tr></table></figure>
 <pre><code>单因素方差分析结果（anova_lm）:
             df  sum_sq   mean_sq         F    PR(&gt;F)
 city       2.0     0.2  0.100000  0.101504  0.903821
@@ -1330,10 +1282,10 @@ Residual  27.0    26.6  0.985185       NaN       NaN
 
 
 
-<h6><span id="3-手动计算各误差值-实现单因素方差分析">3 手动计算各误差值, 实现单因素方差分析</span></h6><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> scipy.stats <span class="hljs-keyword">import</span> f_oneway<br><span class="hljs-keyword">import</span> scipy.stats <span class="hljs-keyword">as</span> stats<br><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">import</span> pandas <span class="hljs-keyword">as</span> pd<br><br>cityA = [<span class="hljs-number">10</span>,<span class="hljs-number">9</span>,<span class="hljs-number">9</span>,<span class="hljs-number">8</span>,<span class="hljs-number">8</span>,<span class="hljs-number">7</span>,<span class="hljs-number">7</span>,<span class="hljs-number">8</span>,<span class="hljs-number">8</span>,<span class="hljs-number">9</span>]<br>cityB = [<span class="hljs-number">10</span>,<span class="hljs-number">8</span>,<span class="hljs-number">9</span>,<span class="hljs-number">8</span>,<span class="hljs-number">7</span>,<span class="hljs-number">7</span>,<span class="hljs-number">7</span>,<span class="hljs-number">8</span>,<span class="hljs-number">9</span>,<span class="hljs-number">9</span>]<br>cityC = [<span class="hljs-number">9</span>,<span class="hljs-number">9</span>,<span class="hljs-number">8</span>,<span class="hljs-number">8</span>,<span class="hljs-number">8</span>,<span class="hljs-number">7</span>,<span class="hljs-number">6</span>,<span class="hljs-number">9</span>,<span class="hljs-number">8</span>,<span class="hljs-number">9</span>]<br>df = pd.DataFrame()<br>names = <span class="hljs-built_in">locals</span>()<br><span class="hljs-keyword">for</span> city <span class="hljs-keyword">in</span> [<span class="hljs-string">&#x27;A&#x27;</span>,<span class="hljs-string">&#x27;B&#x27;</span>,<span class="hljs-string">&#x27;C&#x27;</span>]:<br>    s = names[<span class="hljs-string">&#x27;city%c&#x27;</span> % city]<br>    df_temp = pd.DataFrame(&#123;<span class="hljs-string">&#x27;city&#x27;</span>:city[-<span class="hljs-number">1</span>], <span class="hljs-string">&#x27;S&#x27;</span>:s&#125;)<br>    df = pd.concat([df, df_temp], ignore_index=<span class="hljs-literal">True</span>)<br>groups = df.groupby(<span class="hljs-string">&#x27;city&#x27;</span>)<br><span class="hljs-comment"># The &quot;total sum-square&quot; is the squared deviation from the mean</span><br>ss_total = np.<span class="hljs-built_in">sum</span>((df[<span class="hljs-string">&#x27;S&#x27;</span>] - df[<span class="hljs-string">&#x27;S&#x27;</span>].mean()) ** <span class="hljs-number">2</span>)<br><span class="hljs-comment"># 计算SSE和SSA</span><br>(ss_treatments, ss_error) = (<span class="hljs-number">0</span>, <span class="hljs-number">0</span>)<br><span class="hljs-keyword">for</span> val, group <span class="hljs-keyword">in</span> groups:<br>    ss_error += <span class="hljs-built_in">sum</span>((group[<span class="hljs-string">&#x27;S&#x27;</span>] - group[<span class="hljs-string">&#x27;S&#x27;</span>].mean()) ** <span class="hljs-number">2</span>)<br>    ss_treatments += <span class="hljs-built_in">len</span>(group) * (group[<span class="hljs-string">&#x27;S&#x27;</span>].mean() - df[<span class="hljs-string">&#x27;S&#x27;</span>].mean()) ** <span class="hljs-number">2</span><br>df_groups = <span class="hljs-built_in">len</span>(groups) - <span class="hljs-number">1</span><br>df_residuals = <span class="hljs-built_in">len</span>(df) - <span class="hljs-built_in">len</span>(groups)<br>F = (ss_treatments / df_groups) / (ss_error / df_residuals)<br>df = stats.f(df_groups, df_residuals)<br>p = df.sf(F)<br><span class="hljs-built_in">print</span>((<span class="hljs-string">&#x27;单因素方差分析结果(手动计算）: F = &#123;0&#125;, and p = &#123;1&#125;&#x27;</span>.<span class="hljs-built_in">format</span>(F, p)))<br></code></pre></td></tr></table></figure>
+<h6 id="3-手动计算各误差值-实现单因素方差分析"><a href="#3-手动计算各误差值-实现单因素方差分析" class="headerlink" title="3 手动计算各误差值, 实现单因素方差分析"></a>3 手动计算各误差值, 实现单因素方差分析</h6><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> scipy.stats <span class="hljs-keyword">import</span> f_oneway<br><span class="hljs-keyword">import</span> scipy.stats <span class="hljs-keyword">as</span> stats<br><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">import</span> pandas <span class="hljs-keyword">as</span> pd<br><br>cityA = [<span class="hljs-number">10</span>,<span class="hljs-number">9</span>,<span class="hljs-number">9</span>,<span class="hljs-number">8</span>,<span class="hljs-number">8</span>,<span class="hljs-number">7</span>,<span class="hljs-number">7</span>,<span class="hljs-number">8</span>,<span class="hljs-number">8</span>,<span class="hljs-number">9</span>]<br>cityB = [<span class="hljs-number">10</span>,<span class="hljs-number">8</span>,<span class="hljs-number">9</span>,<span class="hljs-number">8</span>,<span class="hljs-number">7</span>,<span class="hljs-number">7</span>,<span class="hljs-number">7</span>,<span class="hljs-number">8</span>,<span class="hljs-number">9</span>,<span class="hljs-number">9</span>]<br>cityC = [<span class="hljs-number">9</span>,<span class="hljs-number">9</span>,<span class="hljs-number">8</span>,<span class="hljs-number">8</span>,<span class="hljs-number">8</span>,<span class="hljs-number">7</span>,<span class="hljs-number">6</span>,<span class="hljs-number">9</span>,<span class="hljs-number">8</span>,<span class="hljs-number">9</span>]<br>df = pd.DataFrame()<br>names = <span class="hljs-built_in">locals</span>()<br><span class="hljs-keyword">for</span> city <span class="hljs-keyword">in</span> [<span class="hljs-string">&#x27;A&#x27;</span>,<span class="hljs-string">&#x27;B&#x27;</span>,<span class="hljs-string">&#x27;C&#x27;</span>]:<br>    s = names[<span class="hljs-string">&#x27;city%c&#x27;</span> % city]<br>    df_temp = pd.DataFrame(&#123;<span class="hljs-string">&#x27;city&#x27;</span>:city[-<span class="hljs-number">1</span>], <span class="hljs-string">&#x27;S&#x27;</span>:s&#125;)<br>    df = pd.concat([df, df_temp], ignore_index=<span class="hljs-literal">True</span>)<br>groups = df.groupby(<span class="hljs-string">&#x27;city&#x27;</span>)<br><span class="hljs-comment"># The &quot;total sum-square&quot; is the squared deviation from the mean</span><br>ss_total = np.<span class="hljs-built_in">sum</span>((df[<span class="hljs-string">&#x27;S&#x27;</span>] - df[<span class="hljs-string">&#x27;S&#x27;</span>].mean()) ** <span class="hljs-number">2</span>)<br><span class="hljs-comment"># 计算SSE和SSA</span><br>(ss_treatments, ss_error) = (<span class="hljs-number">0</span>, <span class="hljs-number">0</span>)<br><span class="hljs-keyword">for</span> val, group <span class="hljs-keyword">in</span> groups:<br>    ss_error += <span class="hljs-built_in">sum</span>((group[<span class="hljs-string">&#x27;S&#x27;</span>] - group[<span class="hljs-string">&#x27;S&#x27;</span>].mean()) ** <span class="hljs-number">2</span>)<br>    ss_treatments += <span class="hljs-built_in">len</span>(group) * (group[<span class="hljs-string">&#x27;S&#x27;</span>].mean() - df[<span class="hljs-string">&#x27;S&#x27;</span>].mean()) ** <span class="hljs-number">2</span><br>df_groups = <span class="hljs-built_in">len</span>(groups) - <span class="hljs-number">1</span><br>df_residuals = <span class="hljs-built_in">len</span>(df) - <span class="hljs-built_in">len</span>(groups)<br>F = (ss_treatments / df_groups) / (ss_error / df_residuals)<br>df = stats.f(df_groups, df_residuals)<br>p = df.sf(F)<br><span class="hljs-built_in">print</span>((<span class="hljs-string">&#x27;单因素方差分析结果(手动计算）: F = &#123;0&#125;, and p = &#123;1&#125;&#x27;</span>.<span class="hljs-built_in">format</span>(F, p)))<br></code></pre></td></tr></table></figure>
 <pre><code>单因素方差分析结果(手动计算）: F = 0.1015037593984973, and p=0.9038208903685354
-</code></pre><p>由于$F<f_{0.05}(2, 27)="3.35$或$P">0.05$, 所以原假设成立, 不能认为城市对用户评分有影响</f_{0.05}(2,></p>
-<h5><span id="1542-多因素方差分析实例">15.4.2 多因素方差分析实例</span></h5><p>收集在环境等级(environment)和食材等级(ingredients)两个因素影响下的某连锁餐饮店的用户评价数据</p>
+</code></pre><p>由于$F<F_{0.05}(2, 27)=3.35$或$P>0.05$, 所以原假设成立, 不能认为城市对用户评分有影响</p>
+<h5 id="15-4-2-多因素方差分析实例"><a href="#15-4-2-多因素方差分析实例" class="headerlink" title="15.4.2 多因素方差分析实例"></a>15.4.2 多因素方差分析实例</h5><p>收集在环境等级(environment)和食材等级(ingredients)两个因素影响下的某连锁餐饮店的用户评价数据</p>
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment">#影响餐饮的2个因素：环境等级，食材等级</span><br><span class="hljs-keyword">from</span> scipy <span class="hljs-keyword">import</span> stats<br><span class="hljs-keyword">import</span> pandas <span class="hljs-keyword">as</span> pd<br><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">from</span> statsmodels.formula.api <span class="hljs-keyword">import</span> ols<br><span class="hljs-keyword">from</span> statsmodels.stats.anova <span class="hljs-keyword">import</span> anova_lm<br>environmental =  [<span class="hljs-number">5</span>,<span class="hljs-number">5</span>,<span class="hljs-number">5</span>,<span class="hljs-number">5</span>,<span class="hljs-number">5</span>,<span class="hljs-number">4</span>,<span class="hljs-number">4</span>,<span class="hljs-number">4</span>,<span class="hljs-number">4</span>,<span class="hljs-number">4</span>,<span class="hljs-number">3</span>,<span class="hljs-number">3</span>,<span class="hljs-number">3</span>,<span class="hljs-number">3</span>,<span class="hljs-number">3</span>,<span class="hljs-number">2</span>,<span class="hljs-number">2</span>,<span class="hljs-number">2</span>,<span class="hljs-number">2</span>,<span class="hljs-number">2</span>,<span class="hljs-number">1</span>,<span class="hljs-number">1</span>,<span class="hljs-number">1</span>,<span class="hljs-number">1</span>,<span class="hljs-number">1</span>]<br>ingredients    = [<span class="hljs-number">5</span>,<span class="hljs-number">4</span>,<span class="hljs-number">3</span>,<span class="hljs-number">2</span>,<span class="hljs-number">1</span>,<span class="hljs-number">5</span>,<span class="hljs-number">4</span>,<span class="hljs-number">3</span>,<span class="hljs-number">2</span>,<span class="hljs-number">1</span>,<span class="hljs-number">5</span>,<span class="hljs-number">4</span>,<span class="hljs-number">3</span>,<span class="hljs-number">2</span>,<span class="hljs-number">1</span>,<span class="hljs-number">5</span>,<span class="hljs-number">4</span>,<span class="hljs-number">3</span>,<span class="hljs-number">2</span>,<span class="hljs-number">1</span>,<span class="hljs-number">5</span>,<span class="hljs-number">4</span>,<span class="hljs-number">3</span>,<span class="hljs-number">2</span>,<span class="hljs-number">1</span>]<br>score      =     [<span class="hljs-number">5</span>,<span class="hljs-number">5</span>,<span class="hljs-number">4</span>,<span class="hljs-number">3</span>,<span class="hljs-number">2</span>,<span class="hljs-number">5</span>,<span class="hljs-number">4</span>,<span class="hljs-number">4</span>,<span class="hljs-number">3</span>,<span class="hljs-number">2</span>,<span class="hljs-number">4</span>,<span class="hljs-number">4</span>,<span class="hljs-number">3</span>,<span class="hljs-number">3</span>,<span class="hljs-number">2</span>,<span class="hljs-number">4</span>,<span class="hljs-number">3</span>,<span class="hljs-number">2</span>,<span class="hljs-number">2</span>,<span class="hljs-number">2</span>,<span class="hljs-number">3</span>,<span class="hljs-number">3</span>,<span class="hljs-number">3</span>,<span class="hljs-number">2</span>,<span class="hljs-number">1</span>]<br>data = &#123;<span class="hljs-string">&#x27;E&#x27;</span>:environmental, <span class="hljs-string">&#x27;I&#x27;</span>:ingredients, <span class="hljs-string">&#x27;S&#x27;</span>:score&#125;  <span class="hljs-comment"># E表示环境, I表示食材, S表示分数</span><br>df = pd.DataFrame(data)<br>df<br></code></pre></td></tr></table></figure>
 <div>
 <style scoped>
@@ -1532,56 +1484,49 @@ Residual  22.0    3.42   0.155455         NaN           NaN
 </div>
 
 <script>
-  
-Fancybox.bind('[data-fancybox="fancybox-gallery-img"]', {
-  dragToClose: true,
-  Toolbar: true,
-  closeButton: "top",
-  Image: {
-    zoom: true,
-  },
-  on: {
-    initCarousel: (fancybox) => {
-      const slide = fancybox.Carousel.slides[fancybox.Carousel.page];
-      fancybox.$container.style.setProperty(
-        "--bg-image",
-        `url("${slide.$thumb.src}")`
-      );
+  Fancybox.bind('[data-fancybox="fancybox-gallery-img"]', {
+    dragToClose: true,
+    Toolbar: true,
+    closeButton: 'top',
+    Image: {
+      zoom: true
     },
-    "Carousel.change": (fancybox, carousel, to, from) => {
-      const slide = carousel.slides[to];
-      fancybox.$container.style.setProperty(
-        "--bg-image",
-        `url("${slide.$thumb.src}")`
-      );
-    },
-  },
-});
+    on: {
+      initCarousel: (fancybox) => {
+        const slide = fancybox.Carousel.slides[fancybox.Carousel.page]
+        fancybox.$container.style.setProperty('--bg-image', `url("${slide.$thumb.src}")`)
+      },
+      'Carousel.change': (fancybox, carousel, to, from) => {
+        const slide = carousel.slides[to]
+        fancybox.$container.style.setProperty('--bg-image', `url("${slide.$thumb.src}")`)
+      }
+    }
+  })
 </script>
 
 <style>
+  #noneimg img {
+    display: none;
+    z-index: 9999;
+    /* width: 600px !important; */
+    min-width: 0%;
+    max-width: 90%;
+    max-height: 80%;
+    border-radius: 0px;
+    position: fixed;
+    box-shadow: 0 0 0px #c3c3c300 !important;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    margin: auto !important;
+  }
+  
+  @media screen and (max-width: 600px) {
     #noneimg img {
-        display: none;
-        z-index: 9999;
-        /* width: 600px !important; */
-        min-width: 0%;
-        max-width: 90%;
-        max-height: 80%;
-        border-radius: 0px;
-        position: fixed;
-        box-shadow: 0 0 0px #c3c3c300 !important;
-        left: 0;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        margin: auto !important;
+      max-width: 88%;
     }
-
-    @media screen and (max-width:600px) {
-        #noneimg img {
-            max-width: 88%
-        }
-    }
+  }
 </style>
 
     <div class="post-paging">
@@ -1631,65 +1576,28 @@ Fancybox.bind('[data-fancybox="fancybox-gallery-img"]', {
 	</div>
 </div>
 
+
+	<div style="bottom: 90px;" class="sidebar_button" id="js-toc">
+  <span>
+      <img style="width: 24px; height: 24px;" src="/image/toc.png" class="meat-type" alt="Icon">
+  </span>
+</div>
+
+<div id="post-toc" class="post-toc">
+    <span class="post-toc-title">文章目录</span>
+    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Python-%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%E6%95%B0%E5%AD%A6%E5%9F%BA%E7%A1%8015"><span class="toc-text">Python-人工智能数学基础15</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#15-%E6%96%B9%E5%B7%AE%E5%88%86%E6%9E%90"><span class="toc-text">15 方差分析</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#15-1-%E6%96%B9%E5%B7%AE%E5%88%86%E6%9E%90%E6%A6%82%E8%BF%B0"><span class="toc-text">15.1 方差分析概述</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#15-2-%E6%96%B9%E5%B7%AE%E7%9A%84%E6%AF%94%E8%BE%83"><span class="toc-text">15.2 方差的比较</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#15-3-%E6%96%B9%E5%B7%AE%E5%88%86%E6%9E%90"><span class="toc-text">15.3 方差分析</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#15-3-1-%E5%8D%95%E5%9B%A0%E7%B4%A0%E6%96%B9%E5%B7%AE%E5%88%86%E6%9E%90"><span class="toc-text">15.3.1 单因素方差分析</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E4%B8%8E%E6%96%B9%E5%B7%AE%E5%88%86%E6%9E%90%E7%9B%B8%E5%85%B3%E7%9A%84%E7%BB%9F%E8%AE%A1%E9%87%8F"><span class="toc-text">与方差分析相关的统计量:</span></a><ol class="toc-child"><li class="toc-item toc-level-6"><a class="toc-link" href="#1-%E6%B0%B4%E5%B9%B3-%E6%80%BB%E4%BD%93-%E7%9A%84%E5%9D%87%E5%80%BC"><span class="toc-text">1 水平(总体)的均值</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#2-%E5%85%A8%E9%83%A8%E8%A7%82%E5%AF%9F%E5%80%BC%E7%9A%84%E6%80%BB%E5%9D%87%E5%80%BC"><span class="toc-text">2 全部观察值的总均值</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#3-%E6%80%BB%E7%A6%BB%E5%B7%AE%E5%B9%B3%E6%96%B9%E5%92%8C-SST"><span class="toc-text">3 总离差平方和(SST)</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#4-%E6%B0%B4%E5%B9%B3%E9%A1%B9%E5%B9%B3%E6%96%B9%E5%92%8C-SSA"><span class="toc-text">4 水平项平方和(SSA)</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#5-%E8%AF%AF%E5%B7%AE%E9%A1%B9%E5%B9%B3%E6%96%B9%E5%92%8C-SSE"><span class="toc-text">5 误差项平方和(SSE)</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#6-%E6%80%BB%E7%A6%BB%E5%B7%AE%E5%B9%B3%E6%96%B9%E5%92%8C%E7%9A%84%E5%88%86%E8%A7%A3"><span class="toc-text">6 总离差平方和的分解</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#7-%E5%90%84%E8%87%AA%E7%94%B1%E5%BA%A6"><span class="toc-text">7 各自由度</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#8-%E5%90%84%E8%AF%AF%E5%B7%AE%E7%9A%84%E5%9D%87%E6%96%B9%E5%B7%AEMSA%E5%92%8CMSE"><span class="toc-text">8 各误差的均方差MSA和MSE</span></a></li></ol></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E8%AE%BE%E7%BD%AE%E6%A3%80%E9%AA%8C%E7%BB%9F%E8%AE%A1%E9%87%8F"><span class="toc-text">设置检验统计量</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#15-3-2-%E6%96%B9%E5%B7%AE%E5%88%86%E6%9E%90%E4%B8%AD%E7%9A%84%E5%A4%9A%E9%87%8D%E6%AF%94%E8%BE%83"><span class="toc-text">15.3.2 方差分析中的多重比较</span></a><ol class="toc-child"><li class="toc-item toc-level-6"><a class="toc-link" href="#%E4%BE%8B15-2"><span class="toc-text">例15.2</span></a></li></ol></li><li class="toc-item toc-level-5"><a class="toc-link" href="#15-3-3-%E5%A4%9A%E5%9B%A0%E7%B4%A0%E6%96%B9%E5%B7%AE%E5%88%86%E6%9E%90"><span class="toc-text">15.3.3 多因素方差分析</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#15-3-3-%E5%A4%9A%E5%9B%A0%E7%B4%A0%E6%96%B9%E5%B7%AE%E5%88%86%E6%9E%90-1"><span class="toc-text">15.3.3 多因素方差分析</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#15-3-3-%E5%A4%9A%E5%9B%A0%E7%B4%A0%E6%96%B9%E5%B7%AE%E5%88%86%E6%9E%90-2"><span class="toc-text">15.3.3 多因素方差分析</span></a><ol class="toc-child"><li class="toc-item toc-level-6"><a class="toc-link" href="#%E4%BE%8B-15-3"><span class="toc-text">例 15.3</span></a></li></ol></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#15-4-%E7%BB%BC%E5%90%88%E5%AE%9E%E4%BE%8B%E2%80%94%E2%80%94%E8%BF%9E%E9%94%81%E9%A4%90%E9%A5%AE%E7%94%A8%E6%88%B7%E8%AF%84%E7%BA%A7%E5%88%86%E6%9E%90"><span class="toc-text">15.4 综合实例——连锁餐饮用户评级分析</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#15-4-1-%E5%8D%95%E5%9B%A0%E7%B4%A0%E6%96%B9%E5%B7%AE%E5%AE%9E%E4%BE%8B%E5%88%86%E6%9E%90"><span class="toc-text">15.4.1 单因素方差实例分析</span></a><ol class="toc-child"><li class="toc-item toc-level-6"><a class="toc-link" href="#%E6%96%B9%E6%B3%951-%E4%BD%BF%E7%94%A8scipy-stats-f-oneway-%E6%96%B9%E6%B3%95"><span class="toc-text">方法1 使用scipy.stats.f_oneway()方法</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#%E6%96%B9%E6%B3%952-%E5%88%A9%E7%94%A8statsmodels%E5%BA%93%E5%87%BD%E6%95%B0%E4%B8%AD%E5%8C%85%E5%90%AB%E7%9A%84anova-lm%E6%A8%A1%E5%9E%8B-%E4%BD%BF%E7%94%A8%E7%BA%BF%E6%80%A7OLSModel%E8%BF%9B%E8%A1%8C%E6%96%B9%E5%B7%AE%E5%88%86%E6%9E%90"><span class="toc-text">方法2 利用statsmodels库函数中包含的anova_lm模型, 使用线性OLSModel进行方差分析</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#3-%E6%89%8B%E5%8A%A8%E8%AE%A1%E7%AE%97%E5%90%84%E8%AF%AF%E5%B7%AE%E5%80%BC-%E5%AE%9E%E7%8E%B0%E5%8D%95%E5%9B%A0%E7%B4%A0%E6%96%B9%E5%B7%AE%E5%88%86%E6%9E%90"><span class="toc-text">3 手动计算各误差值, 实现单因素方差分析</span></a></li></ol></li><li class="toc-item toc-level-5"><a class="toc-link" href="#15-4-2-%E5%A4%9A%E5%9B%A0%E7%B4%A0%E6%96%B9%E5%B7%AE%E5%88%86%E6%9E%90%E5%AE%9E%E4%BE%8B"><span class="toc-text">15.4.2 多因素方差分析实例</span></a></li></ol></li></ol></li></ol></li></ol>
+</div>
+
+
+<script src="/js/toc.js"></script>
+
+
+
 <script src="/js/gotop.js"></script>
 
-
-<style type="text/css">
-    @media screen and (min-width: 600px) {
-        .goTop>span {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 10px;
-            width: 40px;
-            height: 40px;
-            cursor: pointer;
-            opacity: 0.8;
-            background: rgba(18, 24, 58, 0.06);
-            text-align: center;
-            transition: border .5s;
-            border: 1px solid rgba(18, 24, 58, 0.06);
-
-            -moz-transition: border .5s;
-            /* Firefox 4 */
-            -webkit-transition: border .5s;
-            /* Safari 和 Chrome */
-            -o-transition: border .5s;
-            /* Opera */
-        }
-
-        .goTop>span:hover {
-            border: 1px solid #6680B3;
-        }
-
-
-        .goTop {
-            position: fixed;
-            right: 30px;
-            bottom: 80px;
-        }
-
-        .goTop>span>svg {
-            width: 20px;
-            height: 20px;
-            opacity: 0.7;
-        }
-
-    }
-
-    @media screen and (max-width: 600px) {
-        .goTop {
-            display: none;
-        }
-    }
-</style>
-<div class="goTop" id="js-go_top">
+<div style="bottom: 40px;" class="sidebar_button" id="js-go_top">
     <span>
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-            <g>
-                <path d="M13 12v8h-2v-8H4l8-8 8 8z"></path>
-            </g>
-        </svg>
+        <img style="width: 24px; height: 24px;" src="/image/go_top.png" class="meat-type" alt="Icon">
     </span>
 </div>
 <script>
@@ -1742,6 +1650,7 @@ Fancybox.bind('[data-fancybox="fancybox-gallery-img"]', {
         }
     </script>
 
+  
 <script>
 	console.log('\n %c Hexo-Quiet 主题 %c https://github.com/79e/hexo-theme-quiet \n', 'color: #fadfa3; background: #030307; padding:5px 0;', 'background: #fadfa3; padding:5px 0;')
 </script>

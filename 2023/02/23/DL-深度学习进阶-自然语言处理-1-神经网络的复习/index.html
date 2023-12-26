@@ -13,7 +13,7 @@
 
 
 <meta name="keywords" content="Python,《深度学习进阶》,">
-<meta name="description" content="《深度学习进阶》第 1 章学习笔记。">
+<meta name="description" content="">
 
 
 <script src="/js/jquery.min.js"></script>
@@ -371,34 +371,14 @@
     </div>
 </div>
     <div class="post-content" id="content">
-  
   <div id="article" class="post-content-info">
-    
-
-    <h2><span id="dl-深度学习进阶-自然语言处理-1-神经网络的复习">DL-深度学习进阶-自然语言处理-1-神经网络的复习</span></h2><h2><span id="目录">目录</span></h2><!-- toc -->
-<ul>
-<li><a href="#14-使用神经网络解决问题">1.4 使用神经网络解决问题</a><ul>
-<li><a href="#141-螺旋状数据集">1.4.1 螺旋状数据集</a></li>
-<li><a href="#142-神经网络的实现">1.4.2 神经网络的实现</a></li>
-<li><a href="#143-学习用的代码">1.4.3 学习用的代码</a></li>
-<li><a href="#144-trainer-类">1.4.4 Trainer 类</a></li>
-</ul>
-</li>
-<li><a href="#15-计算的高速化">1.5 计算的高速化</a><ul>
-<li><a href="#151-位精度">1.5.1 位精度</a></li>
-<li><a href="#152-gpucupy">1.5.2 GPU(CuPy)</a></li>
-</ul>
-</li>
-<li><a href="#16-小结">1.6 小结</a></li>
-</ul>
-<!-- tocstop -->
-<h3><span id="14-使用神经网络解决问题">1.4 使用神经网络解决问题</span></h3><h4><span id="141-螺旋状数据集">1.4.1 螺旋状数据集</span></h4><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> sys<br>sys.path.append(<span class="hljs-string">&#x27;..&#x27;</span>) <span class="hljs-comment"># 为了引入父目录的文件而进行的设定</span><br><span class="hljs-keyword">from</span> dataset <span class="hljs-keyword">import</span> spiral<br><span class="hljs-keyword">import</span> matplotlib.pyplot <span class="hljs-keyword">as</span> plt<br><br>x, t = spiral.load_data()<br><span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;x&#x27;</span>, x.shape) <span class="hljs-comment"># (300, 2)</span><br><span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;t&#x27;</span>, t.shape) <span class="hljs-comment"># (300, 3)</span><br></code></pre></td></tr></table></figure>
+    <h2 id="DL-深度学习进阶-自然语言处理-1-神经网络的复习"><a href="#DL-深度学习进阶-自然语言处理-1-神经网络的复习" class="headerlink" title="DL-深度学习进阶-自然语言处理-1-神经网络的复习"></a>DL-深度学习进阶-自然语言处理-1-神经网络的复习</h2><h3 id="1-4-使用神经网络解决问题"><a href="#1-4-使用神经网络解决问题" class="headerlink" title="1.4 使用神经网络解决问题"></a>1.4 使用神经网络解决问题</h3><h4 id="1-4-1-螺旋状数据集"><a href="#1-4-1-螺旋状数据集" class="headerlink" title="1.4.1 螺旋状数据集"></a>1.4.1 螺旋状数据集</h4><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> sys<br>sys.path.append(<span class="hljs-string">&#x27;..&#x27;</span>) <span class="hljs-comment"># 为了引入父目录的文件而进行的设定</span><br><span class="hljs-keyword">from</span> dataset <span class="hljs-keyword">import</span> spiral<br><span class="hljs-keyword">import</span> matplotlib.pyplot <span class="hljs-keyword">as</span> plt<br><br>x, t = spiral.load_data()<br><span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;x&#x27;</span>, x.shape) <span class="hljs-comment"># (300, 2)</span><br><span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;t&#x27;</span>, t.shape) <span class="hljs-comment"># (300, 3)</span><br></code></pre></td></tr></table></figure>
 <pre><code>x (300, 2)
 t (300, 3)
 </code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># 绘制数据点</span><br>N = <span class="hljs-number">100</span><br>CLS_NUM = <span class="hljs-number">3</span><br>markers = [<span class="hljs-string">&#x27;o&#x27;</span>, <span class="hljs-string">&#x27;x&#x27;</span>, <span class="hljs-string">&#x27;^&#x27;</span>]<br><span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(CLS_NUM):<br>    plt.scatter(x[i * N:(i + <span class="hljs-number">1</span>) * N, <span class="hljs-number">0</span>], x[i * N: (i + <span class="hljs-number">1</span>) * N, <span class="hljs-number">1</span>], s=<span class="hljs-number">40</span>, marker=markers[i])<br>plt.show()<br></code></pre></td></tr></table></figure>
 <p><img src="1_1.png" alt="png"></p>
-<h4><span id="142-神经网络的实现">1.4.2 神经网络的实现</span></h4><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> sys<br>sys.path.append(<span class="hljs-string">&#x27;..&#x27;</span>)<br><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">from</span> common.layers <span class="hljs-keyword">import</span> Affine, Sigmoid, SoftmaxWithLoss<br><br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">TwoLayerNet</span>:<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, input_size, hidden_size, output_size</span>):<br>        I, H, O = input_size, hidden_size, output_size<br>        <span class="hljs-comment"># 初始化权重和偏置</span><br>        W1 = <span class="hljs-number">0.01</span> * np.random.randn(I, H)<br>        b1 = np.zeros(H)<br>        W2 = <span class="hljs-number">0.01</span> * np.random.randn(H, O)<br>        b2 = np.zeros(O)<br>        <span class="hljs-comment"># 生成层</span><br>        self.layers = [Affine(W1, b1), Sigmoid(), Affine(W2, b2)]<br>        self.loss_layer = SoftmaxWithLoss()<br>        <span class="hljs-comment"># 将所有的权重和梯度整理到列表中</span><br>        self.params, self.grads = [], []<br>        <span class="hljs-keyword">for</span> layer <span class="hljs-keyword">in</span> self.layers:<br>            self.params += layer.params<br>            self.grads += layer.grads<br>  <br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">predict</span>(<span class="hljs-params">self, x</span>):<br>        <span class="hljs-keyword">for</span> layer <span class="hljs-keyword">in</span> self.layers:<br>            x = layer.forward(x)<br>        <span class="hljs-keyword">return</span> x<br>    <br>    <br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">self, x, t</span>):<br>        score = self.predict(x)<br>        loss = self.loss_layer.forward(score, t)<br>        <span class="hljs-keyword">return</span> loss<br>    <br>    <br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">backward</span>(<span class="hljs-params">self, dout=<span class="hljs-number">1</span></span>):<br>        dout = self.loss_layer.backward(dout)<br>        <span class="hljs-keyword">for</span> layer <span class="hljs-keyword">in</span> <span class="hljs-built_in">reversed</span>(self.layers):<br>            dout = layer.backward(dout)<br>        <span class="hljs-keyword">return</span> dout<br></code></pre></td></tr></table></figure>
-<h4><span id="143-学习用的代码">1.4.3 学习用的代码</span></h4><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> sys<br>sys.path.append(<span class="hljs-string">&#x27;..&#x27;</span>)  <span class="hljs-comment"># 为了引入父目录的文件而进行的设定</span><br><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">from</span> common.optimizer <span class="hljs-keyword">import</span> SGD<br><span class="hljs-keyword">from</span> dataset <span class="hljs-keyword">import</span> spiral<br><span class="hljs-keyword">import</span> matplotlib.pyplot <span class="hljs-keyword">as</span> plt<br><br><span class="hljs-comment"># 设定超参数</span><br>max_epoch = <span class="hljs-number">300</span><br>batch_size = <span class="hljs-number">30</span><br>hidden_size = <span class="hljs-number">10</span><br>learning_rate = <span class="hljs-number">1.0</span><br><br>x, t = spiral.load_data()<br>model = TwoLayerNet(input_size=<span class="hljs-number">2</span>, hidden_size=hidden_size, output_size=<span class="hljs-number">3</span>)<br>optimizer = SGD(lr=learning_rate)<br><br><span class="hljs-comment"># 学习用的变量</span><br>data_size = <span class="hljs-built_in">len</span>(x)<br>max_iters = data_size // batch_size<br>total_loss = <span class="hljs-number">0</span><br>loss_count = <span class="hljs-number">0</span><br>loss_list = []<br><br><span class="hljs-keyword">for</span> epoch <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(max_epoch):<br>    <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">    在进行学习时，需要随机选择数据作为 mini-batch。</span><br><span class="hljs-string">    &quot;&quot;&quot;</span><br>    <span class="hljs-comment"># 打乱数据 使用np.random.permutation() 方法。给定参数 N，该方法可以返回 0 到 N − 1 的随机序列。</span><br>    idx = np.random.permutation(data_size)<br>    x = x[idx]<br>    t = t[idx]<br><br>    <span class="hljs-keyword">for</span> iters <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(max_iters):<br>        batch_x = x[iters*batch_size:(iters+<span class="hljs-number">1</span>)*batch_size]<br>        batch_t = t[iters*batch_size:(iters+<span class="hljs-number">1</span>)*batch_size]<br><br>        <span class="hljs-comment"># 计算梯度，更新参数</span><br>        loss = model.forward(batch_x, batch_t)<br>        model.backward()<br>        optimizer.update(model.params, model.grads)<br><br>        total_loss += loss<br>        loss_count += <span class="hljs-number">1</span><br><br>        <span class="hljs-comment"># 定期输出学习过程</span><br>        <span class="hljs-keyword">if</span> (iters+<span class="hljs-number">1</span>) % <span class="hljs-number">10</span> == <span class="hljs-number">0</span>:<br>            avg_loss = total_loss / loss_count<br>            <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;| epoch %d |  iter %d / %d | loss %.2f&#x27;</span><br>                  % (epoch + <span class="hljs-number">1</span>, iters + <span class="hljs-number">1</span>, max_iters, avg_loss))<br>            loss_list.append(avg_loss)<br>            total_loss, loss_count = <span class="hljs-number">0</span>, <span class="hljs-number">0</span><br></code></pre></td></tr></table></figure>
+<h4 id="1-4-2-神经网络的实现"><a href="#1-4-2-神经网络的实现" class="headerlink" title="1.4.2 神经网络的实现"></a>1.4.2 神经网络的实现</h4><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> sys<br>sys.path.append(<span class="hljs-string">&#x27;..&#x27;</span>)<br><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">from</span> common.layers <span class="hljs-keyword">import</span> Affine, Sigmoid, SoftmaxWithLoss<br><br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">TwoLayerNet</span>:<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, input_size, hidden_size, output_size</span>):<br>        I, H, O = input_size, hidden_size, output_size<br>        <span class="hljs-comment"># 初始化权重和偏置</span><br>        W1 = <span class="hljs-number">0.01</span> * np.random.randn(I, H)<br>        b1 = np.zeros(H)<br>        W2 = <span class="hljs-number">0.01</span> * np.random.randn(H, O)<br>        b2 = np.zeros(O)<br>        <span class="hljs-comment"># 生成层</span><br>        self.layers = [Affine(W1, b1), Sigmoid(), Affine(W2, b2)]<br>        self.loss_layer = SoftmaxWithLoss()<br>        <span class="hljs-comment"># 将所有的权重和梯度整理到列表中</span><br>        self.params, self.grads = [], []<br>        <span class="hljs-keyword">for</span> layer <span class="hljs-keyword">in</span> self.layers:<br>            self.params += layer.params<br>            self.grads += layer.grads<br>  <br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">predict</span>(<span class="hljs-params">self, x</span>):<br>        <span class="hljs-keyword">for</span> layer <span class="hljs-keyword">in</span> self.layers:<br>            x = layer.forward(x)<br>        <span class="hljs-keyword">return</span> x<br>    <br>    <br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">self, x, t</span>):<br>        score = self.predict(x)<br>        loss = self.loss_layer.forward(score, t)<br>        <span class="hljs-keyword">return</span> loss<br>    <br>    <br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">backward</span>(<span class="hljs-params">self, dout=<span class="hljs-number">1</span></span>):<br>        dout = self.loss_layer.backward(dout)<br>        <span class="hljs-keyword">for</span> layer <span class="hljs-keyword">in</span> <span class="hljs-built_in">reversed</span>(self.layers):<br>            dout = layer.backward(dout)<br>        <span class="hljs-keyword">return</span> dout<br></code></pre></td></tr></table></figure>
+<h4 id="1-4-3-学习用的代码"><a href="#1-4-3-学习用的代码" class="headerlink" title="1.4.3 学习用的代码"></a>1.4.3 学习用的代码</h4><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> sys<br>sys.path.append(<span class="hljs-string">&#x27;..&#x27;</span>)  <span class="hljs-comment"># 为了引入父目录的文件而进行的设定</span><br><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">from</span> common.optimizer <span class="hljs-keyword">import</span> SGD<br><span class="hljs-keyword">from</span> dataset <span class="hljs-keyword">import</span> spiral<br><span class="hljs-keyword">import</span> matplotlib.pyplot <span class="hljs-keyword">as</span> plt<br><br><span class="hljs-comment"># 设定超参数</span><br>max_epoch = <span class="hljs-number">300</span><br>batch_size = <span class="hljs-number">30</span><br>hidden_size = <span class="hljs-number">10</span><br>learning_rate = <span class="hljs-number">1.0</span><br><br>x, t = spiral.load_data()<br>model = TwoLayerNet(input_size=<span class="hljs-number">2</span>, hidden_size=hidden_size, output_size=<span class="hljs-number">3</span>)<br>optimizer = SGD(lr=learning_rate)<br><br><span class="hljs-comment"># 学习用的变量</span><br>data_size = <span class="hljs-built_in">len</span>(x)<br>max_iters = data_size // batch_size<br>total_loss = <span class="hljs-number">0</span><br>loss_count = <span class="hljs-number">0</span><br>loss_list = []<br><br><span class="hljs-keyword">for</span> epoch <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(max_epoch):<br>    <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">    在进行学习时，需要随机选择数据作为 mini-batch。</span><br><span class="hljs-string">    &quot;&quot;&quot;</span><br>    <span class="hljs-comment"># 打乱数据 使用np.random.permutation() 方法。给定参数 N，该方法可以返回 0 到 N − 1 的随机序列。</span><br>    idx = np.random.permutation(data_size)<br>    x = x[idx]<br>    t = t[idx]<br><br>    <span class="hljs-keyword">for</span> iters <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(max_iters):<br>        batch_x = x[iters*batch_size:(iters+<span class="hljs-number">1</span>)*batch_size]<br>        batch_t = t[iters*batch_size:(iters+<span class="hljs-number">1</span>)*batch_size]<br><br>        <span class="hljs-comment"># 计算梯度，更新参数</span><br>        loss = model.forward(batch_x, batch_t)<br>        model.backward()<br>        optimizer.update(model.params, model.grads)<br><br>        total_loss += loss<br>        loss_count += <span class="hljs-number">1</span><br><br>        <span class="hljs-comment"># 定期输出学习过程</span><br>        <span class="hljs-keyword">if</span> (iters+<span class="hljs-number">1</span>) % <span class="hljs-number">10</span> == <span class="hljs-number">0</span>:<br>            avg_loss = total_loss / loss_count<br>            <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;| epoch %d |  iter %d / %d | loss %.2f&#x27;</span><br>                  % (epoch + <span class="hljs-number">1</span>, iters + <span class="hljs-number">1</span>, max_iters, avg_loss))<br>            loss_list.append(avg_loss)<br>            total_loss, loss_count = <span class="hljs-number">0</span>, <span class="hljs-number">0</span><br></code></pre></td></tr></table></figure>
 <pre><code>| epoch 1 |  iter 10 / 10 | loss 1.13
 | epoch 2 |  iter 10 / 10 | loss 1.13
 | epoch 3 |  iter 10 / 10 | loss 1.12
@@ -703,7 +683,7 @@ t (300, 3)
 <p>​<br><img src="1_2.png" alt="png"><br>​    </p>
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># 绘制决策边界</span><br>h = <span class="hljs-number">0.001</span><br>x_min, x_max = x[:, <span class="hljs-number">0</span>].<span class="hljs-built_in">min</span>() - <span class="hljs-number">.1</span>, x[:, <span class="hljs-number">0</span>].<span class="hljs-built_in">max</span>() + <span class="hljs-number">.1</span><br>y_min, y_max = x[:, <span class="hljs-number">1</span>].<span class="hljs-built_in">min</span>() - <span class="hljs-number">.1</span>, x[:, <span class="hljs-number">1</span>].<span class="hljs-built_in">max</span>() + <span class="hljs-number">.1</span><br>xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))<br>X = np.c_[xx.ravel(), yy.ravel()]<br>score = model.predict(X)<br>predict_cls = np.argmax(score, axis=<span class="hljs-number">1</span>)<br>Z = predict_cls.reshape(xx.shape)<br>plt.contourf(xx, yy, Z)<br>plt.axis(<span class="hljs-string">&#x27;off&#x27;</span>)<br><br><span class="hljs-comment"># 绘制数据点</span><br>x, t = spiral.load_data()<br>N = <span class="hljs-number">100</span><br>CLS_NUM = <span class="hljs-number">3</span><br>markers = [<span class="hljs-string">&#x27;o&#x27;</span>, <span class="hljs-string">&#x27;x&#x27;</span>, <span class="hljs-string">&#x27;^&#x27;</span>]<br><span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(CLS_NUM):<br>    plt.scatter(x[i*N:(i+<span class="hljs-number">1</span>)*N, <span class="hljs-number">0</span>], x[i*N:(i+<span class="hljs-number">1</span>)*N, <span class="hljs-number">1</span>], s=<span class="hljs-number">40</span>, marker=markers[i])<br>plt.show()<br></code></pre></td></tr></table></figure>
 <p><img src="1_3.png" alt="png"></p>
-<h4><span id="144-trainer-类">1.4.4 Trainer 类</span></h4><p>将执行神经网络的学习封装成一个类。</p>
+<h4 id="1-4-4-Trainer-类"><a href="#1-4-4-Trainer-类" class="headerlink" title="1.4.4 Trainer 类"></a>1.4.4 Trainer 类</h4><p>将执行神经网络的学习封装成一个类。</p>
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> sys<br>sys.path.append(<span class="hljs-string">&#x27;..&#x27;</span>)<br><span class="hljs-keyword">from</span> common.optimizer <span class="hljs-keyword">import</span> SGD<br><span class="hljs-keyword">from</span> common.trainer <span class="hljs-keyword">import</span> Trainer<br><span class="hljs-keyword">from</span> dataset <span class="hljs-keyword">import</span> spiral<br><br>max_epoch = <span class="hljs-number">300</span><br>batch_size = <span class="hljs-number">30</span><br>hidden_size = <span class="hljs-number">10</span><br>learning_rate = <span class="hljs-number">1.0</span><br>x, t = spiral.load_data()<br>model = TwoLayerNet(input_size=<span class="hljs-number">2</span>, hidden_size=hidden_size, output_size=<span class="hljs-number">3</span>)<br>optimizer = SGD(lr=learning_rate)<br>trainer = Trainer(model, optimizer)<br><span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">x: 输入数据</span><br><span class="hljs-string">t: 监督标签</span><br><span class="hljs-string">max_epoch (= 10): 进行学习的 epoch 数</span><br><span class="hljs-string">batch_size(= 32): mini-batch 的大小</span><br><span class="hljs-string">eval_interval(= 20): 输出结果（平均损失等）的间隔。</span><br><span class="hljs-string">    例如设置eval_interval=20，则每 20 次迭代计算 1 次平均损失，并将结果输出到界面上。</span><br><span class="hljs-string">max_grad(= None): 梯度的最大范数。</span><br><span class="hljs-string">&quot;&quot;&quot;</span><br>trainer.fit(x, t, max_epoch, batch_size, eval_interval=<span class="hljs-number">10</span>)<br>trainer.plot()<br></code></pre></td></tr></table></figure>
 <pre><code>| epoch 1 |  iter 1 / 10 | time 0[s] | loss 1.10
 | epoch 2 |  iter 1 / 10 | time 0[s] | loss 1.12
@@ -1006,13 +986,13 @@ t (300, 3)
 | epoch 299 |  iter 1 / 10 | time 0[s] | loss 0.11
 | epoch 300 |  iter 1 / 10 | time 0[s] | loss 0.11
 </code></pre><p><img src="1_4.png" alt="png"></p>
-<h3><span id="15-计算的高速化">1.5 计算的高速化</span></h3><h4><span id="151-位精度">1.5.1 位精度</span></h4><blockquote>
+<h3 id="1-5-计算的高速化"><a href="#1-5-计算的高速化" class="headerlink" title="1.5 计算的高速化"></a>1.5 计算的高速化</h3><h4 id="1-5-1-位精度"><a href="#1-5-1-位精度" class="headerlink" title="1.5.1 位精度"></a>1.5.1 位精度</h4><blockquote>
 <p>随着深度学习备受瞩目，最近的 GPU 已经开始支持 16 位半精度浮点数的存储与计算。另外，谷歌公司设计了一款名为 TPU 的专用芯片，可以支持8 位计算。</p>
 </blockquote>
-<h4><span id="152-gpucupy">1.5.2 GPU(CuPy)</span></h4><blockquote>
+<h4 id="1-5-2-GPU-CuPy"><a href="#1-5-2-GPU-CuPy" class="headerlink" title="1.5.2 GPU(CuPy)"></a>1.5.2 GPU(CuPy)</h4><blockquote>
 <p>CuPy 是基于 GPU 进行并行计算的库。要使用 CuPy，需要使用安装有 NVIDIA 的 GPU 的机器，并且需要安装 CUDA 这个面向 GPU 的通用并行计算平台。</p>
 </blockquote>
-<h3><span id="16-小结">1.6 小结</span></h3><ul>
+<h3 id="1-6-小结"><a href="#1-6-小结" class="headerlink" title="1.6 小结"></a>1.6 小结</h3><ul>
 <li><p>神经网络具有输入层、隐藏层和输出层</p>
 </li>
 <li><p>通过全连接层进行线性变换，通过激活函数进行非线性变换</p>
@@ -1034,56 +1014,49 @@ t (300, 3)
 </div>
 
 <script>
-  
-Fancybox.bind('[data-fancybox="fancybox-gallery-img"]', {
-  dragToClose: true,
-  Toolbar: true,
-  closeButton: "top",
-  Image: {
-    zoom: true,
-  },
-  on: {
-    initCarousel: (fancybox) => {
-      const slide = fancybox.Carousel.slides[fancybox.Carousel.page];
-      fancybox.$container.style.setProperty(
-        "--bg-image",
-        `url("${slide.$thumb.src}")`
-      );
+  Fancybox.bind('[data-fancybox="fancybox-gallery-img"]', {
+    dragToClose: true,
+    Toolbar: true,
+    closeButton: 'top',
+    Image: {
+      zoom: true
     },
-    "Carousel.change": (fancybox, carousel, to, from) => {
-      const slide = carousel.slides[to];
-      fancybox.$container.style.setProperty(
-        "--bg-image",
-        `url("${slide.$thumb.src}")`
-      );
-    },
-  },
-});
+    on: {
+      initCarousel: (fancybox) => {
+        const slide = fancybox.Carousel.slides[fancybox.Carousel.page]
+        fancybox.$container.style.setProperty('--bg-image', `url("${slide.$thumb.src}")`)
+      },
+      'Carousel.change': (fancybox, carousel, to, from) => {
+        const slide = carousel.slides[to]
+        fancybox.$container.style.setProperty('--bg-image', `url("${slide.$thumb.src}")`)
+      }
+    }
+  })
 </script>
 
 <style>
+  #noneimg img {
+    display: none;
+    z-index: 9999;
+    /* width: 600px !important; */
+    min-width: 0%;
+    max-width: 90%;
+    max-height: 80%;
+    border-radius: 0px;
+    position: fixed;
+    box-shadow: 0 0 0px #c3c3c300 !important;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    margin: auto !important;
+  }
+  
+  @media screen and (max-width: 600px) {
     #noneimg img {
-        display: none;
-        z-index: 9999;
-        /* width: 600px !important; */
-        min-width: 0%;
-        max-width: 90%;
-        max-height: 80%;
-        border-radius: 0px;
-        position: fixed;
-        box-shadow: 0 0 0px #c3c3c300 !important;
-        left: 0;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        margin: auto !important;
+      max-width: 88%;
     }
-
-    @media screen and (max-width:600px) {
-        #noneimg img {
-            max-width: 88%
-        }
-    }
+  }
 </style>
 
     <div class="post-paging">
@@ -1133,65 +1106,28 @@ Fancybox.bind('[data-fancybox="fancybox-gallery-img"]', {
 	</div>
 </div>
 
+
+	<div style="bottom: 90px;" class="sidebar_button" id="js-toc">
+  <span>
+      <img style="width: 24px; height: 24px;" src="/image/toc.png" class="meat-type" alt="Icon">
+  </span>
+</div>
+
+<div id="post-toc" class="post-toc">
+    <span class="post-toc-title">文章目录</span>
+    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#DL-%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E8%BF%9B%E9%98%B6-%E8%87%AA%E7%84%B6%E8%AF%AD%E8%A8%80%E5%A4%84%E7%90%86-1-%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C%E7%9A%84%E5%A4%8D%E4%B9%A0"><span class="toc-text">DL-深度学习进阶-自然语言处理-1-神经网络的复习</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-4-%E4%BD%BF%E7%94%A8%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C%E8%A7%A3%E5%86%B3%E9%97%AE%E9%A2%98"><span class="toc-text">1.4 使用神经网络解决问题</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-4-1-%E8%9E%BA%E6%97%8B%E7%8A%B6%E6%95%B0%E6%8D%AE%E9%9B%86"><span class="toc-text">1.4.1 螺旋状数据集</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-4-2-%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="toc-text">1.4.2 神经网络的实现</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-4-3-%E5%AD%A6%E4%B9%A0%E7%94%A8%E7%9A%84%E4%BB%A3%E7%A0%81"><span class="toc-text">1.4.3 学习用的代码</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-4-4-Trainer-%E7%B1%BB"><span class="toc-text">1.4.4 Trainer 类</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-5-%E8%AE%A1%E7%AE%97%E7%9A%84%E9%AB%98%E9%80%9F%E5%8C%96"><span class="toc-text">1.5 计算的高速化</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-5-1-%E4%BD%8D%E7%B2%BE%E5%BA%A6"><span class="toc-text">1.5.1 位精度</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-5-2-GPU-CuPy"><span class="toc-text">1.5.2 GPU(CuPy)</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-6-%E5%B0%8F%E7%BB%93"><span class="toc-text">1.6 小结</span></a></li></ol></li></ol>
+</div>
+
+
+<script src="/js/toc.js"></script>
+
+
+
 <script src="/js/gotop.js"></script>
 
-
-<style type="text/css">
-    @media screen and (min-width: 600px) {
-        .goTop>span {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 10px;
-            width: 40px;
-            height: 40px;
-            cursor: pointer;
-            opacity: 0.8;
-            background: rgba(18, 24, 58, 0.06);
-            text-align: center;
-            transition: border .5s;
-            border: 1px solid rgba(18, 24, 58, 0.06);
-
-            -moz-transition: border .5s;
-            /* Firefox 4 */
-            -webkit-transition: border .5s;
-            /* Safari 和 Chrome */
-            -o-transition: border .5s;
-            /* Opera */
-        }
-
-        .goTop>span:hover {
-            border: 1px solid #6680B3;
-        }
-
-
-        .goTop {
-            position: fixed;
-            right: 30px;
-            bottom: 80px;
-        }
-
-        .goTop>span>svg {
-            width: 20px;
-            height: 20px;
-            opacity: 0.7;
-        }
-
-    }
-
-    @media screen and (max-width: 600px) {
-        .goTop {
-            display: none;
-        }
-    }
-</style>
-<div class="goTop" id="js-go_top">
+<div style="bottom: 40px;" class="sidebar_button" id="js-go_top">
     <span>
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-            <g>
-                <path d="M13 12v8h-2v-8H4l8-8 8 8z"></path>
-            </g>
-        </svg>
+        <img style="width: 24px; height: 24px;" src="/image/go_top.png" class="meat-type" alt="Icon">
     </span>
 </div>
 <script>
@@ -1244,6 +1180,7 @@ Fancybox.bind('[data-fancybox="fancybox-gallery-img"]', {
         }
     </script>
 
+  
 <script>
 	console.log('\n %c Hexo-Quiet 主题 %c https://github.com/79e/hexo-theme-quiet \n', 'color: #fadfa3; background: #030307; padding:5px 0;', 'background: #fadfa3; padding:5px 0;')
 </script>

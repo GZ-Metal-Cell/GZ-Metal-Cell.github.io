@@ -114,7 +114,7 @@ var searchFunc = function (path, search_id, content_id, match_count_id) {
                 }
                 else
                 {
-                    document.getElementById(match_count_id).innerHTML = "匹配到 <b><font size=\"5px\">" + str.match(/<li>/g).length + "</font></b> 个结果。";
+                    document.getElementById(match_count_id).innerHTML = "匹配到 <b><font size=\"5px\"><font color=\"#424242\">" + str.match(/<li>/g).length + "</font></font></b> 个结果。";
                 }
                 $resultContent.innerHTML = str;
             });

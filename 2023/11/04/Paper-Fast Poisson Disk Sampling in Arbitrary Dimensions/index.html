@@ -13,7 +13,7 @@
 
 
 <meta name="keywords" content="论文,代码复现,数学,">
-<meta name="description" content="论文阅读。">
+<meta name="description" content="">
 
 
 <script src="/js/jquery.min.js"></script>
@@ -373,91 +373,68 @@
     </div>
 </div>
     <div class="post-content" id="content">
-  
   <div id="article" class="post-content-info">
-    
-
-    <h2><span id="paper-fast-poisson-disk-sampling-in-arbitrary-dimensions">Paper-Fast Poisson Disk Sampling in Arbitrary Dimensions</span></h2><h2><span id="目录">目录</span></h2><!-- toc -->
-<ul>
-<li><a href="#资源">资源</a></li>
-<li><a href="#原文">原文</a><ul>
-<li><a href="#abstract">Abstract</a></li>
-<li><a href="#1-introduction">1 Introduction</a></li>
-<li><a href="#2-the-algorithm">2 The Algorithm</a></li>
-<li><a href="#3-analysis">3 Analysis</a></li>
-</ul>
-</li>
-<li><a href="#代码">代码</a></li>
-</ul>
-<!-- tocstop -->
-<h2><span id="资源">资源</span></h2><ul>
+    <h2 id="Paper-Fast-Poisson-Disk-Sampling-in-Arbitrary-Dimensions"><a href="#Paper-Fast-Poisson-Disk-Sampling-in-Arbitrary-Dimensions" class="headerlink" title="Paper-Fast Poisson Disk Sampling in Arbitrary Dimensions"></a>Paper-Fast Poisson Disk Sampling in Arbitrary Dimensions</h2><h2 id="资源"><a href="#资源" class="headerlink" title="资源"></a>资源</h2><ul>
 <li><a target="_blank" rel="noopener" href="https://www.cs.ubc.ca/~rbridson/docs/bridson-siggraph07-poissondisk.pdf">bluenoise.dvi (ubc.ca)</a></li>
 <li><a target="_blank" rel="noopener" href="https://www.zhihu.com/question/276554643">有人知道泊松盘采样算法吗？看了几天没看懂？ - 知乎 (zhihu.com)</a></li>
 </ul>
-<h2><span id="原文">原文</span></h2><h3><span id="abstract">Abstract</span></h3><p>在图形的许多应用中，特别是渲染中，从蓝色噪声分布生成样本是很重要的。然而，现有的有效技术不容易推广到二维之外。在这里，我演示了对飞镖投掷的一个简单修改，它允许在 $O(N)$ 时间内生成泊松圆盘样本，可以在任意维度中轻松实现。</p>
-<h3><span id="1-introduction">1 Introduction</span></h3><p>在这个草图中，我提出了一种新的算法，可以在任意维度上轻松实现，它保证需要 $O(N)$ 时间来生成 $N$ 个泊松圆盘样本。</p>
-<h3><span id="2-the-algorithm">2 The Algorithm</span></h3><p>该算法将 $\mathbf R^n$ 中的样本域的范围、样本之间的最小距离 $r$ 以及常数 $k$ 作为在算法中拒绝之前要选择的样本的极限（通常 $k＝30$）作为输入。</p>
+<h2 id="原文"><a href="#原文" class="headerlink" title="原文"></a>原文</h2><h3 id="Abstract"><a href="#Abstract" class="headerlink" title="Abstract"></a>Abstract</h3><p>在图形的许多应用中，特别是渲染中，从蓝色噪声分布生成样本是很重要的。然而，现有的有效技术不容易推广到二维之外。在这里，我演示了对飞镖投掷的一个简单修改，它允许在 $O(N)$ 时间内生成泊松圆盘样本，可以在任意维度中轻松实现。</p>
+<h3 id="1-Introduction"><a href="#1-Introduction" class="headerlink" title="1 Introduction"></a>1 Introduction</h3><p>在这个草图中，我提出了一种新的算法，可以在任意维度上轻松实现，它保证需要 $O(N)$ 时间来生成 $N$ 个泊松圆盘样本。</p>
+<h3 id="2-The-Algorithm"><a href="#2-The-Algorithm" class="headerlink" title="2 The Algorithm"></a>2 The Algorithm</h3><p>该算法将 $\mathbf R^n$ 中的样本域的范围、样本之间的最小距离 $r$ 以及常数 $k$ 作为在算法中拒绝之前要选择的样本的极限（通常 $k＝30$）作为输入。</p>
 <p><strong>Step0</strong> 初始化用于存储样本和加速空间搜索的 $n$ 维背景网格。我们选择以 $r/\sqrt n$ 为界的单元格大小，这样每个网格单元格最多包含一个样本，因此网格可以实现为一个简单的二维整数数组：默认的 $−1$ 表示没有样本，非负整数给出位于单元格中的样本的索引。</p>
 <p><strong>Step1</strong> 从域中随机均匀选择初始样本 $x_0$ 从域中随机选择。将其插入背景网格，并以该索引（零）初始化“活动列表”（一个样本索引数组）。活动列表”（样本索引数组）的初始化。</p>
 <p><strong>Step2</strong> 当活动列表不为空时，从中选择一个随机索引（比如 $i$）。生成从 $x_i$ 周围半径 $r$ 和 $2r$ 之间的球面环中均匀选择的多达 $k$ 个点。依次检查每个点是否在现有样本的距离 $r$ 内（使用背景网格仅测试附近的样本）。如果某个点距离现有采样足够远，则将其作为下一个采样发射，并将其添加到活动列表中。如果在 $k$ 次尝试之后没有找到这样的点，则将 $i$ 从活动列表中删除。</p>
-<h3><span id="3-analysis">3 Analysis</span></h3><p>Step2 执行 $2N−1$ 次，产生 $N$ 个样本：每次迭代要么产生一个新样本并将其添加到活动列表中，要么从活动列表中删除一个现有样本。Step2 的每次迭代花费 $O(k)$ 时间，并且由于 $k$ 保持恒定（通常非常小），因此算法是线性的。</p>
-<h2><span id="代码">代码</span></h2><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">import</span> matplotlib.pyplot <span class="hljs-keyword">as</span> plt<br><br>r = <span class="hljs-number">1</span>  <span class="hljs-comment"># 样本间的最小距离</span><br>d = r / np.sqrt(<span class="hljs-number">2</span>)  <span class="hljs-comment"># 单元格大小</span><br>k = <span class="hljs-number">30</span>  <span class="hljs-comment"># 算法中拒绝之前要选择的样本的极限</span><br>width = <span class="hljs-number">20</span>  <span class="hljs-comment"># 样本域宽</span><br>height = <span class="hljs-number">16</span>  <span class="hljs-comment"># 样本域高</span><br><br><span class="hljs-comment"># 将网格实现为一个简单的二维数组</span><br>nx = <span class="hljs-built_in">int</span>(width / d) + <span class="hljs-number">1</span><br>ny = <span class="hljs-built_in">int</span>(height / d) + <span class="hljs-number">1</span><br>occupied = np.zeros((ny, nx))  <span class="hljs-comment"># 用于记录网格是否被占用</span><br>occupied_coord = np.zeros((ny, nx, <span class="hljs-number">2</span>))  <span class="hljs-comment"># 记录每个被占用网格对应的坐标</span><br>active_list = []  <span class="hljs-comment"># 待处理点集</span><br>sampled = []  <span class="hljs-comment"># 已经采样的点集</span><br><br><span class="hljs-comment"># 定义了一个相对坐标矩阵 relative，它包含了一个中心点和其周围18个格点的相对坐标。</span><br>relative = np.array([[-<span class="hljs-number">1</span>, <span class="hljs-number">2</span>], [<span class="hljs-number">0</span>, <span class="hljs-number">2</span>], [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>],<br>                     [-<span class="hljs-number">2</span>, <span class="hljs-number">1</span>], [-<span class="hljs-number">1</span>, <span class="hljs-number">1</span>], [<span class="hljs-number">0</span>, <span class="hljs-number">1</span>], [<span class="hljs-number">1</span>, <span class="hljs-number">1</span>], [<span class="hljs-number">2</span>, <span class="hljs-number">1</span>],<br>                     [-<span class="hljs-number">2</span>, <span class="hljs-number">0</span>], [-<span class="hljs-number">1</span>, <span class="hljs-number">0</span>], [<span class="hljs-number">1</span>, <span class="hljs-number">0</span>], [<span class="hljs-number">2</span>, <span class="hljs-number">0</span>],<br>                     [-<span class="hljs-number">2</span>, -<span class="hljs-number">1</span>], [-<span class="hljs-number">1</span>, -<span class="hljs-number">1</span>], [<span class="hljs-number">0</span>, -<span class="hljs-number">1</span>], [<span class="hljs-number">1</span>, -<span class="hljs-number">1</span>], [<span class="hljs-number">2</span>, -<span class="hljs-number">1</span>],<br>                     [-<span class="hljs-number">1</span>, -<span class="hljs-number">2</span>], [<span class="hljs-number">0</span>, -<span class="hljs-number">2</span>], [<span class="hljs-number">1</span>, -<span class="hljs-number">2</span>]])<br>np.random.seed(<span class="hljs-number">0</span>)<br><span class="hljs-comment"># 使用 numpy.random.rand 函数生成一个随机的初始点，并将其添加到相应的数组中</span><br>x, y = np.random.rand() * width, np.random.rand() * height<br>idx_x, idx_y = <span class="hljs-built_in">int</span>(x / d), <span class="hljs-built_in">int</span>(y / d)<br>occupied[idx_y, idx_x] = <span class="hljs-number">1</span><br>occupied_coord[idx_y, idx_x] = (x, y)<br>active_list.append((x, y))<br>sampled.append((x, y))<br><br>sampled_idx = <span class="hljs-number">0</span><br><br><span class="hljs-keyword">while</span> <span class="hljs-built_in">len</span>(active_list) &gt; <span class="hljs-number">0</span>:  <span class="hljs-comment"># 当活动列表不为空时</span><br>    idx = np.random.choice(np.arange(<span class="hljs-built_in">len</span>(active_list)))  <span class="hljs-comment"># 选择一个随机索引, 比如 i</span><br>    <span class="hljs-comment"># 生成从 x_i 周围半径 r 和 2r 之间的球面环中均匀选择的多达 k 个点</span><br>    ref_x, ref_y = active_list[idx]<br>    radius = (np.random.rand(k) + <span class="hljs-number">1</span>) * r<br>    theta = np.random.rand(k) * np.pi * <span class="hljs-number">2</span><br>    candidate = radius * np.cos(theta) + ref_x, radius * np.sin(theta) + ref_y<br>    flag_out = <span class="hljs-literal">False</span><br>    <span class="hljs-keyword">for</span> _x, _y <span class="hljs-keyword">in</span> <span class="hljs-built_in">zip</span>(*candidate):<br>        <span class="hljs-comment"># 依次检查每个点是否在现有样本的距离 r 内</span><br>        <span class="hljs-keyword">if</span> _x &lt; <span class="hljs-number">0</span> <span class="hljs-keyword">or</span> _x &gt; width <span class="hljs-keyword">or</span> _y &lt; <span class="hljs-number">0</span> <span class="hljs-keyword">or</span> _y &gt; height:<br>            <span class="hljs-keyword">continue</span><br>        <span class="hljs-comment"># other geo constraints</span><br>        flag = <span class="hljs-literal">True</span><br>        idx_x, idx_y = <span class="hljs-built_in">int</span>(_x / d), <span class="hljs-built_in">int</span>(_y / d)<br>        <span class="hljs-keyword">if</span> occupied[idx_y, idx_x] != <span class="hljs-number">0</span>:<br>            <span class="hljs-keyword">continue</span><br>        <span class="hljs-keyword">else</span>:<br>            neighbours = relative + np.array([idx_x, idx_y])<br>        <span class="hljs-keyword">for</span> cand_x, cand_y <span class="hljs-keyword">in</span> neighbours:<br>            <span class="hljs-comment"># 检查其坐标是否超出画布范围。如果超出，则跳过该点</span><br>            <span class="hljs-keyword">if</span> cand_x &lt; <span class="hljs-number">0</span> <span class="hljs-keyword">or</span> cand_x &gt;= nx <span class="hljs-keyword">or</span> cand_y &lt; <span class="hljs-number">0</span> <span class="hljs-keyword">or</span> cand_y &gt;= ny:<br>                <span class="hljs-keyword">continue</span><br>            <span class="hljs-keyword">if</span> occupied[cand_y, cand_x] == <span class="hljs-number">1</span>:<br>                <span class="hljs-comment"># 找到该网格对应的点</span><br>                cood = occupied_coord[cand_y, cand_x]<br>                <span class="hljs-comment"># 计算该网格对应的点与候选点之间的距离，如果小于最小半径 r，则说明候选点不满足几何约束条件，需要舍弃</span><br>                <span class="hljs-keyword">if</span> (_x - cood[<span class="hljs-number">0</span>]) ** <span class="hljs-number">2</span> + (_y - cood[<span class="hljs-number">1</span>]) ** <span class="hljs-number">2</span> &lt; r ** <span class="hljs-number">2</span>:<br>                    flag = <span class="hljs-literal">False</span><br>                    <span class="hljs-keyword">break</span><br>        <span class="hljs-keyword">if</span> flag:  <span class="hljs-comment"># 将该点标记为已占据，并添加到已采样点集和活动列表中。</span><br>            flag_out = <span class="hljs-literal">True</span><br>            occupied[idx_y, idx_x] = <span class="hljs-number">1</span><br>            occupied_coord[idx_y, idx_x] = (_x, _y)<br>            sampled.append((_x, _y))<br>            active_list.append((_x, _y))<br>            sampled_idx += <span class="hljs-number">1</span><br>            <span class="hljs-keyword">break</span><br>    <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> flag_out:  <span class="hljs-comment"># 如果在 k 次尝试之后没有找到这样的点，则将 i 从活动列表中删除</span><br>        active_list.pop(idx)<br><br>fig, ax = plt.subplots(<span class="hljs-number">1</span>, <span class="hljs-number">1</span>, figsize=(<span class="hljs-number">9</span>, <span class="hljs-number">6</span>))<br>fig.set_tight_layout(<span class="hljs-literal">True</span>)<br>ax.scatter(*<span class="hljs-built_in">zip</span>(*sampled), c=<span class="hljs-string">&#x27;g&#x27;</span>)<br>ax.set_xlim([<span class="hljs-number">0</span>, width])<br>ax.set_ylim([<span class="hljs-number">0</span>, height])<br>plt.show()<br></code></pre></td></tr></table></figure>
+<h3 id="3-Analysis"><a href="#3-Analysis" class="headerlink" title="3 Analysis"></a>3 Analysis</h3><p>Step2 执行 $2N−1$ 次，产生 $N$ 个样本：每次迭代要么产生一个新样本并将其添加到活动列表中，要么从活动列表中删除一个现有样本。Step2 的每次迭代花费 $O(k)$ 时间，并且由于 $k$ 保持恒定（通常非常小），因此算法是线性的。</p>
+<h2 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h2><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">import</span> matplotlib.pyplot <span class="hljs-keyword">as</span> plt<br><br>r = <span class="hljs-number">1</span>  <span class="hljs-comment"># 样本间的最小距离</span><br>d = r / np.sqrt(<span class="hljs-number">2</span>)  <span class="hljs-comment"># 单元格大小</span><br>k = <span class="hljs-number">30</span>  <span class="hljs-comment"># 算法中拒绝之前要选择的样本的极限</span><br>width = <span class="hljs-number">20</span>  <span class="hljs-comment"># 样本域宽</span><br>height = <span class="hljs-number">16</span>  <span class="hljs-comment"># 样本域高</span><br><br><span class="hljs-comment"># 将网格实现为一个简单的二维数组</span><br>nx = <span class="hljs-built_in">int</span>(width / d) + <span class="hljs-number">1</span><br>ny = <span class="hljs-built_in">int</span>(height / d) + <span class="hljs-number">1</span><br>occupied = np.zeros((ny, nx))  <span class="hljs-comment"># 用于记录网格是否被占用</span><br>occupied_coord = np.zeros((ny, nx, <span class="hljs-number">2</span>))  <span class="hljs-comment"># 记录每个被占用网格对应的坐标</span><br>active_list = []  <span class="hljs-comment"># 待处理点集</span><br>sampled = []  <span class="hljs-comment"># 已经采样的点集</span><br><br><span class="hljs-comment"># 定义了一个相对坐标矩阵 relative，它包含了一个中心点和其周围18个格点的相对坐标。</span><br>relative = np.array([[-<span class="hljs-number">1</span>, <span class="hljs-number">2</span>], [<span class="hljs-number">0</span>, <span class="hljs-number">2</span>], [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>],<br>                     [-<span class="hljs-number">2</span>, <span class="hljs-number">1</span>], [-<span class="hljs-number">1</span>, <span class="hljs-number">1</span>], [<span class="hljs-number">0</span>, <span class="hljs-number">1</span>], [<span class="hljs-number">1</span>, <span class="hljs-number">1</span>], [<span class="hljs-number">2</span>, <span class="hljs-number">1</span>],<br>                     [-<span class="hljs-number">2</span>, <span class="hljs-number">0</span>], [-<span class="hljs-number">1</span>, <span class="hljs-number">0</span>], [<span class="hljs-number">1</span>, <span class="hljs-number">0</span>], [<span class="hljs-number">2</span>, <span class="hljs-number">0</span>],<br>                     [-<span class="hljs-number">2</span>, -<span class="hljs-number">1</span>], [-<span class="hljs-number">1</span>, -<span class="hljs-number">1</span>], [<span class="hljs-number">0</span>, -<span class="hljs-number">1</span>], [<span class="hljs-number">1</span>, -<span class="hljs-number">1</span>], [<span class="hljs-number">2</span>, -<span class="hljs-number">1</span>],<br>                     [-<span class="hljs-number">1</span>, -<span class="hljs-number">2</span>], [<span class="hljs-number">0</span>, -<span class="hljs-number">2</span>], [<span class="hljs-number">1</span>, -<span class="hljs-number">2</span>]])<br>np.random.seed(<span class="hljs-number">0</span>)<br><span class="hljs-comment"># 使用 numpy.random.rand 函数生成一个随机的初始点，并将其添加到相应的数组中</span><br>x, y = np.random.rand() * width, np.random.rand() * height<br>idx_x, idx_y = <span class="hljs-built_in">int</span>(x / d), <span class="hljs-built_in">int</span>(y / d)<br>occupied[idx_y, idx_x] = <span class="hljs-number">1</span><br>occupied_coord[idx_y, idx_x] = (x, y)<br>active_list.append((x, y))<br>sampled.append((x, y))<br><br>sampled_idx = <span class="hljs-number">0</span><br><br><span class="hljs-keyword">while</span> <span class="hljs-built_in">len</span>(active_list) &gt; <span class="hljs-number">0</span>:  <span class="hljs-comment"># 当活动列表不为空时</span><br>    idx = np.random.choice(np.arange(<span class="hljs-built_in">len</span>(active_list)))  <span class="hljs-comment"># 选择一个随机索引, 比如 i</span><br>    <span class="hljs-comment"># 生成从 x_i 周围半径 r 和 2r 之间的球面环中均匀选择的多达 k 个点</span><br>    ref_x, ref_y = active_list[idx]<br>    radius = (np.random.rand(k) + <span class="hljs-number">1</span>) * r<br>    theta = np.random.rand(k) * np.pi * <span class="hljs-number">2</span><br>    candidate = radius * np.cos(theta) + ref_x, radius * np.sin(theta) + ref_y<br>    flag_out = <span class="hljs-literal">False</span><br>    <span class="hljs-keyword">for</span> _x, _y <span class="hljs-keyword">in</span> <span class="hljs-built_in">zip</span>(*candidate):<br>        <span class="hljs-comment"># 依次检查每个点是否在现有样本的距离 r 内</span><br>        <span class="hljs-keyword">if</span> _x &lt; <span class="hljs-number">0</span> <span class="hljs-keyword">or</span> _x &gt; width <span class="hljs-keyword">or</span> _y &lt; <span class="hljs-number">0</span> <span class="hljs-keyword">or</span> _y &gt; height:<br>            <span class="hljs-keyword">continue</span><br>        <span class="hljs-comment"># other geo constraints</span><br>        flag = <span class="hljs-literal">True</span><br>        idx_x, idx_y = <span class="hljs-built_in">int</span>(_x / d), <span class="hljs-built_in">int</span>(_y / d)<br>        <span class="hljs-keyword">if</span> occupied[idx_y, idx_x] != <span class="hljs-number">0</span>:<br>            <span class="hljs-keyword">continue</span><br>        <span class="hljs-keyword">else</span>:<br>            neighbours = relative + np.array([idx_x, idx_y])<br>        <span class="hljs-keyword">for</span> cand_x, cand_y <span class="hljs-keyword">in</span> neighbours:<br>            <span class="hljs-comment"># 检查其坐标是否超出画布范围。如果超出，则跳过该点</span><br>            <span class="hljs-keyword">if</span> cand_x &lt; <span class="hljs-number">0</span> <span class="hljs-keyword">or</span> cand_x &gt;= nx <span class="hljs-keyword">or</span> cand_y &lt; <span class="hljs-number">0</span> <span class="hljs-keyword">or</span> cand_y &gt;= ny:<br>                <span class="hljs-keyword">continue</span><br>            <span class="hljs-keyword">if</span> occupied[cand_y, cand_x] == <span class="hljs-number">1</span>:<br>                <span class="hljs-comment"># 找到该网格对应的点</span><br>                cood = occupied_coord[cand_y, cand_x]<br>                <span class="hljs-comment"># 计算该网格对应的点与候选点之间的距离，如果小于最小半径 r，则说明候选点不满足几何约束条件，需要舍弃</span><br>                <span class="hljs-keyword">if</span> (_x - cood[<span class="hljs-number">0</span>]) ** <span class="hljs-number">2</span> + (_y - cood[<span class="hljs-number">1</span>]) ** <span class="hljs-number">2</span> &lt; r ** <span class="hljs-number">2</span>:<br>                    flag = <span class="hljs-literal">False</span><br>                    <span class="hljs-keyword">break</span><br>        <span class="hljs-keyword">if</span> flag:  <span class="hljs-comment"># 将该点标记为已占据，并添加到已采样点集和活动列表中。</span><br>            flag_out = <span class="hljs-literal">True</span><br>            occupied[idx_y, idx_x] = <span class="hljs-number">1</span><br>            occupied_coord[idx_y, idx_x] = (_x, _y)<br>            sampled.append((_x, _y))<br>            active_list.append((_x, _y))<br>            sampled_idx += <span class="hljs-number">1</span><br>            <span class="hljs-keyword">break</span><br>    <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> flag_out:  <span class="hljs-comment"># 如果在 k 次尝试之后没有找到这样的点，则将 i 从活动列表中删除</span><br>        active_list.pop(idx)<br><br>fig, ax = plt.subplots(<span class="hljs-number">1</span>, <span class="hljs-number">1</span>, figsize=(<span class="hljs-number">9</span>, <span class="hljs-number">6</span>))<br>fig.set_tight_layout(<span class="hljs-literal">True</span>)<br>ax.scatter(*<span class="hljs-built_in">zip</span>(*sampled), c=<span class="hljs-string">&#x27;g&#x27;</span>)<br>ax.set_xlim([<span class="hljs-number">0</span>, width])<br>ax.set_ylim([<span class="hljs-number">0</span>, height])<br>plt.show()<br></code></pre></td></tr></table></figure>
 
   </div>
   <div id="gitalk-container"></div>
 </div>
 
 <script>
-  
-Fancybox.bind('[data-fancybox="fancybox-gallery-img"]', {
-  dragToClose: true,
-  Toolbar: true,
-  closeButton: "top",
-  Image: {
-    zoom: true,
-  },
-  on: {
-    initCarousel: (fancybox) => {
-      const slide = fancybox.Carousel.slides[fancybox.Carousel.page];
-      fancybox.$container.style.setProperty(
-        "--bg-image",
-        `url("${slide.$thumb.src}")`
-      );
+  Fancybox.bind('[data-fancybox="fancybox-gallery-img"]', {
+    dragToClose: true,
+    Toolbar: true,
+    closeButton: 'top',
+    Image: {
+      zoom: true
     },
-    "Carousel.change": (fancybox, carousel, to, from) => {
-      const slide = carousel.slides[to];
-      fancybox.$container.style.setProperty(
-        "--bg-image",
-        `url("${slide.$thumb.src}")`
-      );
-    },
-  },
-});
+    on: {
+      initCarousel: (fancybox) => {
+        const slide = fancybox.Carousel.slides[fancybox.Carousel.page]
+        fancybox.$container.style.setProperty('--bg-image', `url("${slide.$thumb.src}")`)
+      },
+      'Carousel.change': (fancybox, carousel, to, from) => {
+        const slide = carousel.slides[to]
+        fancybox.$container.style.setProperty('--bg-image', `url("${slide.$thumb.src}")`)
+      }
+    }
+  })
 </script>
 
 <style>
+  #noneimg img {
+    display: none;
+    z-index: 9999;
+    /* width: 600px !important; */
+    min-width: 0%;
+    max-width: 90%;
+    max-height: 80%;
+    border-radius: 0px;
+    position: fixed;
+    box-shadow: 0 0 0px #c3c3c300 !important;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    margin: auto !important;
+  }
+  
+  @media screen and (max-width: 600px) {
     #noneimg img {
-        display: none;
-        z-index: 9999;
-        /* width: 600px !important; */
-        min-width: 0%;
-        max-width: 90%;
-        max-height: 80%;
-        border-radius: 0px;
-        position: fixed;
-        box-shadow: 0 0 0px #c3c3c300 !important;
-        left: 0;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        margin: auto !important;
+      max-width: 88%;
     }
-
-    @media screen and (max-width:600px) {
-        #noneimg img {
-            max-width: 88%
-        }
-    }
+  }
 </style>
 
     <div class="post-paging">
@@ -507,65 +484,28 @@ Fancybox.bind('[data-fancybox="fancybox-gallery-img"]', {
 	</div>
 </div>
 
+
+	<div style="bottom: 90px;" class="sidebar_button" id="js-toc">
+  <span>
+      <img style="width: 24px; height: 24px;" src="/image/toc.png" class="meat-type" alt="Icon">
+  </span>
+</div>
+
+<div id="post-toc" class="post-toc">
+    <span class="post-toc-title">文章目录</span>
+    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Paper-Fast-Poisson-Disk-Sampling-in-Arbitrary-Dimensions"><span class="toc-text">Paper-Fast Poisson Disk Sampling in Arbitrary Dimensions</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%B5%84%E6%BA%90"><span class="toc-text">资源</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8E%9F%E6%96%87"><span class="toc-text">原文</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Abstract"><span class="toc-text">Abstract</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-Introduction"><span class="toc-text">1 Introduction</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-The-Algorithm"><span class="toc-text">2 The Algorithm</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-Analysis"><span class="toc-text">3 Analysis</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BB%A3%E7%A0%81"><span class="toc-text">代码</span></a></li></ol>
+</div>
+
+
+<script src="/js/toc.js"></script>
+
+
+
 <script src="/js/gotop.js"></script>
 
-
-<style type="text/css">
-    @media screen and (min-width: 600px) {
-        .goTop>span {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 10px;
-            width: 40px;
-            height: 40px;
-            cursor: pointer;
-            opacity: 0.8;
-            background: rgba(18, 24, 58, 0.06);
-            text-align: center;
-            transition: border .5s;
-            border: 1px solid rgba(18, 24, 58, 0.06);
-
-            -moz-transition: border .5s;
-            /* Firefox 4 */
-            -webkit-transition: border .5s;
-            /* Safari 和 Chrome */
-            -o-transition: border .5s;
-            /* Opera */
-        }
-
-        .goTop>span:hover {
-            border: 1px solid #6680B3;
-        }
-
-
-        .goTop {
-            position: fixed;
-            right: 30px;
-            bottom: 80px;
-        }
-
-        .goTop>span>svg {
-            width: 20px;
-            height: 20px;
-            opacity: 0.7;
-        }
-
-    }
-
-    @media screen and (max-width: 600px) {
-        .goTop {
-            display: none;
-        }
-    }
-</style>
-<div class="goTop" id="js-go_top">
+<div style="bottom: 40px;" class="sidebar_button" id="js-go_top">
     <span>
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-            <g>
-                <path d="M13 12v8h-2v-8H4l8-8 8 8z"></path>
-            </g>
-        </svg>
+        <img style="width: 24px; height: 24px;" src="/image/go_top.png" class="meat-type" alt="Icon">
     </span>
 </div>
 <script>
@@ -618,6 +558,7 @@ Fancybox.bind('[data-fancybox="fancybox-gallery-img"]', {
         }
     </script>
 
+  
 <script>
 	console.log('\n %c Hexo-Quiet 主题 %c https://github.com/79e/hexo-theme-quiet \n', 'color: #fadfa3; background: #030307; padding:5px 0;', 'background: #fadfa3; padding:5px 0;')
 </script>

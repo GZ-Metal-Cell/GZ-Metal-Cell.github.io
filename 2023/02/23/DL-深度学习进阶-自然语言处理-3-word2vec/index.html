@@ -13,7 +13,7 @@
 
 
 <meta name="keywords" content="Python,《深度学习进阶》,">
-<meta name="description" content="《深度学习进阶》第 3 章学习笔记。">
+<meta name="description" content="">
 
 
 <script src="/js/jquery.min.js"></script>
@@ -371,40 +371,8 @@
     </div>
 </div>
     <div class="post-content" id="content">
-  
   <div id="article" class="post-content-info">
-    
-
-    <h2><span id="dl-深度学习进阶-自然语言处理-3-word2vec">DL-深度学习进阶-自然语言处理-3-word2vec</span></h2><h2><span id="目录">目录</span></h2><!-- toc -->
-<ul>
-<li><a href="#31-基于推理的方法和神经网络">3.1 基于推理的方法和神经网络</a><ul>
-<li><a href="#311-基于计数的方法的问题">3.1.1 基于计数的方法的问题</a></li>
-<li><a href="#312-基于推理的方法的概要">3.1.2 基于推理的方法的概要</a></li>
-<li><a href="#313-神经网络中的单词的处理方法">3.1.3 神经网络中的单词的处理方法</a></li>
-</ul>
-</li>
-<li><a href="#32-简单的-word2vec">3.2 简单的 word2vec</a><ul>
-<li><a href="#321-cbow-模型的推理">3.2.1 CBOW 模型的推理</a></li>
-<li><a href="#322-cbow-模型的学习">3.2.2 CBOW 模型的学习</a></li>
-<li><a href="#323-word2vec-的权重和分布式表示">3.2.3 word2vec 的权重和分布式表示</a></li>
-</ul>
-</li>
-<li><a href="#33-学习数据的准备">3.3 学习数据的准备</a><ul>
-<li><a href="#331-上下文和目标词">3.3.1 上下文和目标词</a></li>
-<li><a href="#332-转换为-one-hot-表示">3.3.2 转换为 one-hot 表示</a></li>
-</ul>
-</li>
-<li><a href="#34-cbow-模型的实现">3.4 CBOW 模型的实现</a></li>
-<li><a href="#35-word2vec-的补充说明">3.5 word2vec 的补充说明</a><ul>
-<li><a href="#351-cbow-模型和概率">3.5.1 CBOW 模型和概率</a></li>
-<li><a href="#352-skip-gram-模型">3.5.2 skip-gram 模型</a></li>
-<li><a href="#353-基于计数于基于推理">3.5.3 基于计数于基于推理</a></li>
-</ul>
-</li>
-<li><a href="#36-小结">3.6 小结</a></li>
-</ul>
-<!-- tocstop -->
-<h3><span id="31-基于推理的方法和神经网络">3.1 基于推理的方法和神经网络</span></h3><p>向量表示单词的研究：</p>
+    <h2 id="DL-深度学习进阶-自然语言处理-3-word2vec"><a href="#DL-深度学习进阶-自然语言处理-3-word2vec" class="headerlink" title="DL-深度学习进阶-自然语言处理-3-word2vec"></a>DL-深度学习进阶-自然语言处理-3-word2vec</h2><h3 id="3-1-基于推理的方法和神经网络"><a href="#3-1-基于推理的方法和神经网络" class="headerlink" title="3.1 基于推理的方法和神经网络"></a>3.1 基于推理的方法和神经网络</h3><p>向量表示单词的研究：</p>
 <ul>
 <li><p>基于计数的方法</p>
 </li>
@@ -412,18 +380,18 @@
 </li>
 </ul>
 <p>两者在获得单词含义的方法上差别很大，但两者的背景都是分布式假设。</p>
-<h4><span id="311-基于计数的方法的问题">3.1.1 基于计数的方法的问题</span></h4><blockquote>
+<h4 id="3-1-1-基于计数的方法的问题"><a href="#3-1-1-基于计数的方法的问题" class="headerlink" title="3.1.1 基于计数的方法的问题"></a>3.1.1 基于计数的方法的问题</h4><blockquote>
 <p>对于一个 $n\times n$ 的矩阵，SVD的复杂度是 $O(n^3)$，这表示计算量与 $n$ 的立方成比例增长。如此大的计算成本，即便是超级计算机也无法胜任。实际上，利用近似方法和稀疏矩阵的性质，可以在一定程度上提高处理速度，但还是需要大量的计算资源和时间。</p>
 </blockquote>
 <p><img src="1.png" alt="png"></p>
-<h4><span id="312-基于推理的方法的概要">3.1.2 基于推理的方法的概要</span></h4><p>基于推理的方法的主要操作是“推理”。当给出周围的单词（上下文）时，预测“？”处会出现什么单词，这就是推理。</p>
+<h4 id="3-1-2-基于推理的方法的概要"><a href="#3-1-2-基于推理的方法的概要" class="headerlink" title="3.1.2 基于推理的方法的概要"></a>3.1.2 基于推理的方法的概要</h4><p>基于推理的方法的主要操作是“推理”。当给出周围的单词（上下文）时，预测“？”处会出现什么单词，这就是推理。</p>
 <p><img src="2.png" alt="png"></p>
-<h4><span id="313-神经网络中的单词的处理方法">3.1.3 神经网络中的单词的处理方法</span></h4><p>我们将使用神经网络来处理单词。但是，神经网络无法直接处理 you 或 say 这样的单词，要用神经网络处理单词，需要先将单词转化为固定长度的向量。对此，一种方式是将单词转换为 one-hot 表示（one-hot 向量）。在 one-hot 表示中，只有一个元素是 1，其他元素都是 0。</p>
+<h4 id="3-1-3-神经网络中的单词的处理方法"><a href="#3-1-3-神经网络中的单词的处理方法" class="headerlink" title="3.1.3 神经网络中的单词的处理方法"></a>3.1.3 神经网络中的单词的处理方法</h4><p>我们将使用神经网络来处理单词。但是，神经网络无法直接处理 you 或 say 这样的单词，要用神经网络处理单词，需要先将单词转化为固定长度的向量。对此，一种方式是将单词转换为 one-hot 表示（one-hot 向量）。在 one-hot 表示中，只有一个元素是 1，其他元素都是 0。</p>
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><br>c = np.array([[<span class="hljs-number">1</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>]])  <span class="hljs-comment"># 输入</span><br>W = np.random.randn(<span class="hljs-number">7</span>, <span class="hljs-number">3</span>)  <span class="hljs-comment"># 权重</span><br>h = np.dot(c, W)  <span class="hljs-comment"># 中间节点</span><br><span class="hljs-built_in">print</span>(h)<br></code></pre></td></tr></table></figure>
 <pre><code>[[-0.7200455  -0.12248471 -0.19002763]]
 </code></pre><p><img src="4.png" alt="png"></p>
-<h3><span id="32-简单的-word2vec">3.2 简单的 word2vec</span></h3><p>使用由原版 <strong>word2vec</strong> 提出的名为 <strong>continuous bag-of-words（CBOW）</strong>的模型作为神经网络。</p>
-<h4><span id="321-cbow-模型的推理">3.2.1 CBOW 模型的推理</span></h4><p><img src="9.png" alt="png"></p>
+<h3 id="3-2-简单的-word2vec"><a href="#3-2-简单的-word2vec" class="headerlink" title="3.2 简单的 word2vec"></a>3.2 简单的 word2vec</h3><p>使用由原版 <strong>word2vec</strong> 提出的名为 <strong>continuous bag-of-words（CBOW）</strong>的模型作为神经网络。</p>
+<h4 id="3-2-1-CBOW-模型的推理"><a href="#3-2-1-CBOW-模型的推理" class="headerlink" title="3.2.1 CBOW 模型的推理"></a>3.2.1 CBOW 模型的推理</h4><p><img src="9.png" alt="png"></p>
 <p>中间层的神经元是各个输入层经全连接层变换后得到的值的“平均”。</p>
 <p>经全连接层变换后，第 1 个输入层转化为 $h_1$，第 2 个输入层转化为 $h_2$，那么中间层的神经元是 $\frac{1}{2}(h_1+h_2)$。</p>
 <p>从输入层到中间层的变换由全连接层（权重是 $W_{in}$）完成。此时，全连接层的权重 $W_{in}$ 是一个 $7\times 3$ 的矩阵。提前剧透一下，这个权重就是我们要的单词的分布式表示。如此获得的向量很好地对单词含义进行了编码。这就是 word2vec 的全貌。</p>
@@ -431,15 +399,15 @@
 <pre><code>[[-1.6202109   0.75824908 -0.05364709 -0.39814822 -0.37373042  0.51207421
    0.8510953 ]]
 </code></pre><p>CBOW 模型是没有使用激活函数的简单的网络结构。</p>
-<h4><span id="322-cbow-模型的学习">3.2.2 CBOW 模型的学习</span></h4><p><img src="12.png" alt="png"></p>
+<h4 id="3-2-2-CBOW-模型的学习"><a href="#3-2-2-CBOW-模型的学习" class="headerlink" title="3.2.2 CBOW 模型的学习"></a>3.2.2 CBOW 模型的学习</h4><p><img src="12.png" alt="png"></p>
 <p>上下文是you 和 goodbye，正确解标签（神经网络应该预测出的单词）是 say。这时，如果网络具有“良好的权重”，那么在表示概率的神经元中，对应正确解的神经元的得分应该更高。</p>
 <p>CBOW 模型的学习就是调整权重，以使预测准确。其结果是，权重 $W_{in}$（确切地说是 $W_{in}$ 和 $W_{out}$ 两者）学习到蕴含单词出现模式的向量。</p>
 <blockquote>
 <p>对其进行学习只是使用一下 Softmax 函数和交叉熵误差。首先，使用 Softmax 函数将得分转化为概率，再求这些概率和监督标签之间的交叉熵误差，并将其作为损失进行学习。</p>
 </blockquote>
-<h4><span id="323-word2vec-的权重和分布式表示">3.2.3 word2vec 的权重和分布式表示</span></h4><p>word2vec 中使用的网络有两个权重，分别是输入侧的全连接层的权重（$W_{in}$）和输出侧的全连接层的权重（$W_{out}$）。</p>
+<h4 id="3-2-3-word2vec-的权重和分布式表示"><a href="#3-2-3-word2vec-的权重和分布式表示" class="headerlink" title="3.2.3 word2vec 的权重和分布式表示"></a>3.2.3 word2vec 的权重和分布式表示</h4><p>word2vec 中使用的网络有两个权重，分别是输入侧的全连接层的权重（$W_{in}$）和输出侧的全连接层的权重（$W_{out}$）。</p>
 <p>一般而言，输入侧的权重 $W_{in}$ 的每一行对应于各个单词的分布式表示。另外，输出侧的权重 $W_{out}$ 也同样保存了对单词含义进行了编码的向量。</p>
-<h3><span id="33-学习数据的准备">3.3 学习数据的准备</span></h3><h4><span id="331-上下文和目标词">3.3.1 上下文和目标词</span></h4><p><img src="16.png" alt="png"></p>
+<h3 id="3-3-学习数据的准备"><a href="#3-3-学习数据的准备" class="headerlink" title="3.3 学习数据的准备"></a>3.3 学习数据的准备</h3><h4 id="3-3-1-上下文和目标词"><a href="#3-3-1-上下文和目标词" class="headerlink" title="3.3.1 上下文和目标词"></a>3.3.1 上下文和目标词</h4><p><img src="16.png" alt="png"></p>
 <p>word2vec 中使用的神经网络的输入是上下文，它的正确解标签是被这些上下文包围在中间的单词，即目标词。</p>
 <p>将语料库中的目标单词作为目标词，将其周围的单词作为上下文提取出来。我们对语料库中的所有单词都执行该操作（两端的单词除外），可以得到 contexts（上下文）和 target（目标词）。</p>
 <p><strong>将语料库的文本转换成单词 ID</strong></p>
@@ -456,9 +424,9 @@
  [4 5]
  [1 6]]
 </code></pre><p>这样就从语料库生成了上下文和目标词，后面只需将它们赋给 CBOW 模型即可。不过，因为这些上下文和目标词的元素还是单词ID，所以还需<br>要将它们转化为 one-hot 表示。</p>
-<h4><span id="332-转换为-one-hot-表示">3.3.2 转换为 one-hot 表示</span></h4><p><img src="18.png" alt="png"></p>
+<h4 id="3-3-2-转换为-one-hot-表示"><a href="#3-3-2-转换为-one-hot-表示" class="headerlink" title="3.3.2 转换为 one-hot 表示"></a>3.3.2 转换为 one-hot 表示</h4><p><img src="18.png" alt="png"></p>
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> sys<br>sys.path.append(<span class="hljs-string">&#x27;..&#x27;</span>)<br><span class="hljs-keyword">from</span> common.util <span class="hljs-keyword">import</span> preprocess, create_contexts_target, convert_one_hot<br><br>text = <span class="hljs-string">&#x27;You say goodbye and I say hello.&#x27;</span><br><br>corpus, word_to_id, id_to_word = preprocess(text)<br><br>contexts, target = create_contexts_target(corpus, window_size=<span class="hljs-number">1</span>)<br><br>vocab_size = <span class="hljs-built_in">len</span>(word_to_id)<br>target = convert_one_hot(target, vocab_size)<br>contexts = convert_one_hot(contexts, vocab_size)<br></code></pre></td></tr></table></figure>
-<h3><span id="34-cbow-模型的实现">3.4 CBOW 模型的实现</span></h3><p><img src="19.png" alt="png"></p>
+<h3 id="3-4-CBOW-模型的实现"><a href="#3-4-CBOW-模型的实现" class="headerlink" title="3.4 CBOW 模型的实现"></a>3.4 CBOW 模型的实现</h3><p><img src="19.png" alt="png"></p>
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> sys<br>sys.path.append(<span class="hljs-string">&#x27;..&#x27;</span>)<br><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">from</span> common.layers <span class="hljs-keyword">import</span> MatMul, SoftmaxWithLoss<br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">SimpleCBOW</span>:  <br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, vocab_size, hidden_size</span>):<br>        <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">        vocab_size: 词汇个数</span><br><span class="hljs-string">        hidden_size: 中间层的神经元个数</span><br><span class="hljs-string">        &quot;&quot;&quot;</span><br>        V, H = vocab_size, hidden_size<br>        <br>        <span class="hljs-comment"># 初始化权重</span><br>        W_in = <span class="hljs-number">0.01</span> * np.random.randn(V, H).astype(<span class="hljs-string">&#x27;f&#x27;</span>)  <span class="hljs-comment"># 初始化将使用 32 位的浮点数</span><br>        W_out = <span class="hljs-number">0.01</span> * np.random.randn(H, V).astype(<span class="hljs-string">&#x27;f&#x27;</span>)<br>        <br>        <span class="hljs-comment"># 生成层</span><br>        self.in_layer0 = MatMul(W_in)<br>        self.in_layer1 = MatMul(W_in)<br>        self.out_layer = MatMul(W_out)<br>        self.loss_layer = SoftmaxWithLoss()<br>        <br>        <span class="hljs-comment"># 将所有的权重和梯度整理到列表中</span><br>        layers = [self.in_layer0, self.in_layer1, self.out_layer]<br>        self.params, self.grads = [], []<br>        <span class="hljs-keyword">for</span> layer <span class="hljs-keyword">in</span> layers:<br>            self.params += layer.params<br>            self.grads += layer.grads<br>        <br>        <span class="hljs-comment"># 将单词的分布式表示设置为成员变量</span><br>        self.word_vecs = W_in<br>        <br>        <br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">self, contexts, target</span>):<br>        <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">        神经网络的正向传播 forward() 函数。</span><br><span class="hljs-string">        这个函数接收参数 contexts 和 target，并返回损失（loss）。</span><br><span class="hljs-string">        &quot;&quot;&quot;</span><br>        h0 = self.in_layer0.forward(contexts[:, <span class="hljs-number">0</span>])<br>        h1 = self.in_layer1.forward(contexts[:, <span class="hljs-number">1</span>])<br>        h = (h0 + h1) * <span class="hljs-number">0.5</span><br>        score = self.out_layer.forward(h)<br>        loss = self.loss_layer.forward(score, target)<br>        <span class="hljs-keyword">return</span> loss<br>    <br>    <br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">backward</span>(<span class="hljs-params">self, dout=<span class="hljs-number">1</span></span>):<br>        <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">        反向传播</span><br><span class="hljs-string">        &quot;&quot;&quot;</span><br>        ds = self.loss_layer.backward(dout)<br>        da = self.out_layer.backward(ds)<br>        da *= <span class="hljs-number">0.5</span><br>        self.in_layer1.backward(da)<br>        self.in_layer0.backward(da)<br>        <span class="hljs-keyword">return</span> <span class="hljs-literal">None</span><br></code></pre></td></tr></table></figure>
 <p><strong>学习的实现</strong></p>
 <p>CBOW 模型的学习和一般的神经网络的学习完全相同。首先，给神经网络准备好学习数据。然后，求梯度，并逐步更新权重参数。</p>
@@ -474,10 +442,10 @@ i [-0.9705925  -0.96961325 -1.0059276   1.0296363   0.02202316]
 hello [-0.9177436  -0.9189522  -0.90853983  0.89148486 -1.6829524 ]
 . [ 1.2674404   0.2086714   1.1918164  -1.3567644   0.25613624]
 </code></pre><p>这里使用的小型语料库并没有给出很好的结果。当然，主要原因是语料库太小了。如果换成更大、更实用的语料库，相信会获得更好的结果。但是，这样在处理速度方面又会出现新的问题，这是因为当前这个 CBOW 模型的实现在处理效率方面存在几个问题。</p>
-<h3><span id="35-word2vec-的补充说明">3.5 word2vec 的补充说明</span></h3><h4><span id="351-cbow-模型和概率">3.5.1 CBOW 模型和概率</span></h4><p>给定上下文 $w_{t−1}$ 和 $w_{t+1}$ 时目标词为 $w_t$ 的概率。使用后验概率：</p>
+<h3 id="3-5-word2vec-的补充说明"><a href="#3-5-word2vec-的补充说明" class="headerlink" title="3.5 word2vec 的补充说明"></a>3.5 word2vec 的补充说明</h3><h4 id="3-5-1-CBOW-模型和概率"><a href="#3-5-1-CBOW-模型和概率" class="headerlink" title="3.5.1 CBOW 模型和概率"></a>3.5.1 CBOW 模型和概率</h4><p>给定上下文 $w_{t−1}$ 和 $w_{t+1}$ 时目标词为 $w_t$ 的概率。使用后验概率：</p>
 <script type="math/tex; mode=display">P(w_t|w_{t-1},w_{t+1})</script><p>CBOW 模型的损失函数只是对上式的概率取 $\log$，并加上负号。顺便提一下，这也称为<strong>负对数似然（negative log likelihood）</strong>。</p>
 <script type="math/tex; mode=display">L=-\log P(w_t|w_{t-1}, w_{t+1})</script><p>上式是一笔样本数据的损失函数。如果将其扩展到整个语料库：</p>
-<script type="math/tex; mode=display">L=-\frac{1}{T}\sum^T_{t=1}\log P(w_t|w_{t-1}, w_{t+1})</script><h4><span id="352-skip-gram-模型">3.5.2 skip-gram 模型</span></h4><p><img src="23.png" alt="png"></p>
+<script type="math/tex; mode=display">L=-\frac{1}{T}\sum^T_{t=1}\log P(w_t|w_{t-1}, w_{t+1})</script><h4 id="3-5-2-skip-gram-模型"><a href="#3-5-2-skip-gram-模型" class="headerlink" title="3.5.2 skip-gram 模型"></a>3.5.2 skip-gram 模型</h4><p><img src="23.png" alt="png"></p>
 <p>skip-gram 是反转了CBOW 模型处理的上下文和目标词的模型。</p>
 <ul>
 <li><p>CBOW 模型从上下文的多个单词预测中间的单词（目标词）</p>
@@ -488,14 +456,14 @@ hello [-0.9177436  -0.9189522  -0.90853983  0.89148486 -1.6829524 ]
 <p>skip-gram 可以建模为：</p>
 <script type="math/tex; mode=display">P(w_{t-1}, w_{t+1}|w_t)</script><p>“当给定 $w_t$ 时，$w_{t−1}$ 和 $w_{t+1}$ 同时发生的概率”。</p>
 <script type="math/tex; mode=display">P(w_{t-1},w_{t+1}|w_t)=P(w_{t-1}|w_t)P(w_{t+1}|w_t)</script><p>带入交叉熵损失函数，推导出 skip-gram 模型的损失函数：</p>
-<script type="math/tex; mode=display">L=-\frac{1}{T}\sum^T_{t=1}(\log P(w_{t-1}|w_t) + \log P(w_{t+1}|w_t))</script><h4><span id="353-基于计数于基于推理">3.5.3 基于计数于基于推理</span></h4><ul>
+<script type="math/tex; mode=display">L=-\frac{1}{T}\sum^T_{t=1}(\log P(w_{t-1}|w_t) + \log P(w_{t+1}|w_t))</script><h4 id="3-5-3-基于计数于基于推理"><a href="#3-5-3-基于计数于基于推理" class="headerlink" title="3.5.3 基于计数于基于推理"></a>3.5.3 基于计数于基于推理</h4><ul>
 <li><p>基于计数的方法通过对整个语料库的统计数据进行一次学习来获得单词的分布式表示</p>
 </li>
 <li><p>基于推理的方法则反复观察语料库的一部分数据进行学习（mini-batch 学习）</p>
 </li>
 </ul>
 <p>在word2vec 之后，有研究人员提出了GloVe 方法。GloVe 方法融合了基于推理的方法和基于计数的方法。该方法的思想是，将整个语料库的统计数据的信息纳入损失函数，进行mini-batch 学习（具体请参考论文）。据此，这两个方法论成功地被融合在了一起。</p>
-<h3><span id="36-小结">3.6 小结</span></h3><ul>
+<h3 id="3-6-小结"><a href="#3-6-小结" class="headerlink" title="3.6 小结"></a>3.6 小结</h3><ul>
 <li><p>基于推理的方法以预测为目标，同时获得了作为副产物的单词的分布式表示</p>
 </li>
 <li><p>word2vec 是基于推理的方法，由简单的 2 层神经网络构成</p>
@@ -515,56 +483,49 @@ hello [-0.9177436  -0.9189522  -0.90853983  0.89148486 -1.6829524 ]
 </div>
 
 <script>
-  
-Fancybox.bind('[data-fancybox="fancybox-gallery-img"]', {
-  dragToClose: true,
-  Toolbar: true,
-  closeButton: "top",
-  Image: {
-    zoom: true,
-  },
-  on: {
-    initCarousel: (fancybox) => {
-      const slide = fancybox.Carousel.slides[fancybox.Carousel.page];
-      fancybox.$container.style.setProperty(
-        "--bg-image",
-        `url("${slide.$thumb.src}")`
-      );
+  Fancybox.bind('[data-fancybox="fancybox-gallery-img"]', {
+    dragToClose: true,
+    Toolbar: true,
+    closeButton: 'top',
+    Image: {
+      zoom: true
     },
-    "Carousel.change": (fancybox, carousel, to, from) => {
-      const slide = carousel.slides[to];
-      fancybox.$container.style.setProperty(
-        "--bg-image",
-        `url("${slide.$thumb.src}")`
-      );
-    },
-  },
-});
+    on: {
+      initCarousel: (fancybox) => {
+        const slide = fancybox.Carousel.slides[fancybox.Carousel.page]
+        fancybox.$container.style.setProperty('--bg-image', `url("${slide.$thumb.src}")`)
+      },
+      'Carousel.change': (fancybox, carousel, to, from) => {
+        const slide = carousel.slides[to]
+        fancybox.$container.style.setProperty('--bg-image', `url("${slide.$thumb.src}")`)
+      }
+    }
+  })
 </script>
 
 <style>
+  #noneimg img {
+    display: none;
+    z-index: 9999;
+    /* width: 600px !important; */
+    min-width: 0%;
+    max-width: 90%;
+    max-height: 80%;
+    border-radius: 0px;
+    position: fixed;
+    box-shadow: 0 0 0px #c3c3c300 !important;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    margin: auto !important;
+  }
+  
+  @media screen and (max-width: 600px) {
     #noneimg img {
-        display: none;
-        z-index: 9999;
-        /* width: 600px !important; */
-        min-width: 0%;
-        max-width: 90%;
-        max-height: 80%;
-        border-radius: 0px;
-        position: fixed;
-        box-shadow: 0 0 0px #c3c3c300 !important;
-        left: 0;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        margin: auto !important;
+      max-width: 88%;
     }
-
-    @media screen and (max-width:600px) {
-        #noneimg img {
-            max-width: 88%
-        }
-    }
+  }
 </style>
 
     <div class="post-paging">
@@ -614,65 +575,28 @@ Fancybox.bind('[data-fancybox="fancybox-gallery-img"]', {
 	</div>
 </div>
 
+
+	<div style="bottom: 90px;" class="sidebar_button" id="js-toc">
+  <span>
+      <img style="width: 24px; height: 24px;" src="/image/toc.png" class="meat-type" alt="Icon">
+  </span>
+</div>
+
+<div id="post-toc" class="post-toc">
+    <span class="post-toc-title">文章目录</span>
+    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#DL-%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E8%BF%9B%E9%98%B6-%E8%87%AA%E7%84%B6%E8%AF%AD%E8%A8%80%E5%A4%84%E7%90%86-3-word2vec"><span class="toc-text">DL-深度学习进阶-自然语言处理-3-word2vec</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E5%9F%BA%E4%BA%8E%E6%8E%A8%E7%90%86%E7%9A%84%E6%96%B9%E6%B3%95%E5%92%8C%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C"><span class="toc-text">3.1 基于推理的方法和神经网络</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#3-1-1-%E5%9F%BA%E4%BA%8E%E8%AE%A1%E6%95%B0%E7%9A%84%E6%96%B9%E6%B3%95%E7%9A%84%E9%97%AE%E9%A2%98"><span class="toc-text">3.1.1 基于计数的方法的问题</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-1-2-%E5%9F%BA%E4%BA%8E%E6%8E%A8%E7%90%86%E7%9A%84%E6%96%B9%E6%B3%95%E7%9A%84%E6%A6%82%E8%A6%81"><span class="toc-text">3.1.2 基于推理的方法的概要</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-1-3-%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C%E4%B8%AD%E7%9A%84%E5%8D%95%E8%AF%8D%E7%9A%84%E5%A4%84%E7%90%86%E6%96%B9%E6%B3%95"><span class="toc-text">3.1.3 神经网络中的单词的处理方法</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E7%AE%80%E5%8D%95%E7%9A%84-word2vec"><span class="toc-text">3.2 简单的 word2vec</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#3-2-1-CBOW-%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%8E%A8%E7%90%86"><span class="toc-text">3.2.1 CBOW 模型的推理</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-2-2-CBOW-%E6%A8%A1%E5%9E%8B%E7%9A%84%E5%AD%A6%E4%B9%A0"><span class="toc-text">3.2.2 CBOW 模型的学习</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-2-3-word2vec-%E7%9A%84%E6%9D%83%E9%87%8D%E5%92%8C%E5%88%86%E5%B8%83%E5%BC%8F%E8%A1%A8%E7%A4%BA"><span class="toc-text">3.2.3 word2vec 的权重和分布式表示</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-%E5%AD%A6%E4%B9%A0%E6%95%B0%E6%8D%AE%E7%9A%84%E5%87%86%E5%A4%87"><span class="toc-text">3.3 学习数据的准备</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#3-3-1-%E4%B8%8A%E4%B8%8B%E6%96%87%E5%92%8C%E7%9B%AE%E6%A0%87%E8%AF%8D"><span class="toc-text">3.3.1 上下文和目标词</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-3-2-%E8%BD%AC%E6%8D%A2%E4%B8%BA-one-hot-%E8%A1%A8%E7%A4%BA"><span class="toc-text">3.3.2 转换为 one-hot 表示</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-4-CBOW-%E6%A8%A1%E5%9E%8B%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="toc-text">3.4 CBOW 模型的实现</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-5-word2vec-%E7%9A%84%E8%A1%A5%E5%85%85%E8%AF%B4%E6%98%8E"><span class="toc-text">3.5 word2vec 的补充说明</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#3-5-1-CBOW-%E6%A8%A1%E5%9E%8B%E5%92%8C%E6%A6%82%E7%8E%87"><span class="toc-text">3.5.1 CBOW 模型和概率</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-5-2-skip-gram-%E6%A8%A1%E5%9E%8B"><span class="toc-text">3.5.2 skip-gram 模型</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-5-3-%E5%9F%BA%E4%BA%8E%E8%AE%A1%E6%95%B0%E4%BA%8E%E5%9F%BA%E4%BA%8E%E6%8E%A8%E7%90%86"><span class="toc-text">3.5.3 基于计数于基于推理</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-6-%E5%B0%8F%E7%BB%93"><span class="toc-text">3.6 小结</span></a></li></ol></li></ol>
+</div>
+
+
+<script src="/js/toc.js"></script>
+
+
+
 <script src="/js/gotop.js"></script>
 
-
-<style type="text/css">
-    @media screen and (min-width: 600px) {
-        .goTop>span {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 10px;
-            width: 40px;
-            height: 40px;
-            cursor: pointer;
-            opacity: 0.8;
-            background: rgba(18, 24, 58, 0.06);
-            text-align: center;
-            transition: border .5s;
-            border: 1px solid rgba(18, 24, 58, 0.06);
-
-            -moz-transition: border .5s;
-            /* Firefox 4 */
-            -webkit-transition: border .5s;
-            /* Safari 和 Chrome */
-            -o-transition: border .5s;
-            /* Opera */
-        }
-
-        .goTop>span:hover {
-            border: 1px solid #6680B3;
-        }
-
-
-        .goTop {
-            position: fixed;
-            right: 30px;
-            bottom: 80px;
-        }
-
-        .goTop>span>svg {
-            width: 20px;
-            height: 20px;
-            opacity: 0.7;
-        }
-
-    }
-
-    @media screen and (max-width: 600px) {
-        .goTop {
-            display: none;
-        }
-    }
-</style>
-<div class="goTop" id="js-go_top">
+<div style="bottom: 40px;" class="sidebar_button" id="js-go_top">
     <span>
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-            <g>
-                <path d="M13 12v8h-2v-8H4l8-8 8 8z"></path>
-            </g>
-        </svg>
+        <img style="width: 24px; height: 24px;" src="/image/go_top.png" class="meat-type" alt="Icon">
     </span>
 </div>
 <script>
@@ -725,6 +649,7 @@ Fancybox.bind('[data-fancybox="fancybox-gallery-img"]', {
         }
     </script>
 
+  
 <script>
 	console.log('\n %c Hexo-Quiet 主题 %c https://github.com/79e/hexo-theme-quiet \n', 'color: #fadfa3; background: #030307; padding:5px 0;', 'background: #fadfa3; padding:5px 0;')
 </script>
