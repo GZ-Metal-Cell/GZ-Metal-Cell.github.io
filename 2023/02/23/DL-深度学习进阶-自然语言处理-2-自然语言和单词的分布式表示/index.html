@@ -13,7 +13,7 @@
 
 
 <meta name="keywords" content="Python,《深度学习进阶》,">
-<meta name="description" content="">
+<meta name="description" content="《深度学习进阶》第 2 章学习笔记。">
 
 
 <script src="/js/jquery.min.js"></script>
@@ -515,7 +515,7 @@ word_to_id[&#39;car&#39;]: 3856
 word_to_id[&#39;happy&#39;]: 4428
 word_to_id[&#39;lexus&#39;]: 7426
 </code></pre><h4 id="2-4-5-基于-PTB-数据集的评价"><a href="#2-4-5-基于-PTB-数据集的评价" class="headerlink" title="2.4.5 基于 PTB 数据集的评价"></a>2.4.5 基于 PTB 数据集的评价</h4><p>这里建议使用更快速的 SVD 对大矩阵执行 SVD，为此我们需要安装 sklearn 模块。当然，虽然仍可以使用基本版的SVD（<code>np.linalg.svd()</code>），但是这需要更多的时间和内存。</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> sys<br>sys.path.append(<span class="hljs-string">&#x27;..&#x27;</span>)<br><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">from</span> common.util <span class="hljs-keyword">import</span> most_similar, create_co_matrix, ppmi<br><span class="hljs-keyword">from</span> dataset <span class="hljs-keyword">import</span> ptb<br><br>window_size = <span class="hljs-number">2</span><br>wordvec_size = <span class="hljs-number">100</span><br>corpus, word_to_id, id_to_word = ptb.load_data(<span class="hljs-string">&#x27;train&#x27;</span>)<br>vocab_size = <span class="hljs-built_in">len</span>(word_to_id)<br><span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;counting co-occurrence ...&#x27;</span>)<br>C = create_co_matrix(corpus, vocab_size, window_size)<br><span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;calculating PPMI ...&#x27;</span>)<br>W = ppmi(C, verbose=<span class="hljs-literal">True</span>)<br><br><span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;calculating SVD ...&#x27;</span>)<br><span class="hljs-keyword">try</span>:<br>    <span class="hljs-comment"># truncated SVD (fast!)</span><br>    <span class="hljs-keyword">from</span> sklearn.utils.extmath <span class="hljs-keyword">import</span> randomized_svd<br>    U, S, V = randomized_svd(W, n_components=wordvec_size, n_iter=<span class="hljs-number">5</span>, random_state=<span class="hljs-literal">None</span>)<br><span class="hljs-keyword">except</span> ImportError:<br>    <span class="hljs-comment"># SVD (slow)</span><br>    U, S, V = np.linalg.svd(W)<br><br>word_vecs = U[:, :wordvec_size]<br>querys = [<span class="hljs-string">&#x27;you&#x27;</span>, <span class="hljs-string">&#x27;year&#x27;</span>, <span class="hljs-string">&#x27;car&#x27;</span>, <span class="hljs-string">&#x27;toyota&#x27;</span>]<br><span class="hljs-keyword">for</span> query <span class="hljs-keyword">in</span> querys:<br>    most_similar(query, word_to_id, id_to_word, word_vecs, top=<span class="hljs-number">5</span>)<br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> sys<br>sys.path.append(<span class="hljs-string">&#x27;..&#x27;</span>)<br><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">from</span> common.util <span class="hljs-keyword">import</span> most_similar, create_co_matrix, ppmi<br><span class="hljs-keyword">from</span> dataset <span class="hljs-keyword">import</span> ptb<br><br>window_size = <span class="hljs-number">2</span><br>wordvec_size = <span class="hljs-number">100</span><br>corpus, word_to_id, id_to_word = ptb.load_data(<span class="hljs-string">&#x27;train&#x27;</span>)<br>vocab_size = <span class="hljs-built_in">len</span>(word_to_id)<br><span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;counting co-occurrence ...&#x27;</span>)<br>C = create_co_matrix(corpus, vocab_size, window_size)<br><span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;calculating PPMI ...&#x27;</span>)<br>W = ppmi(C, verbose=<span class="hljs-literal">True</span>)<br><br><span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;calculating SVD ...&#x27;</span>)<br><span class="hljs-keyword">try</span>:<br>    <span class="hljs-comment"># truncated SVD (fast!)</span><br>    <span class="hljs-keyword">from</span> sklearn.utils.extmath <span class="hljs-keyword">import</span> randomized_svd<br>    U, S, V = randomized_svd(W, n_components=wordvec_size, n_iter=<span class="hljs-number">5</span>, random_state=<span class="hljs-literal">None</span>)<br>excerpt ImportError:<br>    <span class="hljs-comment"># SVD (slow)</span><br>    U, S, V = np.linalg.svd(W)<br><br>word_vecs = U[:, :wordvec_size]<br>querys = [<span class="hljs-string">&#x27;you&#x27;</span>, <span class="hljs-string">&#x27;year&#x27;</span>, <span class="hljs-string">&#x27;car&#x27;</span>, <span class="hljs-string">&#x27;toyota&#x27;</span>]<br><span class="hljs-keyword">for</span> query <span class="hljs-keyword">in</span> querys:<br>    most_similar(query, word_to_id, id_to_word, word_vecs, top=<span class="hljs-number">5</span>)<br></code></pre></td></tr></table></figure>
 <pre><code>counting co-occurrence ...
 calculating PPMI ...
 
@@ -770,42 +770,68 @@ calculating SVD ...
 </div>
 
 
-	<div style="bottom: 90px;" class="sidebar_button" id="js-toc">
-  <span>
-      <img style="width: 24px; height: 24px;" src="/image/toc.png" class="meat-type" alt="Icon">
-  </span>
-</div>
 
-<div id="post-toc" class="post-toc">
-    <span class="post-toc-title">文章目录</span>
-    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#DL-%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E8%BF%9B%E9%98%B6-%E8%87%AA%E7%84%B6%E8%AF%AD%E8%A8%80%E5%A4%84%E7%90%86-2-%E8%87%AA%E7%84%B6%E8%AF%AD%E8%A8%80%E5%92%8C%E5%8D%95%E8%AF%8D%E7%9A%84%E5%88%86%E5%B8%83%E5%BC%8F%E8%A1%A8%E7%A4%BA"><span class="toc-text">DL-深度学习进阶-自然语言处理-2-自然语言和单词的分布式表示</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E4%BB%80%E4%B9%88%E6%98%AF%E8%87%AA%E7%84%B6%E8%AF%AD%E8%A8%80%E5%A4%84%E7%90%86"><span class="toc-text">2.1 什么是自然语言处理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E5%90%8C%E4%B9%89%E8%AF%8D%E8%AF%8D%E5%85%B8"><span class="toc-text">2.2 同义词词典</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#2-2-1-WordNet"><span class="toc-text">2.2.1 WordNet</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-2-2-%E5%90%8C%E4%B9%89%E8%AF%8D%E8%AF%8D%E5%85%B8%E7%9A%84%E9%97%AE%E9%A2%98"><span class="toc-text">2.2.2 同义词词典的问题</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-%E5%9F%BA%E4%BA%8E%E8%AE%A1%E6%95%B0%E7%9A%84%E6%96%B9%E6%B3%95"><span class="toc-text">2.3 基于计数的方法</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#2-3-1-%E5%9F%BA%E4%BA%8E-Python-%E7%9A%84%E8%AF%AD%E6%96%99%E5%BA%93%E7%9A%84%E9%A2%84%E5%A4%84%E7%90%86"><span class="toc-text">2.3.1 基于 Python 的语料库的预处理</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-3-2-%E5%8D%95%E8%AF%8D%E7%9A%84%E5%88%86%E5%B8%83%E5%BC%8F%E8%A1%A8%E7%A4%BA"><span class="toc-text">2.3.2 单词的分布式表示</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-3-3-%E5%88%86%E5%B8%83%E5%BC%8F%E5%81%87%E8%AE%BE"><span class="toc-text">2.3.3 分布式假设</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-3-4-%E5%85%B1%E7%8E%B0%E7%9F%A9%E9%98%B5"><span class="toc-text">2.3.4 共现矩阵</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-3-5-%E5%90%91%E9%87%8F%E9%97%B4%E7%9A%84%E7%9B%B8%E4%BC%BC%E5%BA%A6"><span class="toc-text">2.3.5 向量间的相似度</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-3-6-%E7%9B%B8%E4%BC%BC%E5%8D%95%E8%AF%8D%E7%9A%84%E6%8E%92%E5%BA%8F"><span class="toc-text">2.3.6 相似单词的排序</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-4-%E5%9F%BA%E4%BA%8E%E8%AE%A1%E6%95%B0%E7%9A%84%E6%96%B9%E6%B3%95%E7%9A%84%E6%94%B9%E8%BF%9B"><span class="toc-text">2.4 基于计数的方法的改进</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#2-4-1-%E7%82%B9%E4%BA%92%E4%BF%A1%E6%81%AF"><span class="toc-text">2.4.1 点互信息</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-4-2-%E9%99%8D%E7%BB%B4"><span class="toc-text">2.4.2 降维</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-4-3-%E5%9F%BA%E4%BA%8E-SVD-%E7%9A%84%E9%99%8D%E7%BB%B4"><span class="toc-text">2.4.3 基于 SVD 的降维</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-4-4-PTB-%E6%95%B0%E6%8D%AE%E9%9B%86"><span class="toc-text">2.4.4 PTB 数据集</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-4-5-%E5%9F%BA%E4%BA%8E-PTB-%E6%95%B0%E6%8D%AE%E9%9B%86%E7%9A%84%E8%AF%84%E4%BB%B7"><span class="toc-text">2.4.5 基于 PTB 数据集的评价</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-5-%E5%B0%8F%E7%BB%93"><span class="toc-text">2.5 小结</span></a></li></ol></li></ol>
-</div>
+<script src="/js/highlight-tools.js"></script>
 
 
+<link rel="stylesheet" href="/css/plugin/highlight-tools.css">
+
+<script>
+    var codeBlocks = document.querySelectorAll('pre');
+    createHighlightTools(codeBlocks, "/image/copy.png", "/image/close_code_block.png", ); // 调用函数并传递参数
+</script>
+
+<script src="/js/goto_position.js"></script>
+
+<style>
+	.rightside_button
+	{
+		width: 24px;
+		height: 24px;
+		-webkit-user-select: none; /* Chrome, Safari, Opera */
+        -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+        user-select: none; /* Non-prefixed version, supported by most modern browsers */
+	}
+</style>
+
+<div style="z-index: 3; position: fixed; bottom: 30px; right: 20px; transition: all 0.5s ease-out;" id="rightside">
+	
+		<div class="post-toc" id="post-toc">
+			<span class="post-toc-title">导航</span>
+			<ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#DL-%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E8%BF%9B%E9%98%B6-%E8%87%AA%E7%84%B6%E8%AF%AD%E8%A8%80%E5%A4%84%E7%90%86-2-%E8%87%AA%E7%84%B6%E8%AF%AD%E8%A8%80%E5%92%8C%E5%8D%95%E8%AF%8D%E7%9A%84%E5%88%86%E5%B8%83%E5%BC%8F%E8%A1%A8%E7%A4%BA"><span class="toc-text">DL-深度学习进阶-自然语言处理-2-自然语言和单词的分布式表示</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E4%BB%80%E4%B9%88%E6%98%AF%E8%87%AA%E7%84%B6%E8%AF%AD%E8%A8%80%E5%A4%84%E7%90%86"><span class="toc-text">2.1 什么是自然语言处理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E5%90%8C%E4%B9%89%E8%AF%8D%E8%AF%8D%E5%85%B8"><span class="toc-text">2.2 同义词词典</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#2-2-1-WordNet"><span class="toc-text">2.2.1 WordNet</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-2-2-%E5%90%8C%E4%B9%89%E8%AF%8D%E8%AF%8D%E5%85%B8%E7%9A%84%E9%97%AE%E9%A2%98"><span class="toc-text">2.2.2 同义词词典的问题</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-%E5%9F%BA%E4%BA%8E%E8%AE%A1%E6%95%B0%E7%9A%84%E6%96%B9%E6%B3%95"><span class="toc-text">2.3 基于计数的方法</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#2-3-1-%E5%9F%BA%E4%BA%8E-Python-%E7%9A%84%E8%AF%AD%E6%96%99%E5%BA%93%E7%9A%84%E9%A2%84%E5%A4%84%E7%90%86"><span class="toc-text">2.3.1 基于 Python 的语料库的预处理</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-3-2-%E5%8D%95%E8%AF%8D%E7%9A%84%E5%88%86%E5%B8%83%E5%BC%8F%E8%A1%A8%E7%A4%BA"><span class="toc-text">2.3.2 单词的分布式表示</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-3-3-%E5%88%86%E5%B8%83%E5%BC%8F%E5%81%87%E8%AE%BE"><span class="toc-text">2.3.3 分布式假设</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-3-4-%E5%85%B1%E7%8E%B0%E7%9F%A9%E9%98%B5"><span class="toc-text">2.3.4 共现矩阵</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-3-5-%E5%90%91%E9%87%8F%E9%97%B4%E7%9A%84%E7%9B%B8%E4%BC%BC%E5%BA%A6"><span class="toc-text">2.3.5 向量间的相似度</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-3-6-%E7%9B%B8%E4%BC%BC%E5%8D%95%E8%AF%8D%E7%9A%84%E6%8E%92%E5%BA%8F"><span class="toc-text">2.3.6 相似单词的排序</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-4-%E5%9F%BA%E4%BA%8E%E8%AE%A1%E6%95%B0%E7%9A%84%E6%96%B9%E6%B3%95%E7%9A%84%E6%94%B9%E8%BF%9B"><span class="toc-text">2.4 基于计数的方法的改进</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#2-4-1-%E7%82%B9%E4%BA%92%E4%BF%A1%E6%81%AF"><span class="toc-text">2.4.1 点互信息</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-4-2-%E9%99%8D%E7%BB%B4"><span class="toc-text">2.4.2 降维</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-4-3-%E5%9F%BA%E4%BA%8E-SVD-%E7%9A%84%E9%99%8D%E7%BB%B4"><span class="toc-text">2.4.3 基于 SVD 的降维</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-4-4-PTB-%E6%95%B0%E6%8D%AE%E9%9B%86"><span class="toc-text">2.4.4 PTB 数据集</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-4-5-%E5%9F%BA%E4%BA%8E-PTB-%E6%95%B0%E6%8D%AE%E9%9B%86%E7%9A%84%E8%AF%84%E4%BB%B7"><span class="toc-text">2.4.5 基于 PTB 数据集的评价</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-5-%E5%B0%8F%E7%BB%93"><span class="toc-text">2.5 小结</span></a></li></ol></li></ol>
+		</div>
+		<div class="rightside-button " id="js-toc">
+			<span>
+				<img src="/image/toc.png" class="rightside_button" alt="Icon">
+			</span>
+		</div>
+		
 <script src="/js/toc.js"></script>
 
-
-
-<script src="/js/gotop.js"></script>
-
-<div style="bottom: 40px;" class="sidebar_button" id="js-go_top">
-    <span>
-        <img style="width: 24px; height: 24px;" src="/image/go_top.png" class="meat-type" alt="Icon">
-    </span>
+	
+	<div class="rightside-button" id="js-go_top">
+		<span>
+			<img src="/image/go_top.png" class="rightside_button" alt="Icon">
+		</span>
+	</div>
+	<div class="rightside-button" id="js-go_bottom">
+		<span>
+			<img src="/image/go_bottom.png" class="rightside_button" alt="Icon">
+		</span>
+	</div>
 </div>
+
 <script>
-    $( '#js-go_top' )
-	.gotoTop( {
-		offset: 500,
+    $('#js-go_top')
+	.gotoPosition( {
 		speed: 300,
-		animationShow: {
-			'transform': 'translate(0,0)',
-			'transition': 'transform .5s ease-in-out'
-		},
-		animationHide: {
-			'transform': 'translate(100px,0)',
-			'transition': 'transform .5s ease-in-out'
-		}
+		target: 'top',
+	} );
+	$('#js-go_bottom')
+	.gotoPosition( {
+		speed: 300,
+		target: 'bottom',
 	} );
 </script>
 <!-- Analytics -->

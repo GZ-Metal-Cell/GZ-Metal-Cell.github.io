@@ -34,7 +34,6 @@ var searchFunc = function (path, search_id, content_id, match_count_id) {
             var $input = document.getElementById(search_id);
             var $resultContent = document.getElementById(content_id);
             $input.addEventListener('input', function () {
-                console.log("start_input");
                 var str = '<ul class=\"search-result-list\">';
                 var keywords = this.value.trim().split(/[\s\-]+/);  // .toLowerCase().split(/[\s\-]+/);
                 $resultContent.innerHTML = "";

@@ -13,7 +13,7 @@
 
 
 <meta name="keywords" content="Python,DigitalSreeni,">
-<meta name="description" content="">
+<meta name="description" content="学习自 Youtube 博主 DigitalSreeni。">
 
 
 <script src="/js/jquery.min.js"></script>
@@ -539,7 +539,7 @@
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">test_path = <span class="hljs-string">&#x27;images/cell_images/test&#x27;</span><br>testing_names = os.listdir(test_path)<br></code></pre></td></tr></table></figure>
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># Get path to all images and save them in a list</span><br><span class="hljs-comment"># image_paths and the corresponding label in image_paths</span><br>image_paths = []<br>image_classes = []<br>class_id = <span class="hljs-number">0</span><br><br><span class="hljs-comment"># To make it easy to list all file names in a directory let us define a function</span><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">imglist</span>(<span class="hljs-params">path</span>):<br>    <span class="hljs-keyword">return</span> [os.path.join(path, f) <span class="hljs-keyword">for</span> f <span class="hljs-keyword">in</span> os.listdir(path)]<br><br><span class="hljs-comment"># Fill the placeholder empty lists with image path, classes, and add class ID number</span><br><br><span class="hljs-keyword">for</span> testing_name <span class="hljs-keyword">in</span> testing_names:<br>    <span class="hljs-built_in">dir</span> = os.path.join(test_path, testing_name)<br>    class_path = imglist(<span class="hljs-built_in">dir</span>)<br>    image_paths+=class_path<br>    image_classes+=[class_id]*<span class="hljs-built_in">len</span>(class_path)<br>    class_id+=<span class="hljs-number">1</span><br>    <br><span class="hljs-comment"># Create feature extraction and keypoint detector objects</span><br><span class="hljs-comment"># SIFT is not available anymore in openCV    </span><br><span class="hljs-comment"># Create List where all the descriptors will be stored</span><br>des_list = []<br><br><span class="hljs-comment"># BRISK is a good replacement to SIFT. ORB also works but didn;t work well for this example</span><br>brisk = cv2.BRISK_create(<span class="hljs-number">30</span>)<br><br><span class="hljs-keyword">for</span> image_path <span class="hljs-keyword">in</span> image_paths:<br>    im = cv2.imread(image_path)<br>    kpts, des = brisk.detectAndCompute(im, <span class="hljs-literal">None</span>)<br>    des_list.append((image_path, des))   <br>    <br><span class="hljs-comment"># Stack all the descriptors vertically in a numpy array</span><br>descriptors = des_list[<span class="hljs-number">0</span>][<span class="hljs-number">1</span>]<br><span class="hljs-keyword">for</span> image_path, descriptor <span class="hljs-keyword">in</span> des_list[<span class="hljs-number">0</span>:]:<br>    descriptors = np.vstack((descriptors, descriptor)) <br><br><span class="hljs-comment"># Calculate the histogram of features</span><br><span class="hljs-comment"># vq Assigns codes from a code book to observations.</span><br><span class="hljs-keyword">from</span> scipy.cluster.vq <span class="hljs-keyword">import</span> vq    <br>test_features = np.zeros((<span class="hljs-built_in">len</span>(image_paths), k), <span class="hljs-string">&quot;float32&quot;</span>)<br><span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-built_in">len</span>(image_paths)):<br>    words, distance = vq(des_list[i][<span class="hljs-number">1</span>],voc)<br>    <span class="hljs-keyword">for</span> w <span class="hljs-keyword">in</span> words:<br>        test_features[i][w] += <span class="hljs-number">1</span><br><br><span class="hljs-comment"># Perform Tf-Idf vectorization</span><br>nbr_occurences = np.<span class="hljs-built_in">sum</span>( (test_features &gt; <span class="hljs-number">0</span>) * <span class="hljs-number">1</span>, axis = <span class="hljs-number">0</span>)<br>idf = np.array(np.log((<span class="hljs-number">1.0</span>*<span class="hljs-built_in">len</span>(image_paths)+<span class="hljs-number">1</span>) / (<span class="hljs-number">1.0</span>*nbr_occurences + <span class="hljs-number">1</span>)), <span class="hljs-string">&#x27;float32&#x27;</span>)<br><br><span class="hljs-comment"># Scale the features</span><br><span class="hljs-comment"># Standardize features by removing the mean and scaling to unit variance</span><br><span class="hljs-comment"># Scaler (stdSlr comes from the pickled file we imported)</span><br>test_features = stdSlr.transform(test_features)<br></code></pre></td></tr></table></figure>
 <ul>
-<li>Until here most of the above code is similar to Train except for kmeans clustering</li>
+<li>Until here most of the above code is similar to Train excerpt for kmeans clustering</li>
 </ul>
 <hr>
 <ul>
@@ -626,10 +626,10 @@ prediction =[&#39;Parasitized&#39;, &#39;Parasitized&#39;, &#39;Uninfected&#39;,
 
     <div class="post-paging">
     
-    <a href="/2022/12/17/DIP-Python%20tutorials%20for%20image%20processing%20and%20machine%20learning(73-78)-U-net/">
+    <a href="/2022/12/17/DIP-Python%20tutorials%20for%20image%20processing%20and%20machine%20learning(70-71)-Deep%20Learning/">
         <div class="post-paging-last">
             <span>上一篇</span>
-            <p>DIP-Python tutorials for image processing and machine learning(73-78)-U-net</p>
+            <p>DIP-Python tutorials for image processing and machine learning(70-71)-Deep Learning</p>
         </div>
     </a>
     
@@ -672,42 +672,68 @@ prediction =[&#39;Parasitized&#39;, &#39;Parasitized&#39;, &#39;Uninfected&#39;,
 </div>
 
 
-	<div style="bottom: 90px;" class="sidebar_button" id="js-toc">
-  <span>
-      <img style="width: 24px; height: 24px;" src="/image/toc.png" class="meat-type" alt="Icon">
-  </span>
-</div>
 
-<div id="post-toc" class="post-toc">
-    <span class="post-toc-title">文章目录</span>
-    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#DIP-Python-tutorials-for-image-processing-and-machine-learning-69-BOVW"><span class="toc-text">DIP-Python tutorials for image processing and machine learning(69)-BOVW</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#69-Image-classification-using-Bag-of-Visual-Words-BOVW"><span class="toc-text">69 - Image classification using Bag of Visual Words -BOVW-</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Train-BOVW"><span class="toc-text">Train_BOVW</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Validate-BOVW"><span class="toc-text">Validate_BOVW</span></a></li></ol></li></ol>
-</div>
+<script src="/js/highlight-tools.js"></script>
 
 
+<link rel="stylesheet" href="/css/plugin/highlight-tools.css">
+
+<script>
+    var codeBlocks = document.querySelectorAll('pre');
+    createHighlightTools(codeBlocks, "/image/copy.png", "/image/close_code_block.png", ); // 调用函数并传递参数
+</script>
+
+<script src="/js/goto_position.js"></script>
+
+<style>
+	.rightside_button
+	{
+		width: 24px;
+		height: 24px;
+		-webkit-user-select: none; /* Chrome, Safari, Opera */
+        -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+        user-select: none; /* Non-prefixed version, supported by most modern browsers */
+	}
+</style>
+
+<div style="z-index: 3; position: fixed; bottom: 30px; right: 20px; transition: all 0.5s ease-out;" id="rightside">
+	
+		<div class="post-toc" id="post-toc">
+			<span class="post-toc-title">导航</span>
+			<ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#DIP-Python-tutorials-for-image-processing-and-machine-learning-69-BOVW"><span class="toc-text">DIP-Python tutorials for image processing and machine learning(69)-BOVW</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#69-Image-classification-using-Bag-of-Visual-Words-BOVW"><span class="toc-text">69 - Image classification using Bag of Visual Words -BOVW-</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Train-BOVW"><span class="toc-text">Train_BOVW</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Validate-BOVW"><span class="toc-text">Validate_BOVW</span></a></li></ol></li></ol>
+		</div>
+		<div class="rightside-button " id="js-toc">
+			<span>
+				<img src="/image/toc.png" class="rightside_button" alt="Icon">
+			</span>
+		</div>
+		
 <script src="/js/toc.js"></script>
 
-
-
-<script src="/js/gotop.js"></script>
-
-<div style="bottom: 40px;" class="sidebar_button" id="js-go_top">
-    <span>
-        <img style="width: 24px; height: 24px;" src="/image/go_top.png" class="meat-type" alt="Icon">
-    </span>
+	
+	<div class="rightside-button" id="js-go_top">
+		<span>
+			<img src="/image/go_top.png" class="rightside_button" alt="Icon">
+		</span>
+	</div>
+	<div class="rightside-button" id="js-go_bottom">
+		<span>
+			<img src="/image/go_bottom.png" class="rightside_button" alt="Icon">
+		</span>
+	</div>
 </div>
+
 <script>
-    $( '#js-go_top' )
-	.gotoTop( {
-		offset: 500,
+    $('#js-go_top')
+	.gotoPosition( {
 		speed: 300,
-		animationShow: {
-			'transform': 'translate(0,0)',
-			'transition': 'transform .5s ease-in-out'
-		},
-		animationHide: {
-			'transform': 'translate(100px,0)',
-			'transition': 'transform .5s ease-in-out'
-		}
+		target: 'top',
+	} );
+	$('#js-go_bottom')
+	.gotoPosition( {
+		speed: 300,
+		target: 'bottom',
 	} );
 </script>
 <!-- Analytics -->
