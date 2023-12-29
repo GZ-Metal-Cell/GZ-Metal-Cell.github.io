@@ -1,4 +1,5 @@
-$("#js-toc").click(function () {
+function showToc()
+{
     var postToc = $("#post-toc");
     var content = $("#content");
     if (postToc.hasClass("show-toc")) {
@@ -8,6 +9,10 @@ $("#js-toc").click(function () {
         content.addClass("show-toc");
         postToc.addClass("show-toc");
     }
+}
+
+$("#js-toc").click(function () {
+    showToc();
 });
 
 function getTopHeadingId() {
