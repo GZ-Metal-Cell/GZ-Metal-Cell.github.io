@@ -33,10 +33,8 @@ function getTopHeadingId() {
 document.addEventListener("scroll", function (event) {
     const tocLinks = document.querySelectorAll('a.toc-link');
     const topHeadingId = getTopHeadingId();
-    console.log(topHeadingId);
     tocLinks.forEach(link => {
         var href =  decodeURIComponent(link.getAttribute('href')).replace(/^#/, '');;
-        console.log(href);
         if (href == topHeadingId) {
             if (!link.classList.contains('active')) {
                 link.classList.add("active");
