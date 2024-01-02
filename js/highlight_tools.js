@@ -11,7 +11,7 @@ function createHighlightTools(codeBlocks, copyIcon, closeCodeBlockIcon, highligh
 function createContainer(codeBlock) {
     // 创建包裹代码块和按钮的容器元素
     var container = document.createElement('div');
-    container.className = 'hightlight-tools';
+    container.className = 'highlight-tools';
     // 将容器元素插入到代码块之前
     codeBlock.parentNode.insertBefore(container, codeBlock);
     return container;

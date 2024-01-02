@@ -1,13 +1,29 @@
+function initToc()
+{
+    var value = localStorage.getItem('aside-status');
+    if (value === null) {  // 如果存储项不存在，则创建它
+        localStorage.setItem('aside-status', "true");
+        value = true;
+    }
+    if (value === "true")
+    {
+        $("#post-toc").addClass("show-toc");
+        $("#content").addClass("show-toc");
+    }
+}
+
 function showToc()
 {
     var postToc = $("#post-toc");
     var content = $("#content");
-    if (postToc.hasClass("show-toc")) {
-        content.removeClass("show-toc");
-        postToc.removeClass("show-toc");
-    } else {
+    if (!postToc.hasClass("show-toc")) {
+        localStorage.setItem('aside-status', true);
         content.addClass("show-toc");
         postToc.addClass("show-toc");
+    } else {
+        content.removeClass("show-toc");
+        postToc.removeClass("show-toc");
+        localStorage.setItem('aside-status', false);
     }
 }
 
