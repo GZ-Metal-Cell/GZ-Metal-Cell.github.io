@@ -5,7 +5,7 @@ function initToc()
         localStorage.setItem('aside-status', "true");
         value = true;
     }
-    if (value === "true")
+    if (value === "true" && !$("#post-toc").hasClass("hidden"))
     {
         $("#post-toc").addClass("show-toc");
         $("#content").addClass("show-toc");

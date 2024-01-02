@@ -14,7 +14,6 @@ else {
     galleryContent.addEventListener('mouseover', function(event) {
         if (event.target.tagName.toLowerCase() === 'img') {
             var title = event.target.getAttribute('alt');
-            console.log(title);
             descriptionContainer.textContent = title;
         }
     });
