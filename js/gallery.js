@@ -1,10 +1,13 @@
 function galleryShowImgs(imgs)
 {
+    console.log(imgs);
     var galleryData = document.querySelector('.gallery-content-data');
 
     sortListByGroup(imgs, parseInt(window.getComputedStyle(galleryData).columnCount)).forEach(function(img) {
     // 创建一个新的 <a> 元素
         var linkElement = document.createElement('a');
+        if (img.src == 'undefined')
+            return;
         linkElement.href = img.src;
         linkElement.title = img.title;
         linkElement.dataset.src = img.src;
