@@ -61,7 +61,7 @@ function createCodeLangText(container, codeBlock) {
     // 创建 <span> 元素
     var span = document.createElement('span');
     span.textContent = codeBlock.querySelector('.hljs').classList.value.replace('hljs ', '').toUpperCase();  // 代码语言
-    if (span.textContent === 'EBNF')
+    if (span.textContent === 'EBNF' || span.textContent === 'ISBL')
         span.textContent = '';
     // 添加类名
     span.className = 'code-lang';

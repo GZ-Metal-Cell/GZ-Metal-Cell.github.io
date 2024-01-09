@@ -6,6 +6,10 @@ window.dispatchEvent(event);
 function handleHexoBlogDecryptEvent() {
     console.log("文章解密成功！");
     initToc();
+    initFancybox();
+    if (typeof initMathjax === 'function') {
+        initMathjax();
+    }  
 }
 
 // 添加事件监听器

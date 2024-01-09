@@ -1,3 +1,7 @@
+$(document).ready(function() {
+    initToc();
+});
+
 function initToc() {
     // 检查是否存在具有类名为 'hbe' 和 'hbe-content' 的元素
     if ($('.hbe.hbe-content').length > 0) {
