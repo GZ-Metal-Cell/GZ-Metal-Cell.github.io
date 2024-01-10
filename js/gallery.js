@@ -5,13 +5,27 @@ function initGallery()
         percentPosition: true,
         columnWidth: '.grid-sizer'
     });
-    // layout Masonry after each image loads
-    $grid.imagesLoaded().progress(function() {
-        $grid.masonry();
-    });
-
+    if(lazyLoad)
+    {  
+        window.imageLazyLoadSetting = {
+            onImageLoaded: function() {
+            $grid.masonry();
+            }
+        };
+    }
+    else
+    {
+        // layout Masonry after each image loads
+        $grid.imagesLoaded().progress(function() {
+            $grid.masonry();
+        });
+    }
     galleryBottom();
 }
+
+$(document).ready(function() {
+    initGallery();
+});
 
 function galleryBottom(){
     if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent))
