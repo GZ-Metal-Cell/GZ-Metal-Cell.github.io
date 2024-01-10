@@ -45,7 +45,7 @@
 	<div class="header-top" id="header-top">
 		<div class="h-left">
 			<a href="/" class="logo">
-				<img src="/image/logo.png" alt="Quiet">
+				<img src="/images/loading.webp" data-original="/image/logo.png" alt="Quiet">
 			</a>
 			<ul class="breadcrumb" id="breadcrumb"></ul>
 		</div>
@@ -207,19 +207,19 @@
     <div class="my_foot">
         
         <a target="_blank" rel="noopener" href="https://weibo.com/u/5020307235">
-            <img src="/image/Weibo.png" alt="Quiet主题">
+            <img src="/images/loading.webp" data-original="/image/Weibo.png" alt="Quiet主题">
         </a>
         
         <a target="_blank" rel="noopener" href="https://tieba.baidu.com/home/main?id=tb.1.ff6d2775.vFH7wrdW2ZjPCmyBHJcjnA">
-            <img src="/image/Tieba.png" alt="Quiet主题">
+            <img src="/images/loading.webp" data-original="/image/Tieba.png" alt="Quiet主题">
         </a>
         
         <a target="_blank" rel="noopener" href="https://space.bilibili.com/11547880">
-            <img src="/image/Bilibili.png" alt="Quiet主题">
+            <img src="/images/loading.webp" data-original="/image/Bilibili.png" alt="Quiet主题">
         </a>
         
         <a target="_blank" rel="noopener" href="https://github.com/GZ-Metal-Cell">
-            <img src="/image/github.png" alt="Quiet主题">
+            <img src="/images/loading.webp" data-original="/image/github.png" alt="Quiet主题">
         </a>
         
     </div>
@@ -794,7 +794,7 @@ k= 1 压缩后的矩阵:
  [2.  4.  8.1 5.  2.4]]
 </code></pre><p>可以选取合适的k值, 保留较大的奇异值和特征向量, 实现用较少的数据量达到较好的矩阵近似效果.</p>
 <h4 id="6-6-综合实例1-——利用SVD对图像进行压缩"><a href="#6-6-综合实例1-——利用SVD对图像进行压缩" class="headerlink" title="6.6 综合实例1 ——利用SVD对图像进行压缩"></a>6.6 综合实例1 ——利用SVD对图像进行压缩</h4><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> PIL <span class="hljs-keyword">import</span> Image<br><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">import</span> matplotlib.pyplot <span class="hljs-keyword">as</span> plt<br><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">get_approx_SVD1</span>(<span class="hljs-params">data, percent</span>):<br>    <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">    SVD并还原压缩后的数据, 取整体奇异值的百分比</span><br><span class="hljs-string">    :param data: 原始矩阵</span><br><span class="hljs-string">    :param percent: 奇异值总和百分比</span><br><span class="hljs-string">    &quot;&quot;&quot;</span><br>    U, s, VT = np.linalg.svd(data)<br>    Sigma = np.zeros(np.shape(data))<br>    Sigma[:<span class="hljs-built_in">len</span>(s), :<span class="hljs-built_in">len</span>(s)] = np.diag(s)<br>    count = (<span class="hljs-built_in">int</span>)(<span class="hljs-built_in">sum</span>(s)) * percent  <span class="hljs-comment"># 取整体奇异值的百分比</span><br>    k = -<span class="hljs-number">1</span>  <span class="hljs-comment"># k是奇异值总和的百分比的个数</span><br>    curSum = <span class="hljs-number">0</span>  <span class="hljs-comment"># 初始为第一个奇异值</span><br>    <span class="hljs-keyword">while</span> curSum &lt;= count:  <span class="hljs-comment"># 当取的奇异值之和 &lt;= 应取得奇异值之和 时:</span><br>        k += <span class="hljs-number">1</span><br>        curSum += s[k]<br>    D = U[:, :k].dot(Sigma[:k, :k].dot(VT[:k, :]))  <span class="hljs-comment"># 取 U 的前 k 列, Sigma 的前 k 阶方阵, VT 的前 k 行</span><br>    D[D &lt; <span class="hljs-number">0</span>] = <span class="hljs-number">0</span>  <span class="hljs-comment"># 钳制颜色范围</span><br>    D[D &gt; <span class="hljs-number">255</span>] = <span class="hljs-number">255</span><br>    <span class="hljs-comment"># numpy.rint()将数组的元素四舍五入为最接近的整数</span><br>    <span class="hljs-keyword">return</span> np.rint(D).astype(<span class="hljs-string">&quot;uint8&quot;</span>)<br><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">get_approx_SVD2</span>(<span class="hljs-params">data, percent</span>):<br>    <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">    SVD并还原压缩后的数据, 取奇异值之和的百分比</span><br><span class="hljs-string">    :param data: 原始矩阵</span><br><span class="hljs-string">    :param percent: 奇异值个数百分比</span><br><span class="hljs-string">    &quot;&quot;&quot;</span><br>    U, s, VT = np.linalg.svd(data)<br>    Sigma = np.zeros(np.shape(data))<br>    Sigma[:<span class="hljs-built_in">len</span>(s), :<span class="hljs-built_in">len</span>(s)] = np.diag(s)<br>    k = (<span class="hljs-built_in">int</span>)(percent * <span class="hljs-built_in">len</span>(s))  <span class="hljs-comment"># 取最大的前 k 个奇异值</span><br>    D = U[:, :k].dot(Sigma[:k, :k].dot(VT[:k, :]))<br>    D[D &lt; <span class="hljs-number">0</span>] = <span class="hljs-number">0</span><br>    D[D &gt; <span class="hljs-number">255</span>] = <span class="hljs-number">255</span><br>    <span class="hljs-keyword">return</span> np.rint(D).astype(<span class="hljs-string">&quot;uint8&quot;</span>)<br><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">rebuild_img</span>(<span class="hljs-params">filename, p, get_approx_SVD, index</span>):<br>    <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">    导入图像, 进行SVD压缩, 并重构图像</span><br><span class="hljs-string">    :param filename: 文件名</span><br><span class="hljs-string">    :param p: 百分比</span><br><span class="hljs-string">    :param get_approx_SVD: 调用的SVD筛选方法</span><br><span class="hljs-string">    :param index: 显示图像的序号</span><br><span class="hljs-string">    &quot;&quot;&quot;</span><br>    img = Image.<span class="hljs-built_in">open</span>(filename, <span class="hljs-string">&#x27;r&#x27;</span>)<br>    a = np.array(img)<br>    R0 = a[:, :, <span class="hljs-number">0</span>]  <span class="hljs-comment"># 红色</span><br>    G0 = a[:, :, <span class="hljs-number">1</span>]  <span class="hljs-comment"># 绿色</span><br>    B0 = a[:, :, <span class="hljs-number">2</span>]  <span class="hljs-comment"># 蓝色</span><br>    R = get_approx_SVD(R0, p)<br>    G = get_approx_SVD(G0, p)<br>    B = get_approx_SVD(B0, p)<br>    I = np.stack((R, G, B), <span class="hljs-number">2</span>)<br><br>    <span class="hljs-comment"># 加载图像</span><br>    plt.subplot(<span class="hljs-number">2</span>, <span class="hljs-number">5</span>, index)<br>    <span class="hljs-keyword">if</span> get_approx_SVD == get_approx_SVD1:<br>        plt.title(<span class="hljs-string">&quot;SVD1 &quot;</span> + <span class="hljs-built_in">str</span>((<span class="hljs-built_in">int</span>)(p * <span class="hljs-number">100</span>)) + <span class="hljs-string">&#x27;%&#x27;</span>)<br>    <span class="hljs-keyword">else</span>:<br>        plt.title(<span class="hljs-string">&quot;SVD2 &quot;</span> + <span class="hljs-built_in">str</span>((<span class="hljs-built_in">int</span>)(p * <span class="hljs-number">100</span>)) + <span class="hljs-string">&#x27;%&#x27;</span>)<br>    plt.imshow(I)<br>    plt.axis(<span class="hljs-string">&#x27;off&#x27;</span>)<br><br><br><span class="hljs-keyword">if</span> __name__ == <span class="hljs-string">&quot;__main__&quot;</span>:<br>    filename = <span class="hljs-string">&quot;lenna.bmp&quot;</span><br>    plt.figure(figsize=(<span class="hljs-number">10</span>, <span class="hljs-number">5</span>))<br>    index = <span class="hljs-number">0</span><br>    <span class="hljs-keyword">for</span> p <span class="hljs-keyword">in</span> np.arange(<span class="hljs-number">0.2</span>, <span class="hljs-number">1.2</span>, <span class="hljs-number">0.2</span>):<br>        index += <span class="hljs-number">1</span><br>        rebuild_img(filename, p, get_approx_SVD1, index)<br>    <span class="hljs-keyword">for</span> p <span class="hljs-keyword">in</span> np.arange(<span class="hljs-number">0.2</span>, <span class="hljs-number">1.2</span>, <span class="hljs-number">0.2</span>):<br>        index += <span class="hljs-number">1</span><br>        rebuild_img(filename, p, get_approx_SVD2, index)<br>    plt.show()<br><br></code></pre></td></tr></table></figure>
-<p><img src="6.6.png" alt="png"></p>
+<p><img src="/images/loading.webp" data-original="6.6.png" alt="png"></p>
 <h4 id="6-7-综合实例2——利用SVD推荐商品"><a href="#6-7-综合实例2——利用SVD推荐商品" class="headerlink" title="6.7 综合实例2——利用SVD推荐商品"></a>6.7 综合实例2——利用SVD推荐商品</h4><h5 id="准备工作，调入相关的库"><a href="#准备工作，调入相关的库" class="headerlink" title="准备工作，调入相关的库"></a>准备工作，调入相关的库</h5><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">from</span> numpy <span class="hljs-keyword">import</span> linalg <span class="hljs-keyword">as</span> la<br><span class="hljs-keyword">import</span> pandas <span class="hljs-keyword">as</span> pd<br><span class="hljs-keyword">import</span> time<br></code></pre></td></tr></table></figure>
 <h5 id="1-加载测试数据集，-形成loadExData-函数"><a href="#1-加载测试数据集，-形成loadExData-函数" class="headerlink" title="1 加载测试数据集， 形成loadExData()函数"></a>1 加载测试数据集， 形成loadExData()函数</h5><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">loadExData</span>():<br>    <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">    行: 代表用户</span><br><span class="hljs-string">    列: 代表电影</span><br><span class="hljs-string">    值: 代表用户对电影的评分, 0表示未评分</span><br><span class="hljs-string">    :return: 将csv转换成的np.array数组</span><br><span class="hljs-string">    &quot;&quot;&quot;</span><br>    <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">    pd.read_csv():</span><br><span class="hljs-string">    sep：读取csv文件时指定的分隔符，默认为逗号。</span><br><span class="hljs-string">    header：设置导入 DataFrame 的列名称(第一行)，默认为 &quot;infer&quot;</span><br><span class="hljs-string">    &quot;&quot;&quot;</span><br>    <span class="hljs-keyword">return</span> np.array(pd.read_csv(<span class="hljs-string">&quot;评分.csv&quot;</span>, sep=<span class="hljs-string">&quot;,&quot;</span>, header=<span class="hljs-literal">None</span>))<br></code></pre></td></tr></table></figure>
 <h5 id="2-计算相似度-形成ecludSim-欧式距离-pearsSim-皮尔逊相关系数-cosSim-余弦相似度-三个判断相似度的函数"><a href="#2-计算相似度-形成ecludSim-欧式距离-pearsSim-皮尔逊相关系数-cosSim-余弦相似度-三个判断相似度的函数" class="headerlink" title="2 计算相似度, 形成ecludSim()欧式距离, pearsSim()皮尔逊相关系数, cosSim() 余弦相似度 三个判断相似度的函数"></a>2 计算相似度, 形成ecludSim()欧式距离, pearsSim()皮尔逊相关系数, cosSim() 余弦相似度 三个判断相似度的函数</h5><ul>
@@ -1321,19 +1321,19 @@ user_item_rating 矩阵的大小 (943, 1682)
 	<div class="contact">
 		
 		<a target="_blank" rel="noopener" href="https://weibo.com/u/5020307235">
-			<img src="/image/Weibo.png" alt="Quiet主题">
+			<img src="/images/loading.webp" data-original="/image/Weibo.png" alt="Quiet主题">
 		</a>
 		
 		<a target="_blank" rel="noopener" href="https://tieba.baidu.com/home/main?id=tb.1.ff6d2775.vFH7wrdW2ZjPCmyBHJcjnA">
-			<img src="/image/Tieba.png" alt="Quiet主题">
+			<img src="/images/loading.webp" data-original="/image/Tieba.png" alt="Quiet主题">
 		</a>
 		
 		<a target="_blank" rel="noopener" href="https://space.bilibili.com/11547880">
-			<img src="/image/Bilibili.png" alt="Quiet主题">
+			<img src="/images/loading.webp" data-original="/image/Bilibili.png" alt="Quiet主题">
 		</a>
 		
 		<a target="_blank" rel="noopener" href="https://github.com/GZ-Metal-Cell">
-			<img src="/image/github.png" alt="Quiet主题">
+			<img src="/images/loading.webp" data-original="/image/github.png" alt="Quiet主题">
 		</a>
 		
 	</div>
@@ -1374,7 +1374,7 @@ user_item_rating 矩阵的大小 (943, 1682)
 		</div>
 		<div class="rightside-button hidden" id="js-toc">
 			<span>
-				<img src="/image/toc.png" class="rightside-button-icon" alt="Icon">
+				<img src="/images/loading.webp" data-original="/image/toc.png" class="rightside-button-icon" alt="Icon">
 			</span>
 		</div>
 		
@@ -1383,12 +1383,12 @@ user_item_rating 矩阵的大小 (943, 1682)
 	
 	<div class="rightside-button" id="js-go_top">
 		<span>
-			<img src="/image/go_top.png" class="rightside-button-icon" alt="Icon">
+			<img src="/images/loading.webp" data-original="/image/go_top.png" class="rightside-button-icon" alt="Icon">
 		</span>
 	</div>
 	<div class="rightside-button" id="js-go_bottom">
 		<span>
-			<img src="/image/go_bottom.png" class="rightside-button-icon" alt="Icon">
+			<img src="/images/loading.webp" data-original="/image/go_bottom.png" class="rightside-button-icon" alt="Icon">
 		</span>
 	</div>
 </div>
@@ -1447,6 +1447,19 @@ user_item_rating 矩阵的大小 (943, 1682)
 <script>
 	console.log('\n %c Hexo-Quiet 主题 %c https://github.com/79e/hexo-theme-quiet \n', 'color: #fadfa3; background: #030307; padding:5px 0;', 'background: #fadfa3; padding:5px 0;')
 </script>
-	</body>
+	
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 5,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body>
 </html>
 
