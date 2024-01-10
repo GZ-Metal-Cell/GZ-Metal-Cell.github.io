@@ -1,3 +1,18 @@
+function initGallery()
+{
+    var $grid = $('.grid').masonry({
+        itemSelector: '.grid-item',
+        percentPosition: true,
+        columnWidth: '.grid-sizer'
+    });
+    // layout Masonry after each image loads
+    $grid.imagesLoaded().progress(function() {
+        $grid.masonry();
+    });
+
+    galleryBottom();
+}
+
 function galleryBottom(){
     if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent))
     {
