@@ -21,8 +21,9 @@ function initToc() {
         value = true;
     }
     if (value === "true") {
-        $("#post-toc").addClass("show-toc");
-        $("#content").addClass("show-toc");
+        $(".post-toc").addClass("show-toc");
+        $(".post-content").addClass("show-toc");
+        $(".post-paging").addClass("show-toc");
     }
     createToc();
 }
@@ -31,7 +32,7 @@ function createToc() {
     var toc = $('.toc');
     toc.empty();
 
-    var headings = $('#content').find('h1, h2, h3, h4, h5, h6');
+    var headings = $('.post-content').find('h1, h2, h3, h4, h5, h6');
     var currentLevel = 1;
     var currentList = toc;
 
@@ -88,21 +89,24 @@ function createToc() {
 
 
 $("#js-toc").click(function () {
-    var postToc = $("#post-toc");
-    var content = $("#content");
+    var postToc = $(".post-toc");
+    var postContent = $(".post-content");
+    var postPaging = $(".post-paging");
     if (!postToc.hasClass("show-toc")) {
         localStorage.setItem('aside-status', true);
-        content.addClass("show-toc");
+        postContent.addClass("show-toc");
         postToc.addClass("show-toc");
+        postPaging.addClass("show-toc");
     } else {
-        content.removeClass("show-toc");
+        postContent.removeClass("show-toc");
         postToc.removeClass("show-toc");
+        postPaging.removeClass("show-toc");
         localStorage.setItem('aside-status', false);
     }
 });
 
 function getTopHeadingId() {
-    const headings = document.querySelector('#content').querySelectorAll('h1, h2, h3, h4, h5, h6');
+    const headings = document.querySelector('.post-content').querySelectorAll('h1, h2, h3, h4, h5, h6');
     let topHeadingId = null;
     let minDistanceFromTop = Infinity;
     for (const heading of headings) {
