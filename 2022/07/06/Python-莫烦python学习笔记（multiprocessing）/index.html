@@ -28,10 +28,6 @@
 <script src="/js/fancybox-images.js"></script>
 
 
-    
-<script src="/js/gitalk.min.js"></script>
-
-
 
 
 	<meta name="generator" content="Hexo 6.1.0"></head>
@@ -389,8 +385,7 @@
     </div>
 </div>
     <div class="post-content" id="content">
-  <div id="article" class="post-content-info">
-    <h1 id="Python-莫烦python学习笔记（multiprocessing）"><a href="#Python-莫烦python学习笔记（multiprocessing）" class="headerlink" title="Python-莫烦python学习笔记（multiprocessing）"></a>Python-莫烦python学习笔记（multiprocessing）</h1><h2 id="2-创建进程"><a href="#2-创建进程" class="headerlink" title="2 创建进程"></a>2 创建进程</h2><p>jupyter只能跟踪主进程，没法跟踪子进程。</p>
+    <div id="article" class="post-content-info"><h1 id="Python-莫烦python学习笔记（multiprocessing）"><a href="#Python-莫烦python学习笔记（multiprocessing）" class="headerlink" title="Python-莫烦python学习笔记（multiprocessing）"></a>Python-莫烦python学习笔记（multiprocessing）</h1><h2 id="2-创建进程"><a href="#2-创建进程" class="headerlink" title="2 创建进程"></a>2 创建进程</h2><p>jupyter只能跟踪主进程，没法跟踪子进程。</p>
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> multiprocessing <span class="hljs-keyword">as</span> mp<br><span class="hljs-keyword">import</span> threading <span class="hljs-keyword">as</span> td<br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">job</span>(<span class="hljs-params">a, d</span>):<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;aaaa&#x27;</span>)<br>    <br>    <br><span class="hljs-keyword">if</span> __name__ == <span class="hljs-string">&#x27;__main__&#x27;</span>:<br>    p1 = mp.Process(target=job, args=(<span class="hljs-number">1</span>, <span class="hljs-number">2</span>))<br>    p1.start()<br>    p1.join()<br></code></pre></td></tr></table></figure>
 <h2 id="3-queue-进程输出"><a href="#3-queue-进程输出" class="headerlink" title="3 queue 进程输出"></a>3 queue 进程输出</h2><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> multiprocessing <span class="hljs-keyword">as</span> mp<br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">job</span>(<span class="hljs-params">q</span>):<br>    res = <span class="hljs-number">0</span><br>    <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">1000</span>):<br>        res += i + i ** <span class="hljs-number">2</span> + i ** <span class="hljs-number">3</span><br>    q.put(res)<br>    <br><br><span class="hljs-keyword">if</span> __name__ == <span class="hljs-string">&#x27;__main__&#x27;</span>:<br>    q = mp.Queue()<br>    p1 = mp.Process(target=job, args=(q,))<br>    p2 = mp.Process(target=job, args=(q,))<br>    p1.start()<br>    p2.start()<br>    p1.join()<br>    p2.join()<br>    res1 = q.get()<br>    res2 = q.get()<br>    <span class="hljs-built_in">print</span>(res1 + res2)<br></code></pre></td></tr></table></figure>
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-number">499667166000</span><br></code></pre></td></tr></table></figure>
@@ -408,9 +403,11 @@
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">p1: <span class="hljs-number">1</span><br>p2: <span class="hljs-number">4</span><br>p1: <span class="hljs-number">5</span><br>p2: <span class="hljs-number">8</span><br>p1: <span class="hljs-number">9</span><br>p2: <span class="hljs-number">12</span><br>p1: <span class="hljs-number">13</span><br>p2: <span class="hljs-number">16</span><br>p1: <span class="hljs-number">17</span><br>p2: <span class="hljs-number">20</span><br>p1: <span class="hljs-number">21</span><br>p2: <span class="hljs-number">24</span><br>p1: <span class="hljs-number">25</span><br>p2: <span class="hljs-number">28</span><br>p1: <span class="hljs-number">29</span><br>p2: <span class="hljs-number">32</span><br>p1: <span class="hljs-number">33</span><br>p2: <span class="hljs-number">36</span><br>p1: <span class="hljs-number">37</span><br>p2: <span class="hljs-number">40</span><br></code></pre></td></tr></table></figure>
 <h3 id="加锁"><a href="#加锁" class="headerlink" title="加锁:"></a>加锁:</h3><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> multiprocessing <span class="hljs-keyword">as</span> mp<br><span class="hljs-keyword">import</span> time<br><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">job</span>(<span class="hljs-params">v, num, name, l</span>):<br>    l.acquire()  <span class="hljs-comment"># 上锁</span><br>    <span class="hljs-keyword">for</span> _ <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">10</span>):<br>        time.sleep(<span class="hljs-number">0.1</span>)<br>        v.value += num<br>        <span class="hljs-built_in">print</span>(name + <span class="hljs-string">&#x27;: &#x27;</span> + <span class="hljs-built_in">str</span>(v.value))<br>    l.release()  <span class="hljs-comment"># 解锁</span><br><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">multicore</span>():<br>    l = mp.Lock()<br>    v = mp.Value(<span class="hljs-string">&#x27;i&#x27;</span>, <span class="hljs-number">0</span>)  <span class="hljs-comment"># 定义一个共享内存</span><br>    p1 = mp.Process(target=job, args=(v, <span class="hljs-number">1</span>, <span class="hljs-string">&#x27;p1&#x27;</span>, l))<br>    p2 = mp.Process(target=job, args=(v, <span class="hljs-number">3</span>, <span class="hljs-string">&#x27;p2&#x27;</span>, l))<br>    p1.start()<br>    p2.start()<br>    p1.join()<br>    p2.join()<br><br><br><span class="hljs-keyword">if</span> __name__ == <span class="hljs-string">&#x27;__main__&#x27;</span>:<br>    multicore()<br><br></code></pre></td></tr></table></figure>
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">p1: <span class="hljs-number">1</span><br>p1: <span class="hljs-number">2</span><br>p1: <span class="hljs-number">3</span><br>p1: <span class="hljs-number">4</span><br>p1: <span class="hljs-number">5</span><br>p1: <span class="hljs-number">6</span><br>p1: <span class="hljs-number">7</span><br>p1: <span class="hljs-number">8</span><br>p1: <span class="hljs-number">9</span><br>p1: <span class="hljs-number">10</span><br>p2: <span class="hljs-number">13</span><br>p2: <span class="hljs-number">16</span><br>p2: <span class="hljs-number">19</span><br>p2: <span class="hljs-number">22</span><br>p2: <span class="hljs-number">25</span><br>p2: <span class="hljs-number">28</span><br>p2: <span class="hljs-number">31</span><br>p2: <span class="hljs-number">34</span><br>p2: <span class="hljs-number">37</span><br>p2: <span class="hljs-number">40</span><br></code></pre></td></tr></table></figure>
-
-  </div>
-  <div id="gitalk-container"></div>
+</div>
+    
+    
+      <div class="giscus"></div>
+  
 </div>
 
 <script>
@@ -458,6 +455,7 @@
     }
   }
 </style>
+
     <div class="post-paging">
     
     <a href="/2022/07/06/Python-%E8%8E%AB%E7%83%A6python%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%88multithreading%EF%BC%89/">
@@ -593,18 +591,28 @@
 
 
 	
-    <script src="/js/md5.min.js"></script>
-    <!-- Gitalk -->
     <script>
-        const data = '{"clientID":"f3a4ea928b90c73f66d4","clientSecret":"d697ef6f42e83e83c49ff8d19e753f36bc375015","repo":"GZ-Metal-Cell.github.io","owner":"GZ-Metal-Cell","admin":"GZ-Metal-Cell"}'
-        const gitalk = new Gitalk({
-            ...JSON.parse( data),
-            id:md5(location.pathname), //  location.pathname,
-            distractionFreeMode:false
-        })
-        
-        if(Boolean('true')){
-            gitalk.render('gitalk-container')
+        if($('.giscus'))
+        {
+            var scriptElement = document.createElement('script');
+            scriptElement.src = 'https://giscus.app/client.js';
+            scriptElement.setAttribute('data-repo', 'GZ-Metal-Cell/GZ-Metal-Cell.github.io');
+            scriptElement.setAttribute('data-repo-id', 'R_kgDOIHLEOQ');
+            scriptElement.setAttribute('data-category', 'Announcements');
+            scriptElement.setAttribute('data-category-id', 'DIC_kwDOIHLEOc4CcVwP');
+            scriptElement.setAttribute('data-mapping', 'title');
+            scriptElement.setAttribute('data-strict', '1');
+            scriptElement.setAttribute('data-reactions-enabled', '');
+            scriptElement.setAttribute('data-emit-metadata', '0');
+            scriptElement.setAttribute('data-input-position', 'top');
+            scriptElement.setAttribute('data-theme', 'light');
+            scriptElement.setAttribute('data-lang', 'zh-CN');
+            
+                scriptElement.setAttribute('data-loading', 'lazy');
+            
+            scriptElement.setAttribute('crossorigin', 'anonymous');
+            scriptElement.async = true;
+            document.head.appendChild(scriptElement);
         }
     </script>
 

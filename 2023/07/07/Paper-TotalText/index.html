@@ -28,10 +28,6 @@
 <script src="/js/fancybox-images.js"></script>
 
 
-    
-<script src="/js/gitalk.min.js"></script>
-
-
 
 
     
@@ -395,8 +391,7 @@
     </div>
 </div>
     <div class="post-content" id="content">
-  <div id="article" class="post-content-info">
-    <h2 id="Paper-TotalText"><a href="#Paper-TotalText" class="headerlink" title="Paper-TotalText"></a>Paper-TotalText</h2><h2 id="资源"><a href="#资源" class="headerlink" title="资源"></a>资源</h2><ul>
+    <div id="article" class="post-content-info"><h2 id="Paper-TotalText"><a href="#Paper-TotalText" class="headerlink" title="Paper-TotalText"></a>Paper-TotalText</h2><h2 id="资源"><a href="#资源" class="headerlink" title="资源"></a>资源</h2><ul>
 <li>PaperWithCode：<a target="_blank" rel="noopener" href="https://paperswithcode.com/dataset/total-text">Total-Text Dataset | Papers With Code</a></li>
 <li>Arxiv：<a target="_blank" rel="noopener" href="https://arxiv.org/abs/1710.10400v1">[1710.10400v1] Total-Text: A Comprehensive Dataset for Scene Text Detection and Recognition (arxiv.org)</a></li>
 <li>GitHub：<a target="_blank" rel="noopener" href="https://github.com/cs-chan/Total-Text-Dataset">cs-chan/Total-Text-Dataset: Total Text Dataset. It consists of 1555 images with more than 3 different text orientations: Horizontal, Multi-Oriented, and Curved, one of a kind. (github.com)</a></li>
@@ -949,9 +944,11 @@
 <h2 id="可视化数据集"><a href="#可视化数据集" class="headerlink" title="可视化数据集"></a>可视化数据集</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;根据数据集的<strong>源图像</strong>以及它的 <strong>txt 标注</strong>格式，再一阵 ChatGPT 和一阵操作，写一个可视化代码：</p>
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> cv2<br><span class="hljs-keyword">import</span> os<br><span class="hljs-keyword">import</span> matplotlib.pyplot <span class="hljs-keyword">as</span> plt<br><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><br>index = <span class="hljs-number">396</span><br><br>image_dir = <span class="hljs-string">r&#x27;E:\dataset\TotalText\Images\Test\\&#x27;</span><br>label_dir = <span class="hljs-string">r&#x27;E:\dataset\TotalText\GroundTruth\Text\Test\\&#x27;</span><br><br>image_path = os.path.join(image_dir, <span class="hljs-string">&#x27;img&#x27;</span> + <span class="hljs-built_in">str</span>(index) + <span class="hljs-string">&#x27;.jpg&#x27;</span>)<br>label_path = os.path.join(label_dir, <span class="hljs-string">&#x27;poly_gt_img&#x27;</span> + <span class="hljs-built_in">str</span>(index) + <span class="hljs-string">&#x27;.txt&#x27;</span>)<br><br>image_origin = cv2.imread(image_path)<br>image = image_origin.copy()<br>height, width, _ = image.shape<br>label_file = <span class="hljs-built_in">open</span>(label_path, <span class="hljs-string">&#x27;r&#x27;</span>)<br>annotations = label_file.readlines()<br>label_file.close()<br><br><span class="hljs-keyword">for</span> annotation <span class="hljs-keyword">in</span> annotations:<br>    x = [<span class="hljs-built_in">int</span>(num) <span class="hljs-keyword">for</span> num <span class="hljs-keyword">in</span> annotation[annotation.find(<span class="hljs-string">&quot;x: [[&quot;</span>) + <span class="hljs-number">5</span>: annotation.find(<span class="hljs-string">&quot;]], y: [[&quot;</span>)].split()]<br>    y = [<span class="hljs-built_in">int</span>(num) <span class="hljs-keyword">for</span> num <span class="hljs-keyword">in</span> annotation[annotation.find(<span class="hljs-string">&quot;y: [[&quot;</span>) + <span class="hljs-number">5</span>: annotation.find(<span class="hljs-string">&quot;]], ornt: [&quot;</span>)].split()]<br>    ornt = annotation[annotation.find(<span class="hljs-string">&quot;ornt: [u&#x27;&quot;</span>) + <span class="hljs-number">9</span>: annotation.find(<span class="hljs-string">&quot;&#x27;], transcriptions: [&quot;</span>)]<br>    transcriptions = annotation[annotation.find(<span class="hljs-string">&quot;transcriptions: [u&#x27;&quot;</span>) + <span class="hljs-number">19</span>: -<span class="hljs-number">3</span>]<br>    <br>    points = np.array([x, y], np.int32).T<br>    <br>    cv2.polylines(image, [points], isClosed=<span class="hljs-literal">True</span>, color=(<span class="hljs-number">255</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>), thickness=<span class="hljs-number">2</span>)<br>    <span class="hljs-keyword">for</span> p <span class="hljs-keyword">in</span> points:<br>        cv2.circle(image, (p[<span class="hljs-number">0</span>], p[<span class="hljs-number">1</span>]), <span class="hljs-built_in">int</span>(<span class="hljs-built_in">min</span>(height, width) / <span class="hljs-number">150</span>), (<span class="hljs-number">0</span>, <span class="hljs-number">255</span>, <span class="hljs-number">255</span>), -<span class="hljs-number">1</span>)<br><br>    cv2.putText(image, ornt, (x[<span class="hljs-number">0</span>], y[<span class="hljs-number">0</span>] + <span class="hljs-built_in">int</span>(<span class="hljs-built_in">min</span>(height, width) / <span class="hljs-number">50</span>)), cv2.FONT_HERSHEY_SIMPLEX,<br>                <span class="hljs-built_in">min</span>(height, width) / <span class="hljs-number">1000</span>, (<span class="hljs-number">255</span>, <span class="hljs-number">0</span>, <span class="hljs-number">255</span>), <span class="hljs-built_in">int</span>(<span class="hljs-built_in">min</span>(height, width) / <span class="hljs-number">500</span>))<br>    cv2.putText(image, transcriptions, (x[<span class="hljs-number">0</span>], y[<span class="hljs-number">0</span>] - <span class="hljs-built_in">int</span>(<span class="hljs-built_in">min</span>(height, width) / <span class="hljs-number">150</span>)), cv2.FONT_HERSHEY_SIMPLEX,<br>                <span class="hljs-built_in">min</span>(height, width) / <span class="hljs-number">1000</span>, (<span class="hljs-number">0</span>, <span class="hljs-number">255</span>, <span class="hljs-number">0</span>), <span class="hljs-built_in">int</span>(<span class="hljs-built_in">min</span>(height, width) / <span class="hljs-number">500</span>))<br>    <br>fig, axes = plt.subplots(nrows=<span class="hljs-number">1</span>, ncols=<span class="hljs-number">2</span>, figsize=(<span class="hljs-number">16</span>, <span class="hljs-number">9</span>))<br>axes = axes.flatten()<br><br>axes[<span class="hljs-number">0</span>].imshow(cv2.cvtColor(image_origin, cv2.COLOR_BGR2RGB))<br>axes[<span class="hljs-number">0</span>].axis(<span class="hljs-string">&#x27;off&#x27;</span>)<br>axes[<span class="hljs-number">0</span>].set_title(<span class="hljs-string">&#x27;Origin&#x27;</span>)<br><br>axes[<span class="hljs-number">1</span>].imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))<br>axes[<span class="hljs-number">1</span>].axis(<span class="hljs-string">&#x27;off&#x27;</span>)<br>axes[<span class="hljs-number">1</span>].set_title(<span class="hljs-string">&#x27;Annotation&#x27;</span>)<br><br>plt.tight_layout()<br>plt.show()<br></code></pre></td></tr></table></figure>
 <p><img src="/images/loading.webp" data-original="Vis.png" alt="png"></p>
-
-  </div>
-  <div id="gitalk-container"></div>
+</div>
+    
+    
+      <div class="giscus"></div>
+  
 </div>
 
 <script>
@@ -999,6 +996,7 @@
     }
   }
 </style>
+
     <div class="post-paging">
     
     <a href="/2023/07/12/Server-MindOCR/">
@@ -1134,18 +1132,28 @@
 
 
 	
-    <script src="/js/md5.min.js"></script>
-    <!-- Gitalk -->
     <script>
-        const data = '{"clientID":"f3a4ea928b90c73f66d4","clientSecret":"d697ef6f42e83e83c49ff8d19e753f36bc375015","repo":"GZ-Metal-Cell.github.io","owner":"GZ-Metal-Cell","admin":"GZ-Metal-Cell"}'
-        const gitalk = new Gitalk({
-            ...JSON.parse( data),
-            id:md5(location.pathname), //  location.pathname,
-            distractionFreeMode:false
-        })
-        
-        if(Boolean('true')){
-            gitalk.render('gitalk-container')
+        if($('.giscus'))
+        {
+            var scriptElement = document.createElement('script');
+            scriptElement.src = 'https://giscus.app/client.js';
+            scriptElement.setAttribute('data-repo', 'GZ-Metal-Cell/GZ-Metal-Cell.github.io');
+            scriptElement.setAttribute('data-repo-id', 'R_kgDOIHLEOQ');
+            scriptElement.setAttribute('data-category', 'Announcements');
+            scriptElement.setAttribute('data-category-id', 'DIC_kwDOIHLEOc4CcVwP');
+            scriptElement.setAttribute('data-mapping', 'title');
+            scriptElement.setAttribute('data-strict', '1');
+            scriptElement.setAttribute('data-reactions-enabled', '');
+            scriptElement.setAttribute('data-emit-metadata', '0');
+            scriptElement.setAttribute('data-input-position', 'top');
+            scriptElement.setAttribute('data-theme', 'light');
+            scriptElement.setAttribute('data-lang', 'zh-CN');
+            
+                scriptElement.setAttribute('data-loading', 'lazy');
+            
+            scriptElement.setAttribute('crossorigin', 'anonymous');
+            scriptElement.async = true;
+            document.head.appendChild(scriptElement);
         }
     </script>
 

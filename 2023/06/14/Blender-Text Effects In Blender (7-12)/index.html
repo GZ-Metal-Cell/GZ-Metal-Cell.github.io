@@ -28,10 +28,6 @@
 <script src="/js/fancybox-images.js"></script>
 
 
-    
-<script src="/js/gitalk.min.js"></script>
-
-
 
 
 	<meta name="generator" content="Hexo 6.1.0"></head>
@@ -389,8 +385,7 @@
     </div>
 </div>
     <div class="post-content" id="content">
-  <div id="article" class="post-content-info">
-    <h2 id="Blender-Text-Effects-In-Blender-7-12"><a href="#Blender-Text-Effects-In-Blender-7-12" class="headerlink" title="Blender-Text Effects In Blender (7-12)"></a>Blender-Text Effects In Blender (7-12)</h2><h2 id="资源"><a href="#资源" class="headerlink" title="资源"></a>资源</h2><ul>
+    <div id="article" class="post-content-info"><h2 id="Blender-Text-Effects-In-Blender-7-12"><a href="#Blender-Text-Effects-In-Blender-7-12" class="headerlink" title="Blender-Text Effects In Blender (7-12)"></a>Blender-Text Effects In Blender (7-12)</h2><h2 id="资源"><a href="#资源" class="headerlink" title="资源"></a>资源</h2><ul>
 <li><a target="_blank" rel="noopener" href="https://www.youtube.com/playlist?list=PLtV6EPHDRNQKj4S7hYAmRbmGM91XJF3ps">Text Effects In Blender YouTube</a></li>
 </ul>
 <h2 id="Add-Flickering-Effect-Flickering-Neon-Sign-Simple-amp-Easy-Method-Blender-Eevee-All-Versions"><a href="#Add-Flickering-Effect-Flickering-Neon-Sign-Simple-amp-Easy-Method-Blender-Eevee-All-Versions" class="headerlink" title="Add Flickering Effect | Flickering Neon Sign | Simple &amp; Easy Method | Blender Eevee (All Versions)"></a>Add Flickering Effect | Flickering Neon Sign | Simple &amp; Easy Method | Blender Eevee (All Versions)</h2><ol>
@@ -537,9 +532,11 @@
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> bpy<br><span class="hljs-keyword">import</span> os<br><br>bpy.ops.<span class="hljs-built_in">object</span>.text_add()<br>text_obj = bpy.context.<span class="hljs-built_in">object</span><br><br>text_obj.data.align_x = <span class="hljs-string">&quot;CENTER&quot;</span><br>text_obj.data.align_y = <span class="hljs-string">&quot;CENTER&quot;</span><br><br>text_obj.data.body = <span class="hljs-string">&quot;Hello,\nWorld!&quot;</span><br><br>text_obj.location[<span class="hljs-number">2</span>] = <span class="hljs-number">0.15</span><br><br><span class="hljs-comment"># text_obj.data.extrude = 0.3</span><br><br>bpy.ops.<span class="hljs-built_in">object</span>.convert(target=<span class="hljs-string">&quot;MESH&quot;</span>)<br><br>bpy.ops.<span class="hljs-built_in">object</span>.editmode_toggle()<br>bpy.ops.mesh.dissolve_limited()<br><br>bpy.ops.mesh.select_all(action=<span class="hljs-string">&quot;SELECT&quot;</span>)<br>bpy.ops.mesh.remove_doubles(threshold=<span class="hljs-number">0.01</span>)<br>bpy.ops.mesh.extrude_region_move(TRANSFORM_OT_translate=&#123;<span class="hljs-string">&quot;value&quot;</span>:(<span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0.3</span>)&#125;)<br>bpy.ops.<span class="hljs-built_in">object</span>.editmode_toggle()<br><br>bpy.ops.mesh.primitive_cube_add()<br>cube_obj = bpy.context.<span class="hljs-built_in">object</span><br><br>cube_obj.scale[<span class="hljs-number">0</span>:<span class="hljs-number">3</span>] = [<span class="hljs-number">2.5</span>, <span class="hljs-number">1.2</span>, <span class="hljs-number">0.25</span>]<br><br>cube_material = bpy.data.materials.new(name=<span class="hljs-string">&quot;Material&quot;</span>)<br>cube_material.use_nodes = <span class="hljs-literal">True</span><br>nodes = cube_material.node_tree.nodes<br>principled_bsdf = nodes.get(<span class="hljs-string">&quot;Principled BSDF&quot;</span>)<br><span class="hljs-keyword">if</span> principled_bsdf <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span>:<br>    principled_bsdf.inputs[<span class="hljs-number">0</span>].default_value = (<span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">1</span>)<br><br>cube_obj.data.materials.append(cube_material)<br><br>cube_modifier_boolean = cube_obj.modifiers.new(name=<span class="hljs-string">&quot;Boolean&quot;</span>, <span class="hljs-built_in">type</span>=<span class="hljs-string">&quot;BOOLEAN&quot;</span>)<br>cube_modifier_boolean.<span class="hljs-built_in">object</span> = text_obj<br>bpy.ops.<span class="hljs-built_in">object</span>.modifier_apply(modifier=<span class="hljs-string">&quot;Boolean&quot;</span>)<br><br>bpy.ops.<span class="hljs-built_in">object</span>.transform_apply()<br><br>cube_modifier_bevel = cube_obj.modifiers.new(name=<span class="hljs-string">&quot;Bevel&quot;</span>, <span class="hljs-built_in">type</span>=<span class="hljs-string">&quot;BEVEL&quot;</span>)<br>cube_modifier_bevel.width = <span class="hljs-number">0.01</span><br>cube_modifier_bevel.segments = <span class="hljs-number">1</span><br>cube_modifier_bevel.use_clamp_overlap = <span class="hljs-literal">False</span><br>cube_modifier_bevel.harden_normals = <span class="hljs-literal">True</span><br><br>text_obj.hide_viewport = <span class="hljs-literal">True</span><br>text_obj.hide_render = <span class="hljs-literal">True</span><br><br>bpy.ops.export_scene.gltf(filepath=os.path.abspath(os.path.join(os.path.abspath(os.path.dirname(bpy.data.filepath))<br>                                                                      , <span class="hljs-string">&#x27;./outputs/1&#x27;</span>)))<br></code></pre></td></tr></table></figure>
 <h2 id="Easy-Method-to-Emboss-Your-Text-or-Logo-How-To-Create-Raised-Letters-3D-Text-Effects-In-Blender"><a href="#Easy-Method-to-Emboss-Your-Text-or-Logo-How-To-Create-Raised-Letters-3D-Text-Effects-In-Blender" class="headerlink" title="Easy Method to Emboss Your Text or Logo | How To Create Raised Letters | 3D Text Effects In Blender"></a>Easy Method to Emboss Your Text or Logo | How To Create Raised Letters | 3D Text Effects In Blender</h2><p>emmmm差不多就是把上一个的 <code>Boolean</code> 中的 <code>DIfference</code> 改为 <code>UNION</code>。如果有破，要自己修复：</p>
 <p><img src="/images/loading.webp" data-original="12_1.png" alt="png"></p>
-
-  </div>
-  <div id="gitalk-container"></div>
+</div>
+    
+    
+      <div class="giscus"></div>
+  
 </div>
 
 <script>
@@ -587,6 +584,7 @@
     }
   }
 </style>
+
     <div class="post-paging">
     
     <a href="/2023/06/16/Blender-Datasets-auto-generator-based-on-Blender/">
@@ -722,18 +720,28 @@
 
 
 	
-    <script src="/js/md5.min.js"></script>
-    <!-- Gitalk -->
     <script>
-        const data = '{"clientID":"f3a4ea928b90c73f66d4","clientSecret":"d697ef6f42e83e83c49ff8d19e753f36bc375015","repo":"GZ-Metal-Cell.github.io","owner":"GZ-Metal-Cell","admin":"GZ-Metal-Cell"}'
-        const gitalk = new Gitalk({
-            ...JSON.parse( data),
-            id:md5(location.pathname), //  location.pathname,
-            distractionFreeMode:false
-        })
-        
-        if(Boolean('true')){
-            gitalk.render('gitalk-container')
+        if($('.giscus'))
+        {
+            var scriptElement = document.createElement('script');
+            scriptElement.src = 'https://giscus.app/client.js';
+            scriptElement.setAttribute('data-repo', 'GZ-Metal-Cell/GZ-Metal-Cell.github.io');
+            scriptElement.setAttribute('data-repo-id', 'R_kgDOIHLEOQ');
+            scriptElement.setAttribute('data-category', 'Announcements');
+            scriptElement.setAttribute('data-category-id', 'DIC_kwDOIHLEOc4CcVwP');
+            scriptElement.setAttribute('data-mapping', 'title');
+            scriptElement.setAttribute('data-strict', '1');
+            scriptElement.setAttribute('data-reactions-enabled', '');
+            scriptElement.setAttribute('data-emit-metadata', '0');
+            scriptElement.setAttribute('data-input-position', 'top');
+            scriptElement.setAttribute('data-theme', 'light');
+            scriptElement.setAttribute('data-lang', 'zh-CN');
+            
+                scriptElement.setAttribute('data-loading', 'lazy');
+            
+            scriptElement.setAttribute('crossorigin', 'anonymous');
+            scriptElement.async = true;
+            document.head.appendChild(scriptElement);
         }
     </script>
 
