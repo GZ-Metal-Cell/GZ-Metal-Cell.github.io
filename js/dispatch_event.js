@@ -13,6 +13,9 @@ function handleHexoBlogDecryptEvent() {
     }  
     if (typeof initMathjax === 'function') {
         initMathjax();
+    }
+    if (typeof initTabs === 'function') {
+        initTabs();
     }  
 }
 
