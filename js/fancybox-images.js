@@ -5,7 +5,8 @@ function initFancybox() {
         var alt = this.alt;
         $(this).wrap(
             '<a href="' + ($(this).attr('data-original') == null ? this.src :
-                $(this).attr('data-original')) + '" title="' + alt + '" data-original="' + this.src + '" class="fancybox" data-fancybox="fancybox-gallery-img"></a>');
+                $(this).attr('data-original')) + '" title="' + alt + '" class="fancybox" data-fancybox="fancybox-gallery-img" data-thumb='+ ($(this).attr('data-original') == null ? this.src :
+                $(this).attr('data-original')) + '></a>');
     });
     $(this).find('.fancybox').each(function () {
         $(this).attr('rel', 'article');
