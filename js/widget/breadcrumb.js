@@ -50,7 +50,7 @@ function customBreadcrumb(breadcrumb, menus_title) {
     }
 }
 
-function categoriesBreadcrumb(breadcrumb, categories, categoriesLink) {
+function categoriesBreadcrumb(breadcrumb, categories, categoriesLink, categoriesName, categoriesNameLink) {
     var li = document.createElement('li');
     var a = document.createElement('a');
 
@@ -58,6 +58,15 @@ function categoriesBreadcrumb(breadcrumb, categories, categoriesLink) {
     a.href = categoriesLink;
     li.appendChild(a);
     breadcrumb.appendChild(li);
+
+    li = document.createElement('li');
+    a = document.createElement('a');
+
+    a.textContent = categoriesName;
+    a.href = categoriesNameLink;
+    li.appendChild(a);
+    breadcrumb.appendChild(li);
+
 
     li = document.createElement('li');
     a = document.createElement('a');
