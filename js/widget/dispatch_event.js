@@ -16,7 +16,10 @@ function handleHexoBlogDecryptEvent() {
     }
     if (typeof initTabs === 'function') {
         initTabs();
-    }  
+    }
+    if (typeof initPhotoFigcaption === 'function') {
+        initPhotoFigcaption();
+    }
 }
 
 // 添加事件监听器

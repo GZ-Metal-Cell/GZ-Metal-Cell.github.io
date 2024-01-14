@@ -1,7 +1,7 @@
 function initFancybox() {
     $('#article img').each(function () {
         if ($(this).parent().hasClass('fancybox')) return;
-        if ($(this).hasClass('nofancybox')) return;
+        if ($(this).hasClass('no-fancybox')) return;
         var alt = this.alt;
         $(this).wrap(
             '<a ' +
