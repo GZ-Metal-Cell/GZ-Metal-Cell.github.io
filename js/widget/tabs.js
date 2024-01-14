@@ -1,7 +1,7 @@
 function initTabs() {
     $('.tab-to-top button, .tab-to-bottom button').on('click', function() {
         var $tabs = $(this).closest('.tabs');
-        var targetY = $tabs.offset().top - 110;
+        var targetY = $tabs.offset().top - 90;
     
         $('html, body').animate({ scrollTop: targetY }, 'slow');
     

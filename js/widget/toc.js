@@ -76,7 +76,7 @@ function createToc() {
             event.preventDefault();
             var element = $($(this).attr("href"));
             var rect = element[0].getBoundingClientRect();
-            var topOffset = rect.top + window.scrollY - 110;
+            var topOffset = rect.top + window.scrollY - 90;
             window.scrollTo({
                 top: topOffset,
                 behavior: "smooth"
@@ -111,7 +111,7 @@ function getTopHeadingId() {
     let minDistanceFromTop = Infinity;
     for (const heading of headings) {
         const boundingRect = heading.getBoundingClientRect();
-        const distanceFromTop = Math.abs(boundingRect.y - 110);
+        const distanceFromTop = Math.abs(boundingRect.y - 90);
         if (distanceFromTop < minDistanceFromTop) {
             minDistanceFromTop = distanceFromTop;
             topHeadingId = heading.id;
