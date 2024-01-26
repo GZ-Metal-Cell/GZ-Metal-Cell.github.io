@@ -32,8 +32,9 @@ function galleryBottom() {
         var descriptionContainer = $('.description-container span');
         $(document).on("scroll", function () {
             var title = getBottomTitle();
+            console.log("title:", title);
             descriptionContainer.text(title);
-        }, 3000);
+        });
     } else {
         var galleryContent = $('.grid');
         var descriptionContainer = $('.description-container span');
@@ -63,7 +64,7 @@ function galleryBottom() {
             }
         });
         if (bottomElement) {
-            return bottomElement.element.attr('title');
+            return bottomElement.element.attr('data-caption');
         }
     }
 }
