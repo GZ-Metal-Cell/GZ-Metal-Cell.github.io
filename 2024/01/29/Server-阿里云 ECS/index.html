@@ -507,12 +507,29 @@
 <p>在 hexo 项目的 <code>_config.yml</code> 中，设置部署到服务器上：</p>
 <p><code>账户@服务器 IP:推送地址</code></p>
 <p><img src="/images/loading.webp" data-original="18.webp" alt="这是多部署！"></p>
-<p>开始推送！这样推送会要你输入密码，接下来尝试在本地<strong>建立 SSH 信任关系</strong>：</p>
+<p>开始推送！这样推送会要你输入密码，接下来尝试在本地<strong>建立 SSH 信任关系</strong>以实现免密登录！</p>
 <figure class="highlight shell"><table><tr><td class="code"><pre><code class="hljs shell">hexo d<br></code></pre></td></tr></table></figure>
 <hr>
-<p>在 Windows 下任意位置打开 git，上传本地的公钥到远端仓库：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><code class="hljs shell">ssh-copy-id -i ~/.ssh/id_rsa.pub git@sever_ip<br></code></pre></td></tr></table></figure>
-<p><img src="/images/loading.webp" data-original="19.png" alt="建立 SSH 信任"></p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_41205651/article/details/114577694">私人Git服务器SSH免密登录配置成功不生效问题_git 服务器免密不生效-CSDN博客</a></li>
+</ul>
+<p>MobaXterm 下 root 账户打开 RSA 认证：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><code class="hljs shell">vim /etc/ssh/sshd_config<br></code></pre></td></tr></table></figure>
+<p>最下方添加几行：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><code class="hljs shell">RSAAuthentication yes<br>PubkeyAuthentication yes<br>AuthorizedKeysFile  .ssh/authorized_keys<br></code></pre></td></tr></table></figure>
+<p><img src="/images/loading.webp" data-original="/C:/Users/19048/AppData/Roaming/Typora/typora-user-images/image-20240130095606162.png" alt="加几行！"></p>
+<p>配置 SSH：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><code class="hljs shell">su git<br>mkdir ~/.ssh<br>vim ~/.ssh/authorized_keys<br></code></pre></td></tr></table></figure>
+<p>将 Windows 下 <code>C:/用户/用户名/.ssh/id_rsa.pub</code> 下的内容：</p>
+<p><img src="/images/loading.webp" data-original="/C:/Users/19048/AppData/Roaming/Typora/typora-user-images/image-20240130095914865.png" alt="id_rsa.pub"></p>
+<p>拷贝到服务器的 <code>~/.ssh/authorized_keys</code> 中：</p>
+<p><img src="/images/loading.webp" data-original="/C:/Users/19048/AppData/Roaming/Typora/typora-user-images/image-20240130095826932.png" alt="配置 SSH"></p>
+<p>给这个文件一点权限：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><code class="hljs shell">chmod 600 ~/.ssh/authorzied_keys<br>chmod 700 ~/.ssh<br></code></pre></td></tr></table></figure>
+<p>此时本机上命令：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><code class="hljs shell">ssh git@server_ip<br></code></pre></td></tr></table></figure>
+<p>登录便不需要密码！</p>
+<p><img src="/images/loading.webp" data-original="/C:/Users/19048/AppData/Roaming/Typora/typora-user-images/image-20240130100110692.png" alt="image-20240130100110692"></p>
 </div>
     
     
