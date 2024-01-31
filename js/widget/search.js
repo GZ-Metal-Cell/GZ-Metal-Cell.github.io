@@ -18,11 +18,28 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 // 02110-1301 USA
 
-var searchFunc = function (path, search_id, content_id, match_count_id) {
+var searchFunc = function (path, input_id, content_id, result_id) {
+    var $input = document.getElementById(input_id);
+    var $content = document.getElementById(content_id);
+    var $result = document.getElementById(result_id);
+    
+    $result.innerHTML = "搜索功能加载中……";
     $.ajax({
         url: path,
         dataType: "xml",
+        xhr: function () {
+            var xhr = new window.XMLHttpRequest();
+            // 绑定 progress 事件，用于获取加载进度
+            xhr.addEventListener("progress", function (evt) {
+                if (evt.lengthComputable) {
+                    var percentComplete = (evt.loaded / evt.total) * 100;
+                    $result.innerHTML = "搜索功能加载中…… " + percentComplete.toFixed(2) + "%";
+                }
+            }, false);
+            return xhr;
+        },
         success: function (xmlResponse) {
+            $result.innerHTML = "";  // 隐藏加载提示
             // get the contents from search data
             var datas = $("entry", xmlResponse).map(function () {
                 return {
@@ -31,14 +48,13 @@ var searchFunc = function (path, search_id, content_id, match_count_id) {
                     url: $("url", this).text()
                 };
             }).get();
-            var $input = document.getElementById(search_id);
-            var $resultContent = document.getElementById(content_id);
+            
             $input.addEventListener('input', function () {
                 var str = '<ul class=\"search-result-list\">';
                 var keywords = this.value.trim().split(/[\s\-]+/);  // .toLowerCase().split(/[\s\-]+/);
-                $resultContent.innerHTML = "";
+                $content.innerHTML = "";
                 if (this.value.trim().length <= 0) {
-                    document.getElementById(match_count_id).textContent = "";
+                    document.getElementById(result_id).textContent = "";
                     return;
                 }
                 // perform local searching
@@ -108,14 +124,14 @@ var searchFunc = function (path, search_id, content_id, match_count_id) {
                 });
                 str += "</ul>";
                 if (str.indexOf('<li>') === -1) {
-                    document.getElementById(match_count_id).textContent = "";
-                    return $resultContent.innerHTML = "<ul><span class='local-search-empty'>没有找到内容，更换下搜索词试试吧~<span></ul>";
+                    $result.textContent = "";
+                    return $content.innerHTML = "<ul><span class='result-empty'>没有找到内容，更换下搜索词试试吧~<span></ul>";
                 }
                 else
                 {
-                    document.getElementById(match_count_id).innerHTML = "匹配到 <b><font size=\"5px\"><font color=\"#424242\">" + str.match(/<li>/g).length + "</font></font></b> 个结果。";
+                    $result.innerHTML = "匹配到 <b><font size=\"5px\"><font color=\"#424242\">" + str.match(/<li>/g).length + "</font></font></b> 个结果。";
                 }
-                $resultContent.innerHTML = str;
+                $content.innerHTML = str;
             });
         }
     });
