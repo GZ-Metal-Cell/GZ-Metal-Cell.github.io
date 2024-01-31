@@ -7,7 +7,7 @@ function initMathjax() {
     var scriptElement2 = document.createElement('script');
     scriptElement2.id = 'MathJax-script';
     scriptElement2.async = true;
-    scriptElement2.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+    scriptElement2.src = '/js/third-party/mathjax/tex-mml-chtml.js'; //'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
 
     // 将 <script> 元素添加到 <head> 元素中
     document.head.appendChild(scriptElement1);
