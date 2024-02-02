@@ -133,6 +133,10 @@ var searchFunc = function (path, input_id, content_id, result_id) {
                 }
                 $content.innerHTML = str;
             });
+        },
+        error: function (xhr, status, error) {
+            console.error("AJAX Request Failed: ", status, error);
+            $result.innerHTML = "搜索功能加载失败，请检查控制台日志了解详细信息。";
         }
     });
 }
