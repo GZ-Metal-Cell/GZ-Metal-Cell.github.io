@@ -8,6 +8,7 @@ function createHighlightTools(codeBlocks, copyIcon, closeCodeBlockIcon, highligh
         createCloseCodeBlockButton(container, codeBlock, closeCodeBlockIcon, highlightShrink);
     });
 }
+
 function createContainer(codeBlock) {
     // 创建包裹代码块和按钮的容器元素
     var container = document.createElement('div');
@@ -16,6 +17,7 @@ function createContainer(codeBlock) {
     codeBlock.parentNode.insertBefore(container, codeBlock);
     return container;
 }
+
 function createCopyButton(container, codeBlock, icon) {
     var button = document.createElement('button');
     button.className = 'copy-button';
@@ -69,8 +71,7 @@ function createCodeLangText(container, codeBlock) {
     container.appendChild(span);
 }
 
-function createCloseCodeBlockButton(container, codeBlock, icon, highlightShrink)
-{
+function createCloseCodeBlockButton(container, codeBlock, icon, highlightShrink) {
     var button = document.createElement('button');
     button.className = 'close-code-block-button';
     button.type = 'button';
@@ -78,8 +79,7 @@ function createCloseCodeBlockButton(container, codeBlock, icon, highlightShrink)
     button.style.backgroundImage = 'url("' + icon + '")';
     // 将按钮添加到容器元素内
     container.appendChild(button);
-    if(highlightShrink)
-    {
+    if (highlightShrink) {
         var hljs = codeBlock.querySelector('.hljs');
         button.style.transform = "rotate(-90deg)";
         hljs.classList.add("closed");
@@ -89,7 +89,7 @@ function createCloseCodeBlockButton(container, codeBlock, icon, highlightShrink)
         if (!hljs.classList.contains('closed')) {
             button.style.transform = "rotate(-90deg)";
             hljs.classList.add("closed");
-        }else{
+        } else {
             button.style.transform = "rotate(0deg)";
             hljs.classList.remove("closed");
         }
