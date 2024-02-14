@@ -140,5 +140,5 @@ document.addEventListener("scroll", function (event) {
             link.classList.remove("active");
         }
     });
-}, 3000);
+});
 
