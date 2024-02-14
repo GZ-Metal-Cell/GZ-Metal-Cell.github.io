@@ -4,14 +4,6 @@ var pages = {};
 var $book = $('#book');
 
 $(document).ready(function () {
-	// 设置容器宽度
-	$book.css('width', '95%');
-	// 计算高度
-	var width = $book.width(); // 获取容器的实际宽度
-	var height = (3 / 8) * width; // 根据比例计算高度
-	// 设置容器高度
-	$book.css('height', height + 'px'); // 将高度值赋给容器的高度属性
-
 	let index = 0;
 	$headings.each(function () {
 		if(index === 0)
@@ -20,6 +12,15 @@ $(document).ready(function () {
 			pages[this.id] = index * 2;
 		index += 1;
 	});
+
+	$book.removeAttr("style");
+	// 设置容器宽度
+	$book.css('width', '95%');
+	// 计算高度
+	var width = $book.width(); // 获取容器的实际宽度
+	var height = (3 / 8) * width; // 根据比例计算高度
+	// 设置容器高度
+	$book.css('height', height + 'px'); // 将高度值赋给容器的高度属性
 });
 
 $(window).ready(function () {
