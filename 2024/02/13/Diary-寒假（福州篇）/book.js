@@ -4,6 +4,7 @@ var pages = {};
 var $book = $('#book');
 
 $(document).ready(function () {
+	// 初始化
 	let index = 0;
 	$headings.each(function () {
 		if(index === 0)
@@ -12,8 +13,8 @@ $(document).ready(function () {
 			pages[this.id] = index * 2;
 		index += 1;
 	});
-
-	$book.removeAttr("style");
+	$("#loading").remove();
+	$book.removeAttr("style");  // 将 book 设为可见
 	// 设置容器宽度
 	$book.css('width', '95%');
 	// 计算高度
@@ -24,6 +25,7 @@ $(document).ready(function () {
 });
 
 $(window).ready(function () {
+	// 配置 turn.js 的参数
 	$book.turn({
 		display: 'double',
 		acceleration: true,
@@ -40,15 +42,17 @@ $(window).ready(function () {
 });
 
 $(window).bind('keydown', function (e) {
-	if (e.keyCode == 37) {
+	// 键盘翻页
+	if (e.keyCode == 37) {  // 左键
 		$book.turn('previous');
 	}
-	else if (e.keyCode == 39) {
+	else if (e.keyCode == 39) {  // 右键
 		$book.turn('next');
 	}
 });
 
 function myGetTopHeadingId() {
+	// 获得最近的标题 ID
 	let topHeadingId = null;
 	let minDistanceFromTop = Infinity;
 	let top = $book[0].getBoundingClientRect().y + $book[0].getBoundingClientRect().height + 20;
@@ -69,6 +73,7 @@ function myGetTopHeadingId() {
 }
 
 document.addEventListener("scroll", function (event) {
+	// 滚动自动翻书
 	const tempId = myGetTopHeadingId();
 	if (topHeadingId != tempId) {
 		topHeadingId = tempId;
