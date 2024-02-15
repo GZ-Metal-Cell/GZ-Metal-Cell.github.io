@@ -3,8 +3,10 @@
  */
 const initTagHide = () => {
     const hideButtons = document.querySelectorAll('.hide-button');
+    console.log(hideButtons);
     if (!hideButtons.length) return;
     const handleClick = function (e) {
+        console.log("handleClick");
         const $this = this;
         $this.classList.add('open');
         const $fjGallery = $this.nextElementSibling.querySelectorAll('.gallery-container');
