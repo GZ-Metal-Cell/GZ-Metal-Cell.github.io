@@ -17,6 +17,9 @@ function handleHexoBlogDecryptEvent() {
     if (typeof initTabs === 'function') {
         initTabs();
     }
+    if (typeof initTagHide === 'function') {
+        initTagHide();
+    }
     if (typeof initPhotoFigcaption === 'function') {
         initPhotoFigcaption();
     }
