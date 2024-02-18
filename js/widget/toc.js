@@ -124,7 +124,7 @@ document.addEventListener("scroll", function (event) {
     const tocLinks = document.querySelectorAll('a.toc-link');
     const topHeadingId = getTopHeadingId();
     tocLinks.forEach(link => {
-        var href = decodeURIComponent(link.getAttribute('href')).replace(/^#/, '');;
+        var href = decodeURIComponent(link.getAttribute('href')).replace(/^#/, '');
         if (href == topHeadingId) {
             if (!link.classList.contains('active')) {
                 link.classList.add("active");

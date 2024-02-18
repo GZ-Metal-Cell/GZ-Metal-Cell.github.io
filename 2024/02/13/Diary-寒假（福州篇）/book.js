@@ -7,10 +7,11 @@ $(document).ready(function () {
 	// 初始化
 	let index = 0;
 	$headings.each(function () {
-		if(index === 0)
+		if(index === 0);
+		else if(index === 1)
 			pages[this.id] = 1;
 		else
-			pages[this.id] = index * 2;
+			pages[this.id] = index * 2 - 2;
 		index += 1;
 	});
 	$("#loading").remove();
@@ -34,7 +35,7 @@ $(window).ready(function () {
 		duration: 1000,
 		when: {
 			turned: function (e, p) {
-				console.log('Current view: ', p);
+				// console.log('Current view: ', p);
 			}
 		}
 	});
@@ -58,6 +59,8 @@ function myGetTopHeadingId() {
 	let top = $book[0].getBoundingClientRect().y + $book[0].getBoundingClientRect().height + 20;
 	if ($headings[0].getBoundingClientRect().y + $headings[0].getBoundingClientRect().height > 140) {
 		return $headings[0].id;
+	} else if ($headings[1].getBoundingClientRect().y + $headings[1].getBoundingClientRect().height > 140) {
+		return $headings[1].id;
 	}
 	else {
 		$headings.each(function () {
@@ -79,7 +82,6 @@ document.addEventListener("scroll", function (event) {
 		topHeadingId = tempId;
 		$book.turn("page", pages[topHeadingId]);
 	}
-	console.log(topHeadingId);
 });
 
 function findKeyByValue(obj, value) {

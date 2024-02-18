@@ -32,7 +32,6 @@ function galleryBottom() {
         var descriptionContainer = $('.description-container span');
         $(document).on("scroll", function () {
             var title = getBottomTitle();
-            console.log("title:", title);
             descriptionContainer.text(title);
         });
     } else {

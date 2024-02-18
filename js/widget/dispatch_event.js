@@ -4,7 +4,6 @@ window.dispatchEvent(event);
 
 // 定义回调函数
 function handleHexoBlogDecryptEvent() {
-    console.log("文章解密成功！");
     if (typeof initToc === 'function') {
         initToc();
     } 
