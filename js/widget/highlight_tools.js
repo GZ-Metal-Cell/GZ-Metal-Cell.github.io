@@ -1,4 +1,4 @@
-function createHighlightTools(codeBlocks, copyIcon, closeCodeBlockIcon, highlightShrink) {
+function createHighlightTools(codeBlocks, copyIcon, closeCodeBlockIcon, highlightShrink, HighlightHeightLimit) {
     codeBlocks.forEach(function (codeBlock) {
         if (!codeBlock.querySelector('code'))
             return;
@@ -6,6 +6,7 @@ function createHighlightTools(codeBlocks, copyIcon, closeCodeBlockIcon, highligh
         createCopyButton(container, codeBlock, copyIcon);
         createCodeLangText(container, codeBlock);
         createCloseCodeBlockButton(container, codeBlock, closeCodeBlockIcon, highlightShrink);
+        setHighlightHeightLimit(codeBlock, HighlightHeightLimit);
     });
 }
 
@@ -79,7 +80,7 @@ function createCloseCodeBlockButton(container, codeBlock, icon, highlightShrink)
     button.style.backgroundImage = 'url("' + icon + '")';
     // 将按钮添加到容器元素内
     container.appendChild(button);
-    if (highlightShrink) {
+    if (Boolean(highlightShrink)) {
         var hljs = codeBlock.querySelector('.hljs');
         button.style.transform = "rotate(-90deg)";
         hljs.classList.add("closed");
@@ -94,4 +95,14 @@ function createCloseCodeBlockButton(container, codeBlock, icon, highlightShrink)
             hljs.classList.remove("closed");
         }
     });
+}
+
+function setHighlightHeightLimit(codeBlock, HighlightHeightLimit)
+{
+    // 限制代码块最大长度
+    if (HighlightHeightLimit != "")
+    {
+        var hljs = codeBlock.querySelector('.hljs');
+        hljs.style.maxHeight = HighlightHeightLimit;
+    }
 }
