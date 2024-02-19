@@ -76,7 +76,7 @@ function createToc() {
             event.preventDefault();
             var element = $($(this).attr("href"));
             var rect = element[0].getBoundingClientRect();
-            var topOffset = rect.top + window.scrollY - 90;
+            var topOffset = rect.top + window.scrollY - 80;
             window.scrollTo({
                 top: topOffset,
                 behavior: "smooth"
@@ -127,17 +127,17 @@ document.addEventListener("scroll", function (event) {
         var href = decodeURIComponent(link.getAttribute('href')).replace(/^#/, '');
         if (href == topHeadingId) {
             if (!link.classList.contains('active')) {
-                link.classList.add("active");
+                link.parentNode.classList.add("active");
                 var toc = document.querySelector(".toc");
                 var activeItem = toc.querySelector(".active");
                 if (activeItem) {
                     toc.scrollTo({
-                        top: activeItem.offsetTop - 100
+                        top: activeItem.offsetTop - 90
                     });
                 }
             }
         } else {
-            link.classList.remove("active");
+            link.parentNode.classList.remove("active");
         }
     });
 });

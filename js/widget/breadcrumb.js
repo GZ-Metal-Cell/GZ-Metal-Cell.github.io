@@ -41,7 +41,7 @@ function customBreadcrumb(breadcrumb, menus_title) {
             a.textContent = levelName;
         }
         if(i == levels.length - 1) {
-            a.classList.add("last");
+            li.classList.add("last");
         }
         a.href = levelLink;
         }
@@ -73,7 +73,7 @@ function categoriesBreadcrumb(breadcrumb, categories, categoriesLink, categories
 
     a.textContent = "文章";
     a.href = window.location.href;
-    a.classList.add("last");
+    li.classList.add("last");
 
     li.appendChild(a);
     breadcrumb.appendChild(li);

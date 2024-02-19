@@ -1,5 +1,5 @@
 initPhotoFigcaption = () => {
-    $('#article img').each(function () {
+    $('article img').each(function () {
         if ($(this).hasClass('no-figcaption')) return;
         const altValue = $(this).attr('title') || $(this).attr('alt');
         if (!altValue) return;
