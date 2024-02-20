@@ -35,7 +35,7 @@ function galleryBottom() {
             descriptionContainer.text(title);
         });
     } else {
-        var galleryContent = $('.grid');
+        var galleryContent = $('.grid-item');
         var descriptionContainer = $('.description-container span');
 
         galleryContent.on('mouseover', 'img', function (event) {

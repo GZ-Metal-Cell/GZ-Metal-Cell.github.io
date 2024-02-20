@@ -12,7 +12,7 @@ function customBreadcrumb(breadcrumb, menus_title) {
             levelLink += levels[j] + '/';
         }
         var levelName = decodeURIComponent(levels[i]);
-        
+
         if (i === 0) {
             // 查找 menus_title 中与 levelName 相同的键，并获取对应的值
             var title_obj = menus_title.find(function(item) {
@@ -20,12 +20,16 @@ function customBreadcrumb(breadcrumb, menus_title) {
             });
             var title_value = title_obj ? title_obj[levelName] : null;
             if (!title_value) {
+                document.querySelector('.logo').classList.add("last");
                 return; // 如果找不到对应的值，直接返回，不执行后续代码
             }
         }
     }
-    
     // 如果代码执行到这里，说明所有的值都能找到，可以继续添加元素到面包屑导航栏
+    if (levels.length == 0)
+    {
+        document.querySelector('.logo').classList.add("last");
+    }
     for (var i = 0; i < levels.length; i++) {
         var levelLink = '/';
         for (var j = 0; j <= i; j++) {
@@ -40,7 +44,7 @@ function customBreadcrumb(breadcrumb, menus_title) {
         } else {
             a.textContent = levelName;
         }
-        if(i == levels.length - 1) {
+        if (i == levels.length - 1) {
             li.classList.add("last");
         }
         a.href = levelLink;
