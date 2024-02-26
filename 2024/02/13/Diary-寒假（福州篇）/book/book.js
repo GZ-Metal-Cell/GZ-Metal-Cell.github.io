@@ -17,7 +17,7 @@ $(document).ready(function () {
 	$("#loading").remove();
 	$book.removeAttr("style");  // 将 book 设为可见
 	// 设置容器宽度
-	$book.css('width', '95%');
+	$book.css('width', '75%');
 	// 计算高度
 	var width = $book.width(); // 获取容器的实际宽度
 	var height = (3 / 8) * width; // 根据比例计算高度
@@ -53,27 +53,27 @@ $(window).bind('keydown', function (e) {
 });
 
 function myGetTopHeadingId() {
-	// 获得最近的标题 ID
-	let topHeadingId = null;
-	let minDistanceFromTop = Infinity;
-	let top = $book[0].getBoundingClientRect().y + $book[0].getBoundingClientRect().height + 20;
-	if ($headings[0].getBoundingClientRect().y + $headings[0].getBoundingClientRect().height > 140) {
-		return $headings[0].id;
-	} else if ($headings[1].getBoundingClientRect().y + $headings[1].getBoundingClientRect().height > 140) {
-		return $headings[1].id;
-	}
-	else {
-		$headings.each(function () {
-			const boundingRect = this.getBoundingClientRect();
-			const distanceFromTop = Math.abs(boundingRect.y - top);
-			if (distanceFromTop < minDistanceFromTop) {
-				minDistanceFromTop = distanceFromTop;
-				topHeadingId = this.id;
-			}
-		});
-		return topHeadingId;
-	}
+    // 获得最近的标题 ID
+    let topHeadingId = null;
+    let minDistanceFromTop = Infinity;
+    let top = $book[0].getBoundingClientRect().y + $book[0].getBoundingClientRect().height;
+
+    $headings.each(function () {
+        const boundingRect = this.getBoundingClientRect();
+        const distanceFromTop = Math.abs(boundingRect.y - top);
+
+        // 排除页面最底端比标题顶部高的情况
+        if (boundingRect.y + boundingRect.height < top - 240) {
+            if (distanceFromTop < minDistanceFromTop) {
+                minDistanceFromTop = distanceFromTop;
+                topHeadingId = this.id;
+            }
+        }
+    });
+
+    return topHeadingId;
 }
+
 
 document.addEventListener("scroll", function (event) {
 	// 滚动自动翻书
