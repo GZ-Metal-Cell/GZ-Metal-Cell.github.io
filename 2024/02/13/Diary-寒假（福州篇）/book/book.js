@@ -17,7 +17,7 @@ $(document).ready(function () {
 	$("#loading").remove();
 	$book.removeAttr("style");  // 将 book 设为可见
 	// 设置容器宽度
-	$book.css('width', '75%');
+	$book.css('width', '50%');
 	// 计算高度
 	var width = $book.width(); // 获取容器的实际宽度
 	var height = (3 / 8) * width; // 根据比例计算高度
@@ -63,7 +63,7 @@ function myGetTopHeadingId() {
         const distanceFromTop = Math.abs(boundingRect.y - top);
 
         // 排除页面最底端比标题顶部高的情况
-        if (boundingRect.y + boundingRect.height < top - 240) {
+        if (boundingRect.y + boundingRect.height < top - 180) {
             if (distanceFromTop < minDistanceFromTop) {
                 minDistanceFromTop = distanceFromTop;
                 topHeadingId = this.id;

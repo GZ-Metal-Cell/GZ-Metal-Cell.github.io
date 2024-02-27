@@ -7,8 +7,3 @@ initPhotoFigcaption = () => {
         $(this).after(ele);
     });
 }
-
-
-$(document).ready(function () {
-    initPhotoFigcaption();
-});

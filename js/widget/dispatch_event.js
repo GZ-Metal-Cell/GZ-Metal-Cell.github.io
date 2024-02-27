@@ -7,6 +7,9 @@ function handleHexoBlogDecryptEvent() {
     if (typeof initToc === 'function') {
         initToc();
     } 
+    if (typeof initPhotoFigcaption === 'function') {
+        initPhotoFigcaption();
+    }
     if (typeof initFancybox === 'function') {
         initFancybox();
     }  
@@ -18,9 +21,6 @@ function handleHexoBlogDecryptEvent() {
     }
     if (typeof initTagHide === 'function') {
         initTagHide();
-    }
-    if (typeof initPhotoFigcaption === 'function') {
-        initPhotoFigcaption();
     }
 }
 

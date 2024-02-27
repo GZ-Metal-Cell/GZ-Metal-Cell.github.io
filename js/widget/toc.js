@@ -111,14 +111,17 @@ function getTopHeadingId() {
     let minDistanceFromTop = Infinity;
     for (const heading of headings) {
         const boundingRect = heading.getBoundingClientRect();
-        const distanceFromTop = Math.abs(boundingRect.y - 90);
-        if (distanceFromTop < minDistanceFromTop) {
-            minDistanceFromTop = distanceFromTop;
-            topHeadingId = heading.id;
+        if (boundingRect.y < window.innerHeight) {
+            const distanceFromTop = Math.abs(boundingRect.y - 90);
+            if (distanceFromTop < minDistanceFromTop) {
+                minDistanceFromTop = distanceFromTop;
+                topHeadingId = heading.id;
+            }
         }
     }
     return topHeadingId;
 }
+
 
 document.addEventListener("scroll", function (event) {
     const tocLinks = document.querySelectorAll('a.toc-link');
