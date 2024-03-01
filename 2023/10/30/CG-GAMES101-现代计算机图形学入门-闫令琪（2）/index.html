@@ -396,7 +396,8 @@
     element.style.backgroundImage = "url('" + randomLink + "')";
 </script>
     <main class="post-content">
-    <article class="post-content-info"><h1 id="资源"><a href="#资源" class="headerlink" title="资源"></a>资源</h1><ul>
+    <article class="post-content-info">
+        <h1 id="资源"><a href="#资源" class="headerlink" title="资源"></a>资源</h1><ul>
 <li><p><a target="_blank" rel="noopener" href="https://csdiy.wiki/计算机图形学/GAMES101/">GAMES101 - CS自学指南 (csdiy.wiki)</a></p>
 </li>
 <li><p><a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV1X7411F744/?p=1">Lecture 01 Overview of Computer Graphics_哔哩哔哩_bilibili</a></p>
@@ -855,6 +856,7 @@
 <p>$2\times2$ MSAA：</p>
 <figure class="highlight c++"><table><tr><td class="code"><pre><code class="hljs C++"><span class="hljs-comment">//Screen space rasterization</span><br><span class="hljs-type">void</span> rst::rasterizer::<span class="hljs-built_in">rasterize_triangle</span>(<span class="hljs-type">const</span> Triangle&amp; t) &#123;<br>    <span class="hljs-keyword">auto</span> v = t.<span class="hljs-built_in">toVector4</span>();<br>    <br>    <span class="hljs-comment">// TODO : Find out the bounding box of current triangle.</span><br>    <span class="hljs-comment">// iterate through the pixel and find if the current pixel is inside the triangle</span><br>    <span class="hljs-type">int</span> min_x = INT_MAX;<br>    <span class="hljs-type">int</span> max_x = INT_MIN;<br>    <span class="hljs-type">int</span> min_y = INT_MAX;<br>    <span class="hljs-type">int</span> max_y = INT_MIN;<br>    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">auto</span> point : v) <span class="hljs-comment">//获取包围盒边界</span><br>    &#123;<br>        <span class="hljs-keyword">if</span> (point[<span class="hljs-number">0</span>] &lt; min_x) min_x = point[<span class="hljs-number">0</span>];<br>        <span class="hljs-keyword">if</span> (point[<span class="hljs-number">0</span>] &gt; max_x) max_x = point[<span class="hljs-number">0</span>];<br>        <span class="hljs-keyword">if</span> (point[<span class="hljs-number">1</span>] &lt; min_y) min_y = point[<span class="hljs-number">1</span>];<br>        <span class="hljs-keyword">if</span> (point[<span class="hljs-number">1</span>] &gt; max_y) max_y = point[<span class="hljs-number">1</span>];<br>    &#125; <br>    <span class="hljs-comment">// If so, use the following code to get the interpolated z value.</span><br>    <span class="hljs-comment">//auto[alpha, beta, gamma] = computeBarycentric2D(x, y, t.v);</span><br>    <span class="hljs-comment">//float w_reciprocal = 1.0/(alpha / v[0].w() + beta / v[1].w() + gamma / v[2].w());</span><br>    <span class="hljs-comment">//float z_interpolated = alpha * v[0].z() / v[0].w() + beta * v[1].z() / v[1].w() + gamma * v[2].z() / v[2].w();</span><br>    <span class="hljs-comment">//z_interpolated *= w_reciprocal;</span><br><br>    <span class="hljs-comment">// TODO : set the current pixel (use the set_pixel function) to the color of the triangle (use getColor function) if it should be painted.</span><br>    <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> x = min_x; x &lt;= max_x; ++x)<br>    &#123;<br>        <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> y = min_y; y &lt;= max_y; ++y) <br>        &#123;<br>            <span class="hljs-type">float</span> rate = <span class="hljs-number">0.0f</span>;<br>            <span class="hljs-keyword">if</span> (<span class="hljs-built_in">insideTriangle</span>(x + <span class="hljs-number">0.25</span>, y + <span class="hljs-number">0.25</span>, t.v))<br>                rate += <span class="hljs-number">0.25f</span>;<br>            <span class="hljs-keyword">if</span> (<span class="hljs-built_in">insideTriangle</span>(x + <span class="hljs-number">0.75</span>, y + <span class="hljs-number">0.75</span>, t.v))<br>                rate += <span class="hljs-number">0.25f</span>;<br>            <span class="hljs-keyword">if</span> (<span class="hljs-built_in">insideTriangle</span>(x + <span class="hljs-number">0.75</span>, y + <span class="hljs-number">0.25</span>, t.v))<br>                rate += <span class="hljs-number">0.25f</span>;<br>            <span class="hljs-keyword">if</span> (<span class="hljs-built_in">insideTriangle</span>(x + <span class="hljs-number">0.25</span>, y + <span class="hljs-number">0.75</span>, t.v))<br>                rate += <span class="hljs-number">0.25f</span>;<br>            <span class="hljs-keyword">if</span> (rate &gt; <span class="hljs-number">0.0f</span>)<br>            &#123;<br>                <span class="hljs-keyword">auto</span>[alpha, beta, gamma] = <span class="hljs-built_in">computeBarycentric2D</span>(x, y, t.v);<br>                <span class="hljs-type">float</span> w_reciprocal = <span class="hljs-number">1.0</span> / (alpha / v[<span class="hljs-number">0</span>].<span class="hljs-built_in">w</span>() + beta / v[<span class="hljs-number">1</span>].<span class="hljs-built_in">w</span>() + gamma / v[<span class="hljs-number">2</span>].<span class="hljs-built_in">w</span>());<br>                <span class="hljs-type">float</span> z_interpolated = alpha * v[<span class="hljs-number">0</span>].<span class="hljs-built_in">z</span>() / v[<span class="hljs-number">0</span>].<span class="hljs-built_in">w</span>() + beta * v[<span class="hljs-number">1</span>].<span class="hljs-built_in">z</span>() / v[<span class="hljs-number">1</span>].<span class="hljs-built_in">w</span>() + gamma * v[<span class="hljs-number">2</span>].<span class="hljs-built_in">z</span>() / v[<span class="hljs-number">2</span>].<span class="hljs-built_in">w</span>();<br>                z_interpolated *= w_reciprocal;<br>                <br>                <span class="hljs-keyword">if</span> (z_interpolated &lt; depth_buf[<span class="hljs-built_in">get_index</span>(x, y)])<br>                &#123;<br>                    depth_buf[<span class="hljs-built_in">get_index</span>(x, y)] = z_interpolated;<br>                    Eigen::Vector3f point = Eigen::<span class="hljs-built_in">Vector3f</span>(x, y, z_interpolated);<br>                    <span class="hljs-built_in">set_pixel</span>(point, rate * t.<span class="hljs-built_in">getColor</span>());<br>                &#125;<br>            &#125;<br>        &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 
+        
     
         
 <link rel="stylesheet" href="/css/third-party/giscus.css">
@@ -880,7 +882,17 @@
             document.head.appendChild(scriptElement);
         </script>
     
-</article>
+
+    </article>
+    <div class="post-content-aside">
+        
+            <div class="post-content-aside-toc">
+                <h1>目录</h1>
+                <ol class="toc"></ol>
+            </div>
+            <script src="/js/widget/toc.js" async></script>
+        
+    </div>
 </main>
     <div class="post-paging">
     
@@ -962,12 +974,6 @@
 </style>
 
 <div style="z-index: 3; position: fixed; bottom: 10px; right: 20px; transition: all 0.5s ease-out;" id="rightside">
-	
-	<div class="post-toc hidden">
-		<h1>目录</h1>
-		<ol class="toc"></ol>
-	</div>
-	
 	<div class="rightside">
 		
 			<div class="rightside-button hidden" id="js-toc">
@@ -1001,12 +1007,6 @@
 		target: 'bottom',
 	} );
 </script>
-
-
-	
-<script src="/js/widget/toc.js"></script>
-
-
 
 <!-- Analytics -->
 

@@ -398,7 +398,8 @@
     element.style.backgroundImage = "url('" + randomLink + "')";
 </script>
     <main class="post-content">
-    <article class="post-content-info"><h1 id="资源"><a href="#资源" class="headerlink" title="资源"></a>资源</h1><ul>
+    <article class="post-content-info">
+        <h1 id="资源"><a href="#资源" class="headerlink" title="资源"></a>资源</h1><ul>
 <li>PaperWithCode：<a target="_blank" rel="noopener" href="https://paperswithcode.com/dataset/total-text">Total-Text Dataset | Papers With Code</a></li>
 <li>Arxiv：<a target="_blank" rel="noopener" href="https://arxiv.org/abs/1710.10400v1">[1710.10400v1] Total-Text: A Comprehensive Dataset for Scene Text Detection and Recognition (arxiv.org)</a></li>
 <li>GitHub：<a target="_blank" rel="noopener" href="https://github.com/cs-chan/Total-Text-Dataset">cs-chan/Total-Text-Dataset: Total Text Dataset. It consists of 1555 images with more than 3 different text orientations: Horizontal, Multi-Oriented, and Curved, one of a kind. (github.com)</a></li>
@@ -952,6 +953,7 @@
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> cv2<br><span class="hljs-keyword">import</span> os<br><span class="hljs-keyword">import</span> matplotlib.pyplot <span class="hljs-keyword">as</span> plt<br><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><br>index = <span class="hljs-number">396</span><br><br>image_dir = <span class="hljs-string">r&#x27;E:\dataset\TotalText\Images\Test\\&#x27;</span><br>label_dir = <span class="hljs-string">r&#x27;E:\dataset\TotalText\GroundTruth\Text\Test\\&#x27;</span><br><br>image_path = os.path.join(image_dir, <span class="hljs-string">&#x27;img&#x27;</span> + <span class="hljs-built_in">str</span>(index) + <span class="hljs-string">&#x27;.jpg&#x27;</span>)<br>label_path = os.path.join(label_dir, <span class="hljs-string">&#x27;poly_gt_img&#x27;</span> + <span class="hljs-built_in">str</span>(index) + <span class="hljs-string">&#x27;.txt&#x27;</span>)<br><br>image_origin = cv2.imread(image_path)<br>image = image_origin.copy()<br>height, width, _ = image.shape<br>label_file = <span class="hljs-built_in">open</span>(label_path, <span class="hljs-string">&#x27;r&#x27;</span>)<br>annotations = label_file.readlines()<br>label_file.close()<br><br><span class="hljs-keyword">for</span> annotation <span class="hljs-keyword">in</span> annotations:<br>    x = [<span class="hljs-built_in">int</span>(num) <span class="hljs-keyword">for</span> num <span class="hljs-keyword">in</span> annotation[annotation.find(<span class="hljs-string">&quot;x: [[&quot;</span>) + <span class="hljs-number">5</span>: annotation.find(<span class="hljs-string">&quot;]], y: [[&quot;</span>)].split()]<br>    y = [<span class="hljs-built_in">int</span>(num) <span class="hljs-keyword">for</span> num <span class="hljs-keyword">in</span> annotation[annotation.find(<span class="hljs-string">&quot;y: [[&quot;</span>) + <span class="hljs-number">5</span>: annotation.find(<span class="hljs-string">&quot;]], ornt: [&quot;</span>)].split()]<br>    ornt = annotation[annotation.find(<span class="hljs-string">&quot;ornt: [u&#x27;&quot;</span>) + <span class="hljs-number">9</span>: annotation.find(<span class="hljs-string">&quot;&#x27;], transcriptions: [&quot;</span>)]<br>    transcriptions = annotation[annotation.find(<span class="hljs-string">&quot;transcriptions: [u&#x27;&quot;</span>) + <span class="hljs-number">19</span>: -<span class="hljs-number">3</span>]<br>    <br>    points = np.array([x, y], np.int32).T<br>    <br>    cv2.polylines(image, [points], isClosed=<span class="hljs-literal">True</span>, color=(<span class="hljs-number">255</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>), thickness=<span class="hljs-number">2</span>)<br>    <span class="hljs-keyword">for</span> p <span class="hljs-keyword">in</span> points:<br>        cv2.circle(image, (p[<span class="hljs-number">0</span>], p[<span class="hljs-number">1</span>]), <span class="hljs-built_in">int</span>(<span class="hljs-built_in">min</span>(height, width) / <span class="hljs-number">150</span>), (<span class="hljs-number">0</span>, <span class="hljs-number">255</span>, <span class="hljs-number">255</span>), -<span class="hljs-number">1</span>)<br><br>    cv2.putText(image, ornt, (x[<span class="hljs-number">0</span>], y[<span class="hljs-number">0</span>] + <span class="hljs-built_in">int</span>(<span class="hljs-built_in">min</span>(height, width) / <span class="hljs-number">50</span>)), cv2.FONT_HERSHEY_SIMPLEX,<br>                <span class="hljs-built_in">min</span>(height, width) / <span class="hljs-number">1000</span>, (<span class="hljs-number">255</span>, <span class="hljs-number">0</span>, <span class="hljs-number">255</span>), <span class="hljs-built_in">int</span>(<span class="hljs-built_in">min</span>(height, width) / <span class="hljs-number">500</span>))<br>    cv2.putText(image, transcriptions, (x[<span class="hljs-number">0</span>], y[<span class="hljs-number">0</span>] - <span class="hljs-built_in">int</span>(<span class="hljs-built_in">min</span>(height, width) / <span class="hljs-number">150</span>)), cv2.FONT_HERSHEY_SIMPLEX,<br>                <span class="hljs-built_in">min</span>(height, width) / <span class="hljs-number">1000</span>, (<span class="hljs-number">0</span>, <span class="hljs-number">255</span>, <span class="hljs-number">0</span>), <span class="hljs-built_in">int</span>(<span class="hljs-built_in">min</span>(height, width) / <span class="hljs-number">500</span>))<br>    <br>fig, axes = plt.subplots(nrows=<span class="hljs-number">1</span>, ncols=<span class="hljs-number">2</span>, figsize=(<span class="hljs-number">16</span>, <span class="hljs-number">9</span>))<br>axes = axes.flatten()<br><br>axes[<span class="hljs-number">0</span>].imshow(cv2.cvtColor(image_origin, cv2.COLOR_BGR2RGB))<br>axes[<span class="hljs-number">0</span>].axis(<span class="hljs-string">&#x27;off&#x27;</span>)<br>axes[<span class="hljs-number">0</span>].set_title(<span class="hljs-string">&#x27;Origin&#x27;</span>)<br><br>axes[<span class="hljs-number">1</span>].imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))<br>axes[<span class="hljs-number">1</span>].axis(<span class="hljs-string">&#x27;off&#x27;</span>)<br>axes[<span class="hljs-number">1</span>].set_title(<span class="hljs-string">&#x27;Annotation&#x27;</span>)<br><br>plt.tight_layout()<br>plt.show()<br></code></pre></td></tr></table></figure>
 <p><img src="/images/loading.webp" data-original="Vis.png" alt="png"></p>
 
+        
     
         
 <link rel="stylesheet" href="/css/third-party/giscus.css">
@@ -977,7 +979,17 @@
             document.head.appendChild(scriptElement);
         </script>
     
-</article>
+
+    </article>
+    <div class="post-content-aside">
+        
+            <div class="post-content-aside-toc">
+                <h1>目录</h1>
+                <ol class="toc"></ol>
+            </div>
+            <script src="/js/widget/toc.js" async></script>
+        
+    </div>
 </main>
     <div class="post-paging">
     
@@ -1059,12 +1071,6 @@
 </style>
 
 <div style="z-index: 3; position: fixed; bottom: 10px; right: 20px; transition: all 0.5s ease-out;" id="rightside">
-	
-	<div class="post-toc hidden">
-		<h1>目录</h1>
-		<ol class="toc"></ol>
-	</div>
-	
 	<div class="rightside">
 		
 			<div class="rightside-button hidden" id="js-toc">
@@ -1098,12 +1104,6 @@
 		target: 'bottom',
 	} );
 </script>
-
-
-	
-<script src="/js/widget/toc.js"></script>
-
-
 
 <!-- Analytics -->
 

@@ -398,7 +398,8 @@
     element.style.backgroundImage = "url('" + randomLink + "')";
 </script>
     <main class="post-content">
-    <article class="post-content-info"><h1 id="资源"><a href="#资源" class="headerlink" title="资源"></a>资源</h1><ul>
+    <article class="post-content-info">
+        <h1 id="资源"><a href="#资源" class="headerlink" title="资源"></a>资源</h1><ul>
 <li><p>Arxiv：<a target="_blank" rel="noopener" href="https://arxiv.org/abs/1807.03021">[1807.03021] Verisimilar Image Synthesis for Accurate Detection and Recognition of Texts in Scenes (arxiv.org)</a></p>
 </li>
 <li><p>GitHub：<a target="_blank" rel="noopener" href="https://github.com/doem97/VISD-dataset">doem97/VISD-dataset: text detection dataset VISD: Verisimilar image synthesis for accurate detection and recognition of texts in scenes (github.com)</a></p>
@@ -490,6 +491,7 @@
 <p><img src="/images/loading.webp" data-original="C1.png" alt="png"></p>
 <h2 id="转换成-MindOCR-可读取的格式"><a href="#转换成-MindOCR-可读取的格式" class="headerlink" title="转换成 MindOCR 可读取的格式"></a>转换成 MindOCR 可读取的格式</h2><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> os<br><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><br>image_dir = <span class="hljs-string">r&#x27;D:\dataset\VISD\10K\image\\&#x27;</span><br>label_dir = <span class="hljs-string">r&#x27;D:\dataset\VISD\10K\text\\&#x27;</span><br>save_dir = <span class="hljs-string">r&#x27;D:\dataset\VISD\10K\\&#x27;</span><br>save_file = <span class="hljs-string">&quot;train_det_gt.txt&quot;</span><br><br>string = <span class="hljs-string">&quot;&quot;</span><br><br><span class="hljs-keyword">for</span> label_file <span class="hljs-keyword">in</span> os.listdir(label_dir):<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;------&#x27;</span>, label_file, <span class="hljs-string">&#x27;------&#x27;</span>)<br>    <br>    index = <span class="hljs-built_in">int</span>(label_file.split(<span class="hljs-string">&#x27;_&#x27;</span>)[<span class="hljs-number">1</span>].split(<span class="hljs-string">&#x27;.&#x27;</span>)[<span class="hljs-number">0</span>])<br>    <br>    image_file = label_file.split(<span class="hljs-string">&#x27;.&#x27;</span>)[<span class="hljs-number">0</span>] + <span class="hljs-string">&#x27;.jpg&#x27;</span><br>    label_path = os.path.join(label_dir, label_file)<br><br>    label_file = <span class="hljs-built_in">open</span>(label_path, <span class="hljs-string">&#x27;r&#x27;</span>)<br>    annotations = label_file.readlines()<br>    label_file.close()<br>    <br>    string += image_file<br>    string += <span class="hljs-string">&quot;\t[&quot;</span><br><br>    <span class="hljs-keyword">for</span> i, annotation <span class="hljs-keyword">in</span> <span class="hljs-built_in">enumerate</span>(annotations):<br>        annotation_list = annotation.split(<span class="hljs-string">&#x27;,&#x27;</span>)<br>        x = [<span class="hljs-built_in">int</span>(num) <span class="hljs-keyword">for</span> num <span class="hljs-keyword">in</span> [annotation_list[<span class="hljs-number">0</span>], annotation_list[<span class="hljs-number">2</span>], annotation_list[<span class="hljs-number">4</span>], annotation_list[<span class="hljs-number">6</span>]]]<br>        y = [<span class="hljs-built_in">int</span>(num) <span class="hljs-keyword">for</span> num <span class="hljs-keyword">in</span> [annotation_list[<span class="hljs-number">1</span>], annotation_list[<span class="hljs-number">3</span>], annotation_list[<span class="hljs-number">5</span>], annotation_list[<span class="hljs-number">7</span>]]]<br>        points = np.array([x, y], np.int32).T<br>        transcriptions = annotation_list[-<span class="hljs-number">1</span>][:-<span class="hljs-number">1</span>]<br><br>        string += <span class="hljs-string">&#x27;&#123;&quot;transcription&quot;: &quot;&#x27;</span><br>        string += transcriptions<br>        string += <span class="hljs-string">&#x27;&quot;, &quot;points&quot;: [&#x27;</span><br>        <span class="hljs-keyword">for</span> j, point <span class="hljs-keyword">in</span> <span class="hljs-built_in">enumerate</span>(points):<br>            string += <span class="hljs-string">&quot;[&quot;</span><br>            string += <span class="hljs-built_in">str</span>(point[<span class="hljs-number">0</span>])<br>            string += <span class="hljs-string">&quot;, &quot;</span><br>            string += <span class="hljs-built_in">str</span>(point[<span class="hljs-number">1</span>])<br>            <span class="hljs-keyword">if</span> j != <span class="hljs-built_in">len</span>(points) - <span class="hljs-number">1</span>:<br>                string += <span class="hljs-string">&quot;], &quot;</span><br>            <span class="hljs-keyword">else</span>:<br>                string += <span class="hljs-string">&quot;]]&#125;&quot;</span><br>        <span class="hljs-keyword">if</span> i != <span class="hljs-built_in">len</span>(annotations) - <span class="hljs-number">1</span>:<br>            string += <span class="hljs-string">&quot;, &quot;</span><br>    string += <span class="hljs-string">&#x27;]\n&#x27;</span><br><span class="hljs-comment"># print(string)</span><br><br><span class="hljs-keyword">with</span> <span class="hljs-built_in">open</span>(os.path.join(save_dir, save_file), <span class="hljs-string">&#x27;w&#x27;</span>) <span class="hljs-keyword">as</span> file:<br>    file.write(string)<br></code></pre></td></tr></table></figure>
 
+        
     
         
 <link rel="stylesheet" href="/css/third-party/giscus.css">
@@ -515,7 +517,17 @@
             document.head.appendChild(scriptElement);
         </script>
     
-</article>
+
+    </article>
+    <div class="post-content-aside">
+        
+            <div class="post-content-aside-toc">
+                <h1>目录</h1>
+                <ol class="toc"></ol>
+            </div>
+            <script src="/js/widget/toc.js" async></script>
+        
+    </div>
 </main>
     <div class="post-paging">
     
@@ -597,12 +609,6 @@
 </style>
 
 <div style="z-index: 3; position: fixed; bottom: 10px; right: 20px; transition: all 0.5s ease-out;" id="rightside">
-	
-	<div class="post-toc hidden">
-		<h1>目录</h1>
-		<ol class="toc"></ol>
-	</div>
-	
 	<div class="rightside">
 		
 			<div class="rightside-button hidden" id="js-toc">
@@ -636,12 +642,6 @@
 		target: 'bottom',
 	} );
 </script>
-
-
-	
-<script src="/js/widget/toc.js"></script>
-
-
 
 <!-- Analytics -->
 

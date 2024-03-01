@@ -398,7 +398,8 @@
     element.style.backgroundImage = "url('" + randomLink + "')";
 </script>
     <main class="post-content">
-    <article class="post-content-info"><h1 id="Homework-1-COVID-19-Cases-Prediction-Regression"><a href="#Homework-1-COVID-19-Cases-Prediction-Regression" class="headerlink" title="Homework 1: COVID-19 Cases Prediction (Regression)"></a><strong>Homework 1: COVID-19 Cases Prediction (Regression)</strong></h1><p>Objectives:</p>
+    <article class="post-content-info">
+        <h1 id="Homework-1-COVID-19-Cases-Prediction-Regression"><a href="#Homework-1-COVID-19-Cases-Prediction-Regression" class="headerlink" title="Homework 1: COVID-19 Cases Prediction (Regression)"></a><strong>Homework 1: COVID-19 Cases Prediction (Regression)</strong></h1><p>Objectives:</p>
 <ul>
 <li>Solve a regression problem with deep neural networks (DNN).<ul>
 <li>用 DNN 解决回归问题</li>
@@ -693,6 +694,7 @@ Best model found at epoch 0, saving model
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> json<br><span class="hljs-keyword">import</span> csv<br><span class="hljs-keyword">from</span> pathlib <span class="hljs-keyword">import</span> Path<br><span class="hljs-keyword">from</span> tqdm.notebook <span class="hljs-keyword">import</span> tqdm<br><br><span class="hljs-keyword">import</span> torch<br><span class="hljs-keyword">from</span> torch.utils.data <span class="hljs-keyword">import</span> DataLoader<br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">parse_args</span>():<br>    <span class="hljs-string">&quot;&quot;&quot;arguments&quot;&quot;&quot;</span><br>    config = &#123;<br>        <span class="hljs-string">&quot;data_dir&quot;</span>: <span class="hljs-string">&quot;/kaggle/input/ml2023springhw4/Dataset&quot;</span>,<br>        <span class="hljs-string">&quot;model_path&quot;</span>: <span class="hljs-string">&quot;/kaggle/working/model.ckpt&quot;</span>,<br>        <span class="hljs-string">&quot;output_path&quot;</span>: <span class="hljs-string">&quot;/kaggle/working/output.csv&quot;</span>,<br>    &#125;<br><br>    <span class="hljs-keyword">return</span> config<br><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">main</span>(<span class="hljs-params"></span><br><span class="hljs-params">    data_dir,</span><br><span class="hljs-params">    model_path,</span><br><span class="hljs-params">    output_path,</span><br><span class="hljs-params"></span>):<br>    <span class="hljs-string">&quot;&quot;&quot;Main function.&quot;&quot;&quot;</span><br>    device = torch.device(<span class="hljs-string">&quot;cuda&quot;</span> <span class="hljs-keyword">if</span> torch.cuda.is_available() <span class="hljs-keyword">else</span> <span class="hljs-string">&quot;cpu&quot;</span>)<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;[Info]: Use <span class="hljs-subst">&#123;device&#125;</span> now!&quot;</span>)<br><br>    mapping_path = Path(data_dir) / <span class="hljs-string">&quot;mapping.json&quot;</span><br>    mapping = json.load(mapping_path.<span class="hljs-built_in">open</span>())<br><br>    dataset = InferenceDataset(data_dir)<br>    dataloader = DataLoader(<br>        dataset,<br>        batch_size=<span class="hljs-number">1</span>,<br>        shuffle=<span class="hljs-literal">False</span>,<br>        drop_last=<span class="hljs-literal">False</span>,<br>        num_workers=<span class="hljs-number">8</span>,<br>        collate_fn=inference_collate_batch,<br>    )<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;[Info]: Finish loading data!&quot;</span>,flush = <span class="hljs-literal">True</span>)<br><br>    speaker_num = <span class="hljs-built_in">len</span>(mapping[<span class="hljs-string">&quot;id2speaker&quot;</span>])<br>    model = Classifier(n_spks=speaker_num).to(device)<br>    model.load_state_dict(torch.load(model_path))<br>    model.<span class="hljs-built_in">eval</span>()<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;[Info]: Finish creating model!&quot;</span>,flush = <span class="hljs-literal">True</span>)<br><br>    results = [[<span class="hljs-string">&quot;Id&quot;</span>, <span class="hljs-string">&quot;Category&quot;</span>]]<br>    <span class="hljs-keyword">for</span> feat_paths, mels <span class="hljs-keyword">in</span> tqdm(dataloader):<br>        <span class="hljs-keyword">with</span> torch.no_grad():<br>            mels = mels.to(device)<br>            outs = model(mels)<br>            preds = outs.argmax(<span class="hljs-number">1</span>).cpu().numpy()<br>            <span class="hljs-keyword">for</span> feat_path, pred <span class="hljs-keyword">in</span> <span class="hljs-built_in">zip</span>(feat_paths, preds):<br>                results.append([feat_path, mapping[<span class="hljs-string">&quot;id2speaker&quot;</span>][<span class="hljs-built_in">str</span>(pred)]])<br><br>    <span class="hljs-keyword">with</span> <span class="hljs-built_in">open</span>(output_path, <span class="hljs-string">&#x27;w&#x27;</span>, newline=<span class="hljs-string">&#x27;&#x27;</span>) <span class="hljs-keyword">as</span> csvfile:<br>        writer = csv.writer(csvfile)<br>        writer.writerows(results)<br><br><br><span class="hljs-keyword">if</span> __name__ == <span class="hljs-string">&quot;__main__&quot;</span>:<br>    main(**parse_args())<br></code></pre></td></tr></table></figure>
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># ---下面就是交数据啦—--</span><br><span class="hljs-keyword">import</span> os<br><span class="hljs-keyword">import</span> json<br><span class="hljs-keyword">import</span> torch<br><span class="hljs-keyword">from</span> pathlib <span class="hljs-keyword">import</span> Path<br><span class="hljs-keyword">from</span> torch.utils.data <span class="hljs-keyword">import</span> Dataset<br><br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">InferenceDataset</span>(<span class="hljs-title class_ inherited__">Dataset</span>):<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, data_dir</span>):<br>        testdata_path = Path(data_dir) / <span class="hljs-string">&quot;testdata.json&quot;</span><br>        metadata = json.load(testdata_path.<span class="hljs-built_in">open</span>())<br>        self.data_dir = data_dir<br>        self.data = metadata[<span class="hljs-string">&quot;utterances&quot;</span>]<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__len__</span>(<span class="hljs-params">self</span>):<br>        <span class="hljs-keyword">return</span> <span class="hljs-built_in">len</span>(self.data)<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__getitem__</span>(<span class="hljs-params">self, index</span>):<br>        utterance = self.data[index]<br>        feat_path = utterance[<span class="hljs-string">&quot;feature_path&quot;</span>]<br>        mel = torch.load(os.path.join(self.data_dir, feat_path))<br><br>        <span class="hljs-keyword">return</span> feat_path, mel<br><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">inference_collate_batch</span>(<span class="hljs-params">batch</span>):<br>    <span class="hljs-string">&quot;&quot;&quot;Collate a batch of data.&quot;&quot;&quot;</span><br>    feat_paths, mels = <span class="hljs-built_in">zip</span>(*batch)<br><br>    <span class="hljs-keyword">return</span> feat_paths, torch.stack(mels)<br>     <br></code></pre></td></tr></table></figure>
 
+        
     
         
 <link rel="stylesheet" href="/css/third-party/giscus.css">
@@ -718,7 +720,17 @@ Best model found at epoch 0, saving model
             document.head.appendChild(scriptElement);
         </script>
     
-</article>
+
+    </article>
+    <div class="post-content-aside">
+        
+            <div class="post-content-aside-toc">
+                <h1>目录</h1>
+                <ol class="toc"></ol>
+            </div>
+            <script src="/js/widget/toc.js" async></script>
+        
+    </div>
 </main>
     <div class="post-paging">
     
@@ -793,12 +805,6 @@ Best model found at epoch 0, saving model
 </style>
 
 <div style="z-index: 3; position: fixed; bottom: 10px; right: 20px; transition: all 0.5s ease-out;" id="rightside">
-	
-	<div class="post-toc hidden">
-		<h1>目录</h1>
-		<ol class="toc"></ol>
-	</div>
-	
 	<div class="rightside">
 		
 			<div class="rightside-button hidden" id="js-toc">
@@ -832,12 +838,6 @@ Best model found at epoch 0, saving model
 		target: 'bottom',
 	} );
 </script>
-
-
-	
-<script src="/js/widget/toc.js"></script>
-
-
 
 <!-- Analytics -->
 

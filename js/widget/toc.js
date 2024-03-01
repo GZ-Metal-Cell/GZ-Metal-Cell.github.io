@@ -2,17 +2,21 @@ $(document).ready(function() {
     initToc();
 });
 
-function initToc() {
-    // 检查是否存在具有类名为 'hbe' 和 'hbe-content' 的元素
-    if ($('.hbe.hbe-content').length > 0) {
-        // 如果存在该元素，则给 '.rightside-button' 和 '.post-toc' 添加 'hidden' 类
-        $('.rightside-button, .post-toc').addClass('hidden');
+function initToc(){
+    showToc();
+    createToc();
+    showTocButton();
+    $("#js-toc").click(function () {
+        onShowTocButton();
+    });
+}
+
+function showToc(){
+    if ($('.hbe-content').length > 0) {
+        $('.post-content').addClass('hbe-toc');
         return;
     } else {
-        // 找到类名为 .rightside-button 的元素，并移除 hidden 类
-        $('.rightside-button').removeClass('hidden');
-        // 找到类名为 .post-toc 的元素，并移除 hidden 类
-        $('.post-toc').removeClass('hidden');
+        $('.post-content').removeClass('hbe-toc');
     }
 
     var value = localStorage.getItem('aside-status');
@@ -20,12 +24,19 @@ function initToc() {
         localStorage.setItem('aside-status', "true");
         value = true;
     }
-    if (value === "true") {
-        $(".post-toc").addClass("show-toc");
-        $(".post-content").addClass("show-toc");
-        $(".post-paging").addClass("show-toc");
+    console.log(value);
+    if (value === "false") {
+        $(".post-content").addClass("close-toc");
     }
-    createToc();
+}
+
+function showTocButton(){
+    if ($('.hbe.hbe-content').length > 0) {
+        $('.rightside-button').addClass('hidden');
+        return;
+    } else {
+        $('.rightside-button').removeClass('hidden');
+    }
 }
 
 function createToc() {
@@ -87,26 +98,15 @@ function createToc() {
     }
 }
 
-
-$("#js-toc").click(function () {
-    var postToc = $(".post-toc");
-    var postContent = $(".post-content");
-    var postPaging = $(".post-paging");
-    if (!postToc.hasClass("show-toc")) {
-        localStorage.setItem('aside-status', true);
-        postContent.addClass("show-toc");
-        postToc.addClass("show-toc");
-        postPaging.addClass("show-toc");
-    } else {
-        postContent.removeClass("show-toc");
-        postToc.removeClass("show-toc");
-        postPaging.removeClass("show-toc");
-        localStorage.setItem('aside-status', false);
-    }
-});
+function onShowTocButton(){
+    document.querySelector('.post-content').classList.toggle('close-toc');
+    var value = localStorage.getItem('aside-status');
+    localStorage.setItem('aside-status', value === "true" ? "false" : "true");
+    console.log(localStorage.getItem('aside-status'));
+}
 
 function getTopHeadingId() {
-    const headings = document.querySelector('.post-content').querySelectorAll('h1, h2, h3, h4, h5, h6');
+    const headings = document.querySelector('.post-content-info').querySelectorAll('h1, h2, h3, h4, h5, h6');
     let topHeadingId = null;
     let minDistanceFromTop = Infinity;
     for (const heading of headings) {

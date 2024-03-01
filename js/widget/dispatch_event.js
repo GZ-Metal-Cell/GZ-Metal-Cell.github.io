@@ -6,7 +6,7 @@ window.dispatchEvent(event);
 function handleHexoBlogDecryptEvent() {
     if (typeof initToc === 'function') {
         initToc();
-    } 
+    }
     if (typeof initPhotoFigcaption === 'function') {
         initPhotoFigcaption();
     }

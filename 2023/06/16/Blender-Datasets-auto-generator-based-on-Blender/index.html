@@ -398,7 +398,8 @@
     element.style.backgroundImage = "url('" + randomLink + "')";
 </script>
     <main class="post-content">
-    <article class="post-content-info"><h1 id="资源"><a href="#资源" class="headerlink" title="资源"></a>资源</h1><ul>
+    <article class="post-content-info">
+        <h1 id="资源"><a href="#资源" class="headerlink" title="资源"></a>资源</h1><ul>
 <li><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/351349221">基于Blender的深度学习数据集（图像）自动生成 - 知乎 (zhihu.com)</a></li>
 </ul>
 <h1 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h1><h2 id="Config"><a href="#Config" class="headerlink" title="Config"></a>Config</h2><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> bpy<br><span class="hljs-keyword">import</span> math, mathutils<br><span class="hljs-keyword">import</span> os, random<br><span class="hljs-keyword">import</span> json<br><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><br>mode  = <span class="hljs-string">&#x27;train&#x27;</span> <span class="hljs-comment"># FLAGS : train or val</span><br>worldPath = <span class="hljs-string">&#x27;pathToYourBackgrounds/&#x27;</span><br>objsPath = <span class="hljs-string">&#x27;pathToYour3DObjso/&#x27;</span><br>imgPath = <span class="hljs-string">f&#x27;/home/xxx/Documents/myDataset/images/<span class="hljs-subst">&#123;mode&#125;</span>/&#x27;</span><br>labelPath = <span class="hljs-string">f&#x27;/home/xxx/Documents/myDataset/labels/<span class="hljs-subst">&#123;mode&#125;</span>/&#x27;</span><br>kittiCalibsPath = <span class="hljs-string">&#x27;/home/xxx/Documents/myDataset/kittiCalibs/&#x27;</span><br>kittiLabelsPath = <span class="hljs-string">&#x27;/home/xxx/Documents/myDataset/kittiLabels/&#x27;</span><br><br>picsNum = <span class="hljs-number">2000</span><br><span class="hljs-comment"># Number of objects in a scene</span><br>objsNum = <span class="hljs-number">4</span><br><span class="hljs-keyword">if</span> objsNum &gt; <span class="hljs-built_in">len</span>(os.listdir(objsPath)):<br>    objsNum = <span class="hljs-built_in">len</span>(os.listdir(objsPath)) <br>cameraLens = <span class="hljs-number">15</span>  <span class="hljs-comment"># 相机焦距</span><br>img_w = <span class="hljs-number">960</span><br>img_h = <span class="hljs-number">540</span><br><span class="hljs-comment"># Worlds changing frequency</span><br>freq_CTW = <span class="hljs-number">10</span><br>objNameList = []<br></code></pre></td></tr></table></figure>
@@ -435,6 +436,7 @@
 <h2 id="bougeLe"><a href="#bougeLe" class="headerlink" title="bougeLe()"></a>bougeLe()</h2><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">bougeLe</span>():<br>    <span class="hljs-comment"># 遍历场景中的所有物体，对于除了名为 &quot;Camera&quot; 的相机对象之外的所有对象，将其选中，然后使用 while 循环计算一个比例尺来设置对象的位置</span><br>    <span class="hljs-keyword">for</span> obj <span class="hljs-keyword">in</span> bpy.data.objects:<br>        <span class="hljs-keyword">if</span> obj.name != <span class="hljs-string">&#x27;Camera&#x27;</span>:<br>            obj.select_set(<span class="hljs-literal">True</span>)<br>            <span class="hljs-comment"># 使用 while 循环是因为在某些情况下，计算比例尺可能会出现异常而导致程序崩溃，因此使用 try 和 excerpt 语句可以让程序不断地重试直到成功为止</span><br>            <span class="hljs-keyword">while</span> <span class="hljs-literal">True</span>:              <br>                <span class="hljs-keyword">try</span>:<br>                    scale = math.sqrt(<span class="hljs-built_in">max</span>(obj.dimensions)) * bpy.data.objects[<span class="hljs-string">&#x27;Camera&#x27;</span>].data.lens<br>                    obj.location = (<span class="hljs-number">0</span>, <span class="hljs-number">0</span>, -<span class="hljs-number">0.08</span> * scale)<br>                    <span class="hljs-keyword">break</span><br>                excerpt:<br>                    <span class="hljs-keyword">continue</span><br>            <span class="hljs-comment"># 随机变换对象的位置、旋转和缩放，并传递一些参数来控制变换的幅度和随机性</span><br>            bpy.ops.<span class="hljs-built_in">object</span>.randomize_transform(random_seed = random.randint(<span class="hljs-number">0</span>, <span class="hljs-number">100</span>), loc=(<span class="hljs-number">0.24</span>, <span class="hljs-number">0.1</span>, <span class="hljs-number">0.05</span>), rot=(<span class="hljs-number">3</span>, <span class="hljs-number">3</span>, <span class="hljs-number">3</span>), scale=(<span class="hljs-number">1</span>, <span class="hljs-number">1</span>, <span class="hljs-number">1</span>))  <br>        <span class="hljs-keyword">else</span>:<br>            <span class="hljs-comment"># 对于名为 &quot;Camera&quot; 的相机对象，使用 random.uniform 方法生成随机的旋转角度，并将其赋值给对象的 Z 轴旋转角度，以模拟相机的扫描动态</span><br>            obj.rotation_euler[<span class="hljs-number">2</span>] = <span class="hljs-number">4</span> * random.uniform(-<span class="hljs-number">0.7</span>, <span class="hljs-number">0.7</span>)<br></code></pre></td></tr></table></figure>
 <h2 id="snapIt"><a href="#snapIt" class="headerlink" title="snapIt()"></a>snapIt()</h2><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">snapIt</span>(<span class="hljs-params">scene, idNum</span>):<br>    <span class="hljs-keyword">for</span> obj <span class="hljs-keyword">in</span> bpy.data.objects:<br>        <span class="hljs-keyword">if</span> obj.name != <span class="hljs-string">&#x27;Camera&#x27;</span>:<br>            <span class="hljs-comment"># 只选择相机</span><br>            obj.select_set(<span class="hljs-literal">False</span>)<br>    <span class="hljs-comment"># 是通过将 imgPath 和 idNum 进行字符串拼接而得到的文件路径和文件名，用于保存渲染图像</span><br>    imId = <span class="hljs-string">f&#x27;<span class="hljs-subst">&#123;imgPath&#125;</span><span class="hljs-subst">&#123;idNum&#125;</span>.png&#x27;</span><br>    scene.render.filepath = (imId) <br>    <span class="hljs-comment"># 调用 bpy.ops.render.render 方法对场景进行渲染，最终将渲染结果保存为一个 PNG 格式的图像文件</span><br>    bpy.ops.render.render(write_still=<span class="hljs-literal">True</span>)<br></code></pre></td></tr></table></figure>
 
+        
     
         
 <link rel="stylesheet" href="/css/third-party/giscus.css">
@@ -460,7 +462,17 @@
             document.head.appendChild(scriptElement);
         </script>
     
-</article>
+
+    </article>
+    <div class="post-content-aside">
+        
+            <div class="post-content-aside-toc">
+                <h1>目录</h1>
+                <ol class="toc"></ol>
+            </div>
+            <script src="/js/widget/toc.js" async></script>
+        
+    </div>
 </main>
     <div class="post-paging">
     
@@ -535,12 +547,6 @@
 </style>
 
 <div style="z-index: 3; position: fixed; bottom: 10px; right: 20px; transition: all 0.5s ease-out;" id="rightside">
-	
-	<div class="post-toc hidden">
-		<h1>目录</h1>
-		<ol class="toc"></ol>
-	</div>
-	
 	<div class="rightside">
 		
 			<div class="rightside-button hidden" id="js-toc">
@@ -574,12 +580,6 @@
 		target: 'bottom',
 	} );
 </script>
-
-
-	
-<script src="/js/widget/toc.js"></script>
-
-
 
 <!-- Analytics -->
 

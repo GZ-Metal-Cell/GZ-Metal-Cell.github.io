@@ -12,7 +12,7 @@
 
 
 
-<meta name="keywords" content="Python,论文,代码复现,Pytorch,图像分割,">
+<meta name="keywords" content="Python,论文,代码复现,图像分割,Pytorch,">
 <meta name="description" content="论文阅读。">
 
 
@@ -333,9 +333,9 @@
                 
                     <li><a href="/tags/代码复现"><span>代码复现</span></a></li>
                 
-                    <li><a href="/tags/Pytorch"><span>Pytorch</span></a></li>
-                
                     <li><a href="/tags/图像分割"><span>图像分割</span></a></li>
+                
+                    <li><a href="/tags/Pytorch"><span>Pytorch</span></a></li>
                 
             
         </ul>
@@ -402,7 +402,8 @@
     element.style.backgroundImage = "url('" + randomLink + "')";
 </script>
     <main class="post-content">
-    <article class="post-content-info"><h1 id="资源"><a href="#资源" class="headerlink" title="资源"></a>资源</h1><ul>
+    <article class="post-content-info">
+        <h1 id="资源"><a href="#资源" class="headerlink" title="资源"></a>资源</h1><ul>
 <li>原文：<a target="_blank" rel="noopener" href="https://arxiv.org/abs/2304.12306v1">[2304.12306v1] Segment Anything in Medical Images (arxiv.org)</a></li>
 <li>代码：<a target="_blank" rel="noopener" href="https://github.com/bowang-lab/medsam">bowang-lab/MedSAM: This the official repository for MedSAM: Segment Anything in Medical Images. (github.com)</a></li>
 </ul>
@@ -769,6 +770,7 @@
 <h4 id="visualization-functions"><a href="#visualization-functions" class="headerlink" title="visualization functions"></a>visualization functions</h4><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># visualization functions</span><br><span class="hljs-comment"># source: https://github.com/facebookresearch/segment-anything/blob/main/notebooks/predictor_example.ipynb</span><br><span class="hljs-comment"># change color to avoid red and green</span><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">show_mask</span>(<span class="hljs-params">mask, ax, random_color=<span class="hljs-literal">False</span></span>):<br>    <span class="hljs-keyword">if</span> random_color:<br>        color = np.concatenate([np.random.random(<span class="hljs-number">3</span>), np.array([<span class="hljs-number">0.6</span>])], axis=<span class="hljs-number">0</span>)<br>    <span class="hljs-keyword">else</span>:<br>        color = np.array([<span class="hljs-number">251</span>/<span class="hljs-number">255</span>, <span class="hljs-number">252</span>/<span class="hljs-number">255</span>, <span class="hljs-number">30</span>/<span class="hljs-number">255</span>, <span class="hljs-number">0.6</span>])<br>    h, w = mask.shape[-<span class="hljs-number">2</span>:]<br>    mask_image = mask.reshape(h, w, <span class="hljs-number">1</span>) * color.reshape(<span class="hljs-number">1</span>, <span class="hljs-number">1</span>, -<span class="hljs-number">1</span>)<br>    ax.imshow(mask_image)<br>    <br><span class="hljs-keyword">def</span> <span class="hljs-title function_">show_box</span>(<span class="hljs-params">box, ax</span>):<br>    x0, y0 = box[<span class="hljs-number">0</span>], box[<span class="hljs-number">1</span>]<br>    w, h = box[<span class="hljs-number">2</span>] - box[<span class="hljs-number">0</span>], box[<span class="hljs-number">3</span>] - box[<span class="hljs-number">1</span>]<br>    ax.add_patch(plt.Rectangle((x0, y0), w, h, edgecolor=<span class="hljs-string">&#x27;blue&#x27;</span>, facecolor=(<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>), lw=<span class="hljs-number">2</span>))    <br><br>_, axs = plt.subplots(<span class="hljs-number">1</span>, <span class="hljs-number">3</span>, figsize=(<span class="hljs-number">25</span>, <span class="hljs-number">25</span>))<br>axs[<span class="hljs-number">0</span>].imshow(image_data)<br>show_mask(gt_data&gt;<span class="hljs-number">0</span>, axs[<span class="hljs-number">0</span>])<br><span class="hljs-comment"># show_box(box_np[img_id], axs[0])</span><br><span class="hljs-comment"># axs[0].set_title(&#x27;Mask with Tuned Model&#x27;, fontsize=20)</span><br>axs[<span class="hljs-number">0</span>].axis(<span class="hljs-string">&#x27;off&#x27;</span>)<br><br>axs[<span class="hljs-number">1</span>].imshow(image_data)<br>show_mask(ori_sam_seg, axs[<span class="hljs-number">1</span>])<br>show_box(bbox_raw, axs[<span class="hljs-number">1</span>])<br><span class="hljs-comment"># add text to image to show dice score</span><br>axs[<span class="hljs-number">1</span>].text(<span class="hljs-number">0.5</span>, <span class="hljs-number">0.5</span>, <span class="hljs-string">&#x27;SAM DSC: &#123;:.4f&#125;&#x27;</span>.<span class="hljs-built_in">format</span>(ori_sam_dsc), fontsize=<span class="hljs-number">30</span>, horizontalalignment=<span class="hljs-string">&#x27;left&#x27;</span>, verticalalignment=<span class="hljs-string">&#x27;top&#x27;</span>, color=<span class="hljs-string">&#x27;yellow&#x27;</span>)<br><span class="hljs-comment"># axs[1].set_title(&#x27;Mask with Untuned Model&#x27;, fontsize=20)</span><br>axs[<span class="hljs-number">1</span>].axis(<span class="hljs-string">&#x27;off&#x27;</span>)<br><br>axs[<span class="hljs-number">2</span>].imshow(image_data)<br>show_mask(medsam_seg, axs[<span class="hljs-number">2</span>])<br>show_box(bbox_raw, axs[<span class="hljs-number">2</span>])<br><span class="hljs-comment"># add text to image to show dice score</span><br>axs[<span class="hljs-number">2</span>].text(<span class="hljs-number">0.5</span>, <span class="hljs-number">0.5</span>, <span class="hljs-string">&#x27;MedSAM DSC: &#123;:.4f&#125;&#x27;</span>.<span class="hljs-built_in">format</span>(medsam_dsc), fontsize=<span class="hljs-number">30</span>, horizontalalignment=<span class="hljs-string">&#x27;left&#x27;</span>, verticalalignment=<span class="hljs-string">&#x27;top&#x27;</span>, color=<span class="hljs-string">&#x27;yellow&#x27;</span>)<br><span class="hljs-comment"># axs[2].set_title(&#x27;Ground Truth&#x27;, fontsize=20)</span><br>axs[<span class="hljs-number">2</span>].axis(<span class="hljs-string">&#x27;off&#x27;</span>)<br>plt.show()  <br>plt.subplots_adjust(wspace=<span class="hljs-number">0.01</span>, hspace=<span class="hljs-number">0</span>)<br><span class="hljs-comment"># save plot</span><br><span class="hljs-comment"># plt.savefig(join(model_save_path, test_npzs[npz_idx].split(&#x27;.npz&#x27;)[0] + str(img_id).zfill(3) + &#x27;.png&#x27;), bbox_inches=&#x27;tight&#x27;, dpi=300)</span><br>plt.close()<br></code></pre></td></tr></table></figure>
 <p><img src="/images/loading.webp" data-original="C12.png" alt="png"></p>
 
+        
     
         
 <link rel="stylesheet" href="/css/third-party/giscus.css">
@@ -794,7 +796,17 @@
             document.head.appendChild(scriptElement);
         </script>
     
-</article>
+
+    </article>
+    <div class="post-content-aside">
+        
+            <div class="post-content-aside-toc">
+                <h1>目录</h1>
+                <ol class="toc"></ol>
+            </div>
+            <script src="/js/widget/toc.js" async></script>
+        
+    </div>
 </main>
     <div class="post-paging">
     
@@ -876,12 +888,6 @@
 </style>
 
 <div style="z-index: 3; position: fixed; bottom: 10px; right: 20px; transition: all 0.5s ease-out;" id="rightside">
-	
-	<div class="post-toc hidden">
-		<h1>目录</h1>
-		<ol class="toc"></ol>
-	</div>
-	
 	<div class="rightside">
 		
 			<div class="rightside-button hidden" id="js-toc">
@@ -915,12 +921,6 @@
 		target: 'bottom',
 	} );
 </script>
-
-
-	
-<script src="/js/widget/toc.js"></script>
-
-
 
 <!-- Analytics -->
 
