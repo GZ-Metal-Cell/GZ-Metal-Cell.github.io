@@ -24,7 +24,6 @@ function showToc(){
         localStorage.setItem('aside-status', "true");
         value = true;
     }
-    console.log(value);
     if (value === "false") {
         $(".post-content").addClass("close-toc");
     }
@@ -102,7 +101,6 @@ function onShowTocButton(){
     document.querySelector('.post-content').classList.toggle('close-toc');
     var value = localStorage.getItem('aside-status');
     localStorage.setItem('aside-status', value === "true" ? "false" : "true");
-    console.log(localStorage.getItem('aside-status'));
 }
 
 function getTopHeadingId() {
