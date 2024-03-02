@@ -24,7 +24,7 @@ function showToc(){
         localStorage.setItem('aside-status', "true");
         value = true;
     }
-    if (value === "false") {
+    if (localStorage.getItem('aside-status') === "false") {
         $(".post-content").addClass("close-toc");
     }
 }
@@ -98,6 +98,7 @@ function createToc() {
 }
 
 function onShowTocButton(){
+    $(".post-content-aside-toc").css("transition", "bottom 0.4s ease-in-out");
     document.querySelector('.post-content').classList.toggle('close-toc');
     var value = localStorage.getItem('aside-status');
     localStorage.setItem('aside-status', value === "true" ? "false" : "true");

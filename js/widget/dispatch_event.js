@@ -22,6 +22,9 @@ function handleHexoBlogDecryptEvent() {
     if (typeof initTagHide === 'function') {
         initTagHide();
     }
+    if (typeof replaceSpacesWithNbsp === 'function') {
+        replaceSpacesWithNbsp();
+    }
 }
 
 // 添加事件监听器

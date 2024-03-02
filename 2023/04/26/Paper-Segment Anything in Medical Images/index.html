@@ -387,6 +387,11 @@
 <script src="/js/widget/tabs.js"></script>
 
 
+    
+<script src="/js/widget/replaceSpacesWithNbsp.js"></script>
+
+
+
 <script>
     var element = document.querySelector('.post-header-background');
     element.classList.add('custom-style');
@@ -420,9 +425,9 @@
 </li>
 </ul>
 <hr>
-<p>&nbsp;&nbsp;&nbsp;&nbsp;第一个也是最著名的<strong>基础分割模型（segmentation foundation model）</strong>是 SAM，它在超过 1B 个蒙版上进行训练，可以根据提示（例如，边界框、点、文本）或以全自动的方式生成准确的对象蒙版。但是自然图像和医学图像之前存在显著差异，这些模型在医学图像分割中的适用性仍然有限，在一些典型的医学图像分割任务（对象边缘信息较弱）中不好使。</p>
+<p>​    第一个也是最著名的<strong>基础分割模型（segmentation foundation model）</strong>是 SAM，它在超过 1B 个蒙版上进行训练，可以根据提示（例如，边界框、点、文本）或以全自动的方式生成准确的对象蒙版。但是自然图像和医学图像之前存在显著差异，这些模型在医学图像分割中的适用性仍然有限，在一些典型的医学图像分割任务（对象边缘信息较弱）中不好使。</p>
 <hr>
-<p>&nbsp;&nbsp;&nbsp;&nbsp;SAM 利用了基于 transformer 的架构：</p>
+<p>​    SAM 利用了基于 transformer 的架构：</p>
 <ul>
 <li><p>使用 transformer-based 的<strong>图像编码器（image encoder）</strong>提取图像特征</p>
 <ul>
@@ -446,7 +451,7 @@
 </ul>
 </li>
 </ul>
-<p>&nbsp;&nbsp;&nbsp;&nbsp;蒙版预测头可以生成 3 个 $4\times \mathrm{downscaled\ masks}$，分别对应于整个对象、部分对象和子对象。</p>
+<p>​    蒙版预测头可以生成 3 个 $4\times \mathrm{downscaled\ masks}$，分别对应于整个对象、部分对象和子对象。</p>
 <p><img src="/images/loading.webp" data-original="2.png" alt="png"></p>
 <hr>
 <p>SAM 支持 3 中主要的分割模式：</p>
@@ -466,8 +471,8 @@
 </ul>
 <p>我们认为，在医学图像分割任务中使用 SAM 时，基于边界框的分割模式比基于分割一切和点的分割模式具有更广泛的实用价值。</p>
 <hr>
-<p>&nbsp;&nbsp;&nbsp;&nbsp;为了使SAM适用于医学图像分割，有必要选择适当的用户提示和网络组件进行微调。</p>
-<p>&nbsp;&nbsp;&nbsp;&nbsp;基于以上分析，<strong>边界框提示</strong>是指定分割目标的正确选择。SAM 的网络架构包含三个主要组件：<strong>图像编码器</strong>、<strong>提示编码器</strong>和<strong>掩码解码器</strong>。人们可以选择微调它们的任何组合。</p>
+<p>​    为了使SAM适用于医学图像分割，有必要选择适当的用户提示和网络组件进行微调。</p>
+<p>​    基于以上分析，<strong>边界框提示</strong>是指定分割目标的正确选择。SAM 的网络架构包含三个主要组件：<strong>图像编码器</strong>、<strong>提示编码器</strong>和<strong>掩码解码器</strong>。人们可以选择微调它们的任何组合。</p>
 <ul>
 <li><p><strong>图像编码器</strong>基于 vision transformer，该转换器在 SAM 中具有最大的计算开销。为了降低计算成本，将<strong>图像编码器</strong> <em>冻结</em></p>
 </li>
@@ -477,13 +482,13 @@
 </li>
 </ul>
 <p><img src="/images/loading.webp" data-original="3.png" alt="png"></p>
-<p>&nbsp;&nbsp;&nbsp;&nbsp;由于图像编码器可以在提示模型之前应用，因此我们可以<strong>预先计算所有训练图像的图像嵌入</strong>，以避免每次提示的图像嵌入的重复计算，这可以显著提高训练效率。掩码解码器只需要生成一个掩码，而不需要生成三个掩码，因为在大多数情况下，边界框提示可以清楚地指定预期的分割目标。</p>
+<p>​    由于图像编码器可以在提示模型之前应用，因此我们可以<strong>预先计算所有训练图像的图像嵌入</strong>，以避免每次提示的图像嵌入的重复计算，这可以显著提高训练效率。掩码解码器只需要生成一个掩码，而不需要生成三个掩码，因为在大多数情况下，边界框提示可以清楚地指定预期的分割目标。</p>
 <hr>
-<p>&nbsp;&nbsp;&nbsp;&nbsp;每个数据集被随机分为80个和20个，用于训练和测试。排除了像素小于 100 的分割目标。由于 SAM 是为 2D 图像分割而设计的，我们将3D图像（即CT、MR、PET）沿平面外维度划分为2D切片。然后，我们使用预先训练的 ViT-Base 模型作为图像编码器，并通过将归一化的图像馈送到图像编码器来离线计算所有图像嵌入（图像编码器将图像大小转换为 $3\times 1024\times 1024$）。在训练期间，边界框提示是从具有0-20个像素的随机扰动的地面实况掩码生成的。损失函数是Dice损失和交叉熵损失之间的未加权和，已被证明在各种分割任务中是稳健的。Adam 优化器对网络进行了优化，初始学习率为1e-5。</p>
+<p>​    每个数据集被随机分为80个和20个，用于训练和测试。排除了像素小于 100 的分割目标。由于 SAM 是为 2D 图像分割而设计的，我们将3D图像（即CT、MR、PET）沿平面外维度划分为2D切片。然后，我们使用预先训练的 ViT-Base 模型作为图像编码器，并通过将归一化的图像馈送到图像编码器来离线计算所有图像嵌入（图像编码器将图像大小转换为 $3\times 1024\times 1024$）。在训练期间，边界框提示是从具有0-20个像素的随机扰动的地面实况掩码生成的。损失函数是Dice损失和交叉熵损失之间的未加权和，已被证明在各种分割任务中是稳健的。Adam 优化器对网络进行了优化，初始学习率为1e-5。</p>
 <hr>
-<p>&nbsp;&nbsp;&nbsp;&nbsp;使用<strong>骰子相似系数（DSC）</strong>和<strong>归一化表面距离（NSD，公差1 mm）</strong>来评估基本事实和分割结果之间的区域重叠率和边界一致性，这是两种常用的<strong>分割指标</strong>。</p>
+<p>​    使用<strong>骰子相似系数（DSC）</strong>和<strong>归一化表面距离（NSD，公差1 mm）</strong>来评估基本事实和分割结果之间的区域重叠率和边界一致性，这是两种常用的<strong>分割指标</strong>。</p>
 <hr>
-<p>&nbsp;&nbsp;&nbsp;&nbsp;我们的代码和经过训练的模型是公开的，<strong>我们提供了关于在定制的新数据集上微调SAM的分步教程</strong>。我们期待着与社区合作，共同推进这一令人兴奋的研究领域。</p>
+<p>​    我们的代码和经过训练的模型是公开的，<strong>我们提供了关于在定制的新数据集上微调SAM的分步教程</strong>。我们期待着与社区合作，共同推进这一令人兴奋的研究领域。</p>
 <h1 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h1><h2 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h2><p>新建一个 conda 环境：</p>
 <figure class="highlight shell"><table><tr><td class="code"><pre><code class="hljs shell">conda create -n medsam python=3.10 -y<br></code></pre></td></tr></table></figure>
 <p>激活之：</p>
@@ -868,7 +873,7 @@
 <script src="/js/widget/highlight_tools.js"></script>
 
 <script>
-    var codeBlocks = document.querySelectorAll('pre');
+    var codeBlocks = document.querySelectorAll('.hljs');
     createHighlightTools(codeBlocks, "/images/icon/copy.png", "/images/icon/close_code_block.png", "", ""); // 调用函数并传递参数
 </script>
 
