@@ -2,18 +2,19 @@
  * tag-hide
  */
 const initTagHide = () => {
-    const hideButtons = document.querySelectorAll('.hide-button');
-    if (!hideButtons.length) return;
-    const handleClick = function (e) {
-        const $this = this;
-        $this.classList.add('open');
-        const $fjGallery = $this.nextElementSibling.querySelectorAll('.gallery-container');
-        $fjGallery.length && addJustifiedGallery($fjGallery);
+    const $hideButtons = $('.hide-button');
+    if ($hideButtons.length === 0) return;
+
+    const handleClick = function(e) {
+        const $this = $(this);
+        $this.addClass('open');
+        const $fjGallery = $this.next().find('.gallery-container');
+        if ($fjGallery.length) {
+            addJustifiedGallery($fjGallery.get(0));
+        }
     }
 
-    hideButtons.forEach(item => {
-        item.addEventListener('click', handleClick, { once: true });
-    })
+    $hideButtons.one('click', handleClick); // 使用 .one() 来确保事件只触发一次
 }
 
 $(document).ready(function() {

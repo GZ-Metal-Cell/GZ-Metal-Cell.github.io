@@ -6,6 +6,7 @@ function initToc(){
     showToc();
     createToc();
     showTocButton();
+    activeItem();
     $("#js-toc").click(function () {
         onShowTocButton();
     });
@@ -121,8 +122,7 @@ function getTopHeadingId() {
     return topHeadingId;
 }
 
-
-document.addEventListener("scroll", function (event) {
+function activeItem(){
     const tocLinks = document.querySelectorAll('a.toc-link');
     const topHeadingId = getTopHeadingId();
     tocLinks.forEach(link => {
@@ -142,5 +142,9 @@ document.addEventListener("scroll", function (event) {
             link.parentNode.classList.remove("active");
         }
     });
+}
+
+document.addEventListener("scroll", function (event) {
+    activeItem();
 });
 

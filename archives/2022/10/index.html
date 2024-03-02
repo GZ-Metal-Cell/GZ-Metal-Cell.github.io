@@ -401,79 +401,65 @@
 </div>
 
 <script>
-    var groupingDiv = document.querySelector('.grouping');
-    var h3Elements = groupingDiv.querySelectorAll('h3');
+    var $groupingDiv = $('.grouping');
     
-    h3Elements.forEach(function(h3Element) {
-        var monthListDiv = document.createElement('div');
-        monthListDiv.classList.add('grouping-month-list');
-    
-        var nextElement = h3Element.nextElementSibling;
-        var anchorElements = [];
-    
-        while (nextElement && nextElement.tagName === 'A') {
-            anchorElements.push(nextElement);
-            nextElement = nextElement.nextElementSibling;
+    $groupingDiv.find('h3').each(function() {
+        var $h3Element = $(this);
+        var $monthListDiv = $('<div class="grouping-month-list"></div>');
+        
+        var $nextElement = $h3Element.next();
+        var $anchorElements = [];
+        
+        while ($nextElement.length > 0 && $nextElement.is('a')) {
+            $anchorElements.push($nextElement);
+            $nextElement = $nextElement.next();
         }
-    
-        if (anchorElements.length > 0) {
-            anchorElements.forEach(function(anchorElement) {
-                monthListDiv.appendChild(anchorElement);
+        
+        if ($anchorElements.length > 0) {
+            $.each($anchorElements, function() {
+                $monthListDiv.append($(this));
             });
-    
-            var groupingMonthDiv = document.createElement('div');
-            groupingMonthDiv.classList.add('grouping-month');
-            var h3Clone = h3Element.cloneNode(true);
-    
-            groupingMonthDiv.appendChild(h3Clone);
-            groupingMonthDiv.appendChild(monthListDiv);
-    
-            var toggleButton = document.createElement('button');
-            toggleButton.classList.add("toggleButton");
+            
+            var $groupingMonthDiv = $('<div class="grouping-month"></div>');
+            var $h3Clone = $h3Element.clone();
+            
+            $groupingMonthDiv.append($h3Clone).append($monthListDiv);
+            
             var closeCodeBlockIcon = '/images/icon/close_code_block.png';
-            toggleButton.style.backgroundImage = 'url("' + closeCodeBlockIcon + '")';
-            toggleButton.addEventListener('click', function() {
-                toggleButton.classList.toggle('closed');
-                monthListDiv.classList.toggle('closed');
+            var $toggleButton = $('<button class="toggleButton"></button>').css('backgroundImage', 'url("' + closeCodeBlockIcon + '")');
+            $toggleButton.on('click', function() {
+                $(this).toggleClass('closed');
+                $monthListDiv.toggleClass('closed');
             });
-            groupingMonthDiv.appendChild(toggleButton);
-    
-            h3Element.parentNode.replaceChild(groupingMonthDiv, h3Element);
+            $groupingMonthDiv.append($toggleButton);
+            
+            $h3Element.replaceWith($groupingMonthDiv);
         }
     });
     
-    var h2Elements = groupingDiv.querySelectorAll('h2');
-
-    h2Elements.forEach(function(h2Element) {
-        var nextElement = h2Element.nextElementSibling;
-    
-        var groupingYearDiv = document.createElement('div');
-        groupingYearDiv.classList.add('grouping-year');
-    
-        var yearListDiv = document.createElement('div');
-        yearListDiv.classList.add('grouping-year-list');
-
-        while (nextElement && nextElement.tagName.toLowerCase() !== 'h2') {
-            var currentElement = nextElement;
-            nextElement = nextElement.nextElementSibling;
-            yearListDiv.appendChild(currentElement);
-        }
-    
-        h2Element.parentNode.insertBefore(groupingYearDiv, h2Element.nextSibling);
-    
-        groupingYearDiv.appendChild(h2Element);
-        groupingYearDiv.appendChild(yearListDiv);
-    
-        var toggleButton = document.createElement('button');
-        toggleButton.classList.add("toggleButton");
-        var closeCodeBlockIcon = '/images/icon/close_code_block.png';
-        toggleButton.style.backgroundImage = 'url("' + closeCodeBlockIcon + '")';
+    $groupingDiv.find('h2').each(function() {
+        var $h2Element = $(this);
+        var $nextElement = $h2Element.next();
         
-        toggleButton.addEventListener('click', function() {
-            toggleButton.classList.toggle('closed');
-            yearListDiv.classList.toggle('closed');
+        var $groupingYearDiv = $('<div class="grouping-year"></div>');
+        var $yearListDiv = $('<div class="grouping-year-list"></div>');
+        
+        while ($nextElement.length > 0 && !$nextElement.is('h2')) {
+            var $currentElement = $nextElement;
+            $nextElement = $nextElement.next();
+            $yearListDiv.append($currentElement);
+        }
+        
+        $h2Element.after($groupingYearDiv);
+        $groupingYearDiv.append($h2Element).append($yearListDiv);
+        
+        var closeCodeBlockIcon = '/images/icon/close_code_block.png';
+        var $toggleButton = $('<button class="toggleButton"></button>').css('backgroundImage', 'url("' + closeCodeBlockIcon + '")');
+        $toggleButton.on('click', function() {
+            $(this).toggleClass('closed');
+            $yearListDiv.toggleClass('closed');
         });
-        groupingYearDiv.appendChild(toggleButton);
+        $groupingYearDiv.append($toggleButton);
 
         
     });
@@ -515,7 +501,7 @@
 <script src="/js/widget/highlight_tools.js"></script>
 
 <script>
-    var codeBlocks = document.querySelectorAll('.hljs');
+    var codeBlocks = $('.hljs').closest('pre');
     createHighlightTools(codeBlocks, "/images/icon/copy.png", "/images/icon/close_code_block.png", "", ""); // 调用函数并传递参数
 </script>
 
