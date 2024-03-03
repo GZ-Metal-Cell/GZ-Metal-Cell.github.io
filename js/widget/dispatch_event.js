@@ -4,6 +4,7 @@ window.dispatchEvent(event);
 
 // 定义回调函数
 function handleHexoBlogDecryptEvent() {
+    
     if (typeof initToc === 'function') {
         initToc();
     }
@@ -25,6 +26,9 @@ function handleHexoBlogDecryptEvent() {
     if (typeof replaceSpacesWithNbsp === 'function') {
         replaceSpacesWithNbsp();
     }
+    if (typeof initKatex === 'function') {
+        initKatex();
+    }  
 }
 
 // 添加事件监听器
