@@ -1,4 +1,5 @@
 function handleHexoBlogDecryptEvent() {
+    console.log("handleHexoBlogDecryptEvent()");
     if (typeof initToc === 'function') {
         initToc();
     }
@@ -29,7 +30,9 @@ function handleHexoBlogDecryptEvent() {
 }
 
 $(document).ready(function () {
+    // trigger event
     var event = new Event('hexo-blog-decrypt');
     window.dispatchEvent(event);
+	// 添加事件监听器
     window.addEventListener('hexo-blog-decrypt', handleHexoBlogDecryptEvent);
 });
