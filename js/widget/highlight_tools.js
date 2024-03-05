@@ -1,4 +1,5 @@
-function createHighlightTools(codeBlocks, copyIcon, closeCodeBlockIcon, highlightShrink, HighlightHeightLimit) {
+function initHighlightTools() {
+    var codeBlocks = $('.hljs').closest('pre');
     $(codeBlocks).each(function() {
         var $this = $(this);
         var $container = createContainer($this);
@@ -82,3 +83,7 @@ function setHighlightHeightLimit($codeBlock, HighlightHeightLimit) {
         $codeBlock.find('.hljs').css('maxHeight', HighlightHeightLimit);
     }
 }
+
+$(document).ready(function () {
+	initHighlightTools();
+});
