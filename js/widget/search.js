@@ -129,7 +129,7 @@ var searchFunc = function (path, input_id, content_id, result_id) {
                 }
                 else
                 {
-                    $result.innerHTML = "匹配到 <b><font size=\"5px\"><font color=\"#333\">" + str.match(/<li>/g).length + "</font></font></b> 个结果。";
+                    $result.innerHTML = "匹配到 <b><font size=\"5px\">" + str.match(/<li>/g).length + "</font></b> 个结果。";
                 }
                 $content.innerHTML = str;
             });
