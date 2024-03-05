@@ -58,7 +58,7 @@ function createCloseCodeBlockButton($container, $codeBlock, icon, highlightShrin
     var $button = $('<button class="close-code-block-button" type="button" title="close-code-block-button"></button>').css('backgroundImage', 'url("' + icon + '")');
     $container.append($button);
 
-    if (highlightShrink) {
+    if (highlightShrink == 'true') {
         var $hljs = $codeBlock.find('.hljs');
         $button.css('transform', "rotate(-90deg)");
         $hljs.addClass("closed");
