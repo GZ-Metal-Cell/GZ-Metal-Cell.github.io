@@ -47,7 +47,6 @@ function createCopyButton($container, $codeBlock, icon) {
 function createCodeLangText($container, $codeBlock) {
     // 获取代码语言并创建对应的提示文字
     var lang = $codeBlock.find('.hljs').attr('class').replace('hljs ', '').toUpperCase();
-    if (lang === 'EBNF' || lang === 'ISBL') lang = '';
     var $span = $('<span class="code-lang">' + lang + '</span>');
 
     // 将提示文字添加到容器内
