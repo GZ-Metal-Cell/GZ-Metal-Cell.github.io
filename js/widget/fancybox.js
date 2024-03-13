@@ -1,7 +1,8 @@
 function initFancybox() {
 	$('article img').each(function () {
-		if ($(this).parent().hasClass('fancybox')) return;
-		if ($(this).hasClass('no-fancybox')) return;
+		// 避免与 leaflet 冲突
+		if ($(this).parent().hasClass('fancybox') || $(this).closest('.leaflet-container').length > 0 || $(this).hasClass('no-fancybox')) return;
+		
 		var alt = this.alt;
 		$(this).wrap(
 			'<a ' +
