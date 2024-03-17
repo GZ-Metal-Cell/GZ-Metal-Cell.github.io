@@ -32,10 +32,10 @@ function showToc(){
 
 function showTocButton(){
     if ($('.hbe.hbe-content').length > 0) {
-        $('.rightside-button').addClass('hidden');
+        $('#js-toc').addClass('hidden');
         return;
     } else {
-        $('.rightside-button').removeClass('hidden');
+        $('#js-toc').removeClass('hidden');
     }
 }
 
