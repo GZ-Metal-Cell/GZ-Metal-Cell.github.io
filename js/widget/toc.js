@@ -1,5 +1,8 @@
 $(document).ready(function() {
     initToc();
+    $("#js-toc").click(function () {
+        onShowTocButton();
+    });
 });
 
 function initToc(){
@@ -7,9 +10,6 @@ function initToc(){
     createToc();
     showTocButton();
     activeItem();
-    $("#js-toc").click(function () {
-        onShowTocButton();
-    });
 }
 
 function showToc(){
