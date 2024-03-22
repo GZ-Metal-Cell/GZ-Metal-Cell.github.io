@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang=zh-CN data-theme="light">
+	
+<script src="/js/widget/toggleTheme.js"></script>
+
+	<script>
+		setTheme();
+	</script>
+	<head>
+		
+<title>Software-Stable Diffusion | Zi-Zi's Journey</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="shortcut icon" type="image/x-icon" href="/images/icon/favicon.ico">
+
+<link rel="stylesheet" href="/css/index.css">
+
+
+
+<meta name="keywords" content="Python,Pytorch,AIGC,">
+<meta name="description" content="记对 AI 绘画的一次初探索。">
+
+
+<script src="/js/third-party/jquery.min.js"></script>
+
+	<meta name="generator" content="Hexo 6.1.0"></head>
+
+	<body>
+		<div class="header">
+	<div class="header-top" id="header-top">
+		<div class="h-left">
+			<a href="/" class="logo">
+				<img no-lazy src="/images/headers_icon/logo.webp" alt="Quiet">
+			</a>
+			<ul class="breadcrumb" id="breadcrumb"></ul>
+		</div>
+		<div class="h-right">
+			<ul>
+				
+					
+					  <li>
+						<a href="/">
+						  主页
+						</a>
+					  </li>
+					
+				  
+					
+					  <li>
+						<a href="/categories">
+						  类别
+						</a>
+					  </li>
+					
+				  
+					
+					  <li>
+						<a href="/tags">
+						  标签
+						</a>
+					  </li>
+					
+				  
+					
+					  <li>
+						<a href="/archives">
+						  归档
+						</a>
+					  </li>
+					
+				  
+					
+					  <li>
+						<a href="/galleries">
+						  相册
+						</a>
+					  </li>
+					
+				  
+					
+					  <li>
+						<a href="/links">
+						  链接
+						</a>
+					  </li>
+					
+				  
+					
+					  <li>
+						<a href="/about">
+						  关于
+						</a>
+					  </li>
+					
+				  				  
+			</ul>
+		</div>
+		<div class="h-right-close">
+			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+				<path fill="none" d="M0 0h24v24H0z" />
+				<path d="M3 4h18v2H3V4zm0 7h18v2H3v-2zm0 7h18v2H3v-2z" fill="rgba(68,68,68,1)" />
+			</svg>
+		</div>
+	</div>
+</div>
+<div class="sidebar">
+    <div class="topo"></div>
+    <ul>
+        
+        <li>
+            <a href="/">
+                主页
+            </a>
+        </li>
+        
+        <li>
+            <a href="/categories">
+                类别
+            </a>
+        </li>
+        
+        <li>
+            <a href="/tags">
+                标签
+            </a>
+        </li>
+        
+        <li>
+            <a href="/archives">
+                归档
+            </a>
+        </li>
+        
+        <li>
+            <a href="/galleries">
+                相册
+            </a>
+        </li>
+        
+        <li>
+            <a href="/links">
+                链接
+            </a>
+        </li>
+        
+        <li>
+            <a href="/about">
+                关于
+            </a>
+        </li>
+        
+    </ul>
+    <div class="my_foot">
+        
+        <a target="_blank" rel="noopener" href="https://weibo.com/u/5020307235">
+            <img no-lazy src="/images/bottom_icon/Weibo.webp" alt="Quiet主题">
+        </a>
+        
+        <a target="_blank" rel="noopener" href="https://tieba.baidu.com/home/main?id=tb.1.ff6d2775.vFH7wrdW2ZjPCmyBHJcjnA">
+            <img no-lazy src="/images/bottom_icon/Tieba.webp" alt="Quiet主题">
+        </a>
+        
+        <a target="_blank" rel="noopener" href="https://space.bilibili.com/11547880">
+            <img no-lazy src="/images/bottom_icon/Bilibili.webp" alt="Quiet主题">
+        </a>
+        
+        <a target="_blank" rel="noopener" href="https://github.com/GZ-Metal-Cell">
+            <img no-lazy src="/images/bottom_icon/github.webp" alt="Quiet主题">
+        </a>
+        
+    </div>
+</div>
+<div class='shelter'>
+</div>
+<style>
+    .shelter{
+        background-color: #000;
+        opacity: 0.5;
+        cursor: pointer;
+        display: none; 
+        position: fixed;
+        left: 0;
+        top: 0; 
+        right: 0;
+        bottom: 0;
+        z-index: 1998;
+    }
+    .sidebar {
+        width: 67%;
+        height: 100%;
+        position: fixed;
+        top: 0;
+        right: -100%;
+        bottom: 0;
+        background: var(--background-secondary);
+        z-index: 1999;
+        text-align: center;
+        box-shadow: -6px 0 20px rgba(50, 50, 50, 0.2);
+    }
+
+    .topo {
+        width: 100%;
+        height: 180px;
+        background-size: 100% 100%;
+        position: relative;
+        display: flex;
+        align-items: flex-end;
+        background-repeat: repeat;
+        background-size: cover;
+        background-position: 50% 25%;
+    }
+
+    .topo:before {
+        content: '';
+        background-image: url(/images/pattern.png);
+        background-repeat: repeat;
+        height: 100%;
+        left: 0;
+        position: absolute;
+        top: 0;
+        width: 100%;
+        z-index: 1
+    }
+
+    .sidebar ul {
+        width: 100%;
+        margin-top: 40px;
+    }
+
+    .sidebar ul li {
+        height: 60px;
+        list-style: none;
+        font-size: 1.2em;
+        text-align: right;
+        margin-right: 10px;
+    }
+
+    .sidebar ul li a {
+        display: grid;
+        color: #5d606a;
+        text-overflow: ellipsis;
+        width: 100%;
+        text-decoration: none;
+    }
+
+    .my_foot {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        position: absolute;
+        bottom: 0;
+    }
+
+    .my_foot a {
+        text-decoration: none;
+        margin-right: 10px;
+        display: inline-block;
+    }
+
+    .my_foot a img {
+        width: 30px;
+        height: 30px;
+    }
+</style>
+
+<script>
+    $(function() {
+        $('.h-right-close > svg').click(function() {
+            $('.sidebar').animate({
+                right: "0"
+            }, 500);
+            $('.shelter').fadeIn("slow");
+        
+            var element = $('.topo');
+            element.addClass('custom-style');
+        
+            var links = null;
+            if ("") {
+                links = "".split(',');
+            } else {
+                links = "/images/random_covers/01.webp,/images/random_covers/02.webp,/images/random_covers/03.webp,/images/random_covers/04.webp,/images/random_covers/05.webp,/images/random_covers/06.webp,/images/random_covers/07.webp,/images/random_covers/08.webp,/images/random_covers/09.webp,/images/random_covers/10.webp,/images/random_covers/11.webp,/images/random_covers/12.webp,/images/random_covers/13.webp,/images/random_covers/14.webp,/images/random_covers/15.webp,/images/random_covers/16.webp,/images/random_covers/17.webp,/images/random_covers/18.webp,/images/random_covers/19.webp,/images/random_covers/20.webp,/images/random_covers/21.webp,/images/random_covers/22.webp,/images/random_covers/23.webp,/images/random_covers/24.webp,/images/random_covers/25.webp,/images/random_covers/26.webp,/images/random_covers/27.webp,/images/random_covers/28.webp,/images/random_covers/29.webp,/images/random_covers/30.webp,/images/random_covers/31.webp,/images/random_covers/32.webp,/images/random_covers/33.webp,/images/random_covers/34.webp,/images/random_covers/35.webp,/images/random_covers/36.webp,/images/random_covers/37.webp,/images/random_covers/38.webp,/images/random_covers/39.webp,/images/random_covers/40.webp,/images/random_covers/41.webp,/images/random_covers/42.webp,/images/random_covers/43.webp,/images/random_covers/44.webp,/images/random_covers/45.webp,/images/random_covers/46.webp,/images/random_covers/47.webp,/images/random_covers/48.webp,/images/random_covers/49.webp,/images/random_covers/50.webp,/images/random_covers/51.webp,/images/random_covers/52.webp,/images/random_covers/53.webp,/images/random_covers/54.webp,/images/random_covers/55.webp,/images/random_covers/56.webp,/images/random_covers/57.webp".split(',');
+            }
+        
+            var randomLink = links[Math.floor(Math.random() * links.length)];
+            element.css('background-image', "url('" + randomLink + "')");
+        });
+      
+        $('.shelter').click(function(e) {
+            $('.sidebar').animate({
+                right: "-100%"
+            }, 500);
+            $('.shelter').fadeOut("slow");
+        });
+    });      
+</script>
+
+<script src="/js/widget/breadcrumb.js"></script>
+
+<script>
+	var menus_title = [];
+	
+	    menus_title.push({home: '主页'});
+	
+	    menus_title.push({categories: '类别'});
+	
+	    menus_title.push({tags: '标签'});
+	
+	    menus_title.push({galleries: '相册'});
+	
+	    menus_title.push({archives: '归档'});
+	
+	    menus_title.push({links: '链接'});
+	
+	    menus_title.push({about: '关于'});
+	
+	
+		
+			categoriesBreadcrumb(
+				document.getElementById('breadcrumb'),
+				"类别",
+				"/categories",
+				"学习",
+				"/categories/学习"
+			);
+		
+	
+</script>
+<div class="post">
+    <div class="post-header-background">
+    <div class="post-header-background-content">
+        <ul class="post-header-tag">
+            
+                
+                    <li><a href="/tags/Python"><span>Python</span></a></li>
+                
+                    <li><a href="/tags/Pytorch"><span>Pytorch</span></a></li>
+                
+                    <li><a href="/tags/AIGC"><span>AIGC</span></a></li>
+                
+            
+        </ul>
+        
+        <h1>Software-Stable Diffusion</h1>
+        <div class="post-header-info">
+            <div class="post-header-info-author">
+                <svg t="1604839279282" class="icon" viewBox="0 0 1024 1024" version="1.1"
+                    xmlns="http://www.w3.org/2000/svg" p-id="2901" width="20" height="20">
+                    <path
+                        d="M513 956.3c-247.7 0-448-200.3-448-448S265.3 66.2 513 66.2s448 200.3 448 448-200.3 442.1-448 442.1z m0-830.9c-212.2 0-388.8 170.7-388.8 388.8C124.2 726.3 294.9 903 513 903c212.2 0 388.8-170.7 388.8-388.8S725.2 125.4 513 125.4z m0 430.2c-94.2 0-170.7-76.5-170.7-170.7S418.8 207.8 513 207.8s170.7 76.5 170.7 170.7S607.2 555.6 513 555.6z m0-289.1c-64.6 0-112 52.8-112 112s47.4 117.9 112 117.9 112-52.8 112-112-47.4-117.9-112-117.9z m0 689.8c-135.7 0-259-58.7-341.9-158.9l-11.8-17.8 11.8-17.8c76.5-117.9 206.2-188.5 347.8-188.5 135.7 0 265 64.6 341.9 182.6l11.8 17.8-11.8 17.8C778 897.1 648.7 956.3 513 956.3zM230.3 773.2C300.9 849.7 406.9 897 513 897c112 0 218.1-47.4 288.6-129.8-70.5-88.2-170.7-135.6-282.7-135.6s-218.1 53.3-288.6 141.6z"
+                        p-id="2902" fill="#ffffff"></path>
+                </svg>
+                <span class="post-header-info-author-text"> <a href="../../about">Zi-Zi</a></span>
+                <div class="post-header-info-author-categories">
+                    
+                         <a href="/categories/学习" target="_blank" >学习</a>
+                    
+                </div>
+                <!-- 显示页面访问 pv 数 -->
+                <time>2023-04-26 08:21:00</time>
+                
+                    <p id="busuanzi_container_page_pv" style='display:none;'>阅读数：<p id="busuanzi_value_page_pv"></p></p>
+                
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    
+<link rel="stylesheet" href="/css/third-party/fancybox.css">
+
+
+<script src="/js/third-party/fancybox.umd.js"></script>
+
+
+<script src="/js/widget/fancybox.js"></script>
+
+
+
+<script src="/js/third-party/hljs.min.js"></script>
+
+
+
+<script src="/js/widget/hide.js"></script>
+
+
+<script src="/js/widget/tabs.js"></script>
+
+
+    
+<script src="/js/widget/replaceSpacesWithNbsp.js"></script>
+
+
+
+<script>
+    var element = document.querySelector('.post-header-background');
+    element.classList.add('custom-style');
+    var links = null;
+    if("")
+    {
+        links = "".split(',');
+    } else
+    {
+        links = "/images/random_covers/01.webp,/images/random_covers/02.webp,/images/random_covers/03.webp,/images/random_covers/04.webp,/images/random_covers/05.webp,/images/random_covers/06.webp,/images/random_covers/07.webp,/images/random_covers/08.webp,/images/random_covers/09.webp,/images/random_covers/10.webp,/images/random_covers/11.webp,/images/random_covers/12.webp,/images/random_covers/13.webp,/images/random_covers/14.webp,/images/random_covers/15.webp,/images/random_covers/16.webp,/images/random_covers/17.webp,/images/random_covers/18.webp,/images/random_covers/19.webp,/images/random_covers/20.webp,/images/random_covers/21.webp,/images/random_covers/22.webp,/images/random_covers/23.webp,/images/random_covers/24.webp,/images/random_covers/25.webp,/images/random_covers/26.webp,/images/random_covers/27.webp,/images/random_covers/28.webp,/images/random_covers/29.webp,/images/random_covers/30.webp,/images/random_covers/31.webp,/images/random_covers/32.webp,/images/random_covers/33.webp,/images/random_covers/34.webp,/images/random_covers/35.webp,/images/random_covers/36.webp,/images/random_covers/37.webp,/images/random_covers/38.webp,/images/random_covers/39.webp,/images/random_covers/40.webp,/images/random_covers/41.webp,/images/random_covers/42.webp,/images/random_covers/43.webp,/images/random_covers/44.webp,/images/random_covers/45.webp,/images/random_covers/46.webp,/images/random_covers/47.webp,/images/random_covers/48.webp,/images/random_covers/49.webp,/images/random_covers/50.webp,/images/random_covers/51.webp,/images/random_covers/52.webp,/images/random_covers/53.webp,/images/random_covers/54.webp,/images/random_covers/55.webp,/images/random_covers/56.webp,/images/random_covers/57.webp".split(',');
+    }
+    var randomLink = links[Math.floor(Math.random() * links.length)];
+    element.style.backgroundImage = "url('" + randomLink + "')";
+</script>
+    <main class="post-content">
+    <article class="post-content-info">
+        <h1 id="组件"><a href="#组件" class="headerlink" title="组件"></a>组件</h1><ul>
+<li>Git</li>
+<li>Python</li>
+<li>AUTOMATIC1111<ul>
+<li>提供了可视化的界面</li>
+<li><a target="_blank" rel="noopener" href="https://github.com/AUTOMATIC1111/stable-diffusion-webui">AUTOMATIC1111/stable-diffusion-webui: Stable Diffusion web UI (github.com)</a></li>
+</ul>
+</li>
+<li>Stable Diffusion 模型<ul>
+<li>基础模型<ul>
+<li>Stable Diffusion 2 最重要的转变是替换文本编码器。<strong>Stable Diffusion 1</strong> 使用 OpenAl 的 CLIP，这是一种开源模型，可以了解标题对图像的描述程度。虽然模型本身是开源的，但重要的是，训练 CLIP 的数据集<strong>不是公开可用</strong>的。<br>它使用已知 <strong>Stable Diffusion 2</strong> 改为使用 OpenCLIP 它是 CLIP 的<strong>开源版本</strong>数据集进行训练- LAION-5B 的美学子集，可过滤掉 NSFW 图像。Stability Al 表示 OpenCLIP “极大地提高了生成图像的质量”，事实上，在指标上优于 CLIP 的未发布版本。（有时候 2 的效果不如 1 是正常的）</li>
+<li>huggingface</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>预训练的模型（在基础模型的基础上做了与预先的微调，可以生成特定风格的人物）<ul>
+<li><a target="_blank" rel="noopener" href="https://civitai.com/">Civitai | Stable Diffusion models, embeddings, LoRAs and more</a></li>
+</ul>
+</li>
+</ul>
+<p><img src="/images/loading.webp" data-original="S1.png" alt="png"></p>
+<p>模型有 <code>ckpt</code> 和 <code>safetensors</code></p>
+<ul>
+<li><p><code>ckpt</code> 比较早期，嵌入了 python 的一些脚本，容易受到病毒攻击</p>
+</li>
+<li><p><code>safetensors</code> 较新，且读取速度更快</p>
+</li>
+</ul>
+<h1 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h1><p><del>克隆仓库</del></p>
+<p><del><a target="_blank" rel="noopener" href="https://github.com/AUTOMATIC1111/stable-diffusion-webui">AUTOMATIC1111/stable-diffusion-webui: Stable Diffusion web UI (github.com)</a>：</del></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><code class="hljs shell">git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui<br></code></pre></td></tr></table></figure>
+<p><del>下载模型</del></p>
+<p><del>以 1.5 为例：<a target="_blank" rel="noopener" href="https://huggingface.co/runwayml/stable-diffusion-v1-5/tree/main">runwayml/stable-diffusion-v1-5 at main (huggingface.co)</a></del></p>
+<p><img src="/images/loading.webp" data-original="S2.png" alt="png"></p>
+<p><del>将下载好的模型放入仓库的 <code>models/Stable-diffusion</code> 中：</del></p>
+<p><img src="/images/loading.webp" data-original="S3.png" alt="png"></p>
+<p><del>安装 conda</del></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><code class="hljs shell">conda create -n stable-diffusion python=3.10<br></code></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="code"><pre><code class="hljs shell">conda activate stable-diffusion<br></code></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="code"><pre><code class="hljs shell">where python<br></code></pre></td></tr></table></figure>
+<figure class="highlight vim"><table><tr><td class="code"><pre><code class="hljs vim">C:\Users\<span class="hljs-number">19048</span>\.conda\envs\stable-diffusion\<span class="hljs-keyword">python</span>.<span class="hljs-keyword">exe</span><br>C:\ProgramData\anaconda3\<span class="hljs-keyword">python</span>.<span class="hljs-keyword">exe</span><br>C:\Users\<span class="hljs-number">19048</span>\AppData\Local\Microsoft\WindowsApps\<span class="hljs-keyword">python</span>.<span class="hljs-keyword">exe</span><br></code></pre></td></tr></table></figure>
+<p><del>设置仓库根目录下， <code>webui-user.bat</code> 里的参数：</del></p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><code class="hljs bash"><span class="hljs-comment"># git pull</span><br>@<span class="hljs-built_in">echo</span> off<br><br><span class="hljs-built_in">set</span> PYTHON=<span class="hljs-string">&quot;C:\Users\19048\.conda\envs\stable-diffusion\python.exe&quot;</span><br><span class="hljs-built_in">set</span> GIT=<br><span class="hljs-built_in">set</span> VENV_DIR=<br><span class="hljs-built_in">set</span> COMMANDLINE_ARGS=<br><br>call webui.bat<br></code></pre></td></tr></table></figure>
+<ul>
+<li><del><code>git pull</code> 让项目每次运行前都拉取最新的仓库，我就不设了</del></li>
+<li><del><code>set PYTHON=&quot;C:\Users\19048\.conda\envs\stable-diffusion\python.exe&quot;</code> 设置 python 解释器的位置</del></li>
+</ul>
+<p><del>运行 webui</del></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><code class="hljs shell">webui-user.bat<br></code></pre></td></tr></table></figure>
+<figure class="highlight awk"><table><tr><td class="code"><pre><code class="hljs awk">venv <span class="hljs-string">&quot;D:\Study\1st-year-master\Code\StableDiffusion\stable-diffusion-webui\venv\Scripts\Python.exe&quot;</span><br>Python <span class="hljs-number">3.10</span>.<span class="hljs-number">9</span> | packaged by Anaconda, Inc. | (main, Mar  <span class="hljs-number">1</span> <span class="hljs-number">2023</span>, <span class="hljs-number">18</span>:<span class="hljs-number">18</span>:<span class="hljs-number">15</span>) [MSC v.<span class="hljs-number">1916</span> <span class="hljs-number">64</span> bit (AMD64)]<br>Commit hash: <span class="hljs-number">22</span>bcc7be428c94e9408f589966c2040187245d81<br>Installing torch and torchvision<br>Looking <span class="hljs-keyword">in</span> indexes: https:<span class="hljs-regexp">//</span>pypi.org<span class="hljs-regexp">/simple, https:/</span><span class="hljs-regexp">/download.pytorch.org/</span>whl/cu117<br>Collecting torch==<span class="hljs-number">1.13</span>.<span class="hljs-number">1</span>+cu117<br>  Downloading https:<span class="hljs-regexp">//</span>download.pytorch.org<span class="hljs-regexp">/whl/</span>cu117/torch-<span class="hljs-number">1.13</span>.<span class="hljs-number">1</span>%<span class="hljs-number">2</span>Bcu117-cp310-cp310-win_amd64.whl (<span class="hljs-number">2255.4</span> MB)<br>     ━╸━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ <span class="hljs-number">0.1</span><span class="hljs-regexp">/2.3 GB 2.2 MB/</span>s eta <span class="hljs-number">0</span>:<span class="hljs-number">16</span>:<span class="hljs-number">38</span><br></code></pre></td></tr></table></figure>
+<p><del>我试图绕开这个安装 torch 的环节，因为我觉得它安装有点慢，但是我不会😅……但是把代理关了好像还蛮快的？冀大的网速还是值得一夸。</del></p>
+<p><del>老是下载一半报错：</del></p>
+<p><del><font color="red">pip._vendor.urllib3.excerptions.ReadTimeoutError: HTTPSConnectionPool(host=’download.pytorch.org’, port=443): Read timed out.</font></del></p>
+<p><del>唉，因为用清华镜像会下成 CPU 版本的 pytorch，只能一直试了，真傻逼啊。</del></p>
+<p><del>结果安装到<code>gfpgan</code>还是失败……先吃午饭吧。</del></p>
+<hr>
+<p>我说<strong>婷婷</strong>！直接上网找个整合版安装包吧😅。</p>
+<ul>
+<li><p><a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV1iM4y1y7oA">【AI绘画】Stable Diffusion整合包v4发布！全新加速 解压即用 防爆显存 三分钟入门AI绘画 ☆可更新 ☆训练 ☆汉化_哔哩哔哩_bilibili</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://pan.baidu.com/s/1TK7UyX5lgNjdwdfcmYCI5Q#list/path=%2F">sd-webui-aki_免费高速下载|百度网盘-分享无限制 (baidu.com)</a>，提取码：c132</p>
+</li>
+</ul>
+<blockquote>
+<p>打开网页报错 Something went wrong Expecting value: line 1 column 1 (char 0)的，把你梯子关了</p>
+</blockquote>
+<p>尝试使用<code>xFormers</code>会报错，好吧那就关了。</p>
+<p><img src="/images/loading.webp" data-original="S5.png" alt="png"></p>
+<h1 id="玩"><a href="#玩" class="headerlink" title="玩"></a>玩</h1><p>一些使用教程：</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/616895208">2023-03-22_5分钟学会Stable Diffusion图生图功能 - 知乎 (zhihu.com)</a></li>
+<li><a target="_blank" rel="noopener" href="https://search.krea.ai/">KREA — create better prompts.</a> 这个网站可以看到其他人生成的图片所用到的提示词。</li>
+</ul>
+<p>太变态的就不发了咳咳咳……</p>
+<ul>
+<li>cubistic painting of Samuel Beckett by Picasso and Georges Braque, analytical cubism, brushstrokes<ul>
+<li>毕加索和乔治·布拉克分析立体主义笔触的塞缪尔·贝克特立体主义绘画</li>
+</ul>
+</li>
+</ul>
+<p><img src="/images/loading.webp" data-original="cubistic painting of Samuel Beckett by Picasso and Georges Braque, analytical cubism, brushstrokes.png" alt="png"></p>
+<ul>
+<li>photo of rihanna. latex. artgerm, ilya kuvshinov, alphonse mucha. highly detailed 8 k. intricate. nikon d 8 5 0 5 5 mm. award wi<ul>
+<li>蕾哈娜的照片。乳胶。Artgerm， Ilya Kuvshinov， Alphonse Mucha.高度详细的 8 K. 错综复杂。尼康 D 8 5 0 5 5 毫米奖 WI</li>
+</ul>
+</li>
+</ul>
+<p><img src="/images/loading.webp" data-original="photo of rihanna. latex. artgerm, ilya kuvshinov, alphonse mucha. highly detailed 8 k. intricate. nikon d 8 5 0 5 5 mm. award wi.png" alt="png"></p>
+<ul>
+<li>junji ito style homer simpson, intricate, highly detailed, illustration, art by junji ito, junji ito<ul>
+<li>伊藤淳二风格荷马辛普森，复杂，高度详细，插图，伊藤淳二，伊藤润二的艺术</li>
+</ul>
+</li>
+</ul>
+<p><img src="/images/loading.webp" data-original="junji ito style homer simpson, intricate, highly detailed, illustration, art by junji ito, junji ito.png" alt="png"></p>
+<ul>
+<li>Audrey Hepburn painting by Van Gogh<ul>
+<li>梵高画的奥黛丽赫本</li>
+</ul>
+</li>
+</ul>
+<p><img src="/images/loading.webp" data-original="Audrey Hepburn painting by Van Gogh.png" alt="png"></p>
+<ul>
+<li>realistic extremely detailed portrait painting of a beautiful black woman with a robot, city street on background by Jean Delvil<ul>
+<li>现实的极其详细的肖像画，一个美丽的黑人妇女与机器人，背景上的城市街道，由 Jean Delvil 绘制</li>
+</ul>
+</li>
+</ul>
+<p><img src="/images/loading.webp" data-original="realistic extremely detailed portrait painting of a beautiful black woman with a robot, city street on background by Jean Delvil.png" alt="png"></p>
+<ul>
+<li>Michael Jackson painting by Pegaso<ul>
+<li>毕加索画的迈克尔杰克逊</li>
+</ul>
+</li>
+</ul>
+<p><img src="/images/loading.webp" data-original="Michael Jackson painting by Pegaso.png" alt="png"></p>
+<ul>
+<li>a really suspicious horse, you can just tell that it’s up to no good<ul>
+<li>一匹非常可疑的马，你可以说它没有好处</li>
+</ul>
+</li>
+</ul>
+<p><img src="/images/loading.webp" data-original="a really suspicious horse, you can just tell that it&#39;s up to no good.png" alt="png"></p>
+<h1 id="线上部署"><a href="#线上部署" class="headerlink" title="线上部署"></a>线上部署</h1><ul>
+<li>本地吃配置</li>
+<li>本地部署复杂</li>
+<li>随时随地访问</li>
+<li>免费</li>
+</ul>
+<hr>
+<p>Colab 部署地址：<a target="_blank" rel="noopener" href="https://github.com/camenduru/stable-diffusion-webui-colab/tree/drive">camenduru/stable-diffusion-webui-colab at drive (github.com)</a></p>
+
+        
+    
+        
+<link rel="stylesheet" href="/css/third-party/giscus.css">
+
+        <div class="giscus"></div>
+        <script>
+            var scriptElement = document.createElement('script');
+            scriptElement.src = 'https://giscus.app/client.js';
+            scriptElement.setAttribute('data-repo', 'GZ-Metal-Cell/GZ-Metal-Cell.github.io');
+            scriptElement.setAttribute('data-repo-id', 'R_kgDOIHLEOQ');
+            scriptElement.setAttribute('data-category', 'Announcements');
+            scriptElement.setAttribute('data-category-id', 'DIC_kwDOIHLEOc4CcVwP');
+            scriptElement.setAttribute('data-mapping', 'title');
+            scriptElement.setAttribute('data-strict', '1');
+            scriptElement.setAttribute('data-reactions-enabled', '');
+            scriptElement.setAttribute('data-emit-metadata', '0');
+            scriptElement.setAttribute('data-input-position', 'bottom');
+            scriptElement.setAttribute('data-theme', localStorage.getItem('theme') === 'light' ? 'light' : 'dark_high_contrast');
+            scriptElement.setAttribute('data-lang', 'zh-CN');
+            
+            scriptElement.setAttribute('crossorigin', 'anonymous');
+            scriptElement.async = true;
+            document.head.appendChild(scriptElement);
+        </script>
+    
+
+    </article>
+    <div class="post-content-aside">
+        
+            <div class="post-content-aside-toc">
+                <h1>目录</h1>
+                <ol class="toc"></ol>
+            </div>
+            
+<script src="/js/widget/toc.js"></script>
+
+        
+    </div>
+</main>
+    <div class="post-paging">
+    
+    <a href="/2023/04/26/Paper-Segment%20Anything%20in%20Medical%20Images/">
+        <div class="post-paging-last">
+            <span>上一篇</span>
+            <p>Paper-Segment Anything in Medical Images</p>
+        </div>
+    </a>
+    
+
+    
+    <a href="/2023/04/25/Paper-Inpaint%20Anything/">
+        <div class="post-paging-next">
+            <span>下一篇</span>
+            <p>Paper-Inpaint Anything</p>
+        </div>
+    </a>
+    
+</div>
+</div>
+		<div class="footer">
+	<div class="copyright">
+		©2022-2024 By Zi-Zi. Theme by&nbsp;
+		<a target="_blank" rel="noopener" href="https://github.com/79e/hexo-theme-quiet">Quiet</a>
+		
+			.&nbsp;
+			<img no-lazy alt="icp" src="/images/icp_icon.png" style="width:16px;margin-bottom:-3px">
+			<a href="https://icp.gov.moe/?keyword=20241647" target="_blank">萌ICP备20241647号</a>
+		
+	</div>
+	<div class="contact">
+		
+		<a target="_blank" rel="noopener" href="https://weibo.com/u/5020307235">
+			<img no-lazy src="/images/bottom_icon/Weibo.webp" alt="Quiet">
+		</a>
+		
+		<a target="_blank" rel="noopener" href="https://tieba.baidu.com/home/main?id=tb.1.ff6d2775.vFH7wrdW2ZjPCmyBHJcjnA">
+			<img no-lazy src="/images/bottom_icon/Tieba.webp" alt="Quiet">
+		</a>
+		
+		<a target="_blank" rel="noopener" href="https://space.bilibili.com/11547880">
+			<img no-lazy src="/images/bottom_icon/Bilibili.webp" alt="Quiet">
+		</a>
+		
+		<a target="_blank" rel="noopener" href="https://github.com/GZ-Metal-Cell">
+			<img no-lazy src="/images/bottom_icon/github.webp" alt="Quiet">
+		</a>
+		
+	</div>
+</div>
+
+
+
+
+
+
+<script src="/js/widget/highlight_tools.js"></script>
+
+<script>
+	var copyIcon = "/images/icon/copy.png";
+	var closeCodeBlockIcon = "/images/icon/close_code_block.png";
+	var highlightShrink = "";
+	var HighlightHeightLimit = "";
+</script>
+
+
+	
+<script src="/js/widget/goto_position.js"></script>
+
+<style>
+	.rightside-button-icon
+	{
+		width: 18px;
+		height: 18px;
+		-webkit-user-select: none; /* Chrome, Safari, Opera */
+        -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+        user-select: none; /* Non-prefixed version, supported by most modern browsers */
+	}
+</style>
+
+<div style="z-index: 3; position: fixed; bottom: 10px; right: 20px; transition: all 0.5s ease-out;" id="rightside">
+	<div class="rightside">
+		
+			<div class="rightside-button hidden" id="js-toc">
+				<span>
+					<img no-lazy src="/images/icon/toc.png" class="rightside-button-icon" alt="Icon">
+				</span>
+			</div>
+		
+		<div class="rightside-button" id="js-toggle_theme">
+			<span>
+				<img no-lazy src="/images/icon/toggle_theme.png" class="rightside-button-icon" alt="Icon">
+			</span>
+		</div>
+		<div class="rightside-button" id="js-go_top">
+			<span>
+				<img no-lazy src="/images/icon/go_top.png" class="rightside-button-icon" alt="Icon">
+			</span>
+		</div>
+		<div class="rightside-button" id="js-go_bottom">
+			<span>
+				<img no-lazy src="/images/icon/go_bottom.png" class="rightside-button-icon" alt="Icon">
+			</span>
+		</div>
+	</div>
+</div>
+
+<script>
+	setToggleThemeButtonListener();
+</script>
+<script>
+    $('#js-go_top')
+	.gotoPosition( {
+		speed: 300,
+		target: 'top',
+	} );
+	$('#js-go_bottom')
+	.gotoPosition( {
+		speed: 300,
+		target: 'bottom',
+	} );
+</script>
+
+<!-- Analytics -->
+
+    
+        <!-- Busuanzi Analytics -->
+        <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    
+    
+        <!-- Baidu Analytics -->
+        <script defer>
+            var _hmt = _hmt || [];
+            (function () {
+                var hm = document.createElement("script");
+                hm.src = "https://hm.baidu.com/hm.js?e57cf62289f84322ebff116e8b3d343e";
+                var s = document.getElementsByTagName("script")[0];
+                s.parentNode.insertBefore(hm, s);
+            })();
+        </script>
+    
+
+
+
+
+<script>
+	console.log('\n %c Hexo-Quiet 主题 %c https://github.com/79e/hexo-theme-quiet \n', 'color: #fadfa3; background: #030307; padding:5px 0;', 'background: #fadfa3; padding:5px 0;')
+</script>
+	
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 5,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body>
+</html>
+

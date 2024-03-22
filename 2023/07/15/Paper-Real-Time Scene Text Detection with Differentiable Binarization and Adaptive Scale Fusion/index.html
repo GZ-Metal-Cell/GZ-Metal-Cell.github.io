@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang=zh-CN data-theme="light">
+	
+<script src="/js/widget/toggleTheme.js"></script>
+
+	<script>
+		setTheme();
+	</script>
+	<head>
+		
+<title>Paper-Real-Time Scene Text Detection with Differentiable Binarization and Adaptive Scale Fusion | Zi-Zi's Journey</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="shortcut icon" type="image/x-icon" href="/images/icon/favicon.ico">
+
+<link rel="stylesheet" href="/css/index.css">
+
+
+
+<meta name="keywords" content="Python,实验相关,论文,MindSpore,代码复现,文本检测,">
+<meta name="description" content="论文阅读。">
+
+
+<script src="/js/third-party/jquery.min.js"></script>
+
+	<meta name="generator" content="Hexo 6.1.0"></head>
+
+	<body>
+		<div class="header">
+	<div class="header-top" id="header-top">
+		<div class="h-left">
+			<a href="/" class="logo">
+				<img no-lazy src="/images/headers_icon/logo.webp" alt="Quiet">
+			</a>
+			<ul class="breadcrumb" id="breadcrumb"></ul>
+		</div>
+		<div class="h-right">
+			<ul>
+				
+					
+					  <li>
+						<a href="/">
+						  主页
+						</a>
+					  </li>
+					
+				  
+					
+					  <li>
+						<a href="/categories">
+						  类别
+						</a>
+					  </li>
+					
+				  
+					
+					  <li>
+						<a href="/tags">
+						  标签
+						</a>
+					  </li>
+					
+				  
+					
+					  <li>
+						<a href="/archives">
+						  归档
+						</a>
+					  </li>
+					
+				  
+					
+					  <li>
+						<a href="/galleries">
+						  相册
+						</a>
+					  </li>
+					
+				  
+					
+					  <li>
+						<a href="/links">
+						  链接
+						</a>
+					  </li>
+					
+				  
+					
+					  <li>
+						<a href="/about">
+						  关于
+						</a>
+					  </li>
+					
+				  				  
+			</ul>
+		</div>
+		<div class="h-right-close">
+			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+				<path fill="none" d="M0 0h24v24H0z" />
+				<path d="M3 4h18v2H3V4zm0 7h18v2H3v-2zm0 7h18v2H3v-2z" fill="rgba(68,68,68,1)" />
+			</svg>
+		</div>
+	</div>
+</div>
+<div class="sidebar">
+    <div class="topo"></div>
+    <ul>
+        
+        <li>
+            <a href="/">
+                主页
+            </a>
+        </li>
+        
+        <li>
+            <a href="/categories">
+                类别
+            </a>
+        </li>
+        
+        <li>
+            <a href="/tags">
+                标签
+            </a>
+        </li>
+        
+        <li>
+            <a href="/archives">
+                归档
+            </a>
+        </li>
+        
+        <li>
+            <a href="/galleries">
+                相册
+            </a>
+        </li>
+        
+        <li>
+            <a href="/links">
+                链接
+            </a>
+        </li>
+        
+        <li>
+            <a href="/about">
+                关于
+            </a>
+        </li>
+        
+    </ul>
+    <div class="my_foot">
+        
+        <a target="_blank" rel="noopener" href="https://weibo.com/u/5020307235">
+            <img no-lazy src="/images/bottom_icon/Weibo.webp" alt="Quiet主题">
+        </a>
+        
+        <a target="_blank" rel="noopener" href="https://tieba.baidu.com/home/main?id=tb.1.ff6d2775.vFH7wrdW2ZjPCmyBHJcjnA">
+            <img no-lazy src="/images/bottom_icon/Tieba.webp" alt="Quiet主题">
+        </a>
+        
+        <a target="_blank" rel="noopener" href="https://space.bilibili.com/11547880">
+            <img no-lazy src="/images/bottom_icon/Bilibili.webp" alt="Quiet主题">
+        </a>
+        
+        <a target="_blank" rel="noopener" href="https://github.com/GZ-Metal-Cell">
+            <img no-lazy src="/images/bottom_icon/github.webp" alt="Quiet主题">
+        </a>
+        
+    </div>
+</div>
+<div class='shelter'>
+</div>
+<style>
+    .shelter{
+        background-color: #000;
+        opacity: 0.5;
+        cursor: pointer;
+        display: none; 
+        position: fixed;
+        left: 0;
+        top: 0; 
+        right: 0;
+        bottom: 0;
+        z-index: 1998;
+    }
+    .sidebar {
+        width: 67%;
+        height: 100%;
+        position: fixed;
+        top: 0;
+        right: -100%;
+        bottom: 0;
+        background: var(--background-secondary);
+        z-index: 1999;
+        text-align: center;
+        box-shadow: -6px 0 20px rgba(50, 50, 50, 0.2);
+    }
+
+    .topo {
+        width: 100%;
+        height: 180px;
+        background-size: 100% 100%;
+        position: relative;
+        display: flex;
+        align-items: flex-end;
+        background-repeat: repeat;
+        background-size: cover;
+        background-position: 50% 25%;
+    }
+
+    .topo:before {
+        content: '';
+        background-image: url(/images/pattern.png);
+        background-repeat: repeat;
+        height: 100%;
+        left: 0;
+        position: absolute;
+        top: 0;
+        width: 100%;
+        z-index: 1
+    }
+
+    .sidebar ul {
+        width: 100%;
+        margin-top: 40px;
+    }
+
+    .sidebar ul li {
+        height: 60px;
+        list-style: none;
+        font-size: 1.2em;
+        text-align: right;
+        margin-right: 10px;
+    }
+
+    .sidebar ul li a {
+        display: grid;
+        color: #5d606a;
+        text-overflow: ellipsis;
+        width: 100%;
+        text-decoration: none;
+    }
+
+    .my_foot {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        position: absolute;
+        bottom: 0;
+    }
+
+    .my_foot a {
+        text-decoration: none;
+        margin-right: 10px;
+        display: inline-block;
+    }
+
+    .my_foot a img {
+        width: 30px;
+        height: 30px;
+    }
+</style>
+
+<script>
+    $(function() {
+        $('.h-right-close > svg').click(function() {
+            $('.sidebar').animate({
+                right: "0"
+            }, 500);
+            $('.shelter').fadeIn("slow");
+        
+            var element = $('.topo');
+            element.addClass('custom-style');
+        
+            var links = null;
+            if ("") {
+                links = "".split(',');
+            } else {
+                links = "/images/random_covers/01.webp,/images/random_covers/02.webp,/images/random_covers/03.webp,/images/random_covers/04.webp,/images/random_covers/05.webp,/images/random_covers/06.webp,/images/random_covers/07.webp,/images/random_covers/08.webp,/images/random_covers/09.webp,/images/random_covers/10.webp,/images/random_covers/11.webp,/images/random_covers/12.webp,/images/random_covers/13.webp,/images/random_covers/14.webp,/images/random_covers/15.webp,/images/random_covers/16.webp,/images/random_covers/17.webp,/images/random_covers/18.webp,/images/random_covers/19.webp,/images/random_covers/20.webp,/images/random_covers/21.webp,/images/random_covers/22.webp,/images/random_covers/23.webp,/images/random_covers/24.webp,/images/random_covers/25.webp,/images/random_covers/26.webp,/images/random_covers/27.webp,/images/random_covers/28.webp,/images/random_covers/29.webp,/images/random_covers/30.webp,/images/random_covers/31.webp,/images/random_covers/32.webp,/images/random_covers/33.webp,/images/random_covers/34.webp,/images/random_covers/35.webp,/images/random_covers/36.webp,/images/random_covers/37.webp,/images/random_covers/38.webp,/images/random_covers/39.webp,/images/random_covers/40.webp,/images/random_covers/41.webp,/images/random_covers/42.webp,/images/random_covers/43.webp,/images/random_covers/44.webp,/images/random_covers/45.webp,/images/random_covers/46.webp,/images/random_covers/47.webp,/images/random_covers/48.webp,/images/random_covers/49.webp,/images/random_covers/50.webp,/images/random_covers/51.webp,/images/random_covers/52.webp,/images/random_covers/53.webp,/images/random_covers/54.webp,/images/random_covers/55.webp,/images/random_covers/56.webp,/images/random_covers/57.webp".split(',');
+            }
+        
+            var randomLink = links[Math.floor(Math.random() * links.length)];
+            element.css('background-image', "url('" + randomLink + "')");
+        });
+      
+        $('.shelter').click(function(e) {
+            $('.sidebar').animate({
+                right: "-100%"
+            }, 500);
+            $('.shelter').fadeOut("slow");
+        });
+    });      
+</script>
+
+<script src="/js/widget/breadcrumb.js"></script>
+
+<script>
+	var menus_title = [];
+	
+	    menus_title.push({home: '主页'});
+	
+	    menus_title.push({categories: '类别'});
+	
+	    menus_title.push({tags: '标签'});
+	
+	    menus_title.push({galleries: '相册'});
+	
+	    menus_title.push({archives: '归档'});
+	
+	    menus_title.push({links: '链接'});
+	
+	    menus_title.push({about: '关于'});
+	
+	
+		
+			categoriesBreadcrumb(
+				document.getElementById('breadcrumb'),
+				"类别",
+				"/categories",
+				"学习",
+				"/categories/学习"
+			);
+		
+	
+</script>
+<div class="post">
+    <div class="post-header-background">
+    <div class="post-header-background-content">
+        <ul class="post-header-tag">
+            
+                
+                    <li><a href="/tags/Python"><span>Python</span></a></li>
+                
+                    <li><a href="/tags/实验相关"><span>实验相关</span></a></li>
+                
+                    <li><a href="/tags/论文"><span>论文</span></a></li>
+                
+                    <li><a href="/tags/MindSpore"><span>MindSpore</span></a></li>
+                
+                    <li><a href="/tags/代码复现"><span>代码复现</span></a></li>
+                
+                    <li><a href="/tags/文本检测"><span>文本检测</span></a></li>
+                
+            
+        </ul>
+        
+        <h1>Real-Time Scene Text Detection with Differentiable Binarization and <font color="#136ec2">A</font>daptive <font color="#136ec2">S</font>cale <font color="#136ec2">F</font>usion</h1>
+        <div class="post-header-info">
+            <div class="post-header-info-author">
+                <svg t="1604839279282" class="icon" viewBox="0 0 1024 1024" version="1.1"
+                    xmlns="http://www.w3.org/2000/svg" p-id="2901" width="20" height="20">
+                    <path
+                        d="M513 956.3c-247.7 0-448-200.3-448-448S265.3 66.2 513 66.2s448 200.3 448 448-200.3 442.1-448 442.1z m0-830.9c-212.2 0-388.8 170.7-388.8 388.8C124.2 726.3 294.9 903 513 903c212.2 0 388.8-170.7 388.8-388.8S725.2 125.4 513 125.4z m0 430.2c-94.2 0-170.7-76.5-170.7-170.7S418.8 207.8 513 207.8s170.7 76.5 170.7 170.7S607.2 555.6 513 555.6z m0-289.1c-64.6 0-112 52.8-112 112s47.4 117.9 112 117.9 112-52.8 112-112-47.4-117.9-112-117.9z m0 689.8c-135.7 0-259-58.7-341.9-158.9l-11.8-17.8 11.8-17.8c76.5-117.9 206.2-188.5 347.8-188.5 135.7 0 265 64.6 341.9 182.6l11.8 17.8-11.8 17.8C778 897.1 648.7 956.3 513 956.3zM230.3 773.2C300.9 849.7 406.9 897 513 897c112 0 218.1-47.4 288.6-129.8-70.5-88.2-170.7-135.6-282.7-135.6s-218.1 53.3-288.6 141.6z"
+                        p-id="2902" fill="#ffffff"></path>
+                </svg>
+                <span class="post-header-info-author-text"> <a href="../../about">Zi-Zi</a></span>
+                <div class="post-header-info-author-categories">
+                    
+                         <a href="/categories/学习" target="_blank" >学习</a>
+                    
+                </div>
+                <!-- 显示页面访问 pv 数 -->
+                <time>2023-07-15 15:23:00</time>
+                
+                    <p id="busuanzi_container_page_pv" style='display:none;'>阅读数：<p id="busuanzi_value_page_pv"></p></p>
+                
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    
+<link rel="stylesheet" href="/css/third-party/fancybox.css">
+
+
+<script src="/js/third-party/fancybox.umd.js"></script>
+
+
+<script src="/js/widget/fancybox.js"></script>
+
+
+
+<script src="/js/third-party/hljs.min.js"></script>
+
+
+
+<script src="/js/widget/hide.js"></script>
+
+
+<script src="/js/widget/tabs.js"></script>
+
+
+    
+<script src="/js/widget/replaceSpacesWithNbsp.js"></script>
+
+
+
+<script>
+    var element = document.querySelector('.post-header-background');
+    element.classList.add('custom-style');
+    var links = null;
+    if("")
+    {
+        links = "".split(',');
+    } else
+    {
+        links = "/images/random_covers/01.webp,/images/random_covers/02.webp,/images/random_covers/03.webp,/images/random_covers/04.webp,/images/random_covers/05.webp,/images/random_covers/06.webp,/images/random_covers/07.webp,/images/random_covers/08.webp,/images/random_covers/09.webp,/images/random_covers/10.webp,/images/random_covers/11.webp,/images/random_covers/12.webp,/images/random_covers/13.webp,/images/random_covers/14.webp,/images/random_covers/15.webp,/images/random_covers/16.webp,/images/random_covers/17.webp,/images/random_covers/18.webp,/images/random_covers/19.webp,/images/random_covers/20.webp,/images/random_covers/21.webp,/images/random_covers/22.webp,/images/random_covers/23.webp,/images/random_covers/24.webp,/images/random_covers/25.webp,/images/random_covers/26.webp,/images/random_covers/27.webp,/images/random_covers/28.webp,/images/random_covers/29.webp,/images/random_covers/30.webp,/images/random_covers/31.webp,/images/random_covers/32.webp,/images/random_covers/33.webp,/images/random_covers/34.webp,/images/random_covers/35.webp,/images/random_covers/36.webp,/images/random_covers/37.webp,/images/random_covers/38.webp,/images/random_covers/39.webp,/images/random_covers/40.webp,/images/random_covers/41.webp,/images/random_covers/42.webp,/images/random_covers/43.webp,/images/random_covers/44.webp,/images/random_covers/45.webp,/images/random_covers/46.webp,/images/random_covers/47.webp,/images/random_covers/48.webp,/images/random_covers/49.webp,/images/random_covers/50.webp,/images/random_covers/51.webp,/images/random_covers/52.webp,/images/random_covers/53.webp,/images/random_covers/54.webp,/images/random_covers/55.webp,/images/random_covers/56.webp,/images/random_covers/57.webp".split(',');
+    }
+    var randomLink = links[Math.floor(Math.random() * links.length)];
+    element.style.backgroundImage = "url('" + randomLink + "')";
+</script>
+    <main class="post-content">
+    <article class="post-content-info">
+        <h1 id="资源"><a href="#资源" class="headerlink" title="资源"></a>资源</h1><ul>
+<li><p>PapersWithCode：<a target="_blank" rel="noopener" href="https://paperswithcode.com/paper/real-time-scene-text-detection-with-1">Real-Time Scene Text Detection with Differentiable Binarization and Adaptive Scale Fusion | Papers With Code</a></p>
+</li>
+<li><p>Arxiv：<a target="_blank" rel="noopener" href="https://arxiv.org/abs/2202.10304">[2202.10304] Real-Time Scene Text Detection with Differentiable Binarization and Adaptive Scale Fusion (arxiv.org)</a></p>
+</li>
+</ul>
+<h1 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h1><h2 id="Abstract"><a href="#Abstract" class="headerlink" title="Abstract"></a>Abstract</h2><p>​    在之前 DB 的基础上，提出了一种有效的 <strong>自适应尺度融合（ASF）</strong> 模块，通过自适应融合不同尺度的特征来提高尺度鲁棒性。</p>
+<p>​    通过将所提出的 DB 和 ASF 与分割网络相结合，我们提出的场景文本检测器在五个标准基准上，在检测精度和速度方面始终取得了最先进的结果。</p>
+<h2 id="1-Introduction"><a href="#1-Introduction" class="headerlink" title="1 Introduction"></a>1 Introduction</h2><p>​    作为场景文本检测的主流，基于<strong>分割</strong>的场景文本检测器由于其像素级表示和局部预测，通常在处理不规则形状和极端纵横比的文本实例方面具有优势。然而，它们中的大多数依赖于复杂的后处理算法将像素分组到文本区域中，导致在推理周期中花费了相当大的时间。</p>
+<p>​    例如，<strong>PSENet</strong> 应用渐进尺度扩展算法来集成多尺度结果，Tian 等人通过计算像素之间的特征距离，采用像素嵌入来对像素进行分组。此外，他们主要通过应用 <strong>FPN 特征金字塔</strong> 或 <strong>U-Net 结构</strong> 来融合不同尺度的特征图来提高分割网络的尺度鲁棒性，没有明确地针对不同尺度的文本实例自适应地融合多尺度特征。</p>
+<hr>
+<p>​    然后像之前那篇论文一样介绍了<strong>可微二值化</strong>。</p>
+<hr>
+<p>​    本文是其会议版本 <strong>DBNet</strong> 的扩展。它从两个方面扩展了会议版本。</p>
+<ul>
+<li>提出了一个 ASF 模块，以进一步增强分割模型的规模鲁棒性，而不会明显损失效率。所提出的 ASF 带来的改进与场景文本基准的尺度分布呈正相关。</li>
+<li>对所提出的数据库模块进行了更全面的理论分析。</li>
+</ul>
+<p>​    通过将所提出的 DB 模块和 ASF 模块集成到分割网络中，创建了一个准确、稳健、高效的场景文本检测器，称为 DBNet++：</p>
+<ul>
+<li>与所提出的 DB 模块联合优化后，我们的分割网络可以产生高度鲁棒的分割结果，显著提高文本检测结果</li>
+<li><p>由于可以在不牺牲准确性的情况下在推理周期中去除 DB，因此推理没有额外的内存/时间成本</p>
+</li>
+<li><p>所提出的 ASF 模块可以有效地提高分割模型的尺度鲁棒性</p>
+</li>
+<li>DBNet++ 在五个场景文本检测基准上实现了一贯的最先进的准确性，包括水平、多方向和弯曲文本</li>
+</ul>
+<h2 id="2-RELATED-WORK"><a href="#2-RELATED-WORK" class="headerlink" title="2 RELATED WORK"></a>2 RELATED WORK</h2><h3 id="2-1-Text-Detection"><a href="#2-1-Text-Detection" class="headerlink" title="2.1 Text Detection"></a>2.1 Text Detection</h3><p>​    介绍前人工作，认为 Text Detection 分为三大类：</p>
+<ul>
+<li>Regression-based</li>
+<li>Part-based</li>
+<li>Segmentation-based </li>
+</ul>
+<p>​    基于分割的方法通常结合像素级预测和后处理算法来获得边界框。</p>
+<p>​    还有追求 FPS 的模型。</p>
+<h3 id="2-2-Attention-Mechanisms-for-Image-Classification"><a href="#2-2-Attention-Mechanisms-for-Image-Classification" class="headerlink" title="2.2 Attention Mechanisms for Image Classification"></a>2.2 Attention Mechanisms for Image Classification</h3><p>​    以前的一些图像分类方法使用通道注意力和空间注意力来提高图像分类的准确性。</p>
+<p>​    这些方法主要通过不同类型的注意力来提炼独立特征。我们提出的自适应尺度融合侧重于融合不同尺度的特征。</p>
+<h3 id="2-3-用于语义分割的多尺度特征融合和上下文增强"><a href="#2-3-用于语义分割的多尺度特征融合和上下文增强" class="headerlink" title="2.3 用于语义分割的多尺度特征融合和上下文增强"></a>2.3 用于语义分割的多尺度特征融合和上下文增强</h3><p>​    用于语义分割的多尺度特征融合与上下文增强。</p>
+<h2 id="3-METHODOLOGY"><a href="#3-METHODOLOGY" class="headerlink" title="3 METHODOLOGY"></a>3 METHODOLOGY</h2><p><img src="/images/loading.webp" data-original="P3.png" alt="png"></p>
+<ul>
+<li>将输入图像输入到特征金字塔主干中</li>
+<li>金字塔特征被上采样到相同的尺度，并被传递到自适应尺度融合（ASF）模块以产生上下文特征 $F$</li>
+<li>特征 $F$ 被用于预测概率图（$P$）和阈值图（$T$）</li>
+<li>通过 $P$ 和 $F$ 计算近似二值映射（$\hat B$）。</li>
+</ul>
+<hr>
+<ul>
+<li>在训练期间，监督应用于概率映射、阈值映射和近似二值图，其中概率映射和近似二进制映射共享相同的监督。</li>
+<li>在推理期间，可以通过框形成过程从近似二值图或概率图中容易地获得边界框。</li>
+</ul>
+<h3 id="3-1-Adaptive-Scale-Fusion"><a href="#3-1-Adaptive-Scale-Fusion" class="headerlink" title="3.1 Adaptive Scale Fusion"></a>3.1 Adaptive Scale Fusion</h3><p><img src="/images/loading.webp" data-original="P4.png" alt="png"></p>
+<p>​    不同尺度的特征具有不同的感知和感受场，因此它们侧重于描述不同尺度的文本实例。例如，浅或大尺寸特征可以感知小文本实例的细节，但不能捕获大文本实例的全局视图，而深或小尺寸特征相反。</p>
+<p>​    为了充分利用不同尺度的特征，在语义分割方法中通常采用 FPN 或 U-Net 结构。与大多数通过简单级联或相加来融合不同尺度特征的语义分割方法不同，我们提出的自适应尺度融合是为了动态融合不同尺度的特征。</p>
+<script type="math/tex; mode=display">S=Conv(concat([X_0,X_1,...,X_{N-1}]))</script><script type="math/tex; mode=display">A=Spatial\_Attention(S)</script><script type="math/tex; mode=display">F=concat([E_0X_0,E1X_1,...,E_{N-1}X_{N-1}])</script><h3 id="3-2-Binarization"><a href="#3-2-Binarization" class="headerlink" title="3.2 Binarization"></a>3.2 Binarization</h3><p>介绍了它的 DB：</p>
+<p><img src="/images/loading.webp" data-original="P5.png" alt="png"></p>
+<h3 id="3-3-Analysis-of-Differentiable-Binarization"><a href="#3-3-Analysis-of-Differentiable-Binarization" class="headerlink" title="3.3 Analysis of Differentiable Binarization"></a>3.3 Analysis of Differentiable Binarization</h3><p>​    用数学方式解释为什么 DB 好使。</p>
+<h3 id="3-4-Adaptive-Threshold"><a href="#3-4-Adaptive-Threshold" class="headerlink" title="3.4 Adaptive Threshold"></a>3.4 Adaptive Threshold</h3><p>​    自适应阈值。</p>
+<h3 id="3-5-Deformable-Convolution"><a href="#3-5-Deformable-Convolution" class="headerlink" title="3.5 Deformable Convolution"></a>3.5 Deformable Convolution</h3><p>​    可变形卷积。</p>
+<h3 id="3-6-Label-Generation"><a href="#3-6-Label-Generation" class="headerlink" title="3.6 Label Generation"></a>3.6 Label Generation</h3><p>​    概率图的标签生成受到 PSENet 的启发。给定一个文本图像，其文本区域的每个多边形由一组线段描述：</p>
+<script type="math/tex; mode=display">G=\{S_k\}^n_{k=1}</script><p>​    $n$ 是顶点的数量，在不同的数据集中可能不同，例如，ICDAR 2015 数据集为 4 个，CTW1500 数据集为 16 个。</p>
+<p>​    然后，通过使用瓦蒂剪裁算法将多边形 $G$ 缩小为 $G_s$ 来生成正区域。收缩的偏移量 $D$ 是根据原始多边形的周长 $L$ 和面积 $A$ 计算得出的：</p>
+<script type="math/tex; mode=display">D=\frac{A(1-r^2)}{L}</script><p>​    其中 $r$ 是收缩率，根据经验设置为 0.4。</p>
+<p>​    通过类似的过程，我们可以为阈值映射生成标签。首先，以相同的偏移量 $D$ 到 $G_d$ 来展开文本多边形 $G$。我们将 $G_s$ 和 $G_d$ 之间的间隙视为文本区域的边界。阈值映射可以通过计算到 $G$ 中最近分段的距离来生成。</p>
+<h3 id="3-7-Optimization"><a href="#3-7-Optimization" class="headerlink" title="3.7 Optimization"></a>3.7 Optimization</h3><p>​    损失函数 $L$ 可以表示为概率映射 $L_s$ 的损失、二进制映射 $L_b$ 的损失和阈值映射 $L_t$ 的损失的加权和：</p>
+<script type="math/tex; mode=display">L=L_s+\alpha\times L_b +\beta \times L_t</script><h2 id="4-EXPERIMENTS"><a href="#4-EXPERIMENTS" class="headerlink" title="4 EXPERIMENTS"></a>4 EXPERIMENTS</h2><h3 id="4-1-Datasets"><a href="#4-1-Datasets" class="headerlink" title="4.1 Datasets"></a>4.1 Datasets</h3><p>​    使用的数据集：</p>
+<ul>
+<li>SynthText</li>
+<li>MLT-2017</li>
+<li>MLT-2019</li>
+<li>ICDAR 2015</li>
+<li>MSRA-TD500</li>
+<li>CTW1500</li>
+<li>Total-Text</li>
+</ul>
+<h3 id="4-2-Implementation-Details"><a href="#4-2-Implementation-Details" class="headerlink" title="4.2 Implementation Details"></a>4.2 Implementation Details</h3><p>​    对于所有模型：</p>
+<ul>
+<li>首先使用 SynthText 数据集对它们进行 100k 次迭代的<strong>预训练</strong>。</li>
+<li>在 1200 个 epochs 的相应真实世界数据集上<strong>微调模型</strong>。</li>
+<li>训练批次大小设置为 16。我们遵循“多”学习率策略，其中当前迭代的学习率等于初始学习率乘以 $(1-\frac{iter}{max_iter})^{power}$，其中初始学习率设置为 0.007，$power$ 为 0.9。我们使用 0.0001 的权重衰减和 0.9 的动量。最大 iter 意味着最大迭代次数，这取决于 max epochs</li>
+</ul>
+<p>​    训练数据的数据扩充包括：</p>
+<ul>
+<li>角度范围为 $(-10^{\circ},10^{\circ})$ 的随机旋转</li>
+<li>随机裁剪</li>
+<li>随机翻转</li>
+<li>为了提高训练效率，所有处理后的图像都被重新调整为 640×640</li>
+</ul>
+<h3 id="4-3-Ablation-Study"><a href="#4-3-Ablation-Study" class="headerlink" title="4.3 Ablation Study"></a>4.3 Ablation Study</h3><p>​    对 DConv、DB 和 ASF 分别做消融实验：</p>
+<p><img src="/images/loading.webp" data-original="PT1.png" alt="png"></p>
+<h3 id="4-4-Comparisons-with-Previous-Methods"><a href="#4-4-Comparisons-with-Previous-Methods" class="headerlink" title="4.4 Comparisons with Previous Methods"></a>4.4 Comparisons with Previous Methods</h3><p>​    TotalText：</p>
+<p><img src="/images/loading.webp" data-original="PT5.png" alt="png"></p>
+<p>​    CTW1500：</p>
+<p><img src="/images/loading.webp" data-original="PT6.png" alt="png"></p>
+<h3 id="4-5-Comparisons-with-the-Conference-Version"><a href="#4-5-Comparisons-with-the-Conference-Version" class="headerlink" title="4.5 Comparisons with the Conference Version"></a>4.5 Comparisons with the Conference Version</h3><p>​    在标准场景文本基准测试中的定量结果表明，所提出的 DBNet++ 在准确性方面优于会议版本，速度下降很小。具体而言，在</p>
+<ul>
+<li><p>Total Text 数据集</p>
+</li>
+<li><p>CTW1500 数据集</p>
+</li>
+<li><p>ICDAR 2015 数据集</p>
+</li>
+<li><p>MSRA-TD500 数据集</p>
+</li>
+<li><p>MLT-2019 数据集</p>
+</li>
+</ul>
+<p>的 <strong>F-measure</strong> 方面，分别提高了</p>
+<ul>
+<li><p>0.5%（1.3%）</p>
+</li>
+<li><p>2.9%（1.9%）</p>
+</li>
+<li><p>0.8%（0.0%）</p>
+</li>
+<li><p>3.6%（2.3%）</p>
+</li>
+<li><p>1.3%（1.0%）</p>
+</li>
+</ul>
+<p>backbone 是 ResNet-18（ResNet-50）。</p>
+<h3 id="4-6-Limitation"><a href="#4-6-Limitation" class="headerlink" title="4.6 Limitation"></a>4.6 Limitation</h3><p>​    文字中的文字？直接寄。</p>
+<h3 id="5-CONCLUSION"><a href="#5-CONCLUSION" class="headerlink" title="5 CONCLUSION"></a>5 CONCLUSION</h3><p>​    好使。</p>
+
+        
+    
+        
+<link rel="stylesheet" href="/css/third-party/giscus.css">
+
+        <div class="giscus"></div>
+        <script>
+            var scriptElement = document.createElement('script');
+            scriptElement.src = 'https://giscus.app/client.js';
+            scriptElement.setAttribute('data-repo', 'GZ-Metal-Cell/GZ-Metal-Cell.github.io');
+            scriptElement.setAttribute('data-repo-id', 'R_kgDOIHLEOQ');
+            scriptElement.setAttribute('data-category', 'Announcements');
+            scriptElement.setAttribute('data-category-id', 'DIC_kwDOIHLEOc4CcVwP');
+            scriptElement.setAttribute('data-mapping', 'title');
+            scriptElement.setAttribute('data-strict', '1');
+            scriptElement.setAttribute('data-reactions-enabled', '');
+            scriptElement.setAttribute('data-emit-metadata', '0');
+            scriptElement.setAttribute('data-input-position', 'bottom');
+            scriptElement.setAttribute('data-theme', localStorage.getItem('theme') === 'light' ? 'light' : 'dark_high_contrast');
+            scriptElement.setAttribute('data-lang', 'zh-CN');
+            
+            scriptElement.setAttribute('crossorigin', 'anonymous');
+            scriptElement.async = true;
+            document.head.appendChild(scriptElement);
+        </script>
+    
+
+    </article>
+    <div class="post-content-aside">
+        
+            <div class="post-content-aside-toc">
+                <h1>目录</h1>
+                <ol class="toc"></ol>
+            </div>
+            
+<script src="/js/widget/toc.js"></script>
+
+        
+    </div>
+</main>
+    <div class="post-paging">
+    
+    <a href="/2023/07/16/Paper-%E7%9C%8B%E4%B8%80%E7%9C%8B%E5%B8%88%E5%85%84%E5%B8%88%E5%A7%90%E4%BB%AC%E5%86%99%E7%9A%84%E8%AE%BA%E6%96%87/">
+        <div class="post-paging-last">
+            <span>上一篇</span>
+            <p>Paper-看一看师兄师姐们写的论文</p>
+        </div>
+    </a>
+    
+
+    
+    <a href="/2023/07/15/Paper-Shape%20Robust%20Text%20Detection%20With%20Progressive%20Scale%20Expansion%20Network/">
+        <div class="post-paging-next">
+            <span>下一篇</span>
+            <p>Paper-Shape Robust Text Detection With Progressive Scale Expansion Network</p>
+        </div>
+    </a>
+    
+</div>
+</div>
+		<div class="footer">
+	<div class="copyright">
+		©2022-2024 By Zi-Zi. Theme by&nbsp;
+		<a target="_blank" rel="noopener" href="https://github.com/79e/hexo-theme-quiet">Quiet</a>
+		
+			.&nbsp;
+			<img no-lazy alt="icp" src="/images/icp_icon.png" style="width:16px;margin-bottom:-3px">
+			<a href="https://icp.gov.moe/?keyword=20241647" target="_blank">萌ICP备20241647号</a>
+		
+	</div>
+	<div class="contact">
+		
+		<a target="_blank" rel="noopener" href="https://weibo.com/u/5020307235">
+			<img no-lazy src="/images/bottom_icon/Weibo.webp" alt="Quiet">
+		</a>
+		
+		<a target="_blank" rel="noopener" href="https://tieba.baidu.com/home/main?id=tb.1.ff6d2775.vFH7wrdW2ZjPCmyBHJcjnA">
+			<img no-lazy src="/images/bottom_icon/Tieba.webp" alt="Quiet">
+		</a>
+		
+		<a target="_blank" rel="noopener" href="https://space.bilibili.com/11547880">
+			<img no-lazy src="/images/bottom_icon/Bilibili.webp" alt="Quiet">
+		</a>
+		
+		<a target="_blank" rel="noopener" href="https://github.com/GZ-Metal-Cell">
+			<img no-lazy src="/images/bottom_icon/github.webp" alt="Quiet">
+		</a>
+		
+	</div>
+</div>
+
+
+
+
+	
+		<link rel="stylesheet" href="/js/third-party/katex/katex.min.css" integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
+		<script defer src="/js/third-party/katex/katex.min.js" integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
+		<script defer src="/js/third-party/katex/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"
+			onload="renderMathInElement(document.body);"></script>
+		<script>
+			document.addEventListener("DOMContentLoaded", function() {
+				renderMathInElement(document.body, {
+				delimiters: [
+					{left: "$$", right: "$$", display: true},
+					{left: "$", right: "$", display: false}
+				],
+				macros: {
+					"\\ge": "\\geqslant",
+					"\\le": "\\leqslant",
+					"\\geq": "\\geqslant",
+					"\\leq": "\\leqslant"
+				}
+				});
+			});
+		</script>
+		
+<script src="/js/widget/katex.js"></script>
+
+	
+
+
+
+<script src="/js/widget/highlight_tools.js"></script>
+
+<script>
+	var copyIcon = "/images/icon/copy.png";
+	var closeCodeBlockIcon = "/images/icon/close_code_block.png";
+	var highlightShrink = "";
+	var HighlightHeightLimit = "";
+</script>
+
+
+	
+<script src="/js/widget/goto_position.js"></script>
+
+<style>
+	.rightside-button-icon
+	{
+		width: 18px;
+		height: 18px;
+		-webkit-user-select: none; /* Chrome, Safari, Opera */
+        -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+        user-select: none; /* Non-prefixed version, supported by most modern browsers */
+	}
+</style>
+
+<div style="z-index: 3; position: fixed; bottom: 10px; right: 20px; transition: all 0.5s ease-out;" id="rightside">
+	<div class="rightside">
+		
+			<div class="rightside-button hidden" id="js-toc">
+				<span>
+					<img no-lazy src="/images/icon/toc.png" class="rightside-button-icon" alt="Icon">
+				</span>
+			</div>
+		
+		<div class="rightside-button" id="js-toggle_theme">
+			<span>
+				<img no-lazy src="/images/icon/toggle_theme.png" class="rightside-button-icon" alt="Icon">
+			</span>
+		</div>
+		<div class="rightside-button" id="js-go_top">
+			<span>
+				<img no-lazy src="/images/icon/go_top.png" class="rightside-button-icon" alt="Icon">
+			</span>
+		</div>
+		<div class="rightside-button" id="js-go_bottom">
+			<span>
+				<img no-lazy src="/images/icon/go_bottom.png" class="rightside-button-icon" alt="Icon">
+			</span>
+		</div>
+	</div>
+</div>
+
+<script>
+	setToggleThemeButtonListener();
+</script>
+<script>
+    $('#js-go_top')
+	.gotoPosition( {
+		speed: 300,
+		target: 'top',
+	} );
+	$('#js-go_bottom')
+	.gotoPosition( {
+		speed: 300,
+		target: 'bottom',
+	} );
+</script>
+
+<!-- Analytics -->
+
+    
+        <!-- Busuanzi Analytics -->
+        <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    
+    
+        <!-- Baidu Analytics -->
+        <script defer>
+            var _hmt = _hmt || [];
+            (function () {
+                var hm = document.createElement("script");
+                hm.src = "https://hm.baidu.com/hm.js?e57cf62289f84322ebff116e8b3d343e";
+                var s = document.getElementsByTagName("script")[0];
+                s.parentNode.insertBefore(hm, s);
+            })();
+        </script>
+    
+
+
+
+
+<script>
+	console.log('\n %c Hexo-Quiet 主题 %c https://github.com/79e/hexo-theme-quiet \n', 'color: #fadfa3; background: #030307; padding:5px 0;', 'background: #fadfa3; padding:5px 0;')
+</script>
+	
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 5,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body>
+</html>
+
