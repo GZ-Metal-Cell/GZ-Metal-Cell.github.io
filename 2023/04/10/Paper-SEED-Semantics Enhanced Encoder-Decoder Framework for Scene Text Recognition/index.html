@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang=zh-CN data-theme="light">
+	
+<script src="/js/widget/toggleTheme.js"></script>
+
+	<script>
+		setTheme();
+	</script>
+	<head>
+		
+<title>Paper-SEED-Semantics Enhanced Encoder-Decoder Framework for Scene Text Recognition | Zi-Zi's Journey</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="shortcut icon" type="image/x-icon" href="/images/icon/favicon.ico">
+
+<link rel="stylesheet" href="/css/index.css">
+
+
+
+<meta name="keywords" content="论文,作业,文本检测,">
+<meta name="description" content="论文阅读。">
+
+
+<script src="/js/third-party/jquery.min.js"></script>
+
+	<meta name="generator" content="Hexo 6.1.0"></head>
+
+	<body>
+		<div class="header">
+	<div class="header-top" id="header-top">
+		<div class="h-left">
+			<a href="/" class="logo">
+				<img no-lazy src="/images/headers_icon/logo.webp" alt="Quiet">
+			</a>
+			<ul class="breadcrumb" id="breadcrumb"></ul>
+		</div>
+		<div class="h-right">
+			<ul>
+				
+					
+					  <li>
+						<a href="/">
+						  主页
+						</a>
+					  </li>
+					
+				  
+					
+					  <li>
+						<a href="/categories">
+						  类别
+						</a>
+					  </li>
+					
+				  
+					
+					  <li>
+						<a href="/tags">
+						  标签
+						</a>
+					  </li>
+					
+				  
+					
+					  <li>
+						<a href="/archives">
+						  归档
+						</a>
+					  </li>
+					
+				  
+					
+					  <li>
+						<a href="/galleries">
+						  相册
+						</a>
+					  </li>
+					
+				  
+					
+					  <li>
+						<a href="/links">
+						  链接
+						</a>
+					  </li>
+					
+				  
+					
+					  <li>
+						<a href="/about">
+						  关于
+						</a>
+					  </li>
+					
+				  				  
+			</ul>
+		</div>
+		<div class="h-right-close">
+			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+				<path fill="none" d="M0 0h24v24H0z" />
+				<path d="M3 4h18v2H3V4zm0 7h18v2H3v-2zm0 7h18v2H3v-2z" fill="rgba(68,68,68,1)" />
+			</svg>
+		</div>
+	</div>
+</div>
+<div class="sidebar">
+    <div class="topo"></div>
+    <ul>
+        
+        <li>
+            <a href="/">
+                主页
+            </a>
+        </li>
+        
+        <li>
+            <a href="/categories">
+                类别
+            </a>
+        </li>
+        
+        <li>
+            <a href="/tags">
+                标签
+            </a>
+        </li>
+        
+        <li>
+            <a href="/archives">
+                归档
+            </a>
+        </li>
+        
+        <li>
+            <a href="/galleries">
+                相册
+            </a>
+        </li>
+        
+        <li>
+            <a href="/links">
+                链接
+            </a>
+        </li>
+        
+        <li>
+            <a href="/about">
+                关于
+            </a>
+        </li>
+        
+    </ul>
+    <div class="my_foot">
+        
+        <a target="_blank" rel="noopener" href="https://weibo.com/u/5020307235">
+            <img no-lazy src="/images/bottom_icon/Weibo.webp" alt="Quiet主题">
+        </a>
+        
+        <a target="_blank" rel="noopener" href="https://tieba.baidu.com/home/main?id=tb.1.ff6d2775.vFH7wrdW2ZjPCmyBHJcjnA">
+            <img no-lazy src="/images/bottom_icon/Tieba.webp" alt="Quiet主题">
+        </a>
+        
+        <a target="_blank" rel="noopener" href="https://space.bilibili.com/11547880">
+            <img no-lazy src="/images/bottom_icon/Bilibili.webp" alt="Quiet主题">
+        </a>
+        
+        <a target="_blank" rel="noopener" href="https://github.com/GZ-Metal-Cell">
+            <img no-lazy src="/images/bottom_icon/github.webp" alt="Quiet主题">
+        </a>
+        
+    </div>
+</div>
+<div class='shelter'>
+</div>
+<style>
+    .shelter{
+        background-color: #000;
+        opacity: 0.5;
+        cursor: pointer;
+        display: none; 
+        position: fixed;
+        left: 0;
+        top: 0; 
+        right: 0;
+        bottom: 0;
+        z-index: 1998;
+    }
+    .sidebar {
+        width: 67%;
+        height: 100%;
+        position: fixed;
+        top: 0;
+        right: -100%;
+        bottom: 0;
+        background: var(--background-secondary);
+        z-index: 1999;
+        text-align: center;
+        box-shadow: -6px 0 20px rgba(50, 50, 50, 0.2);
+    }
+
+    .topo {
+        width: 100%;
+        height: 180px;
+        background-size: 100% 100%;
+        position: relative;
+        display: flex;
+        align-items: flex-end;
+        background-repeat: repeat;
+        background-size: cover;
+        background-position: 50% 25%;
+    }
+
+    .topo:before {
+        content: '';
+        background-image: url(/images/pattern.png);
+        background-repeat: repeat;
+        height: 100%;
+        left: 0;
+        position: absolute;
+        top: 0;
+        width: 100%;
+        z-index: 1
+    }
+
+    .sidebar ul {
+        width: 100%;
+        margin-top: 40px;
+    }
+
+    .sidebar ul li {
+        height: 60px;
+        list-style: none;
+        font-size: 1.2em;
+        text-align: right;
+        margin-right: 10px;
+    }
+
+    .sidebar ul li a {
+        display: grid;
+        color: #5d606a;
+        text-overflow: ellipsis;
+        width: 100%;
+        text-decoration: none;
+    }
+
+    .my_foot {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        position: absolute;
+        bottom: 0;
+    }
+
+    .my_foot a {
+        text-decoration: none;
+        margin-right: 10px;
+        display: inline-block;
+    }
+
+    .my_foot a img {
+        width: 30px;
+        height: 30px;
+    }
+</style>
+
+<script>
+    $(function() {
+        $('.h-right-close > svg').click(function() {
+            $('.sidebar').animate({
+                right: "0"
+            }, 500);
+            $('.shelter').fadeIn("slow");
+        
+            var element = $('.topo');
+            element.addClass('custom-style');
+        
+            var links = null;
+            if ("") {
+                links = "".split(',');
+            } else {
+                links = "/images/random_covers/01.webp,/images/random_covers/02.webp,/images/random_covers/03.webp,/images/random_covers/04.webp,/images/random_covers/05.webp,/images/random_covers/06.webp,/images/random_covers/07.webp,/images/random_covers/08.webp,/images/random_covers/09.webp,/images/random_covers/10.webp,/images/random_covers/11.webp,/images/random_covers/12.webp,/images/random_covers/13.webp,/images/random_covers/14.webp,/images/random_covers/15.webp,/images/random_covers/16.webp,/images/random_covers/17.webp,/images/random_covers/18.webp,/images/random_covers/19.webp,/images/random_covers/20.webp,/images/random_covers/21.webp,/images/random_covers/22.webp,/images/random_covers/23.webp,/images/random_covers/24.webp,/images/random_covers/25.webp,/images/random_covers/26.webp,/images/random_covers/27.webp,/images/random_covers/28.webp,/images/random_covers/29.webp,/images/random_covers/30.webp,/images/random_covers/31.webp,/images/random_covers/32.webp,/images/random_covers/33.webp,/images/random_covers/34.webp,/images/random_covers/35.webp,/images/random_covers/36.webp,/images/random_covers/37.webp,/images/random_covers/38.webp,/images/random_covers/39.webp,/images/random_covers/40.webp,/images/random_covers/41.webp,/images/random_covers/42.webp,/images/random_covers/43.webp,/images/random_covers/44.webp,/images/random_covers/45.webp,/images/random_covers/46.webp,/images/random_covers/47.webp,/images/random_covers/48.webp,/images/random_covers/49.webp,/images/random_covers/50.webp,/images/random_covers/51.webp,/images/random_covers/52.webp,/images/random_covers/53.webp,/images/random_covers/54.webp,/images/random_covers/55.webp,/images/random_covers/56.webp,/images/random_covers/57.webp".split(',');
+            }
+        
+            var randomLink = links[Math.floor(Math.random() * links.length)];
+            element.css('background-image', "url('" + randomLink + "')");
+        });
+      
+        $('.shelter').click(function(e) {
+            $('.sidebar').animate({
+                right: "-100%"
+            }, 500);
+            $('.shelter').fadeOut("slow");
+        });
+    });      
+</script>
+
+<script src="/js/widget/breadcrumb.js"></script>
+
+<script>
+	var menus_title = [];
+	
+	    menus_title.push({home: '主页'});
+	
+	    menus_title.push({categories: '类别'});
+	
+	    menus_title.push({tags: '标签'});
+	
+	    menus_title.push({galleries: '相册'});
+	
+	    menus_title.push({archives: '归档'});
+	
+	    menus_title.push({links: '链接'});
+	
+	    menus_title.push({about: '关于'});
+	
+	
+		
+			categoriesBreadcrumb(
+				document.getElementById('breadcrumb'),
+				"类别",
+				"/categories",
+				"学习",
+				"/categories/学习"
+			);
+		
+	
+</script>
+<div class="post">
+    <div class="post-header-background">
+    <div class="post-header-background-content">
+        <ul class="post-header-tag">
+            
+                
+                    <li><a href="/tags/论文"><span>论文</span></a></li>
+                
+                    <li><a href="/tags/作业"><span>作业</span></a></li>
+                
+                    <li><a href="/tags/文本检测"><span>文本检测</span></a></li>
+                
+            
+        </ul>
+        
+        <h1>Paper-SEED-Semantics Enhanced Encoder-Decoder Framework for Scene Text Recognition</h1>
+        <div class="post-header-info">
+            <div class="post-header-info-author">
+                <svg t="1604839279282" class="icon" viewBox="0 0 1024 1024" version="1.1"
+                    xmlns="http://www.w3.org/2000/svg" p-id="2901" width="20" height="20">
+                    <path
+                        d="M513 956.3c-247.7 0-448-200.3-448-448S265.3 66.2 513 66.2s448 200.3 448 448-200.3 442.1-448 442.1z m0-830.9c-212.2 0-388.8 170.7-388.8 388.8C124.2 726.3 294.9 903 513 903c212.2 0 388.8-170.7 388.8-388.8S725.2 125.4 513 125.4z m0 430.2c-94.2 0-170.7-76.5-170.7-170.7S418.8 207.8 513 207.8s170.7 76.5 170.7 170.7S607.2 555.6 513 555.6z m0-289.1c-64.6 0-112 52.8-112 112s47.4 117.9 112 117.9 112-52.8 112-112-47.4-117.9-112-117.9z m0 689.8c-135.7 0-259-58.7-341.9-158.9l-11.8-17.8 11.8-17.8c76.5-117.9 206.2-188.5 347.8-188.5 135.7 0 265 64.6 341.9 182.6l11.8 17.8-11.8 17.8C778 897.1 648.7 956.3 513 956.3zM230.3 773.2C300.9 849.7 406.9 897 513 897c112 0 218.1-47.4 288.6-129.8-70.5-88.2-170.7-135.6-282.7-135.6s-218.1 53.3-288.6 141.6z"
+                        p-id="2902" fill="#ffffff"></path>
+                </svg>
+                <span class="post-header-info-author-text"> <a href="../../about">Zi-Zi</a></span>
+                <div class="post-header-info-author-categories">
+                    
+                        
+                            <a href="/categories/学习" target="_blank" >学习</a>
+                        
+                    
+                </div>
+                <!-- 显示页面访问 pv 数 -->
+                <time>2023-04-10 15:34:00</time>
+                
+                    <p id="busuanzi_container_page_pv" style='display:none;'>阅读数：<p id="busuanzi_value_page_pv"></p></p>
+                
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    
+<link rel="stylesheet" href="/css/third-party/fancybox.css">
+
+
+<script src="/js/third-party/fancybox.umd.js"></script>
+
+
+<script src="/js/widget/fancybox.js"></script>
+
+
+
+<script src="/js/third-party/hljs.min.js"></script>
+
+
+
+<script src="/js/widget/hide.js"></script>
+
+
+<script src="/js/widget/tabs.js"></script>
+
+
+    
+<script src="/js/widget/replaceSpacesWithNbsp.js"></script>
+
+
+
+<script>
+    var element = document.querySelector('.post-header-background');
+    element.classList.add('custom-style');
+    var links = null;
+    if("")
+    {
+        links = "".split(',');
+    } else
+    {
+        links = "/images/random_covers/01.webp,/images/random_covers/02.webp,/images/random_covers/03.webp,/images/random_covers/04.webp,/images/random_covers/05.webp,/images/random_covers/06.webp,/images/random_covers/07.webp,/images/random_covers/08.webp,/images/random_covers/09.webp,/images/random_covers/10.webp,/images/random_covers/11.webp,/images/random_covers/12.webp,/images/random_covers/13.webp,/images/random_covers/14.webp,/images/random_covers/15.webp,/images/random_covers/16.webp,/images/random_covers/17.webp,/images/random_covers/18.webp,/images/random_covers/19.webp,/images/random_covers/20.webp,/images/random_covers/21.webp,/images/random_covers/22.webp,/images/random_covers/23.webp,/images/random_covers/24.webp,/images/random_covers/25.webp,/images/random_covers/26.webp,/images/random_covers/27.webp,/images/random_covers/28.webp,/images/random_covers/29.webp,/images/random_covers/30.webp,/images/random_covers/31.webp,/images/random_covers/32.webp,/images/random_covers/33.webp,/images/random_covers/34.webp,/images/random_covers/35.webp,/images/random_covers/36.webp,/images/random_covers/37.webp,/images/random_covers/38.webp,/images/random_covers/39.webp,/images/random_covers/40.webp,/images/random_covers/41.webp,/images/random_covers/42.webp,/images/random_covers/43.webp,/images/random_covers/44.webp,/images/random_covers/45.webp,/images/random_covers/46.webp,/images/random_covers/47.webp,/images/random_covers/48.webp,/images/random_covers/49.webp,/images/random_covers/50.webp,/images/random_covers/51.webp,/images/random_covers/52.webp,/images/random_covers/53.webp,/images/random_covers/54.webp,/images/random_covers/55.webp,/images/random_covers/56.webp,/images/random_covers/57.webp".split(',');
+    }
+    var randomLink = links[Math.floor(Math.random() * links.length)];
+    element.style.backgroundImage = "url('" + randomLink + "')";
+</script>
+    <main class="post-content">
+    <article class="post-content-info">
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><blockquote>
+<p><font color="#136ec2">@全体成员</font> 所有一二年级的同学先读一下这篇论文。咱们本周三组会时请每位同学翻译一段，然后分析一下论文写作的特点。该论文是2020年CVPR会议论文，本年度的CVPR截稿日期为6月20日，是CCF推荐会议，希望各位同学关注会议网站，有准备的同学可以投稿。</p>
+</blockquote>
+<h1 id="翻译"><a href="#翻译" class="headerlink" title="翻译"></a>翻译</h1><h2 id="Abstract"><a href="#Abstract" class="headerlink" title="Abstract"></a>Abstract</h2><p>​    场景文本识别是个研究热点，最近识别模型都是基于 E-D 的框架，可以处理<strong>视角失真</strong>（perspective distortion）和<strong>曲线形状</strong>（curve shape）。但它们对<strong>模糊</strong>（blur）、<strong>不均匀的照明</strong>（uneven illumination）、<strong>不完整的文字</strong>（incomplete characters）不好使。我们认为它们不好使的原因是这些 E-D 方法都是基于<strong>局部视觉特征</strong>（local visual features）没有用<strong>显式的语义信息</strong>（explicit global semantic information）。我们提出了一个语义增强的 E-D 框架来鲁棒地识别低质量的场景文本。<strong>语义信息</strong>（semantic information）在 E 中被用在监督，在 D 中被用于初始化。特别地，当前的 <strong>SOTA</strong>（state-of-the-art）ASTER算法 也被用在我们所提出的框架中。大量的实验表明，我们这个模型对低质量图像具有鲁棒性。在几个基准数据集上获得 SOTA。代码即将可用。</p>
+<h2 id="1-Introduction"><a href="#1-Introduction" class="headerlink" title="1 Introduction"></a>1 Introduction</h2><ul>
+<li>convincing performance（令人信服的性能）</li>
+<li>conventional（传统的）</li>
+<li>promising results（可喜的结果）</li>
+<li>background interfere（背景干扰）</li>
+<li>occlusion（遮挡）</li>
+<li><p>regular（常规）</p>
+</li>
+<li><p>each time step（间距）</p>
+</li>
+<li>For <strong>irregular</strong>（不规律的）based text recognition, the <strong>rectification</strong>（校正）based methods</li>
+<li><p>Rectification based methods first rectify the irregular images, then the following <strong>pipeline</strong>（管道）is as those of <strong>regular recognition</strong>（规则识别）</p>
+</li>
+<li><p><strong>multi-direction encoding</strong>（多向 E）使用带两个 LSTMs 的 CNN 给四个方向编码</p>
+</li>
+<li>2D-attention 使用 2D-attention 机制处理不规则文本，直接处理二维的 feature map</li>
+</ul>
+<p>​    如果只把文字识别单纯视作是一个字符分类任务，忽略全局语义，那么对低质量图像识别出来会是依托答辩。</p>
+<hr>
+<p>​    语义信息（semantic information）有两个优点：</p>
+<ul>
+<li><p>在 NLP 中可以用 <strong>一个词嵌入</strong>（a word embedding）来进行<strong>监督</strong>（supervised）</p>
+</li>
+<li><p>gap（差距）</p>
+</li>
+<li><p>cross-modality task（跨模态任务）</p>
+</li>
+<li><p>concepts（观念）</p>
+</li>
+<li><p>weighted ranking loss（加权排名损失）</p>
+</li>
+</ul>
+<hr>
+<p>​    我们这个模型会预测语义信息，并通过来自预训练的语言模型的单词嵌入来监督。</p>
+<ul>
+<li>integrate（集成）</li>
+</ul>
+<h2 id="2-Related-Work"><a href="#2-Related-Work" class="headerlink" title="2 Related Work"></a>2 Related Work</h2><h3 id="2-1-Scene-Text-Recognition"><a href="#2-1-Scene-Text-Recognition" class="headerlink" title="2.1 Scene Text Recognition"></a>2.1 Scene Text Recognition</h3><ul>
+<li><p>传统方法 adopt（采用）a bottom-up approach（方法），先检测和分类字符，然后使用<strong>启发式规则</strong>（heuristic rules）、<strong>语言模型</strong>（language models）或<strong>词典</strong>（lexicons）。整了一堆手工提取的<strong>计算成本高</strong>（computationally expensive）特征用于 SVM，如<strong>纵横比</strong>（aspect ratio）、<strong>孔面积比</strong>（hole area ratio）</p>
+</li>
+<li><p>HOG descriptors（HOG 描述符）</p>
+</li>
+<li>Hough voting（Hough 投票机制）</li>
+</ul>
+<hr>
+<ul>
+<li><p>treats（视作）</p>
+</li>
+<li><p>character alignment（字符调整）</p>
+</li>
+<li><p>contextual dependencies（上下文相关性）</p>
+</li>
+<li><p>attention drift（注意力漂移）</p>
+</li>
+</ul>
+<hr>
+<p>​    上述方法都假定（assume）文本是水平（horizontal）的，带透视扭曲和曲线就寄。提出了 STN 解决这个问题，还可以用<strong>迭代矫正</strong>（iterative rectification）和<strong>几何约束</strong>（geometric constraints）矫正（rectifies），矫正（rectifying）</p>
+<ul>
+<li><p>in spite of（尽管）</p>
+</li>
+<li><p>auxiliary dense character（辅助稠密特征）</p>
+</li>
+<li><p>tailored（特制的）</p>
+</li>
+</ul>
+<h3 id="2-2-Semantics-in-Scene-Text"><a href="#2-2-Semantics-in-Scene-Text" class="headerlink" title="2.2 Semantics in Scene Text"></a>2.2 Semantics in Scene Text</h3><ul>
+<li><p>contextualized lexicons（语境化词典）</p>
+</li>
+<li><p>word spotting system（单词识别系统）</p>
+</li>
+<li>boost（促进）</li>
+<li>utilize（应用）</li>
+<li>integrate（合并）</li>
+<li>explicitly（准确地）</li>
+</ul>
+<h2 id="3-Method"><a href="#3-Method" class="headerlink" title="3 Method"></a>3 Method</h2><h3 id="3-1-Encoder-Decoder-Framework"><a href="#3-1-Encoder-Decoder-Framework" class="headerlink" title="3.1 Encoder-Decoder Framework"></a>3.1 Encoder-Decoder Framework</h3><ul>
+<li><p>simplicity（简单地）</p>
+</li>
+<li><p>fixed（固定）</p>
+</li>
+<li>drawback（缺点）</li>
+<li>inspired（启发）</li>
+<li>shortcuts（捷径）</li>
+<li>capable（能干的）</li>
+</ul>
+<h3 id="3-2-FastText-Model"><a href="#3-2-FastText-Model" class="headerlink" title="3.2 FastText Model"></a>3.2 FastText Model</h3><p>​    设 $T=\{w_{i-l},…,w_{i+l}\}$ 是文本语料库中的一个句子。</p>
+<ul>
+<li>$l$ 是句子的长度，是一个超参数</li>
+<li><p>单词 $w_i$ 由嵌入向量 $v_i$ 表示，然后输入到简单的前馈神经网络（simple feed-forward neural network）</p>
+</li>
+<li><p>目的是预测表示为 $C_i=w_{i−l},…,w_{i−1},w_{i+1},…,w_{i + l}$。通过前馈网络的训练，同时对嵌入向量进行优化，最终得到的单词嵌入向量与语义相近的单词接近</p>
+</li>
+<li>FastText 还嵌入了子单词（subwords），使用它们生成单词 $w_i$ 的最终嵌入。</li>
+</ul>
+<h3 id="3-3-SEED"><a href="#3-3-SEED" class="headerlink" title="3.3 SEED"></a>3.3 SEED</h3><h4 id="3-3-1-General-Framework"><a href="#3-3-1-General-Framework" class="headerlink" title="3.3.1 General Framework"></a>3.3.1 General Framework</h4><ul>
+<li><p>scenarios（情景）</p>
+</li>
+<li><p>address these problems（解决这些问题）</p>
+</li>
+<li><p>utilizing（使用）</p>
+</li>
+<li><p>alternative（可替代的）</p>
+</li>
+<li>fed into（馈送）</li>
+</ul>
+<h4 id="3-3-2-Architecture-of-Semantics-Enhanced-ASTER"><a href="#3-3-2-Architecture-of-Semantics-Enhanced-ASTER" class="headerlink" title="3.3.2 Architecture of Semantics Enhanced ASTER"></a>3.3.2 Architecture of Semantics Enhanced ASTER</h4><ul>
+<li>exemplar（模板）</li>
+<li>transcribes（转录）</li>
+<li><p>thin-plate splines（薄板样条）</p>
+</li>
+<li><p>rectified image（矫正图像）</p>
+</li>
+</ul>
+<p>​    编码器的输出是形状为 $L\times C$ 的特征序列 $h=(h_1,…h_L)$，$L$ 是 CNN 中最后一个特征图的宽度，$C$ 是深度。</p>
+<p>​    特征序列 $h$ 有两个功能：</p>
+<ul>
+<li>通过语义模块预测语义信息</li>
+<li>作为 D 的输入</li>
+<li><p>将特征序列平坦化为一维向量 $I$，维数为 $K$，$K=L\times C$，语义信息 $S$ 通过两个线性函数预测 $S=W_2\sigma(W_1I+b_1)+b_2$</p>
+</li>
+<li><p>In particular, the semantic information S is used to initialize the states of GRU after a linear function for transforming the dimension.</p>
+<ul>
+<li>特别地，使用语义信息 $S$ 对 GRU 的状态进行初始化，并对维度进行线性函数变换。</li>
+</ul>
+</li>
+<li><p>Instead of using zero-state initializing, the decoding process will be guided with global semantics, so the decoder uses not only local visual information but also global semantic information to generate more accurate results.</p>
+<ul>
+<li>解码过程将以全局语义为指导，而不是使用零状态初始化，因此解码器不仅使用局部视觉信息，还使用全局语义信息来生成更准确的结果。</li>
+</ul>
+</li>
+</ul>
+<h3 id="3-4-Loss-Function-and-Training-Strategy"><a href="#3-4-Loss-Function-and-Training-Strategy" class="headerlink" title="3.4 Loss Function and Training Strategy"></a>3.4 Loss Function and Training Strategy</h3><script type="math/tex; mode=display">L=L_{rec}+\lambda L_{sem}</script><ul>
+<li>$L_{rec}$ 是预测概率相对于 GT 的 standard cross-entropy</li>
+<li>$L_{sem}$ 是预测的语义信息和从预训练 FastText 模型中转录标签词嵌入和预测语义信息的余弦嵌入损失.</li>
+</ul>
+<hr>
+<ul>
+<li>two training strategie（策略）<ul>
+<li>用预训练的 FastText 模型中的词嵌入而不是预测的语义信息初始化 D</li>
+<li>直接预测语义信息</li>
+</ul>
+</li>
+</ul>
+<h2 id="4-Experiments"><a href="#4-Experiments" class="headerlink" title="4 Experiments"></a>4 Experiments</h2><h3 id="4-1-Datasets"><a href="#4-1-Datasets" class="headerlink" title="4.1 Datasets"></a>4.1 Datasets</h3><ul>
+<li>implementation details（实现细节）</li>
+<li><p>benchmarks（基准）</p>
+</li>
+<li><p>cropped（裁切不正的）</p>
+</li>
+<li><p>careful capture（小心捕捉）</p>
+</li>
+<li><p>resolution（分辨率）</p>
+</li>
+<li><p>synthetic（合成）</p>
+</li>
+<li>It contains words from the testing set of the IC13 and SVT. 它包含来自 IC13 和 SVT 测试集的单词</li>
+</ul>
+<h3 id="4-2-Implementation-Details"><a href="#4-2-Implementation-Details" class="headerlink" title="4.2 Implementation Details"></a>4.2 Implementation Details</h3><ul>
+<li><p>officially（正式地）</p>
+</li>
+<li><p>symbols（符号）</p>
+</li>
+<li><p>采用 ADADELTA 最小化目标函数</p>
+</li>
+<li><p>文本生成任务中常用的解码策略Beam Search（集束搜索）</p>
+</li>
+<li><p>accumulative scores（累积计分）</p>
+</li>
+</ul>
+<h3 id="4-3-Ablation-Study"><a href="#4-3-Ablation-Study" class="headerlink" title="4.3 Ablation Study"></a>4.3 Ablation Study</h3><ul>
+<li><p>separately（分开）</p>
+</li>
+<li><p>consistently（一贯地）</p>
+</li>
+<li><p>predicted holistic features（预测整体特征）</p>
+</li>
+<li><p>implicit weakly supervised（隐式弱监督）</p>
+</li>
+</ul>
+<h3 id="4-4-Performance-with-Inaccurate-Bounding-Boxes"><a href="#4-4-Performance-with-Inaccurate-Bounding-Boxes" class="headerlink" title="4.4 Performance with Inaccurate Bounding Boxes"></a>4.4 Performance with Inaccurate Bounding Boxes</h3><ul>
+<li><p>real applications（真正的应用程序）</p>
+</li>
+<li><p>If text recognition is robust to inaccurate detection results, the overall end-to-end performance can be more satisfactory</p>
+<ul>
+<li>如果文本识别对不准确的检测结果具有鲁棒性，则整体端到端性能可以更令人满意</li>
+</ul>
+</li>
+<li><p>receptive field（接受域）</p>
+</li>
+<li><p>conduct experiments（进行实验）</p>
+</li>
+<li><p>situation（情况）</p>
+</li>
+<li><p>exemplar（样本）</p>
+</li>
+<li><p>shrink datasets（小数据集）</p>
+</li>
+<li><p>simultaneously（同时地）</p>
+</li>
+<li><p>intersection over union（交集/并集）</p>
+</li>
+</ul>
+<h3 id="4-5-Generalization-of-Proposed-Framework"><a href="#4-5-Generalization-of-Proposed-Framework" class="headerlink" title="4.5 Generalization of Proposed Framework"></a>4.5 Generalization of Proposed Framework</h3><ul>
+<li><p>generalization（泛化性）</p>
+</li>
+<li><p>ntegrate another state-of-the-art recognition method SAR </p>
+<ul>
+<li>集成了另一种 SOTA：SAR</li>
+</ul>
+</li>
+</ul>
+<h3 id="4-6-Qualitative-Results-and-Visualization"><a href="#4-6-Qualitative-Results-and-Visualization" class="headerlink" title="4.6 Qualitative Results and Visualization"></a>4.6 Qualitative Results and Visualization</h3><ul>
+<li>occlusion（遮挡）</li>
+</ul>
+<h1 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h1><p>从 <a target="_blank" rel="noopener" href="https://github.com/Pay20Y/SEED">Pay20Y/SEED (github.com)</a> 下载代码到系统上，把 <code>requirement.txt</code> 里关于 torch 的删了。</p>
+<p><img src="/images/loading.webp" data-original="C1.png" alt="png"></p>
+<p>装！</p>
+<figure class="highlight sh"><table><tr><td class="code"><pre><code class="hljs sh">pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple<br></code></pre></td></tr></table></figure>
+<p>中间会因为装 <code>pycocotools</code> 失败而寄，填之：</p>
+<figure class="highlight sh"><table><tr><td class="code"><pre><code class="hljs sh">sudo apt-get install gcc build-essential<br></code></pre></td></tr></table></figure>
+<p>继续，然后装 scipy 会寄，从 requirement.txt 里删了它重新装直到没有报错。</p>
+<hr>
+<p>从 <a target="_blank" rel="noopener" href="https://fasttext.cc/docs/en/crawl-vectors.html">Word vectors for 157 languages · fastText</a> 里下载下载预训练语言模型 <code>cc.en.300.bin</code>：</p>
+
+        
+    
+        
+<link rel="stylesheet" href="/css/third-party/giscus.css">
+
+        <div class="giscus"></div>
+        <script>
+            var scriptElement = document.createElement('script');
+            scriptElement.src = 'https://giscus.app/client.js';
+            scriptElement.setAttribute('data-repo', 'GZ-Metal-Cell/GZ-Metal-Cell.github.io');
+            scriptElement.setAttribute('data-repo-id', 'R_kgDOIHLEOQ');
+            scriptElement.setAttribute('data-category', 'Announcements');
+            scriptElement.setAttribute('data-category-id', 'DIC_kwDOIHLEOc4CcVwP');
+            scriptElement.setAttribute('data-mapping', 'title');
+            scriptElement.setAttribute('data-strict', '1');
+            scriptElement.setAttribute('data-reactions-enabled', '');
+            scriptElement.setAttribute('data-emit-metadata', '0');
+            scriptElement.setAttribute('data-input-position', 'bottom');
+            scriptElement.setAttribute('data-theme', localStorage.getItem('theme') === 'light' ? 'light' : 'dark_high_contrast');
+            scriptElement.setAttribute('data-lang', 'zh-CN');
+            
+            scriptElement.setAttribute('crossorigin', 'anonymous');
+            scriptElement.async = true;
+            document.head.appendChild(scriptElement);
+        </script>
+    
+
+    </article>
+    <div class="post-content-aside">
+        
+            <div class="post-content-aside-toc">
+                <h1>目录</h1>
+                <ol class="toc"></ol>
+            </div>
+            
+<script src="/js/widget/toc.js"></script>
+
+        
+    </div>
+</main>
+    <div class="post-paging">
+    
+    <a href="/2023/04/13/Plan-%E5%AF%B9%E8%AE%BA%E6%96%87%E7%9A%84%E7%9B%AE%E5%89%8D%E6%83%B3%E6%B3%95/">
+        <div class="post-paging-last">
+            <span>上一篇</span>
+            <p>Plan-对论文的目前想法</p>
+        </div>
+    </a>
+    
+
+    
+    <a href="/2023/04/07/Paper-%E7%AC%AC%206%20%E5%91%A8%E5%92%8C%E7%AC%AC%207%20%E5%91%A8%E4%B9%9F%E6%98%AF%E8%A2%AB%E8%A6%81%E6%B1%82%E7%9C%8B%E8%AE%BA%E6%96%87%E7%84%B6%E5%90%8E%E7%9C%8B%E4%B8%8D%E6%87%82%E7%9A%84%E4%B8%A4%E5%91%A8/">
+        <div class="post-paging-next">
+            <span>下一篇</span>
+            <p>Paper-第 6 周和第 7 周也是被要求看论文然后看不懂的两周</p>
+        </div>
+    </a>
+    
+</div>
+</div>
+		<div class="footer">
+	<div class="copyright">
+		©2022-2024 By Zi-Zi. Theme by&nbsp;
+		<a target="_blank" rel="noopener" href="https://github.com/79e/hexo-theme-quiet">Quiet</a>
+		
+			.&nbsp;
+			<img no-lazy alt="icp" src="/images/icp_icon.png" style="width:16px;margin-bottom:-3px">
+			<a href="https://icp.gov.moe/?keyword=20241647" target="_blank">萌ICP备20241647号</a>
+		
+	</div>
+	<div class="contact">
+		
+		<a target="_blank" rel="noopener" href="https://weibo.com/u/5020307235">
+			<img no-lazy src="/images/bottom_icon/Weibo.webp" alt="Quiet">
+		</a>
+		
+		<a target="_blank" rel="noopener" href="https://tieba.baidu.com/home/main?id=tb.1.ff6d2775.vFH7wrdW2ZjPCmyBHJcjnA">
+			<img no-lazy src="/images/bottom_icon/Tieba.webp" alt="Quiet">
+		</a>
+		
+		<a target="_blank" rel="noopener" href="https://space.bilibili.com/11547880">
+			<img no-lazy src="/images/bottom_icon/Bilibili.webp" alt="Quiet">
+		</a>
+		
+		<a target="_blank" rel="noopener" href="https://github.com/GZ-Metal-Cell">
+			<img no-lazy src="/images/bottom_icon/github.webp" alt="Quiet">
+		</a>
+		
+	</div>
+</div>
+
+
+
+
+	
+		<link rel="stylesheet" href="/js/third-party/katex/katex.min.css" integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
+		<script defer src="/js/third-party/katex/katex.min.js" integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
+		<script defer src="/js/third-party/katex/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"
+			onload="renderMathInElement(document.body);"></script>
+		<script>
+			document.addEventListener("DOMContentLoaded", function() {
+				renderMathInElement(document.body, {
+				delimiters: [
+					{left: "$$", right: "$$", display: true},
+					{left: "$", right: "$", display: false}
+				],
+				macros: {
+					"\\ge": "\\geqslant",
+					"\\le": "\\leqslant",
+					"\\geq": "\\geqslant",
+					"\\leq": "\\leqslant"
+				}
+				});
+			});
+		</script>
+		
+<script src="/js/widget/katex.js"></script>
+
+	
+
+
+
+<script src="/js/widget/highlight_tools.js"></script>
+
+<script>
+	var copyIcon = "/images/icon/copy.png";
+	var closeCodeBlockIcon = "/images/icon/close_code_block.png";
+	var highlightShrink = "";
+	var HighlightHeightLimit = "";
+</script>
+
+
+	
+<script src="/js/widget/goto_position.js"></script>
+
+<style>
+	.rightside-button-icon
+	{
+		width: 18px;
+		height: 18px;
+		-webkit-user-select: none; /* Chrome, Safari, Opera */
+        -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+        user-select: none; /* Non-prefixed version, supported by most modern browsers */
+	}
+</style>
+
+<div style="z-index: 3; position: fixed; bottom: 10px; right: 20px; transition: all 0.5s ease-out;" id="rightside">
+	<div class="rightside">
+		
+			<div class="rightside-button hidden" id="js-toc">
+				<span>
+					<img no-lazy src="/images/icon/toc.png" class="rightside-button-icon" alt="Icon">
+				</span>
+			</div>
+		
+		<div class="rightside-button" id="js-toggle_theme">
+			<span>
+				<img no-lazy src="/images/icon/toggle_theme.png" class="rightside-button-icon" alt="Icon">
+			</span>
+		</div>
+		<div class="rightside-button" id="js-go_top">
+			<span>
+				<img no-lazy src="/images/icon/go_top.png" class="rightside-button-icon" alt="Icon">
+			</span>
+		</div>
+		<div class="rightside-button" id="js-go_bottom">
+			<span>
+				<img no-lazy src="/images/icon/go_bottom.png" class="rightside-button-icon" alt="Icon">
+			</span>
+		</div>
+	</div>
+</div>
+
+<script>
+	setToggleThemeButtonListener();
+</script>
+<script>
+    $('#js-go_top')
+	.gotoPosition( {
+		speed: 300,
+		target: 'top',
+	} );
+	$('#js-go_bottom')
+	.gotoPosition( {
+		speed: 300,
+		target: 'bottom',
+	} );
+</script>
+
+<!-- Analytics -->
+
+    
+        <!-- Busuanzi Analytics -->
+        <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    
+    
+        <!-- Baidu Analytics -->
+        <script defer>
+            var _hmt = _hmt || [];
+            (function () {
+                var hm = document.createElement("script");
+                hm.src = "https://hm.baidu.com/hm.js?e57cf62289f84322ebff116e8b3d343e";
+                var s = document.getElementsByTagName("script")[0];
+                s.parentNode.insertBefore(hm, s);
+            })();
+        </script>
+    
+
+
+
+
+<script>
+	console.log('\n %c Hexo-Quiet 主题 %c https://github.com/79e/hexo-theme-quiet \n', 'color: #fadfa3; background: #030307; padding:5px 0;', 'background: #fadfa3; padding:5px 0;')
+</script>
+	
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 5,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body>
+</html>
+
