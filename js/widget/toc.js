@@ -6,27 +6,29 @@ $(document).ready(function() {
 });
 
 function initToc(){
-    showToc();
+    hbeToc();
     createToc();
     showTocButton();
     activeItem();
 }
 
 function showToc(){
-    if ($('.hbe-content').length > 0) {
-        $('.post-content').addClass('hbe-toc');
-        return;
-    } else {
-        $('.post-content').removeClass('hbe-toc');
-    }
-
     var value = localStorage.getItem('aside-status');
-    if (value === null) {  // 如果存储项不存在，则创建它
+    if (value === null) {
         localStorage.setItem('aside-status', "true");
         value = true;
     }
     if (localStorage.getItem('aside-status') === "false") {
         $(".post-content").addClass("close-toc");
+    }
+}
+
+function hbeToc(){
+    if ($('.hbe-content').length > 0) {
+        $('.post-content').addClass('hbe-toc');
+        return;
+    } else {
+        $('.post-content').removeClass('hbe-toc');
     }
 }
 
