@@ -101,7 +101,6 @@ function createToc() {
 }
 
 function onShowTocButton(){
-    $(".post-content-aside-toc").css("transition", "bottom 0.5s ease-in-out");
     document.querySelector('.post-content').classList.toggle('close-toc');
     var value = localStorage.getItem('aside-status');
     localStorage.setItem('aside-status', value === "true" ? "false" : "true");
