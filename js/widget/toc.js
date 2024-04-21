@@ -1,15 +1,11 @@
-$(document).ready(function() {
-    initToc();
-    $("#js-toc").click(function () {
-        onShowTocButton();
-    });
-});
-
 function initToc(){
     hbeToc();
     createToc();
     showTocButton();
     activeItem();
+    $("#js-toc").click(function () {
+        onShowTocButton();
+    });
 }
 
 function showToc(){

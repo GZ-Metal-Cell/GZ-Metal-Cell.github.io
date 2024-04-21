@@ -10,7 +10,3 @@ function initMathjax() {
     });
     $('head').append($scriptElement2);
 }
-
-$(document).ready(function() {
-    initMathjax();
-});

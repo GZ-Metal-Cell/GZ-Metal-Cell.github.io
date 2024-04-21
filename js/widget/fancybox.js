@@ -41,7 +41,3 @@ function initFancybox() {
 		}
 	})
 }
-
-$(document).ready(function () {
-	initFancybox();
-});

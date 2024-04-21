@@ -22,7 +22,3 @@ function initTabs() {
         });
     });
 }
-
-$(document).ready(function () {
-    initTabs();
-});
