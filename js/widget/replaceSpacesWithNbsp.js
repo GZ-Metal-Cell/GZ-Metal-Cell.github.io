@@ -15,7 +15,3 @@ function replaceSpacesWithNbsp() {
         });
     });
 }
-
-$(document).ready(function () {
-    replaceSpacesWithNbsp();
-});

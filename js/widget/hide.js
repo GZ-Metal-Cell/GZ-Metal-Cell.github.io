@@ -16,7 +16,3 @@ const initTagHide = () => {
 
     $hideButtons.one('click', handleClick); // 使用 .one() 来确保事件只触发一次
 }
-
-$(document).ready(function() {
-    initTagHide();
-});
