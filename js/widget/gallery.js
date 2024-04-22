@@ -23,10 +23,6 @@ function initGallery()
     galleryBottom();
 }
 
-$(document).ready(function() {
-    initGallery();
-});
-
 function galleryBottom() {
     if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
         var descriptionContainer = $('.description-container span');

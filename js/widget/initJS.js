@@ -1,6 +1,8 @@
 function handleHexoBlogDecryptEvent() {
     console.log("handleHexoBlogDecryptEvent()");
-    initJS();
+    $(document).ready(function() {
+        initJS();
+    });
 }
 
 function initJS(){
