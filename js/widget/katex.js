@@ -1,14 +1,22 @@
-function initKatex(){
-    renderMathInElement(document.body, {
+function initKatex() {
+    const settings = {
+        // customised options
+        // • auto-render specific keys, e.g.:
         delimiters: [
-            {left: "$$", right: "$$", display: true},
-            {left: "$", right: "$", display: false}
+            { left: '$$', right: '$$', display: true },
+            { left: '$', right: '$', display: false },
+            { left: '\\(', right: '\\)', display: false },
+            { left: '\\[', right: '\\]', display: true }
         ],
-        macros: {
-            "\\ge": "\\geqslant",
-            "\\le": "\\leqslant",
-            "\\geq": "\\geqslant",
-            "\\leq": "\\leqslant"
-        }
+        // • rendering keys, e.g.:
+        throwOnError: false
+    };
+
+    document.addEventListener("DOMContentLoaded", function () {
+        renderMathInElement(document.body, settings);
     });
+
+    if (typeof renderMathInElement === 'function') {
+        renderMathInElement(document.body, settings);
+    }
 }
