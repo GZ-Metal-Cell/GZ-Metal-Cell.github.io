@@ -14,9 +14,6 @@ function initJS(){
     }
     if (typeof initFancybox === 'function') {
         initFancybox();
-    }  
-    if (typeof initMathjax === 'function') {
-        initMathjax();
     }
     if (typeof initTabs === 'function') {
         initTabs();
@@ -26,6 +23,9 @@ function initJS(){
     }
     if (typeof replaceSpacesWithNbsp === 'function') {
         replaceSpacesWithNbsp();
+    }
+    if (typeof initMathjax === 'function') {
+        initMathjax();
     }
     if (typeof initKatex === 'function') {
         initKatex();
