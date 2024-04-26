@@ -30,7 +30,7 @@ const strings = [
 function setStep(step) {
     dropDownButton.css({ 'display': 'none' });
     bodyBackground.css({'opacity': 0});
-    $('#stepContainer_' + step.toString()).css({ 'max-height': '100px' });
+    $('#stepContainer_' + step.toString()).css({ 'max-height': '200px' });
 
     new Typed('#typed_' + step.toString(), {
         strings: strings[step],
