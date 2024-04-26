@@ -2,16 +2,16 @@ var bodyBackground;
 var dropDownButton;
 
 const backgrounds = [
-    'url("images/0.webp")', 
-    'url("images/1.webp")', 
-    'url("images/2.webp")', 
-    'url("images/3.webp")', 
-    'url("images/4.webp")', 
-    'url("images/5.webp")', 
-    'url("images/6.webp")', 
-    'url("images/7.webp")', 
-    'url("images/8.webp")', 
-    'url("images/9.webp")'
+    'images/0.webp', 
+    'images/1.webp', 
+    'images/2.webp', 
+    'images/3.webp', 
+    'images/4.webp', 
+    'images/5.webp', 
+    'images/6.webp', 
+    'images/7.webp', 
+    'images/8.webp', 
+    'images/9.webp'
 ];
 
 const strings = [
@@ -40,7 +40,7 @@ function setStep(step) {
         loop: false,
         onComplete: function (self) {
             self.cursor.style.display = 'none';
-            bodyBackground.css({'background-image': backgrounds[step]});
+            bodyBackground.css({'background-image': 'url("' + backgrounds[step] + '")'});
             bodyBackground.css({'opacity': 1});
             if (step < strings.length - 1) {
                 dropDownButton.css({ 'display': 'block' });
@@ -50,6 +50,19 @@ function setStep(step) {
 }
 
 $(document).ready(function () {
+
+    for(var i=0; i < backgrounds.length; i++) {
+        var img = new Image();
+        
+        // 设置图片的src属性
+        img.src = backgrounds[i];
+        
+        // 在图片加载完成后执行的函数
+        $(img).on('load', function(){
+            // 图片加载完成后的处理逻辑，例如显示图片等
+        });
+    }
+
     // 创建一个新的div元素
     bodyBackground = $('<div class="bodyBackground"></div>');
 
