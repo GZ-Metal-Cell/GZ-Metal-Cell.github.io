@@ -48,12 +48,16 @@ var searchFunc = function (path, input_id, content_id, result_id) {
                     url: $("url", this).text()
                 };
             }).get();
+
+            search();
             
-            $input.addEventListener('input', function () {
+            $input.addEventListener('input', function () { search(); });
+
+            function search() {
                 var str = '<ul class=\"search-result-list\">';
-                var keywords = this.value.trim().split(/[\s\-]+/);  // .toLowerCase().split(/[\s\-]+/);
+                var keywords = $input.value.trim().split(/[\s\-]+/);  // .toLowerCase().split(/[\s\-]+/);
                 $content.innerHTML = "";
-                if (this.value.trim().length <= 0) {
+                if ($input.value.trim().length <= 0) {
                     document.getElementById(result_id).textContent = "";
                     return;
                 }
@@ -132,7 +136,7 @@ var searchFunc = function (path, input_id, content_id, result_id) {
                     $result.innerHTML = "匹配到 <b><font size=\"5px\">" + str.match(/<li>/g).length + "</font></b> 个结果。";
                 }
                 $content.innerHTML = str;
-            });
+            }
         },
         error: function (xhr, status, error) {
             console.error("AJAX Request Failed: ", status, error);
