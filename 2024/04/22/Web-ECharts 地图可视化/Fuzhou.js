@@ -7,7 +7,7 @@ var app = {};
 var option;
 
 var img = new Image();
-img.src = 'Fuzhou.png';
+img.src = 'Fuzhou.webp';
 
 img.onload = function () {
     $.get(
@@ -42,7 +42,7 @@ img.onload = function () {
                                 name: "福州市",
                                 // 该区域的多边形样式设置
                                 itemStyle: {
-                                    areaColor: {
+                                    color: {
                                         type: 'image',
                                         image: img,
                                         repeat: 'no-repeat',
@@ -59,7 +59,7 @@ img.onload = function () {
                                 },
                                 emphasis: {
                                     itemStyle: {
-                                        areaColor: {
+                                        color: {
                                             type: 'image',
                                             image: img,
                                             repeat: 'no-repeat',
