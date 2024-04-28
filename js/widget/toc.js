@@ -1,3 +1,5 @@
+const headings = document.querySelector('.post-content-info').querySelectorAll('h1, h2, h3, h4, h5, h6');
+
 function initToc(){
     hbeToc();
     createToc();
@@ -5,6 +7,9 @@ function initToc(){
     activeItem();
     $("#js-toc").click(function () {
         onShowTocButton();
+    });
+    document.addEventListener("scroll", function (event) {
+        activeItem();
     });
 }
 
@@ -103,7 +108,6 @@ function onShowTocButton(){
 }
 
 function getTopHeadingId() {
-    const headings = document.querySelector('.post-content-info').querySelectorAll('h1, h2, h3, h4, h5, h6');
     let topHeadingId = null;
     let minDistanceFromTop = Infinity;
     for (const heading of headings) {
@@ -140,8 +144,4 @@ function activeItem(){
         }
     });
 }
-
-document.addEventListener("scroll", function (event) {
-    activeItem();
-});
 
