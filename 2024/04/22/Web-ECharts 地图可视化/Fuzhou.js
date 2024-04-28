@@ -7,7 +7,7 @@ var app = {};
 var option;
 
 var img = new Image();
-img.src = 'Fuzhou.webp';
+img.src = 'Fuzhou.png';
 
 img.onload = function () {
     $.get(
