@@ -109,7 +109,7 @@ function getTopHeadingId() {
     for (const heading of headings) {
         const boundingRect = heading.getBoundingClientRect();
         if (boundingRect.y < window.innerHeight) {
-            const distanceFromTop = Math.abs(boundingRect.y - 90);
+            const distanceFromTop = Math.abs(boundingRect.y - 80);
             if (distanceFromTop < minDistanceFromTop) {
                 minDistanceFromTop = distanceFromTop;
                 topHeadingId = heading.id;
@@ -131,7 +131,7 @@ function activeItem(){
                 var activeItem = toc.querySelector(".active");
                 if (activeItem) {
                     toc.scrollTo({
-                        top: activeItem.offsetTop - 90
+                        top: activeItem.offsetTop - 80
                     });
                 }
             }
