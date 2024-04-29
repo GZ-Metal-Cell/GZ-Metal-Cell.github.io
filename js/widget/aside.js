@@ -43,6 +43,8 @@ function createToc() {
         }
         if (!heading.find('a').length)  // 标题里没有<a>，可能是用户自己创建的标题，跳过
             continue;
+        else if (!heading.find('a').hasClass('headerlink'))  // 标题里有 <a>，但没有 headerlink 类，跳过
+            continue;
         var level = parseInt(heading.prop('tagName').charAt(1));
         // 创建目录
         if (level > currentLevel) {
