@@ -90,7 +90,11 @@ function createToc() {
 
 function onShowAsideButton(){
     document.querySelector('.post-content').classList.toggle('close-aside');
+    
     var value = localStorage.getItem('aside-status');
+    if(value === "false") {
+        activeSeriesItem();
+    }
     localStorage.setItem('aside-status', value === "true" ? "false" : "true");
 }
 
