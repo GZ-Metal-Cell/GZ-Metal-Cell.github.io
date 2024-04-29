@@ -133,7 +133,7 @@ function activeTocItem(){
     });
 }
 
-function activeSeriesItem() {
+function activeAsideTagItem() {
     var series = document.querySelector(".series");
     var activeItem = series.querySelector(".active");
     if (activeItem) {
