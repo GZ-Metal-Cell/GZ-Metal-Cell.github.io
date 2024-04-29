@@ -6,8 +6,8 @@ function handleHexoBlogDecryptEvent() {
 }
 
 function initJS(){
-    if (typeof initToc === 'function') {
-        initToc();
+    if (typeof initAside === 'function') {
+        initAside();
     }
     if (typeof initPhotoFigcaption === 'function') {
         initPhotoFigcaption();
