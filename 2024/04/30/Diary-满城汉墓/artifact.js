@@ -15,7 +15,6 @@ class Artifact {
         const artifactImgContainer = $('<div>').addClass('artifact-img-container');
 
         const button1 = $('<button>').text('保定仿品');
-        button1.addClass('pressed');
         const button2 = $('<button>').text('庄里真品');
 
         var img1;
@@ -24,6 +23,7 @@ class Artifact {
         {
             img1 = $('<img>').addClass('no-figcaption').attr('src', this.imgSrc).attr('alt', '保定仿品');
             artifactImgContainer.append(img1);
+            button1.addClass('pressed');
         } else {
             button1.prop('disabled', true);
         }
@@ -32,7 +32,11 @@ class Artifact {
 
         if(this.imgTSrc)
         {
-            var img2 = $('<img>').addClass('no-figcaption hidden').attr('src', this.imgTSrc).attr('alt', '庄里真品');
+            var img2 = $('<img>').addClass('no-figcaption').attr('src', this.imgTSrc).attr('alt', '庄里真品');
+            if(this.imgSrc)
+                img2.addClass('hidden');
+            else
+                button2.addClass('pressed');
             artifactImgContainer.append(img2);
         } else {
             button2.prop('disabled', true);
