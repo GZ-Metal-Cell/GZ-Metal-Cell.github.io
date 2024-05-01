@@ -4,7 +4,7 @@ var map = L.map('map',
         maxZoom: 18,
         zoomControl: true,
         editable: true,
-    }).setView([38.947669527139496, 115.30220169138278], 14);
+    }).setView([38.87650052867524, 115.46398556051273], 10);
 
 let baseLayer = L.tileLayer("http://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}", {
     attribution: '&copy; 高德地图',
