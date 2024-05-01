@@ -93,6 +93,7 @@ function onShowAsideButton(){
     
     var value = localStorage.getItem('aside-status');
     if(value === "false") {
+        activeTocItem();
         activeSeriesItem();
     }
     localStorage.setItem('aside-status', value === "true" ? "false" : "true");
