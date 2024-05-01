@@ -2,6 +2,7 @@ function initAside(){
     hbeToc();
     createToc();
     activeTocItem();
+    hbeShowAsideButton();
     document.addEventListener("scroll", function (event) {
         activeTocItem();
     });    
@@ -21,9 +22,16 @@ function showAside(){
 function hbeToc(){
     if ($('.hbe-content').length > 0) {
         $('.post-content').addClass('hbe-toc');
-        return;
     } else {
         $('.post-content').removeClass('hbe-toc');
+    }
+}
+
+function hbeShowAsideButton() {
+    if ($('.hbe-content').length > 0) {
+        $('#js-aside').addClass('hbe-toc');
+    } else {
+        $('#js-aside').removeClass('hbe-toc');
     }
 }
 
