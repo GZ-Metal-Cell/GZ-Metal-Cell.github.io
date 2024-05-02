@@ -78,7 +78,7 @@ function createToc() {
         // 获取 titleValue
         var titleValue = heading.html().match(/title="([^"]+)"/) ? heading.html().match(/title="([^"]+)"/)[1] : '';
         // 创建 <a>
-        li.html('<a class="toc-link" href="' + hrefValue + '"><span class="toc-text">' + Array(level + 1).join("&nbsp;&nbsp;") + titleValue + '</span></a>');
+        li.html('<a class="toc-link" href="' + hrefValue + '">' + Array(level + 1).join("&nbsp;&nbsp;") + '<span class="text">' + titleValue + '</span></a>');
         var a = li.find("a");
         // 重写点击目录时的跳转逻辑
         a.on("click", function (event) {
