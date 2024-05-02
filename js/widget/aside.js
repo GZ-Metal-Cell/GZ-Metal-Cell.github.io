@@ -28,10 +28,12 @@ function hbeToc(){
 }
 
 function hbeShowAsideButton() {
-    if ($('.hbe-content').length > 0) {
-        $('#js-aside').addClass('hbe-toc');
-    } else {
-        $('#js-aside').removeClass('hbe-toc');
+    if ($('#js-aside').length > 0) {
+        if ($('.hbe-content').length > 0) {
+            $('#js-aside').addClass('hbe-toc');
+        } else {
+            $('#js-aside').removeClass('hbe-toc');
+        }
     }
 }
 
@@ -148,10 +150,12 @@ function activeTocItem(){
 
 function activeSeriesItem() {
     var series = document.querySelector(".series");
-    var activeItem = series.querySelector(".active");
-    if (activeItem) {
-        series.scrollTo({
-            top: activeItem.offsetTop - 80
-        });
+    if (series) {
+        var activeItem = series.querySelector(".active");
+        if (activeItem) {
+            series.scrollTo({
+                top: activeItem.offsetTop - 80
+            });
+        }
     }
 }
