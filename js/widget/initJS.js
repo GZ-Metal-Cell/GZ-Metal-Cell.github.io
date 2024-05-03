@@ -33,6 +33,9 @@ function initJS(){
     if (typeof initHighlightTools === 'function'){
         initHighlightTools();
     }
+    if (typeof initWordCount === 'function'){
+        initWordCount();
+    }
 }
 
 window.addEventListener('hexo-blog-decrypt', handleHexoBlogDecryptEvent);

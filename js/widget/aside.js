@@ -87,7 +87,7 @@ function createToc() {
             event.preventDefault();
             var element = $($(this).attr("href"));
             var rect = element[0].getBoundingClientRect();
-            var topOffset = rect.top + window.scrollY - 80;
+            var topOffset = rect.top + window.scrollY - 70;
             window.scrollTo({
                 top: topOffset,
                 behavior: "smooth"
