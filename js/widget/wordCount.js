@@ -12,8 +12,6 @@ function wordCount() {
 
     var count = counter($('.post-content-info').text());
 
-    console.log(count);
-
     return Math.round(count / 100) / 10 + 'k';
 }
 

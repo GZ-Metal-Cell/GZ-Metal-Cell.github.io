@@ -1,4 +1,9 @@
 function initKatex() {
+    $("script[type='math/tex; mode=display']").each(function () {
+        $('<p class="test">' + "$$" + $(this).text() + "$$" + "</p>").insertAfter($(this));
+        $(this).remove();
+    });
+
     const settings = {
         // customised options
         // • auto-render specific keys, e.g.:

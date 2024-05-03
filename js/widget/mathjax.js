@@ -1,4 +1,8 @@
 function initMathjax() {
+    $("script[type='math/tex; mode=display']").each(function () {
+        $('<p class="test">' + "$$" + $(this).text() + "$$" + "</p>").insertAfter($(this));
+        $(this).remove();
+    });
     // 创建并添加第一个 <script> 元素
     $('head').append($('<script>').html("MathJax = {tex: {inlineMath: [['$', '$'], ['\\\\(', '\\\\)']]}};"));
 
