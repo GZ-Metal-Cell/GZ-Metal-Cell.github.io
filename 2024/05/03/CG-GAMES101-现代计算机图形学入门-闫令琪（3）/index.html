@@ -580,7 +580,276 @@
 <p><strong>Produces diffuse appearance</strong></p>
 <p><img src="/images/loading.webp" data-original="7.13.png" alt="png"></p>
 <p>​    最后的渲染结果，$k_d$ 越强，物体越亮。</p>
-
+<h2 id="Lecture-8-Shading-2-Shading-Pipeline-and-Texture-Mapping"><a href="#Lecture-8-Shading-2-Shading-Pipeline-and-Texture-Mapping" class="headerlink" title="Lecture 8: Shading 2 (Shading, Pipeline and Texture Mapping)"></a>Lecture 8: Shading 2 (Shading, Pipeline and Texture Mapping)</h2><ul>
+<li><p>Shading 2</p>
+<ul>
+<li><p>Blinn-Phong reflectance model</p>
+<ul>
+<li><p>Specular and ambient terms</p>
+<p>环境光和镜面反射</p>
+</li>
+</ul>
+</li>
+<li><p>Shading frequencies</p>
+<p>着色频率</p>
+</li>
+<li><p>Graphics pipeline</p>
+<p>图形管线</p>
+</li>
+<li><p>Texture mapping</p>
+<p>纹理映射</p>
+</li>
+<li><p>Barycentric coordinates</p>
+<p>重心坐标</p>
+</li>
+</ul>
+</li>
+</ul>
+<hr>
+<p><strong>Specular Term (Blinn-Phong)</strong></p>
+<p>镜面反射</p>
+<p><img src="/images/loading.webp" data-original="8.1.png" alt="png"></p>
+<p>Intensity <span style="color: red;">depends</span> on view direction</p>
+<p>镜面反射的强度取决于观察者的方向</p>
+<ul>
+<li><p>Bright near mirror reflection direction</p>
+<p>在镜面反射中，光线反射的方向 $\mathbf R$ 与观察者的视线 $\mathbf v$ 非常接近，因此产生了明亮的反射效果</p>
+</li>
+</ul>
+<hr>
+<p>$\mathbf v$ close to mirror direction $\Leftrightarrow$ <span style="color: red;"><b>half vector</b> near normal</span></p>
+<p>在 Blinn-Phong 镜面反射模型中，</p>
+<p>将观察角度 $\mathbf v$ 与镜面反射角度之间的夹角的计算</p>
+<p>转换为</p>
+<p>光线入射角度 $\mathbf l$ 与观察角度 $\mathbf v$ 的半程向量（角平分线方向）$\mathbf h$ 与法线方向 $\mathbf n$ 的夹角。</p>
+<ul>
+<li><p>Measure “near” by dot product of unit vectors</p>
+<p>用单位向量的点积来度量“近”</p>
+</li>
+</ul>
+<p><img src="/images/loading.webp" data-original="8.2.png" alt="png"></p>
+<p>​    因此高光（镜面反射光的计算公式）：</p>
+<script type="math/tex; mode=display">L_s=k_s(I/r^2)\max(0,\mathbf n\cdot\mathbf h)^p</script><p>​    其中 $k_s$ 为镜面反射系数。</p>
+<p><img src="/images/loading.webp" data-original="8.3.png" alt="png"></p>
+<p>​    为什么 $\max(0, \mathbf n\cdot \mathbf h)$ 后要加 $p$ 次方？这是为了调整高光面积。</p>
+<p><img src="/images/loading.webp" data-original="8.4.png" alt="png"></p>
+<p>​    $p$ 值越大，光斑越小。</p>
+<hr>
+<p><strong>Ambient Term</strong></p>
+<p>环境光照</p>
+<p>Shading that does not depend on anything<br>不依赖任何东西的 Shading</p>
+<ul>
+<li><p>Add constant color to account for disregarded illumination and fill in black shadows</p>
+<p>添加恒定的颜色，以说明忽略照明和填充黑色阴影</p>
+</li>
+<li><p>This is approximate / fake!</p>
+<p>这是近似的/假的！</p>
+</li>
+</ul>
+<p><img src="/images/loading.webp" data-original="8.5.png" alt="png"></p>
+<script type="math/tex; mode=display">L_a=k_aI_a</script><p>​    环境光强度=环境系数 * 环境光强度</p>
+<hr>
+<p><strong>Blinn-Phong Reflection Model</strong></p>
+<p><img src="/images/loading.webp" data-original="8.6.png" alt="png"></p>
+<p>​    综上所述，我们得到了一个完整的 Blinn-Phong 反射模型：</p>
+<script type="math/tex; mode=display">\begin{aligned}\text{L}&=L_a+L_d+L_s\\&=k_aI_a+k_d(I/r^2)\max(0,\mathbf{n}\cdot\mathbf{l})+k_s(I/r^2)\max(0,\mathbf{n}\cdot\mathbf{h})^p\end{aligned}</script><p>​    Blinn-Phong 反射 = Ambient 环境光照 + Diffuse 漫反射 + Specular 高光</p>
+<hr>
+<p><strong>Shading Frequencies</strong></p>
+<p>渲染频率</p>
+<p>What caused the shading difference?</p>
+<p><img src="/images/loading.webp" data-original="8.7.png" alt="png"></p>
+<p>​    不同的渲染频率得到不同的渲染效果。</p>
+<hr>
+<p><strong>Shade each triangle (flat shading)</strong></p>
+<p><img src="/images/loading.webp" data-original="8.8.png" alt="png"></p>
+<p><strong>Flat</strong> shading</p>
+<ul>
+<li><p>Triangle face is flat——one normal vector</p>
+<p>对于一个模型来说，<strong>每个三角形具有一个法线向量</strong>，因此每个三角形看上去都是平的。</p>
+</li>
+<li><p>Not good for smooth surfaces</p>
+<p>对平滑物体效果不好。</p>
+</li>
+</ul>
+<hr>
+<p><strong>Shade each vertex (Gouraud shading)</strong></p>
+<p><img src="/images/loading.webp" data-original="8.9.png" alt="png"></p>
+<p><strong>Gouraud</strong> shading</p>
+<ul>
+<li><p><span style="color: red;">Interpolate</span> colors from vertices across triangle</p>
+<p>每个顶点都有一个颜色，平面的颜色由各个顶点之间的颜色插值得到。</p>
+</li>
+<li><p>Each vertex has a normal vector (how?)</p>
+<p><strong>每个顶点具有一个法线向量</strong>。</p>
+</li>
+</ul>
+<hr>
+<p><strong>Shade each pixel (Phong shading)</strong></p>
+<p><img src="/images/loading.webp" data-original="8.10.png" alt="png"></p>
+<p>Phong shading</p>
+<ul>
+<li><p>Interpolate normal vectors across each triangle</p>
+<p>法线向量会在三角形的表面上进行插值，以获得<strong>每个像素处的法线向量</strong>。</p>
+</li>
+<li><p>Compute full shading model at each pixel</p>
+<p>对于每个像素，利用插值得到的法线向量和光照模型。</p>
+</li>
+<li><p><span style="color: red;">Not the <b>Blinn-Phong Reflectance Model</b></span></p>
+<p>跟 Blinn-Phong 反射模型是一个人提出来的，但是这两个东西是两码事。</p>
+</li>
+</ul>
+<hr>
+<p><strong>Shading Frequency: Face, Vertex or Pixel</strong></p>
+<p><img src="/images/loading.webp" data-original="8.11.png" alt="png"></p>
+<p>​    如果模型的面数足够多，那么 Flat Shading 和 Gouraud Shading 也可以得到类似 Phong Shading 的效果。</p>
+<hr>
+<p><strong>Defining Per-Vertex Normal Vectors</strong></p>
+<p>​    如何得到顶点法线？</p>
+<p>​    Best to get vertex normals from the underlying geometry</p>
+<p>​    最好的得到顶点法线向量的方法是从基础几何图形（矢量图形？）处得到。</p>
+<p><img src="/images/loading.webp" data-original="8.12.png" alt="png"></p>
+<ul>
+<li><p>e.g. consider a sphere</p>
+<p>如上图所示，如果计算机知道这是一个球，那么就很好知道顶点法线向量。</p>
+</li>
+</ul>
+<p>​    Otherwise have to infer vertex normals from triangle faces</p>
+<p>​    但是一般情况下计算机并不知道，只能从三角形面推断顶点法线向量。</p>
+<p><img src="/images/loading.webp" data-original="8.13.png" alt="png"></p>
+<ul>
+<li><p>Simple scheme: <strong>average surrounding face normals</strong></p>
+<p>简单方案：取周围面法线的平均值</p>
+</li>
+</ul>
+<script type="math/tex; mode=display">N_v=\frac{\sum_iN_i}{||\sum_iN_i||}</script><hr>
+<p>​    <span style="color: red;">Barycentric interpolation</span> (introducing soon) of vertex normals</p>
+<p>​    顶点法线的重心插值（下节课再说）</p>
+<p><img src="/images/loading.webp" data-original="8.14.png" alt="png"></p>
+<p>​    Don’t forget to <span style="color: red;">normalize</span> the interpolated directions</p>
+<p>​    不要忘记对插值方向进行规范化</p>
+<hr>
+<p><strong>Graphics (Real-time Rendering) Pipeline</strong></p>
+<p>现在我们再来回顾一下实时场景渲染的管线。</p>
+<p><img src="/images/loading.webp" data-original="8.15.png" alt="png"></p>
+<p>渲染管线流程</p>
+<ol>
+<li><p>Vertex Processing</p>
+<p>处理顶点</p>
+</li>
+<li><p>Triangle Processing</p>
+<p>处理三角形面</p>
+</li>
+<li><p>Rasterization</p>
+<p>光栅化</p>
+</li>
+<li><p>Fragment Processing</p>
+<p>处理片元（这个 Fragment 可以视为未经过抗锯齿等后处理的像素）</p>
+</li>
+<li><p>Framebuffer Operations</p>
+<p>帧缓冲操作</p>
+</li>
+</ol>
+<p><img src="/images/loading.webp" data-original="8.16.png" alt="png"></p>
+<p>​    <strong>Model, View, Projection transforms</strong> 属于 <strong>Vertex Processing</strong>，放置场景，得到 <strong>vertices in 3D space</strong>。</p>
+<p><img src="/images/loading.webp" data-original="8.17.png" alt="png"></p>
+<p>​    <strong>Sampling triangle coverage</strong> 属于 <strong>Rasterization</strong>，将三维场景的顶点映射到二维屏幕上，得到 <strong>fragments</strong>。</p>
+<p><img src="/images/loading.webp" data-original="8.18.png" alt="png"></p>
+<p>​    <strong>Z-Buffer Visibility Tests</strong> 属于 <strong>Fragment Processing</strong>，是计算最终 Fragment 颜色的一部分。</p>
+<p><img src="/images/loading.webp" data-original="8.19.png" alt="png"></p>
+<p>​    <strong>Shading</strong> 既可属于 <strong>Vertex Processing</strong>，也可属于 <strong>Fragment Processing</strong>。</p>
+<p>​    Shader  中就分为顶点着色器 Vertex Shader 和片元着色器 Fragment Shader，应该就是这回事。</p>
+<p><img src="/images/loading.webp" data-original="8.20.png" alt="png"></p>
+<p>​    Texture mapping 既可属于 <strong>Vertex Processing</strong>，也可属于 <strong>Fragment Processing</strong>。给模型贴图。</p>
+<hr>
+<p><strong>Shader Programs</strong></p>
+<p>着色器程序</p>
+<ul>
+<li><p>Program vertex and fragment processing stages</p>
+<p>既可属于 <strong>Vertex Processing</strong>，也可属于 <strong>Fragment Processing</strong></p>
+</li>
+<li><p>Describe operation on a single vertex (or fragment)</p>
+<p>描述某个顶点或片元颜色的操作</p>
+</li>
+</ul>
+<figure class="highlight glsl"><table><tr><td class="code"><pre><code class="hljs glsl"><span class="hljs-keyword">uniform</span> <span class="hljs-type">sampler2D</span> myTexture; <span class="hljs-comment">// program parameter 程序参数</span><br><span class="hljs-keyword">uniform</span> <span class="hljs-type">vec3</span> lightDir; <span class="hljs-comment">// program parameter 程序参数</span><br><span class="hljs-keyword">varying</span> <span class="hljs-type">vec2</span> uv; <span class="hljs-comment">// per fragment value (interp. by rasterizer) 每个片元特有的值</span><br><span class="hljs-keyword">varying</span> <span class="hljs-type">vec3</span> norm; <span class="hljs-comment">// per fragment value (interp. by rasterizer) 每个片元特有的值</span><br><br><span class="hljs-type">void</span> diffuseShader() <br>&#123; <br>     <span class="hljs-type">vec3</span> kd; <span class="hljs-comment">// 漫反射系数（颜色）</span><br>     kd = texture2d(myTexture, uv); <span class="hljs-comment">// material color from texture 从 UV 贴图中获取材质颜色</span><br>     kd *= <span class="hljs-built_in">clamp</span>(<span class="hljs-built_in">dot</span>(–lightDir, norm), <span class="hljs-number">0.0</span>, <span class="hljs-number">1.0</span>); <span class="hljs-comment">// Lambertian shading model，应用兰伯特漫反射光照模型，将 kd 乘以后面这东西得到 Ld（漫反射光）</span><br>     <span class="hljs-built_in">gl_FragColor</span> = <span class="hljs-type">vec4</span>(kd, <span class="hljs-number">1.0</span>); <span class="hljs-comment">// output fragment color 输出片元颜色</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<p>Shader function executes once per fragment.</p>
+<p>Shader 函数对每个片元执行一次（因此不用像 C 语言那样遍历所有顶点，它自动帮你遍历好了）。</p>
+<ul>
+<li><p>Outputs color of surface at the current fragment’s screen sample position.</p>
+<p>输出当前片段屏幕样本位置表面的颜色。</p>
+</li>
+<li><p>This shader performs a texture lookup to obtain the surface’s material color at this point, then performs a diffuse lighting calculation.</p>
+<p>这个着色器执行纹理查找以获得表面的材质颜色，然后执行漫反射照明计算。</p>
+</li>
+</ul>
+<p><a target="_blank" rel="noopener" href="https://www.shadertoy.com/view/ld3Gz2">Snail (shadertoy.com)</a> 这是一个很牛逼的 shader 渲染实例。</p>
+<hr>
+<p><strong>Goal: Highly Complex 3D Scenes in Realtime</strong></p>
+<p>目标：高复杂度的实时 3D 场景渲染</p>
+<ul>
+<li><p>100’ s of thousands to millions of triangles in a scene</p>
+<p>场景中有成千上万到数百万个三角形</p>
+</li>
+<li><p>Complex vertex and fragment shader computations</p>
+<p>复杂的顶点和片段着色计算</p>
+</li>
+<li><p>High resolution (2-4 megapixel + supersampling)</p>
+<p>高分辨率（2-4 百万像素+超采样）</p>
+</li>
+<li><p>30-60 frames per second (even higher for VR)</p>
+<p>每秒 30-60 帧(VR 甚至更高)</p>
+</li>
+</ul>
+<hr>
+<p><strong>Graphics Pipeline Implementation: GPUs</strong></p>
+<p>图形管道实现：gpu</p>
+<p><img src="/images/loading.webp" data-original="8.21.png" alt="png"></p>
+<p>​    Specialized processors for executing graphics pipeline computations</p>
+<p>​    图形管道流程需要大量并行运算，因此需要 GPU——用于执行图形管道计算的专用处理器。</p>
+<p><img src="/images/loading.webp" data-original="8.22.png" alt="png"></p>
+<p>​    GPU 的结构示意图。</p>
+<hr>
+<p><strong>Texture Mapping</strong></p>
+<p>Different Colors at Different Places?</p>
+<p><img src="/images/loading.webp" data-original="8.23.png" alt="png"></p>
+<p>​    对于兰伯特漫反射光照模型，其中的 $k_d$ 是怎么得来的？</p>
+<hr>
+<p><strong>Surfaces are 2D</strong></p>
+<p>表面都是 2D 的</p>
+<p><img src="/images/loading.webp" data-original="8.24.png" alt="png"></p>
+<p>Surface lives in 3D world space</p>
+<p>表面在 3D 空间中</p>
+<p>Every 3D surface point also has a place  where it goes in the 2D image (<strong>texture</strong>).</p>
+<p>每个 3D 表面点在 2D 图像（纹理）中也有一个位置。</p>
+<hr>
+<p><strong>Texture Applied to Surface</strong></p>
+<p>Texture Applied to Surface</p>
+<p><img src="/images/loading.webp" data-original="8.25.png" alt="png"></p>
+<p>Each triangle “copies” a piece of  the texture image to the surface</p>
+<p>每个三角形将纹理图像的一部分“复制”到表面</p>
+<hr>
+<p><strong>Visualization of Texture Coordinates</strong></p>
+<p><img src="/images/loading.webp" data-original="8.26.png" alt="png"></p>
+<p>Each triangle vertex is assigned a texture coordinate $(u,v)$</p>
+<p>每个三角形顶点分配一个纹理坐标 $(u,v)$</p>
+<p>这么表示 UV 贴图的情况，越红 $u$ 值越高，越绿 $v$ 值越高。</p>
+<hr>
+<p><strong>Texture Applied to Surface</strong></p>
+<p><img src="/images/loading.webp" data-original="8.27.png" alt="png"></p>
+<p>​    这个 UV 贴图是从美术人员那边获得的，咱们程序员不管这个！</p>
+<hr>
+<p><strong>Textures applied to surfaces</strong></p>
+<p><img src="/images/loading.webp" data-original="8.28.png" alt="png"></p>
+<p>​    一个贴图示例。</p>
+<hr>
+<p><strong>Visualization of texture coordinates</strong></p>
+<p><img src="/images/loading.webp" data-original="8.29.png" alt="png"></p>
+<p>​    这个模型由若干 UV 贴图平铺而成。</p>
+<hr>
+<p><strong>Textures can be used multiple times!</strong></p>
+<p><img src="/images/loading.webp" data-original="8.30.png" alt="png"></p>
+<p>​    这就需要美工人员整一个无缝贴图了！</p>
+<h2 id="Lecture-09-Shading-3-Texture-Mapping-Cont"><a href="#Lecture-09-Shading-3-Texture-Mapping-Cont" class="headerlink" title="Lecture 09 Shading 3 (Texture Mapping Cont.)"></a>Lecture 09 Shading 3 (Texture Mapping Cont.)</h2>
         
     
         
