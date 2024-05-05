@@ -433,7 +433,7 @@
 <pre><code>[0 1 0 1 0 0 0]
 </code></pre><p>实现一个能直接从语料库生成共现矩阵的函数：</p>
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">create_co_matrix</span>(<span class="hljs-params">corpus, vocab_size, window_size=<span class="hljs-number">1</span></span>):<br>    <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">    直接从语料库生成共现矩阵</span><br><span class="hljs-string">    corpus: 单词 ID 列表</span><br><span class="hljs-string">    vocab_size: 词汇个数</span><br><span class="hljs-string">    window_size: 窗口大小</span><br><span class="hljs-string">    &quot;&quot;&quot;</span><br>    corpus_size = <span class="hljs-built_in">len</span>(corpus)<br>    co_matrix = np.zeros((vocab_size, vocab_size), dtype=np.int32)<br>    <span class="hljs-keyword">for</span> idx, word_id <span class="hljs-keyword">in</span> <span class="hljs-built_in">enumerate</span>(corpus):<br>        <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">1</span>, window_size + <span class="hljs-number">1</span>):<br>            left_idx = idx - i<br>            right_idx = idx + i<br><br>            <span class="hljs-keyword">if</span> left_idx &gt;= <span class="hljs-number">0</span>:<br>                left_word_id = corpus[left_idx]<br>                co_matrix[word_id, left_word_id] += <span class="hljs-number">1</span><br><br>            <span class="hljs-keyword">if</span> right_idx &lt; corpus_size:<br>                right_word_id = corpus[right_idx]<br>                co_matrix[word_id, right_word_id] += <span class="hljs-number">1</span><br>    <span class="hljs-keyword">return</span> co_matrix<br></code></pre></td></tr></table></figure>
-<h3 id="2-3-5-向量间的相似度"><a href="#2-3-5-向量间的相似度" class="headerlink" title="2.3.5 向量间的相似度"></a>2.3.5 向量间的相似度</h3><p><strong>余弦相似度（cosine similarity）</strong>。设有 $x=(x_1,x_2,x_3,…,x_n)$ 和 $y=(y_1,y_2,y_3,…,y_n)$ 两个向量，它们之间的余弦相似度定义如下：</p>
+<h3 id="2-3-5-向量间的相似度"><a href="#2-3-5-向量间的相似度" class="headerlink" title="2.3.5 向量间的相似度"></a>2.3.5 向量间的相似度</h3><p><strong>余弦相似度（cosine similarity）</strong>。设有 $x=(x_1,x_2,x_3,...,x_n)$ 和 $y=(y_1,y_2,y_3,...,y_n)$ 两个向量，它们之间的余弦相似度定义如下：</p>
 <script type="math/tex; mode=display">\mathrm{similarity}(x,y)=\frac{x\cdot y}{||x||\ ||y||}\frac{x_1y_1+...+x_ny_n}{\sqrt{x^2_1+...+x^2_n}\sqrt{y^2_1+...+y^2_n}}</script><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">cos_similarity</span>(<span class="hljs-params">x, y</span>):<br>    nx = x / np.sqrt(np.<span class="hljs-built_in">sum</span>(x ** <span class="hljs-number">2</span>))  <span class="hljs-comment"># x的正规化</span><br>    ny = y / np.sqrt(np.<span class="hljs-built_in">sum</span>(y ** <span class="hljs-number">2</span>))  <span class="hljs-comment"># y的正规化</span><br>    <span class="hljs-keyword">return</span> np.dot(nx, ny)<br></code></pre></td></tr></table></figure>
 <p>这里当零向量（元素全部为0 的向量）被赋值给参数时，会出现“除数为0”（zero division）的错误。</p>
 <p>通过参数指定一个微小值eps（eps 是 epsilon 的缩写），并默认eps=1e-8（= 0.000 000 01）以防止“除数为 0”的错误。</p>
@@ -453,7 +453,7 @@
 </code></pre><h2 id="2-4-基于计数的方法的改进"><a href="#2-4-基于计数的方法的改进" class="headerlink" title="2.4 基于计数的方法的改进"></a>2.4 基于计数的方法的改进</h2><h3 id="2-4-1-点互信息"><a href="#2-4-1-点互信息" class="headerlink" title="2.4.1 点互信息"></a>2.4.1 点互信息</h3><p>如果只看单词的出现次数，那么与 drive 相比，the 和car 的相关性更强。这意味着，仅仅因为 the 是个常用词，它就被认为与 car 有很强的相关性。</p>
 <p><strong>点互消息（Pointwise Mutual Information, PMI）</strong>。对于随机变量 $x$ 和 $y$，它们的 PMI 定义如下：</p>
 <script type="math/tex; mode=display">\mathrm{PMI}(x,y)=\log_2\frac{P(x,y)}{P(x)P(y)}</script><p>$P(x)$ 表示 $x$ 发生的概率，$P(y)$ 表示 $y$ 发生的概率，$P(x, y)$ 表示 $x$ 和 $y$ 同时发生的概率。PMI 的值越高，表明相关性越强。</p>
-<p>在自然语言的例子中，$P(x)$ 就是指单词 $x$ 在语料库中出现的概率。假设某个语料库中有 10 000 个单词，其中单词 <code>the</code> 出现了 100 次，则$P(“\mathrm{the}”)=\frac{100}{10000}=0.01$ 另外，$P(x, y)$ 表示单词 $x$ 和 $y$ 同时出现的概率。假设 <code>the</code> 和 <code>car</code> 一起出现了10 次，则$P(“\mathrm{the}”,”\mathrm{car}”)=\frac{100}{10000}=0.01$。</p>
+<p>在自然语言的例子中，$P(x)$ 就是指单词 $x$ 在语料库中出现的概率。假设某个语料库中有 10 000 个单词，其中单词 <code>the</code> 出现了 100 次，则$P(&quot;\mathrm{the}&quot;)=\frac{100}{10000}=0.01$ 另外，$P(x, y)$ 表示单词 $x$ 和 $y$ 同时出现的概率。假设 <code>the</code> 和 <code>car</code> 一起出现了10 次，则$P(&quot;\mathrm{the}&quot;,&quot;\mathrm{car}&quot;)=\frac{100}{10000}=0.01$。</p>
 <p>共现矩阵表示为 $C$，将单词 $x$ 和 $y$ 的共现次数表示为 $C(x, y)$，将单词 $x$ 和 $y$ 的出现次数分别表示为 $C(x)$、$C(y)$，将语料库的单词数量记为 $N$，则：</p>
 <script type="math/tex; mode=display">\mathrm{PMI}(x,y)=\log_2\frac{P(x,y)}{P(x)P(y)}=\log_2\frac{\frac{C(x,y)}{N}}{\frac{C(x)}{N}\frac{C(y)}{N}}=\log_2\frac{C(x,y)\cdot N}{C(x)C(y)}</script><p>在使用PMI 的情况下，与 the 相比，drive 和car 具有更强的相关性。这是我们想要的结果。之所以出现这个结果，是因为我们考虑了单词单独出现的次数。在这个例子中，因为 the 本身出现得多，所以 PMI 的得分被拉低了。式中的“≈”（near equal）表示近似相等的意思。</p>
 <p>PMI 的问题：当两个单词的共现次数为 0 时，$\log_2 0=-\infty$。为了解决这个问题，实践上我们会使用下述<strong>正的点互信息（Positive PMI，PPMI）</strong>。</p>
@@ -727,7 +727,7 @@ calculating SVD ...
                 </a>
                 <a href="/archives" class="post-content-aside-top-about-site-item">
                     <span class="title">归档</span>
-                    <span class="count">302</span>
+                    <span class="count">303</span>
                 </a>
             </div>
         </div> 
@@ -984,6 +984,8 @@ calculating SVD ...
                                     </a>
                                 </li>
                             
+                        
+                    
                         
                     
                         
