@@ -1032,6 +1032,18 @@
 <p><strong>Method: Separable 1D de Casteljau Algorithm</strong></p>
 <p><img src="/images/loading.webp" data-original="11.29.png" alt="png"></p>
 <p>​    方法：可分离的 1D de Casteljau 算法</p>
+<blockquote>
+<p>​    Separable 1D de Casteljau 算法是 de Casteljau 算法的一种变体，用于在一维空间中对 Bézier 曲线进行求值。它是通过将原始的 de Casteljau 算法进行简化和优化而得到的。</p>
+<p>​    de Casteljau 算法是一种递归方法，用于在二维空间中计算 Bézier 曲线上的点。然而，当 Bézier 曲线是一维的（即线性曲线）时，可以使用更简单的算法来进行计算，这就是 Separable 1D de Casteljau 算法。</p>
+<p>​    这个算法的关键思想是将一维 Bézier 曲线的控制点集合视为一系列水平或垂直的线段，并通过对这些线段进行递归求解来计算曲线上的点。由于每个维度都可以单独处理，因此称为&quot;可分离&quot;。</p>
+<p>算法的步骤如下：</p>
+<ol>
+<li>对于给定的参数值 t，在每个维度上对控制点进行插值。例如，在水平方向上进行插值，然后在垂直方向上进行插值，或者反之。</li>
+<li>重复此过程，直到每个维度上只剩下一个点为止。</li>
+<li>最终得到的点就是 Bézier 曲线上的点。</li>
+</ol>
+<p>​    Separable 1D de Casteljau 算法相对于传统的 de Casteljau 算法来说更加简单和高效，特别适用于一维 Bézier 曲线的求值。</p>
+</blockquote>
 <p>Goal: Evaluate surface position corresponding to $(u,v)$ </p>
 <p>​    目标： 评估 $(u,v)$ 对应的曲面位置 </p>
 <p>$(u,v)$-separable application of de Casteljau algorithm </p>
@@ -1052,15 +1064,296 @@
 <ul>
 <li><p>Mesh subdivision</p>
 <p>表面细分</p>
+<ul>
+<li><p>Increase resolution</p>
+<p>提高分辨率</p>
+</li>
+</ul>
 </li>
 <li><p>Mesh simplification</p>
 <p>表面简化</p>
+<ul>
+<li><p>Decrease resolution; try to preserve shape/appearance</p>
+<p>降低分辨率；尽量保持形状/外观</p>
+</li>
+</ul>
 </li>
 <li><p>Mesh regularization</p>
 <p>表面正则化（使表面上的三角形的面积尽可能相同）</p>
+<ul>
+<li><p>Modify sample distribution to <strong>improve quality</strong></p>
+<p>修改样本分布以提高质量</p>
 </li>
 </ul>
-<h3 id="Lecture-12-Geometry-3"><a href="#Lecture-12-Geometry-3" class="headerlink" title="Lecture 12 Geometry 3"></a>Lecture 12 Geometry 3</h3>
+</li>
+</ul>
+<h2 id="Lecture-12-Geometry-3"><a href="#Lecture-12-Geometry-3" class="headerlink" title="Lecture 12 Geometry 3"></a>Lecture 12 Geometry 3</h2><h3 id="Mesh-Operations-Geometry-Processing"><a href="#Mesh-Operations-Geometry-Processing" class="headerlink" title="Mesh Operations: Geometry Processing"></a>Mesh Operations: Geometry Processing</h3><h4 id="Mesh-Subdivision"><a href="#Mesh-Subdivision" class="headerlink" title="Mesh Subdivision"></a>Mesh Subdivision</h4><p>​    细分</p>
+<p><img src="/images/loading.webp" data-original="12.1.png" alt="png"></p>
+<p>Common subdivision rule <span style="color: red;">for triangle meshes</span></p>
+<p>​    三角形网格的常用细分规则</p>
+<p>First, create more triangles (vertices) </p>
+<p>​    首先，创建更多三角形（顶点） </p>
+<p>Second, tune their positions</p>
+<p>​    其次，调整它们的位置</p>
+<hr>
+<p><strong>Loop Subdivision</strong></p>
+<p>​    循环细分</p>
+<p><img src="/images/loading.webp" data-original="12.2.png" alt="png"></p>
+<ul>
+<li><p>Split each triangle into four</p>
+<p>将一个三角形分割成四个</p>
+</li>
+</ul>
+<p><img src="/images/loading.webp" data-original="12.3.png" alt="png"></p>
+<ul>
+<li><p>Assign new vertex positions according to weights</p>
+<p>根据权重分配新的顶点位置</p>
+<ul>
+<li><p>New / old vertices updated differently</p>
+<p>以不同方式更新新/旧顶点</p>
+</li>
+</ul>
+</li>
+</ul>
+<hr>
+<p><strong>Loop Subdivision — Update</strong></p>
+<p><img src="/images/loading.webp" data-original="12.4.png" alt="png"></p>
+<p>​    对于已存在的点 $A、B、C、D$，再往其中间添加一个白点。</p>
+<p>For new vertices:</p>
+<p>​    设置白点的坐标为：$\frac{3}8\cdot(A+B)+\frac{1}{8}\cdot(C+D)$</p>
+<p><img src="/images/loading.webp" data-original="12.5.png" alt="png"></p>
+<p>For old vertices (e.g. degree 6 vertices here):</p>
+<p>​    对于原先的点（假设新添加的点连有 6 个原先的点，度为 6）：</p>
+<p>Update to:  $(1 - n<em>u) </em> \mathrm{original_{position}} +  u * \mathrm{neighbor_{position}_{sum}}$</p>
+<p>​    更新原先的点的坐标</p>
+<ul>
+<li><p>$n$ 为顶点的度</p>
+</li>
+<li><p>$u=\left\{\begin{matrix}3/16\quad \mathrm{if}\ n=3,\\3/(8n)\quad\mathrm{otherwise}\end{matrix}\right.$</p>
+</li>
+</ul>
+<hr>
+<p><strong>Loop Subdivision Results</strong></p>
+<p><img src="/images/loading.webp" data-original="12.6.png" alt="png"></p>
+<p>​    循环细分的结果。看起来好极了！就是它只能支持三角形面。</p>
+<hr>
+<p><b><span style="color: red;">Catmull</span>-Clark Subdivision (<span style="color: red;">General Mesh</span>)</b></p>
+<p><img src="/images/loading.webp" data-original="12.7.png" alt="png"></p>
+<p>​    这个算法可以处理任意面。</p>
+<p>​    对于一堆四边形面中的某些三角形面，就会产生 Extraordinary vertex 奇异点（这个点的度不为 4）</p>
+<p>Each subdivision step: 每个细分步骤 </p>
+<ul>
+<li><p>Add vertex in each face</p>
+<p>在每个面上添加顶点</p>
+</li>
+<li><p>Add midpoint on each edge</p>
+<p>在每条边添加中点</p>
+</li>
+<li><p>Connect all new vertices</p>
+<p>连接所有新顶点</p>
+</li>
+</ul>
+<p><img src="/images/loading.webp" data-original="12.8.png" alt="png"></p>
+<p>After one subdivision:  经过一次细分：</p>
+<ul>
+<li><p>How many extraordinary vertices? </p>
+<p>有多少个奇异点？4。</p>
+</li>
+<li><p>What are their degrees? </p>
+<p>它们的度数是多少？3。</p>
+</li>
+<li><p>How many non-quad faces?</p>
+<p>有多少个非四边形面？没有了，这个细分操作把所有非四边形面全部转为了四边形面，真是太厉害了！</p>
+</li>
+</ul>
+<p><img src="/images/loading.webp" data-original="12.9.png" alt="png"></p>
+<p>我再细分一次。不会有非四边形面。</p>
+<p><img src="/images/loading.webp" data-original="12.10.png" alt="png"></p>
+<p>​    我再再细分一次。怎样都不会有非四边形面。</p>
+<hr>
+<p><strong>FYI: Catmull-Clark Vertex Update Rules (Quad Mesh)</strong></p>
+<p>​    参考：Catmull-Clark 顶点更新规则（四维网格）</p>
+<p><img src="/images/loading.webp" data-original="12.11.png" alt="png"></p>
+<p>​    以此法更新网格点的坐标。</p>
+<hr>
+<p><strong>Convergence: Overall Shape and Creases</strong></p>
+<p>​    趋同： 整体形状和褶皱</p>
+<p><img src="/images/loading.webp" data-original="12.12.png" alt="png"></p>
+<p>​    这个算法效果。</p>
+<h4 id="Mesh-Simplification"><a href="#Mesh-Simplification" class="headerlink" title="Mesh Simplification"></a>Mesh Simplification</h4><p><img src="/images/loading.webp" data-original="12.13.png" alt="png"></p>
+<p>​    面减少会降低精度，但是远处看上去差不多。这么做可以节约性能。</p>
+<p>Goal: reduce number of mesh elements while maintaining the overall shape</p>
+<p>​    目标：在保持整体形状的前提下减少网格元素的数量</p>
+<hr>
+<p><strong>Collapsing An Edge</strong></p>
+<p>​    折叠边缘</p>
+<p><img src="/images/loading.webp" data-original="12.14.png" alt="png"></p>
+<ul>
+<li><p>Suppose we simplify a mesh using <span style="color: red;">edge collapsing</span></p>
+<p>假设我们使用边缘折叠来简化网格。那么这个点的坐标如何？</p>
+</li>
+</ul>
+<hr>
+<p><strong>Quadric Error Metrics</strong></p>
+<p>​    二次误差度量</p>
+<p><img src="/images/loading.webp" data-original="12.15.png" alt="png"></p>
+<ul>
+<li><p>How much geometric error is introduced by simplification?</p>
+<p>简化会带来多少几何误差？</p>
+</li>
+<li><p>Not a good idea to perform local averaging of vertices</p>
+<p>对顶点进行局部平均不是一个好主意。图上看上去形变太大了。</p>
+</li>
+<li><p>Quadric error: new vertex should minimize its <span style="color: red;">sum of square distance</span> (L2 distance) to previously related triangle planes!</p>
+<p>四边形误差：新顶点应最小化其与先前相关三角形平面的 <span style="color: red;">平方距离总和</span>（L2 距离，就是机器学习里的那个概念了）！</p>
+</li>
+</ul>
+<hr>
+<p><strong>Quadric Error of Edge Collapse</strong></p>
+<ul>
+<li><p>How much does it cost to collapse an edge? </p>
+<p>折叠一条边的成本是多少？</p>
+</li>
+<li><p>Idea: compute edge midpoint, measure quadric error</p>
+<p>思路：计算边缘中点，测量四边形误差</p>
+</li>
+<li><p>Better idea: choose point that minimizes quadric error</p>
+<p>更好的思路：选择二次方误差最小的点 </p>
+</li>
+<li><p>More details: Garland &amp; Heckbert 1997.</p>
+</li>
+</ul>
+<hr>
+<p><strong>Simplification via Quadric Error</strong></p>
+<p>​    通过四边形误差进行简化</p>
+<p>Iteratively collapse edges </p>
+<p>​    迭代地折叠边缘</p>
+<p>Which edges? Assign score with quadric error metric*</p>
+<p>​    哪些边缘？使用二次误差度量标准*进行评分</p>
+<ul>
+<li><p>approximate distance to surface as sum of distances to planes containing triangles</p>
+<p>将到表面的近似距离视为到包含三角形的平面的距离之和</p>
+</li>
+<li><p>teratively collapse edge <span style="color: red;">with smallest score</span></p>
+<p>迭代地折叠边缘，选择得分最小的边缘</p>
+</li>
+<li><p>greedy algorithm... great results!</p>
+<p>贪婪算法……取得了很好的结果！（尽管每次迭代后都会改变表面形状，使得选取的边缘不一定是最优解，但是性能好，就这么采用了）</p>
+</li>
+</ul>
+<p>* (Garland &amp; Heckbert 1997)</p>
+<p><img src="/images/loading.webp" data-original="12.16.png" alt="png"></p>
+<h3 id="Shadow-Mapping"><a href="#Shadow-Mapping" class="headerlink" title="Shadow Mapping"></a>Shadow Mapping</h3><ul>
+<li><p>An Image-space Algorithm</p>
+<p>图像空间算法</p>
+<ul>
+<li><p>no knowledge of scene&#39; s geometry during shadow computation</p>
+<p>在计算阴影时不需要场景几何信息</p>
+</li>
+<li><p>must deal with aliasing artifacts</p>
+<p>必须处理深度图中的走样伪影</p>
+</li>
+</ul>
+</li>
+<li><p>Key idea:</p>
+<p>关键思想：</p>
+<ul>
+<li><p>the points NOT in shadow must be seen both <strong>by the light</strong> and <strong>by the camera</strong></p>
+<p>不在阴影中的点必须<strong>同时被光线和相机看到</strong></p>
+</li>
+</ul>
+</li>
+</ul>
+<hr>
+<p><strong>Pass 1: Render from Light</strong></p>
+<p><img src="/images/loading.webp" data-original="12.17.png" alt="png"></p>
+<ul>
+<li><p>Depth image from light source</p>
+<p>来自光源的深度图像</p>
+</li>
+</ul>
+<p><img src="/images/loading.webp" data-original="12.18.png" alt="png"></p>
+<p>​    将观察者坐标视为灯光，获取观察到的深度贴图。</p>
+<hr>
+<p><strong>Pass 2A: Render from Eye</strong></p>
+<p><img src="/images/loading.webp" data-original="12.19.png" alt="png"></p>
+<ul>
+<li><p>Standard image (with depth) from eye</p>
+<p>获取摄像机观察到的深度贴图。</p>
+</li>
+</ul>
+<hr>
+<p><strong>Pass 2B: Project to light</strong></p>
+<p><img src="/images/loading.webp" data-original="12.20.png" alt="png"></p>
+<ul>
+<li><p>Project visible points in eye view back to light source</p>
+<p>将眼睛视图中的可见点投射回光源。</p>
+</li>
+</ul>
+<p>​    如果摄像机和灯光观察到的这个点深度值<strong>一致</strong>，则我们可认定摄像机和灯光观察到的<strong>是</strong>同一个点，视为这个点可见。</p>
+<p><img src="/images/loading.webp" data-original="12.21.png" alt="png"></p>
+<p>​    如果摄像机和灯光观察到的这个点深度值<strong>不一致</strong>，则我们可认定摄像机和灯光观察到的<strong>不是</strong>同一个点，阻挡之。</p>
+<hr>
+<p><strong>Visualizing Shadow Mapping</strong></p>
+<p><img src="/images/loading.webp" data-original="12.22.png" alt="png"></p>
+<ul>
+<li><p>Compare with and without shadows</p>
+<p>比较一下。啊！真实感又提升了！</p>
+</li>
+</ul>
+<p><img src="/images/loading.webp" data-original="12.23.png" alt="png"></p>
+<ul>
+<li><p>The scene from the light&#39; s point-of-view</p>
+<p>从灯光位置观察视图</p>
+</li>
+</ul>
+<p><img src="/images/loading.webp" data-original="12.24.png" alt="png"></p>
+<ul>
+<li><p>The depth buffer from the light&#39; s point-of-view</p>
+<p>我们只需要获取灯光观察视图后得到的深度视图。</p>
+</li>
+</ul>
+<p><img src="/images/loading.webp" data-original="12.25.png" alt="png"></p>
+<ul>
+<li><p>Comparing Dist (light, shading point) with shadow map</p>
+<p>将 Dist（光线，阴影点）与阴影贴图进行比较</p>
+</li>
+</ul>
+<p>Green is where the distance(light, shading point) ≈ depth on the  shadow map</p>
+<p>​    绿色是距离（光线、阴影点）≈阴影贴图深度的地方。（不该出现阴影）</p>
+<p>Non-green is where  shadows should be</p>
+<p>​    非绿色是阴影应该出现的地方。看上去不是很连续，这是因为浮点数比较之间有误差……得设计一种容错的比较方法</p>
+<hr>
+<ul>
+<li><p>Well known rendering technique</p>
+<p>被广泛应用的渲染技术</p>
+<ul>
+<li><p>Basic shadowing technique for early animations (Toy Story, etc.) and in EVERY 3D video game</p>
+<p>早期动画（《玩具总动员》等）和所有 3D 视频游戏的基本阴影技术</p>
+</li>
+</ul>
+</li>
+</ul>
+<hr>
+<p><strong>Problems with shadow maps</strong></p>
+<p>​    阴影贴图的问题</p>
+<ul>
+<li><p>Hard shadows (point lights only)</p>
+<p>硬阴影（仅限点光源）</p>
+</li>
+<li><p>Quality depends on shadow map resolution (general problem with image-based techniques)</p>
+<p>质量取决于阴影贴图的分辨率（基于图像的技术的普遍问题）</p>
+</li>
+<li><p>Involves equality comparison of floating point depth values means issues of scale, bias, tolerance</p>
+<p>涉及浮点深度的相等比较<br>值的相等比较意味着比例、偏差和容差问题</p>
+</li>
+</ul>
+<p><img src="/images/loading.webp" data-original="12.26.png" alt="png"></p>
+<ul>
+<li>Hard shadows vs. soft shadows</li>
+</ul>
+<p>​    如果存在软阴影，则说明光源是有大小的。</p>
+
         
     
         
