@@ -594,7 +594,8 @@
 <p>​    提示：$(1-b_1-b_2)，b_1，b_2$ 是重心坐标！</p>
 <script type="math/tex; mode=display">\begin{bmatrix}t\\b_1\\b_2\end{bmatrix}=\frac1{\vec{\mathbf{S}}_1\bullet\vec{\mathbf{E}}_1}\begin{bmatrix}\vec{\mathbf{S}}_2\bullet\vec{\mathbf{E}}_2\\\vec{\mathbf{S}}_1\bullet\vec{\mathbf{S}}\\\vec{\mathbf{S}}_2\bullet\vec{\mathbf{D}}\end{bmatrix}</script><p>$\text{Cost}=(1 \text{div}, 27 \text{mul} ,17 \text{add})$</p>
 <p>​    需要 1 次除，27 次乘，17 次加。</p>
-<h3 id="Accelerating-Ray-Surface-Intersection"><a href="#Accelerating-Ray-Surface-Intersection" class="headerlink" title="Accelerating Ray-Surface Intersection"></a>Accelerating Ray-Surface Intersection</h3><p><strong>Ray Tracing – Performance Challenges</strong></p>
+<h3 id="Accelerating-Ray-Surface-Intersection"><a href="#Accelerating-Ray-Surface-Intersection" class="headerlink" title="Accelerating Ray-Surface Intersection"></a>Accelerating Ray-Surface Intersection</h3><p>​    加速计算射线-表面交点的方法</p>
+<p><strong>Ray Tracing – Performance Challenges</strong></p>
 <p>Simple ray-scene intersection</p>
 <p>​    简单的光线场景交点    </p>
 <ul>
@@ -628,7 +629,8 @@
 <p>物体完全包含在包围盒中</p>
 </li>
 <li><p>If it doesn&#39; t hit the volume, it doesn&#39; t hit the object</p>
-<p>如果射线没有击中包围盒，它就不会击中物体</p>
+<p><strong>如果射线没有击中包围盒，它就不会击中物体</strong>，就不用后续计算。优化性能</p>
+<p>如果击中了，再老老实实计算吧。</p>
 </li>
 <li><p>So test BVol first, then test object if it hit</p>
 <p> 因此，首先测试 BVol，然后测试物体是否击中</p>
@@ -720,7 +722,415 @@
 <p><img src="/images/loading.webp" data-original="13.28.png" alt="png"></p>
 <script type="math/tex; mode=display">t=\frac{\mathbf{p}^{\prime}_x-\mathbf{o}_x}{\mathbf{d}_x}</script><p>1 subtraction, 1 division</p>
 <p>​    只需要一次加法，一次除法</p>
-<h2 id="Lecture-14-Ray-Tracing-2-Acceleration-amp-Radiometry"><a href="#Lecture-14-Ray-Tracing-2-Acceleration-amp-Radiometry" class="headerlink" title="Lecture 14: Ray Tracing 2 (Acceleration &amp; Radiometry)"></a>Lecture 14: Ray Tracing 2 (Acceleration &amp; Radiometry)</h2>
+<h2 id="Lecture-14-Ray-Tracing-2-Acceleration-amp-Radiometry"><a href="#Lecture-14-Ray-Tracing-2-Acceleration-amp-Radiometry" class="headerlink" title="Lecture 14: Ray Tracing 2 (Acceleration &amp; Radiometry)"></a>Lecture 14: Ray Tracing 2 (Acceleration &amp; Radiometry)</h2><p><strong>Announcements</strong></p>
+<p>​    公告</p>
+<ul>
+<li><p>GTC news: DLSS 2.0</p>
+<p>图形学前沿</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/116211994">https://zhuanlan.zhihu.com/p/116211994</a></li>
+</ul>
+</li>
+<li><p>GTC news: RTXGI</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://developer.nvidia.com/rtxgi">https://developer.nvidia.com/rtxgi</a></li>
+</ul>
+</li>
+<li><p>Personal feeling</p>
+<p>个人感受</p>
+<ul>
+<li><p>Offline rendering techniques will soon become real-time</p>
+<p>离线渲染技术将很快成为实时技术</p>
+</li>
+<li><p>Current real-time rendering techniques will still be useful</p>
+<p>当前的实时渲染技术仍然有用（光栅化还没有那么快被淘汰）</p>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="Using-AABBs-to-accelerate-ray-tracing"><a href="#Using-AABBs-to-accelerate-ray-tracing" class="headerlink" title="Using AABBs to accelerate ray tracing"></a>Using AABBs to accelerate ray tracing</h3><h4 id="Uniform-Spatial-Partitions-Grids"><a href="#Uniform-Spatial-Partitions-Grids" class="headerlink" title="Uniform Spatial Partitions (Grids)"></a>Uniform Spatial Partitions (Grids)</h4><p>​    统一空间分割（网格）</p>
+<p><strong>Preprocess – Build Acceleration Grid</strong></p>
+<p>​    预处理 - 构建加速网格</p>
+<p><img src="/images/loading.webp" data-original="14.1.png" alt="png"></p>
+<ol>
+<li><p>Find bounding box</p>
+<p>给所有物体打一个包围盒</p>
+</li>
+</ol>
+<p><img src="/images/loading.webp" data-original="14.2.png" alt="png"></p>
+<ol>
+<li><p>Create grid</p>
+<p>给这个包围盒用网格划分成多个小包围盒</p>
+</li>
+</ol>
+<p><img src="/images/loading.webp" data-original="14.3.png" alt="png"></p>
+<ol>
+<li><p>Store each object in overlapping cells</p>
+<p>将每个对象存储在重叠的单元格中</p>
+</li>
+</ol>
+<hr>
+<p><img src="/images/loading.webp" data-original="14.4.png" alt="png"></p>
+<p><strong>Ray-Scene Intersection</strong></p>
+<p>Step through grid in ray traversal order</p>
+<p>​    按射线遍历顺序逐步穿过网格</p>
+<p>For each grid cell</p>
+<p>​    对于每个网格单元</p>
+<p>​    Test intersection with all objects stored at that cell</p>
+<p>​        测试与存储在该单元格中的所有对象的交集。如果有交集，则检测到物体，再后续计算</p>
+<hr>
+<p><strong>Grid Resolution?</strong></p>
+<p><img src="/images/loading.webp" data-original="14.5.png" alt="png"></p>
+<p>One cell</p>
+<ul>
+<li><p>No speedup</p>
+<p>网格大小的设定是个问题，如果网格太大，相当于没有加速</p>
+</li>
+</ul>
+<p><img src="/images/loading.webp" data-original="14.6.png" alt="png"></p>
+<p>Too many cells</p>
+<ul>
+<li><p>Inefficiency due to extraneous grid traversal</p>
+<p>无关的网格遍历导致效率低下</p>
+</li>
+</ul>
+<p><img src="/images/loading.webp" data-original="14.7.png" alt="png"></p>
+<p>Heuristic:</p>
+<p>启发式：</p>
+<ul>
+<li>#cells = C * #objs</li>
+<li>C ≈ 27 in 3D</li>
+</ul>
+<p>网格个数大概为物体的个数的 27 倍比较合适！</p>
+<hr>
+<p><strong>Uniform Grids – When They Work Well</strong></p>
+<p><img src="/images/loading.webp" data-original="14.8.png" alt="png"></p>
+<p>Grids work well on large collections of objects that are distributed evenly in size and space</p>
+<p>​    网格适用于大小和空间分布均匀的大型对象集合</p>
+<hr>
+<p><strong>Uniform Grids – When They Fail</strong></p>
+<p>​    统一网格--当它们失效时</p>
+<p><img src="/images/loading.webp" data-original="14.9.png" alt="png"></p>
+<p>&quot;Teapot in a stadium&quot; problem</p>
+<p>​    当各个对象的大小分布和空间分布不均匀时，寄！”体育馆里的茶壶“的问题。</p>
+<h4 id="Spatial-Partitions"><a href="#Spatial-Partitions" class="headerlink" title="Spatial Partitions"></a>Spatial Partitions</h4><p><strong>Spatial Partitioning Examples</strong></p>
+<p>​    空间划分实例</p>
+<p><img src="/images/loading.webp" data-original="14.10.png" alt="png"></p>
+<p>Note: you could have these in both 2D and 3D. In lecture we will illustrate principles in 2D.</p>
+<p>​    注意：您可以在二维和三维中使用这些内容。在课程中，我们将说明 2D 的原理。</p>
+<blockquote>
+<p>​    在计算机图形学中，空间划分是一种常用的技术，用于加速对空间中对象的搜索和查询。它通过将空间划分为更小的区域或单元来减少搜索的复杂度。以下是一些空间划分的示例：</p>
+<ol>
+<li>网格 (Grid)：网格将空间划分为规则的网格单元，每个单元可以包含一个或多个对象。这种方法适用于静态场景，可以通过网格索引快速定位对象。</li>
+<li>八叉树 (Oct-Tree)：八叉树是三维空间的类似于四叉树的划分方法。它将空间递归地分成八个立方体，每个立方体可以继续分为八个子立方体，以此类推。八叉树通常用于三维图形渲染、体素化等方面。</li>
+<li><strong>kd-树 (kd-tree)</strong>：kd-树是一种多维空间划分方法，它根据数据点在各维度上的分布，递归地将空间划分为轴对齐的超矩形区域。kd-树常用于最近邻搜索等问题。（与八叉树相比，八叉树是一次 $x,y,z$ 轴地划分，kd-树 每次只往一个方向划分，划分次数与维度无关）</li>
+<li>二叉空间分区 (BSP-Tree)：与 kd-树相比，它斜着切。（其实没有对齐的好计算）</li>
+</ol>
+</blockquote>
+<hr>
+<p><strong>KD-Tree Pre-Processing</strong></p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/112246942">KD-Tree原理详解 - 知乎 (zhihu.com)</a></li>
+</ul>
+<p><img src="/images/loading.webp" data-original="14.11.png" alt="png"></p>
+<p>​    先给空间 $A$ 竖的来一刀。得到蓝绿两个区域（叶子节点）。</p>
+<p><img src="/images/loading.webp" data-original="14.12.png" alt="png"></p>
+<p>​    将绿色区域作为 $B$，横的来一刀。得到新的绿和黄色两个叶子节点。</p>
+<p><img src="/images/loading.webp" data-original="14.13.png" alt="png"></p>
+<p>​    以此类推，一阵乱切。</p>
+<p>Note: also subdivide nodes 1 and 2, etc.</p>
+<p>​    注：还可细分节点 1 和 2 等。只是示意图是这么切的而已。</p>
+<hr>
+<p><strong>Data Structure for KD-Trees</strong></p>
+<p>​    KD 树的数据结构</p>
+<p>Internal nodes store </p>
+<p>内部节点存储</p>
+<ul>
+<li><p>split axis: x-, y-, or z-axis</p>
+<p>分割轴：X 轴、Y 轴或 Z 轴</p>
+</li>
+<li><p>split position: coordinate of split plane along axis</p>
+<p>分割位置：分割平面沿轴的坐标</p>
+</li>
+<li><p>children: pointers to child nodes</p>
+<p>子节点：指向子节点的指针</p>
+</li>
+<li><p>No objects are stored in internal nodes</p>
+<p>内部节点中不存储任何对象</p>
+</li>
+</ul>
+<p>Leaf nodes store</p>
+<p>​    叶节点存储</p>
+<ul>
+<li><p>list of objects</p>
+<p>对象列表</p>
+</li>
+</ul>
+<hr>
+<p><strong>Traversing a KD-Tree</strong></p>
+<p>​    遍历 KD 树</p>
+<p><img src="/images/loading.webp" data-original="14.14.png" alt="png"></p>
+<p>​    射线穿过 $A$ 时，只需判断射线与各个叶子节点 $1,2,3,4,5$ 的相交关系即可。</p>
+<p><img src="/images/loading.webp" data-original="14.15.png" alt="png"></p>
+<p>Internal node: split</p>
+<p>​    内部节点：分割</p>
+<p><img src="/images/loading.webp" data-original="14.16.png" alt="png"></p>
+<p>Assume it&#39; s leaf node: intersect all objects</p>
+<p>​    假设它是叶节点：与所有叶节点里的所有对象判断相交</p>
+<p><img src="/images/loading.webp" data-original="14.17.png" alt="png"></p>
+<p>Internal node: split</p>
+<p>​    内部节点：分割</p>
+<p><img src="/images/loading.webp" data-original="14.18.png" alt="png"></p>
+<p>Leaf node: intersect all objects</p>
+<p>​    遇到相交的叶节点，与所有叶节点里的所有对象判断相交</p>
+<p><img src="/images/loading.webp" data-original="14.19.png" alt="png"></p>
+<p>Intersection found</p>
+<p>​    找到相交的对象</p>
+<blockquote>
+<p>​    在计算机图形学领域，Object Partitions 和 Bounding Volume Hierarchy (BVH) 是两种常用的空间分割和组织技术，用于加速场景中对象的渲染和碰撞检测等操作。</p>
+<ol>
+<li><strong>Object Partitions</strong>： Object Partitions 是一种将场景中的对象按照位置或其他属性进行划分的技术。通常情况下，这种划分是基于空间的，将场景划分为多个区域或单元，每个单元包含一组对象。Object Partitions 技术的目的是通过合理的空间划分，减少需要处理的对象数量，从而提高渲染和碰撞检测等操作的效率。常见的 Object Partitions 技术包括 kd-树、Octree 等。</li>
+<li><strong>Bounding Volume Hierarchy (BVH)</strong>： Bounding volume hierarchy (BVH) 即层次包围体，在 BVH 中，所有的几何物体都会被包在 bounding volume 的叶子节点里面，bounding volume 外面继续包着一个更大的 bounding volume，递归地包裹下去，最终形成的根节点会包裹着整个场景。</li>
+</ol>
+</blockquote>
+<p>KD-树目前用的比较少，主要是不好划分，而且一个对象有可能被放置在多个叶子节点里，导致重复计算。</p>
+<h4 id="Object-Partitions-amp-Bounding-Volume-Hierarchy-BVH"><a href="#Object-Partitions-amp-Bounding-Volume-Hierarchy-BVH" class="headerlink" title="Object Partitions &amp; Bounding Volume Hierarchy (BVH)"></a>Object Partitions &amp; Bounding Volume Hierarchy (BVH)</h4><p><strong>Bounding Volume Hierarchy (BVH)</strong></p>
+<p><img src="/images/loading.webp" data-original="14.22.png" alt="png"></p>
+<p>​    根节点包含整个场景。</p>
+<p><img src="/images/loading.webp" data-original="14.23.png" alt="png"></p>
+<p>​    在根节点里套包围盒。</p>
+<p><img src="/images/loading.webp" data-original="14.24.png" alt="png"></p>
+<p>​    我再套。</p>
+<p><img src="/images/loading.webp" data-original="14.25.png" alt="png"></p>
+<p>​    我还套！</p>
+<p><img src="/images/loading.webp" data-original="14.26.png" alt="png"></p>
+<hr>
+<p><strong>Summary: Building BVHs</strong></p>
+<ul>
+<li><p>Find bounding box</p>
+<p>查找边界框</p>
+</li>
+<li><p>Recursively split set of objects in two subsets</p>
+<p>递归地将对象集合分成两个子集</p>
+</li>
+<li><p><strong>Recompute</strong> the bounding box of the subsets</p>
+<p><strong>重新计算</strong>子集的边界框</p>
+</li>
+<li><p>Stop when necessary</p>
+<p>必要时停止</p>
+</li>
+<li><p>Store objects in each leaf node</p>
+<p>在每个叶节点中存储对象</p>
+</li>
+</ul>
+<hr>
+<p><strong>Building BVHs</strong></p>
+<p>How to subdivide a node? </p>
+<p>​    如何细分节点？</p>
+<ul>
+<li><p>Choose a dimension to split</p>
+<p>选择要分割的维度</p>
+</li>
+<li><p>Heuristic #1: Always choose the longest axis in node </p>
+<p>启发式 1： 始终选择节点中最长的轴线</p>
+</li>
+<li><p>Heuristic #2: Split node at location of median object</p>
+<p>启发式 2： 在中位对象的位置分割节点</p>
+</li>
+</ul>
+<p>Termination criteria? </p>
+<p>​    终止标准？</p>
+<ul>
+<li><p>Heuristic: stop when node contains few elements (e.g. 5)</p>
+<p>启发式：当节点包含较少元素（如 5 个）时停止</p>
+</li>
+</ul>
+<hr>
+<p><strong>Data Structure for BVHs</strong></p>
+<p>Internal nodes store</p>
+<p>​    内部节点存储</p>
+<ul>
+<li><p>Bounding box</p>
+<p>边界框</p>
+</li>
+<li><p>Children: pointers to child nodes</p>
+<p>子节点：指向子节点的指针</p>
+</li>
+</ul>
+<p>Leaf nodes store</p>
+<p>​    叶节点存储</p>
+<ul>
+<li><p>Bounding box</p>
+<p>边界框</p>
+</li>
+<li><p>List of objects</p>
+<p>对象列表</p>
+</li>
+</ul>
+<p>Nodes represent subset of primitives in scene</p>
+<p>​    节点代表场景中基元的子集</p>
+<ul>
+<li><p>All objects in subtree</p>
+<p>子树上的所有对象</p>
+</li>
+</ul>
+<hr>
+<p><strong>BVH Traversal</strong></p>
+<p><img src="/images/loading.webp" data-original="14.27.png" alt="png"></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><code class="hljs C">Intersect(Ray ray, BVH node) &#123;<br>    <span class="hljs-keyword">if</span> (ray misses node.bbox) <span class="hljs-keyword">return</span>;<br>    <span class="hljs-keyword">if</span> (node is a leaf node)<br>    test intersection with all objs;<br>    <span class="hljs-keyword">return</span> closest intersection;<br>    hit1 = Intersect(ray, node.child1);<br>    hit2 = Intersect(ray, node.child2);<br>    <span class="hljs-keyword">return</span> the closer of hit1, hit2;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>​    递归地检测是否相交。</p>
+<hr>
+<p><strong>Spatial vs Object Partitions</strong></p>
+<p><img src="/images/loading.webp" data-original="14.28.png" alt="png"></p>
+<p>Spatial partition (e.g.KD-tree) </p>
+<p>​    空间分区（如 KD 树）</p>
+<ul>
+<li><p>Partition space into non-overlapping regions</p>
+<p>将空间划分为不重叠的区域</p>
+</li>
+<li><p>An object can be contained in multiple regions</p>
+<p>一个对象可包含在多个区域中</p>
+</li>
+</ul>
+<p><img src="/images/loading.webp" data-original="14.29.png" alt="png"></p>
+<p>Object partition (e.g. BVH) </p>
+<p>​    对象分区（如 BVH）</p>
+<ul>
+<li><p>Partition set of objects into disjoint subsets </p>
+<p>将对象集合划分为互不相交的子集 </p>
+</li>
+<li><p>Bounding boxes for each set may overlap in space</p>
+<p>每个子集的边界框可能在空间上重叠</p>
+</li>
+</ul>
+<h3 id="Basic-radiometry-辐射度量学"><a href="#Basic-radiometry-辐射度量学" class="headerlink" title="Basic radiometry (辐射度量学)"></a>Basic radiometry (辐射度量学)</h3><p>Advertisement: new topics from now on, scarcely covered in other graphics courses</p>
+<p>​    广告：从现在开始，其他图形课程很少涉及的新主题</p>
+<hr>
+<p><strong>Radiometry — Motivation</strong></p>
+<p><img src="/images/loading.webp" data-original="13.13.png" alt="png"></p>
+<p>Observation </p>
+<ul>
+<li><p>In assignment 3, we implement the Blinn-Phong model</p>
+<p>在作业 3 中，我们执行 Blinn-Phong 模型 </p>
+</li>
+<li><p>Light intensity $I$ is 10, for example </p>
+<p>例如，光强 $I$ 为 10 </p>
+</li>
+<li><p>But 10 what? </p>
+<p>但 10 是什么？连单位都没有</p>
+</li>
+</ul>
+<p>Do you think Whitted style ray tracing gives you CORRECT results? </p>
+<p>​    你认为怀特风格的光线追踪能得出正确的结果吗？</p>
+<p>All the answers can be found in radiometry</p>
+<p>​    所有答案都可以在辐射测量中找到 </p>
+<ul>
+<li><p>Also the basics of &quot;Path Tracing&quot;</p>
+<p>还有”路径跟踪“的基础知识</p>
+</li>
+</ul>
+<hr>
+<p><strong>Radiometry</strong></p>
+<p>​    辐射测量</p>
+<p>Measurement system and units for illumination</p>
+<p>​    照明测量系统和单位</p>
+<p>Accurately measure the spatial properties of light</p>
+<p>​    精确测量光的空间特性</p>
+<ul>
+<li><p>New terms: Radiant flux, intensity, irradiance, radiance</p>
+<p> 新术语：辐射通量、强度、辐照度、辐射度</p>
+</li>
+</ul>
+<p>Perform lighting calculations in a physically correct manner</p>
+<p>​    以物理上正确的方式进行照明计算</p>
+<hr>
+<p>My personal way of learning things:</p>
+<p>​    我个人的学习方法：</p>
+<ul>
+<li><p>WHY, WHAT, then HOW</p>
+<p>为什么、是什么，然后是怎么做</p>
+</li>
+</ul>
+<h4 id="Radiant-Energy-and-Flux-Power"><a href="#Radiant-Energy-and-Flux-Power" class="headerlink" title="Radiant Energy and Flux (Power)"></a>Radiant Energy and Flux (Power)</h4><p>​    辐射能量和通量（功率）</p>
+<p>Definition: Radiant energy is the energy of electromagnetic radiation. It is measured in units of joules, and denoted by the symbol:</p>
+<p>​    定义：辐射能是电磁辐射的能量。它以焦耳为单位，用符号表示：</p>
+<script type="math/tex; mode=display">Q\mathrm{[J=Joule]}</script><p>Definition: Radiant flux (power) is the energy emitted, reflected, transmitted or received, per unit time</p>
+<p>​    定义：辐射通量（功率）是单位时间内发射、反射、传输或接收的能量</p>
+<script type="math/tex; mode=display">\Phi\equiv\frac{\mathrm{d}Q}{\mathrm{d}t}\text{ [W = Watt] [lm = lumen]}^\star</script><hr>
+<p><strong>Flux – #photons flowing through a sensor in unit time</strong></p>
+<p>​    光通量--单位时间内流经传感器的光子数量</p>
+<p><img src="/images/loading.webp" data-original="14.30.png" alt="png"></p>
+<hr>
+<p><strong>Important Light Measurements of Interest</strong></p>
+<p>​    重要的相关光测量值</p>
+<p><img src="/images/loading.webp" data-original="14.31.png" alt="png"></p>
+<center>Light Emitted From A Source<br>光源发出的光<br>“Radiant Intensity”<br>辐射强度
+</center>
+
+<p><img src="/images/loading.webp" data-original="14.32.png" alt="png"></p>
+<center>Light Falling On A Surface<br>光落在物体表面<br>“Irradiance”<br>"辐照度"</center>
+
+<p><img src="/images/loading.webp" data-original="14.33.png" alt="png"></p>
+<center>Light Traveling Along A Ray<br>光沿着光线行进<br>"Radiance"<br>“光芒”</center>
+
+<h4 id="Radiant-Intensity"><a href="#Radiant-Intensity" class="headerlink" title="Radiant Intensity"></a>Radiant Intensity</h4><p>​    辐射强度</p>
+<p>Definition: The radiant (luminous) intensity is the power <strong>per unit solid angle (?)</strong> emitted by a point light source.</p>
+<p>​    定义： 辐射（发光）强度是点光源<strong>每单位立体角</strong>（?）这是个什么玩意</p>
+<p><img src="/images/loading.webp" data-original="14.31.png" alt="png"></p>
+<p>$I(\omega)\equiv\frac{\mathrm{d}\Phi}{\mathrm{d}\omega}$</p>
+<p>$\left[\frac{\mathrm{W}}{\mathrm{sr}}\right]\left[\frac{\mathrm{lm}}{\mathrm{sr}}=\mathrm{cd}=\mathrm{candela}\right]$</p>
+<p>The candela is one of the seven SI base units.</p>
+<p>​    坎德拉是国际单位制七个基本单位之一。</p>
+<hr>
+<p><strong>Angles and Solid Angles</strong></p>
+<p><img src="/images/loading.webp" data-original="14.34.png" alt="png"></p>
+<p>Angle: ratio of subtended arc length on circle to radius</p>
+<p>​    平面角：圆上被摄弧长与半径之比 </p>
+<ul>
+<li><p>$\theta=\frac{l}{r}$</p>
+</li>
+<li><p>Circle has $2\pi$ <strong>radians</strong></p>
+<p>圆的弧度为 $2\pi$</p>
+</li>
+</ul>
+<p><img src="/images/loading.webp" data-original="14.35.png" alt="png"></p>
+<p>Solid angle: ratio of subtended area on sphere to radius squared</p>
+<p>​    实心角：球面上的入射面积与半径平方的比值</p>
+<ul>
+<li><p>$\Omega=\frac{A}{r^2}$</p>
+</li>
+<li><p>Sphere has $4\pi$ steradians</p>
+</li>
+</ul>
+<hr>
+<p><strong>Differential Solid Angles</strong></p>
+<p><img src="/images/loading.webp" data-original="14.36.png" alt="png"></p>
+<p>​    这个实体角的求解公式：</p>
+<p>$\begin{aligned}\mathrm{d}A=&amp;(r\mathrm{d}\theta)(r\sin\theta\mathrm{d}\phi)\\=&amp;r^2\sin\theta\mathrm{d}\theta\mathrm{d}\phi\end{aligned}$</p>
+<script type="math/tex; mode=display">\mathrm{d}\omega=\frac{\mathrm{d}A}{r^2}=\sin\theta\mathrm{~d}\theta\mathrm{~d}\phi</script><p><strong>Sphere: </strong>$S^2$</p>
+<p>$\begin{aligned}\Omega&amp;=\int_{S^2}\mathrm{d}\omega\\&amp;=\int_0^{2\pi}\int_0^\pi\sin\theta\mathrm{d}\theta\mathrm{d}\phi\\&amp;=4\pi\end{aligned}$</p>
+<hr>
+<p>$\omega$ <strong>as a direction vector</strong></p>
+<p>​    将 $\omega$ 作为方向向量</p>
+<p><img src="/images/loading.webp" data-original="14.37.png" alt="png"></p>
+<p>Will use $\omega$ to denote a direction vector (unit length)</p>
+<p>​    用 $\omega$ 表示方向向量（单位长度）</p>
+<hr>
+<p><strong>Isotropic Point Source</strong></p>
+<p>​    各向同性点源</p>
+<p><img src="/images/loading.webp" data-original="14.38.png" alt="png"></p>
+<script type="math/tex; mode=display">\begin{aligned}\Phi&=\int_{S^2}I\mathrm{~d}\omega\\&=4\pi I\end{aligned}</script><script type="math/tex; mode=display">I=\frac\Phi{4\pi}</script><hr>
+<p><strong>Modern LED Light</strong></p>
+<p><img src="/images/loading.webp" data-original="14.39.png" alt="png"></p>
+<p>Output: 815 lumens</p>
+<p>​    输出： 815 流明 </p>
+<p>(11W LED replacement for 60W incandescent)</p>
+<p>​    （11 瓦 LED 可替代 60 瓦白炽灯）</p>
+<p>Radiant intensity? </p>
+<p>​    辐射强度？</p>
+<p>Assume isotropic: </p>
+<p>​    Intensity = 815 lumens / 4pi sr = 65 candelas</p>
+
         
     
         
