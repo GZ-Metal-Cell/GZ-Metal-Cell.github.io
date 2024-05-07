@@ -21,13 +21,12 @@ function createContainer($codeBlock) {
 function createCopyButton($container, $codeBlock, icon) {
     // 创建复制按钮并设置样式
     var $button = $('<button class="copy-button" type="button" title="copy-button"></button>').css('backgroundImage', 'url("' + icon + '")');
-    // 创建已复制提示文字
-    var $span = $('<span class="copy-notice">已复制</span>');
-
-    // 添加按钮和提示文字到容器内
-    $container.append($button, $span);
+    $container.append($button);
 
     $button.click(function () {
+        // 创建已复制提示文字
+        var $span = $('<span class="copy-notice">已复制</span>');
+        $container.append($span);
         // 使用innerText获取文本内容，以保留格式
         var code = $codeBlock.get(0).innerText; // 使用.get(0)来获取原生DOM元素
         // 执行复制操作
@@ -39,6 +38,9 @@ function createCopyButton($container, $codeBlock, icon) {
         $span.css('opacity', 1);
         setTimeout(function () {
             $span.css('opacity', 0);
+            setTimeout(function () {
+                $span.remove();
+            }, 500);
         }, 1000);
     });
 }
