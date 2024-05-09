@@ -1130,6 +1130,744 @@
 <p>​    辐射强度？</p>
 <p>Assume isotropic: </p>
 <p>​    Intensity = 815 lumens / 4pi sr = 65 candelas</p>
+<h2 id="Lecture-15-Ray-Tracing-3-Light-Transport-amp-Global-Illumination"><a href="#Lecture-15-Ray-Tracing-3-Light-Transport-amp-Global-Illumination" class="headerlink" title="Lecture 15 Ray Tracing 3 (Light Transport &amp; Global Illumination)"></a>Lecture 15 Ray Tracing 3 (Light Transport &amp; Global Illumination)</h2><p><strong>Reviewing Concepts</strong></p>
+<p><img src="/images/loading.webp" data-original="15.1.png" alt="png"></p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>公式</th>
+<th>解释</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Radiant energy 辐射能<br>（在 CG 中很少使用）</td>
+<td>$Q[\mathrm{J}=\text {Joule}]$</td>
+<td>the energy of electromagnetic radiation<br>电磁辐射的能量</td>
+</tr>
+<tr>
+<td>Radiant flux (power) 辐射通量（功率）</td>
+<td>$\Phi\equiv\frac{\mathrm{d}Q}{\mathrm{d}t}[\mathrm{W}=\text{Watt}][\mathrm{lm}=\text{lumen}]$</td>
+<td>Energy per unit time<br>单位时间能量</td>
+</tr>
+<tr>
+<td>Radiant intensity 辐射强度</td>
+<td>$I(\omega)\equiv\frac{\text d\Phi}{\text d\omega}$</td>
+<td>power per unit solid angle<br>单位立体角功率</td>
+</tr>
+<tr>
+<td>Solid Angle 实体角</td>
+<td>$\Omega=\frac{A}{r^2}$</td>
+<td>ratio of subtended area on sphere to radius squared<br>球面所占面积与半径平方之比</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="Irradiance"><a href="#Irradiance" class="headerlink" title="Irradiance"></a>Irradiance</h3><p>辐照度</p>
+<p>Definition: The irradiance is the power per unit area incident on a surface point.</p>
+<p>​    定义：辐照度是照射在表面某一点的每单位面积的功率。</p>
+<p><img src="/images/loading.webp" data-original="15.2.png" alt="png"></p>
+<script type="math/tex; mode=display">E(\mathrm x)\equiv\frac{\text d\Phi(\mathrm x)}{\mathrm d A}</script><script type="math/tex; mode=display">\left[\frac{W}{m^2}\right]\left[\frac{\text{lm}}{m^2}=\text{lux}\right]</script><hr>
+<p><strong>Lambert&#39; s Cosine Law</strong></p>
+<p>​    兰伯特余弦定理</p>
+<p>Irradiance at surface is proportional to cosine of angle between light direction and surface normal.</p>
+<p>​    表面辐照度与光线方向和表面法线之间的角度的余弦成正比。</p>
+<p>(Note: always use a unit area, the cosine applies on $\Phi$)</p>
+<p>​    （注意：始终使用单位面积，余弦适用于 $\Phi$）</p>
+<p><img src="/images/loading.webp" data-original="15.3.png" alt="png"></p>
+<center>Top face of cube receives a certain amount of power<br>立方体顶面接收一定量的能量<br>$E=\frac{\Phi}{A}$</center>
+
+<p><img src="/images/loading.webp" data-original="15.4.png" alt="png"></p>
+<center>Top face of 60º rotated cube receives half power<br>60º 旋转立方体的顶面接收一半功率<br>$E=\frac{1}{2}\frac{\Phi}{A}$</center>
+
+<p><img src="/images/loading.webp" data-original="15.5.png" alt="png"></p>
+<center>In general, power per unit area is proportional to $\cos\theta=l\cdot n$<br>一般而言，单位面积功率与 $\cos\theta=l\cdot n$ 相关<br>$E=\frac{\Phi}{A}\cos\theta$</center>
+
+<hr>
+<p><strong>Why Do We Have Seasons?</strong></p>
+<p><img src="/images/loading.webp" data-original="15.6.png" alt="png"></p>
+<p>​    为什么我们会有季节？因为太阳光到地球各个地方的夹角不同。</p>
+<p>Earth&#39; s axis of rotation: ~23.5° off axis</p>
+<hr>
+<p><strong>Correction: Irradiance Falloff</strong></p>
+<p>​    校正：辐照度衰减</p>
+<p><img src="/images/loading.webp" data-original="15.7.png" alt="png"></p>
+<p>Assume light is emitting power in a uniform angular distribution</p>
+<p>​    假设光以均匀的角度分布发射功率</p>
+<p>Compare irradiance at surface of two spheres:</p>
+<p>​    比较两个球体表面的辐照度：</p>
+<h3 id="Radiance"><a href="#Radiance" class="headerlink" title="Radiance"></a>Radiance</h3><p>​    辐射</p>
+<p><img src="/images/loading.webp" data-original="15.8.png" alt="png"></p>
+<p>Radiance is the fundamental field quantity that describes the distribution of light in an environment</p>
+<p>​    辐射度是描述环境中光分布的基本场量</p>
+<ul>
+<li><p>Radiance is the quantity associated with a ray</p>
+<p>辐射度是与射线相关的量</p>
+</li>
+<li><p>Rendering is all about computing radiance</p>
+<p>渲染就是计算辐射度</p>
+</li>
+</ul>
+<p>Definition: The radiance (luminance) is the power emitted, reflected, transmitted or received by a surface, <strong>per unit solid angle</strong>, <strong>per projected unit area</strong>.</p>
+<p>​    定义：辐射度（亮度）是表面在<strong>单位立体角</strong>、<strong>单位投影面积</strong>上发射、反射、透射或接收的功率。</p>
+<p><img src="/images/loading.webp" data-original="15.9.png" alt="png"></p>
+<script type="math/tex; mode=display">L(\mathrm{p},\omega)\equiv\frac{\mathrm{d}^2\Phi(\mathrm{p},\omega)}{\mathrm{d}\omega\mathrm{d}A\cos\theta}</script><p>$\cos\theta$ accounts for projected surface area</p>
+<p>​    $\cos\theta$ 表示投影表面积</p>
+<script type="math/tex; mode=display">\left[\frac{\mathrm{W}}{\mathrm{sr}\mathrm{m}^{2}}\right]\left[\frac{\mathrm{cd}}{\mathrm{m}^{2}}=\frac{\mathrm{lm}}{\mathrm{sr}\mathrm{m}^{2}}=\mathrm{nit}\right]</script><p>Definition: power per unit solid angle per projected unit area.</p>
+<p>​    定义：<strong>单位投影面积</strong>上<strong>单位立体角</strong>的功率。</p>
+<script type="math/tex; mode=display">L(\mathrm{p},\omega)\equiv\frac{\mathrm{d}^2\Phi(\mathrm{p},\omega)}{\mathrm{d}\omega\mathrm{d}A\cos\theta}</script><p>Recall</p>
+<ul>
+<li><p>Irradiance: power per projected unit area</p>
+<p>辐照度：单位投影面积的功率</p>
+</li>
+<li><p>Intensity: power per solid angle</p>
+<p>强度：单位立体角的功率</p>
+</li>
+</ul>
+<p>So</p>
+<ul>
+<li><p>Radiance: Irradiance per solid angle</p>
+<p>辐射度：单位立体角的辐照度</p>
+</li>
+<li><p>Radiance: Intensity per projected unit area</p>
+<p>辐射度：单位投影面积的强度</p>
+</li>
+</ul>
+<hr>
+<p><strong>Incident Radiance</strong></p>
+<p>​    入射辐射</p>
+<p>Incident radiance is the irradiance per unit solid angle arriving at the surface.</p>
+<p>​    入射辐射度是到达表面的每单位立体角的辐射度。</p>
+<p><img src="/images/loading.webp" data-original="15.9.png" alt="png"></p>
+<script type="math/tex; mode=display">L(\mathrm{p},\omega)=\frac{\mathrm{d}E(\mathrm{p})}{\mathrm{d}\omega\cos\theta}</script><p>i.e. it is the light arriving at the surface along a given ray (point on surface and incident direction).</p>
+<p>​    即，它是沿给定射线（表面上的点和入射方向）到达表面的光。</p>
+<hr>
+<p><strong>Exiting Radiance</strong></p>
+<p><img src="/images/loading.webp" data-original="15.9.png" alt="png"></p>
+<p>Exiting surface radiance is the intensity per unit projected<br>area leaving the surface.</p>
+<p>​    出射表面辐射度是离开表面的每单位投影面积的强度。</p>
+<script type="math/tex; mode=display">L(\mathrm{p},\omega)=\frac{\mathrm{d}I(\mathrm{p},\omega)}{\mathrm{d}A\cos\theta}</script><p>e.g. for an area light it is the light emitted along a given ray<br>(point on surface and exit direction).</p>
+<p>​    例如，对于区域光来说，它是沿给定射线（表面上的点和出射方向）发射的光。</p>
+<hr>
+<p><strong>Irradiance vs. Radiance</strong></p>
+<p>​    辐照度与辐射度</p>
+<p>Irradiance: total power received by area $\text dA$</p>
+<p>​    辐照度：区域 $\text dA$ 接收的总功率</p>
+<p>Radiance: power received by area $\text dA$ from “direction” $\text d\omega$</p>
+<p>​    辐射度：区域 $\text dA$ 从“方向” $\text d\omega$ 接收的功率</p>
+<script type="math/tex; mode=display">\begin{aligned}dE(\mathrm{p},\omega)&=L_i(\mathrm{p},\omega)\cos\theta\mathrm{d}\omega\\E(\mathrm{p})&=\int_{H^2}L_i(\mathrm{p},\omega)\cos\theta\mathrm{d}\omega\end{aligned}</script><p><img src="/images/loading.webp" data-original="15.10.png" alt="png"></p>
+<p>Unit Hemisphere 单位半球: $H^2$</p>
+<h3 id="Bidirectional-Reflectance-Distribution-Function-BRDF"><a href="#Bidirectional-Reflectance-Distribution-Function-BRDF" class="headerlink" title="Bidirectional Reflectance Distribution Function (BRDF)"></a>Bidirectional Reflectance Distribution Function (BRDF)</h3><p>​    双向反射分布函数 (BRDF)</p>
+<hr>
+<p><strong>Reflection at a Point</strong></p>
+<p>​    点的反射</p>
+<p>Radiance from direction $\omega_i$ turns into the power $E$ that $\text dA$ receives<br>Then power $E$ will become the radiance to any other direction $\omega_o$</p>
+<p>​    来自方向 $\omega_i$ 的辐射度变为 $\text dA$ 接收的功率 $E$ 然后功率 $E$ 将成为到任何其他方向 $\omega_o$ 的辐射度</p>
+<p><img src="/images/loading.webp" data-original="15.11.png" alt="png"></p>
+<p>Differential irradiance incoming 入射光的差异辐照度: $\text dE(\omega_i)=L(\omega_i)cos\theta_i\text d\omega_i$</p>
+<p>Differential radiance exiting (due to $\text d E(\omega_1)$ )差分辐射退出（由于 $\text d E(\omega_1)$ ）：$\text d L_r(\omega_r)$</p>
+<hr>
+<p><strong>BRDF</strong></p>
+<p>The Bidirectional Reflectance Distribution Function (BRDF) represents how much light is reflected into each outgoing direction $\omega_r$ from each incoming direction</p>
+<p>​    双向反射分布函数 (BRDF) 表示从每个入射方向反射到每个出射方向 $\omega_r$ 的光量</p>
+<p><img src="/images/loading.webp" data-original="15.12.png" alt="png"></p>
+<script type="math/tex; mode=display">f_r(\omega_i\to\omega_r)=\frac{\mathrm{d}L_r(\omega_r)}{\mathrm{d}E_i(\omega_i)}=\frac{\mathrm{d}L_r(\omega_r)}{L_i(\omega_i)\cos\theta_i\mathrm{d}\omega_i}\left[\frac{1}{\mathrm{sr}}\right]</script><hr>
+<p><strong>The Reflection Equation</strong></p>
+<p>​    反射方程</p>
+<p><img src="/images/loading.webp" data-original="15.13.png" alt="png"></p>
+<script type="math/tex; mode=display">L_r(\mathrm{p},\omega_r)=\int_{H^2}f_r(\mathrm{p},\omega_i\to\omega_r)L_i(\mathrm{p},\omega_i)\cos\theta_i\mathrm{d}\omega_i</script><hr>
+<p><strong>Challenge: Recursive Equation</strong></p>
+<p>​    挑战：递归方程</p>
+<p>Reflected radiance depends on incoming radiance</p>
+<p>​    反射辐射取决于入射辐射</p>
+<script type="math/tex; mode=display">L_r(\mathrm{p},\omega_r)=\int_{H^2}f_r(\mathrm{p},\omega_i\to\omega_r)L_i(\mathrm{p},\omega_i)\cos\theta_i\mathrm{d}\omega_i</script><ul>
+<li>$L_r(\mathrm{p},\omega_r)$ reflected radiance 反射辐射</li>
+<li>$L_{i}(\mathrm{p},\omega_{i})$ incoming radiance 入射辐射</li>
+</ul>
+<p>But incoming radiance depends on reflected radiance (at<br>another point in the scene)</p>
+<p>​    但入射辐射取决于反射辐射（在场景中的另一点）</p>
+<hr>
+<p><strong>The Rendering Equation</strong></p>
+<p>​    渲染方程</p>
+<p>Re-write the reflection equation 重写反射方程：</p>
+<script type="math/tex; mode=display">\begin{aligned}L_r(\text{p},\omega_r)=\int_{H^2}f_r(\text{p},\omega_i\to\omega_r)L_i(\text{p},\omega_i)\cos\theta_i\text{d}\omega_i\end{aligned}</script><p>by adding an Emission term to make it general!</p>
+<p>​    通过添加发射项使其变得通用！</p>
+<p>The Rendering Equation</p>
+<script type="math/tex; mode=display">\begin{aligned}L_o(p,\omega_o)=L_e(p,\omega_o)+\int_{\Omega^+}L_i(p,\omega_i)f_r(p,\omega_i,\omega_o)(n\cdot\omega_i)\mathrm{d}\omega_i\end{aligned}</script><p>How to solve? Next lecture!</p>
+<p>Note: now, we assume that all directions are pointing outwards!</p>
+<p>注意：现在，我们假设所有方向都指向外面（$\Omega^+$）！</p>
+<h3 id="Understanding-the-rendering-equation"><a href="#Understanding-the-rendering-equation" class="headerlink" title="Understanding the rendering equation"></a>Understanding the rendering equation</h3><p>​    理解渲染方程</p>
+<p><img src="/images/loading.webp" data-original="15.14.png" alt="png"></p>
+<p>​    对于单个点光源：</p>
+<p>$L_r(x,\omega_r)=L_e(x,\omega_r)+L_i(x,\omega_i)~f(x,\omega_i,\omega_r)~(\omega_i,n)$</p>
+<ul>
+<li><p>$L_r(x,\omega_r)$</p>
+<p>Reflected Light (Output Image) 反射光（输出图像）</p>
+</li>
+<li><p>$L_e(x,\omega_r)$</p>
+<p>Emission</p>
+<p>自发光</p>
+</li>
+<li><p>$L_i(x,\omega_i)$</p>
+<p>Incident Light (from light source)</p>
+<p>入射光（来自光源）</p>
+</li>
+<li><p>$f(x,\omega_i,\omega_r)$</p>
+<p>BRDF</p>
+</li>
+<li><p>$(\omega_i,n)$</p>
+<p>Cosine of Incident angle</p>
+<p>入射角余弦</p>
+</li>
+</ul>
+<p><img src="/images/loading.webp" data-original="15.15.png" alt="png"></p>
+<p>​    多个点光源，求和。Sum over all light sources.</p>
+<script type="math/tex; mode=display">L_r(x,\omega_r)=L_e(x,\omega_r)+\sum L_i(x,\omega_i)\left.f(x,\omega_i,\omega_r)\right.(\omega_i,n)</script><p><img src="/images/loading.webp" data-original="15.16.png" alt="png"></p>
+<p>​    平面光源，使用积分。Replace sum with integral.</p>
+<script type="math/tex; mode=display">L_r(x,\omega_r)=L_e(x,\omega_r)+\int_\Omega L_i(x,\omega_i)f(x,\omega_i,\omega_r)\cos\theta_i\mathrm{d}\omega_i</script><p><img src="/images/loading.webp" data-original="15.17.png" alt="png"></p>
+<p>Surfaces (interreflection)</p>
+<p>​    表面（相互反射）</p>
+<p><img src="/images/loading.webp" data-original="15.18.png" alt="png"></p>
+<p><img src="/images/loading.webp" data-original="15.19.png" alt="png"></p>
+<p>​    这是当年那个论文渲染出来的结果。</p>
+<hr>
+<p><strong>Rendering Equation as Integral Equation</strong></p>
+<p>​    将方程渲染为积分方程</p>
+<script type="math/tex; mode=display">L_r(x,\omega_r)=L_e(x,\omega_r)+\int_\Omega L_r(x^{\prime},-\omega_i)f(x,\omega_i,\omega_r)\cos\theta_id\omega_i</script><p>​    要是能看到一个物体，要么它自身能发光，要么它能反射出其它光源发出的光。</p>
+<p>Is a Fredholm Integral Equation of second kind [extensively studied numerically] with canonical form</p>
+<p>​    是具有规范形式的第二类 Fredholm 积分方程 [经过广泛的数值研究]</p>
+<script type="math/tex; mode=display">l(u)=e(u)+\int l(v)K(u,v)dv</script><p>​    $K(u,v)dv$$ 是 Kernel of equation Light Transport Operator.</p>
+<script type="math/tex; mode=display">L=E+KL</script><p>Can be discretized to a simple matrix equation [or system of simultaneous linear equations] ($L$, $E$ are vectors, $K$ is the light transport matrix)</p>
+<p>​    可以离散化为一个简单的矩阵方程[或联立线性方程组]（$L$、$E$为向量，$K$为光传输矩阵）</p>
+<hr>
+<p><strong>Ray Tracing and extensions</strong></p>
+<p>​    光线追踪和扩展</p>
+<ul>
+<li><p>General class numerical Monte Carlo methods</p>
+<p>通用类数值蒙特卡罗方法</p>
+</li>
+<li><p>Approximate set of all paths of light in scene</p>
+<p>场景中所有光路的近似集</p>
+</li>
+</ul>
+<script type="math/tex; mode=display">\begin{aligned}L&=E+KL\\IL-KL&=E\\(I-K)L&=E\\L&=(I-K)^{-1}E\end{aligned}</script><p>​    在矩阵运算中，$(I-K)^{-1}$ 有类似泰勒公式一样的性质：Binomial Theorem 二项式定理</p>
+<script type="math/tex; mode=display">\begin{aligned}
+L&=(1+K+K^2+K^3+...)E \\
+L&=E+KE+K^2E+K^3E+... 
+\end{aligned}</script><ul>
+<li><p>$E$</p>
+<p>Emission directly From light sources</p>
+<p>直接从光源发射</p>
+</li>
+<li><p>$KE$</p>
+<p>Direct Illumination on surfaces</p>
+<p>表面直接照明</p>
+</li>
+<li><p>$K^2E$</p>
+<p>Indirect Illumination (One bounce indirect) [Mirrors, Refraction]</p>
+<p>间接照明（一次间接反射）[镜子、折射]</p>
+</li>
+<li><p>$K^3E$</p>
+<p>(Two bounce indirect illum.)</p>
+<p>（两次反射间接照明。）</p>
+</li>
+</ul>
+<p>如果只取 $L=E+KE$，则我们可以视为 Shading in Rasterization 光栅化中的着色</p>
+<p><img src="/images/loading.webp" data-original="15.20.png" alt="png"></p>
+<p>​    Direct illumination 不计算反射，背光面将会一片漆黑。</p>
+<p>​    计算的反射越多，画面越真实，也会越亮，但不会无限变亮。</p>
+<hr>
+<p><strong>Probability Review</strong></p>
+<p><strong>Random Variables</strong></p>
+<p>​    随机变量</p>
+<p>$X$ random variable. Represents a distribution of potential values</p>
+<p>​    随机变量。表示潜在值的分布</p>
+<p>$X\sim p(x)$ probability density function (PDF). Describes relative probability of a random process choosing value</p>
+<p>​    概率密度函数（PDF）。描述随机过程选择值的相对概率</p>
+<p>Example: uniform PDF: all values over a domain are equally likely</p>
+<p>​    示例：均匀密度函数：域内的所有值都具有相同的可能性</p>
+<p><img src="/images/loading.webp" data-original="15.21.png" alt="png"></p>
+<p>​    示例：扔骰子</p>
+<p>$X$ takes on values $1, 2, 3, 4, 5, 6$</p>
+<p>$p(1)=p(2)=p(3)=p(4)=p(5)=p(6)$</p>
+<hr>
+<p><strong>Probabilities</strong></p>
+<p>​    概率</p>
+<p><img src="/images/loading.webp" data-original="15.22.png" alt="png"></p>
+<p>$n$ discrete values $x_i$ with probability $p_i$</p>
+<p>​    $n$ 个离散值 $x_i$ 具有概率 $p_i$</p>
+<p>Requirements of a probability distribution:</p>
+<p>​    概率分布的要求：</p>
+<p>$p_i\ge 0$</p>
+<p>$\sum^n_{i=1}p_i=1$</p>
+<p>Six-sided die example 六面骰子示例：$p_i=\frac{1}{6}$</p>
+<hr>
+<p><strong>Expected Value of a Random Variable</strong></p>
+<p>​    随机变量的期望值</p>
+<p>The average value that one obtains if repeatedly drawing samples from the random distribution.</p>
+<p>​    从随机分布中反复抽取样本所获得的平均值。</p>
+<p>Expected value of $X$：$E[X]=\sum_{i=1}^{n}x_{i}p_{i}$</p>
+<p>Die example: $\begin{aligned}E[X]&amp;=\sum_{i=1}^n\frac{i}{6}\\&amp;=(1+2+3+4+5+6)/6=3.5\end{aligned}$</p>
+<hr>
+<p><strong>Continuous Case: Probability Distribution Function (PDF)</strong></p>
+<p>​    连续情况：概率分布函数 (PDF)</p>
+<p><img src="/images/loading.webp" data-original="15.23.png" alt="png"></p>
+<script type="math/tex; mode=display">X\sim p(x)</script><p>A random variable $X$ that can take any of a continuous set of values, where the relative probability of a particular value is given by a continuous probability density function $p(x)$.</p>
+<p>​    随机变量 $X$ 可以取一组连续的值中的任意一个，其中特定值的相对概率由连续概率密度函数 $p(x)$ 给出。</p>
+<p>Conditions on $p(x)$: $\begin{aligned}p(x)\geq0\ \mathrm{and}\int p(x)\text dx=1\end{aligned}$</p>
+<p>Expected value of $X$: $E[X]=\int xp(x)dx$</p>
+<h2 id="Lecture-16-Ray-Tracing-4-Monte-Carlo-Path-Tracing"><a href="#Lecture-16-Ray-Tracing-4-Monte-Carlo-Path-Tracing" class="headerlink" title="Lecture 16 Ray Tracing 4 (Monte Carlo Path Tracing)"></a>Lecture 16 Ray Tracing 4 (Monte Carlo Path Tracing)</h2><h3 id="Monte-Carlo-Integration"><a href="#Monte-Carlo-Integration" class="headerlink" title="Monte Carlo Integration"></a>Monte Carlo Integration</h3><p><strong>Why</strong>: we want to solve an integral, but it can be too difficult to solve analytically. </p>
+<p>​    原因：我们想解一个积分，但用分析方法（牛顿莱布尼茨公式）解太难了。</p>
+<p><strong>What &amp; How</strong>: estimate the integral of a function by averaging random samples of the function&#39; s value.</p>
+<p>​    内容和方法：通过对函数值的随机样本求平均值来估计函数的积分。</p>
+<p><img src="/images/loading.webp" data-original="16.1.png" alt="png"></p>
+<p>Let us define the Monte Carlo estimator for the definite integral of given function $f(x)$</p>
+<p>​    让我们为给定函数 $f(x)$ 的定积分定义蒙特卡洛估计量</p>
+<p>Definite integral 定积分：$\int_a^bf(x)dx$</p>
+<p>Random variable 随机变量：$X_i\sim p(x)$</p>
+<p><strong>Monte Carlo estimator</strong> 蒙特卡洛估计量：$F_N=\frac{1}{N}\sum_{i=1}^N\frac{f(X_i)}{p(X_i)}$</p>
+<hr>
+<p><strong>Example: Uniform Monte Carlo Estimator</strong></p>
+<p>​    示例：统一蒙特卡罗估计量</p>
+<p>Uniform random variable 对于均匀随机变量：</p>
+<p><img src="/images/loading.webp" data-original="16.2.png" alt="png"></p>
+<p><img src="/images/loading.webp" data-original="16.3.png" alt="png"></p>
+<p>$\begin{aligned}<br>&amp;X_i\sim p(x)=C \\<br>&amp;\begin{aligned}\int_a^bp(x)dx=1\end{aligned} \\<br>&amp;\Rightarrow  \begin{aligned}\int_a^bCdx=1\end{aligned}  \\<br>&amp;\Rightarrow  \begin{aligned}C=\frac{1}{b-a}\end{aligned}<br>\end{aligned}$</p>
+<p><strong>Uniform</strong> random variable 均匀随机变量：$X_i\sim p(x)=\frac1{b-a}$</p>
+<p>Basic Monte Carlo estimator 基本蒙特卡罗估计量：$F_N=\frac{b-a}N\sum_{i=1}^Nf(X_i)$</p>
+<hr>
+<p><strong>Monte Carlo Integration</strong></p>
+<p>​    蒙特卡罗积分</p>
+<script type="math/tex; mode=display">\begin{aligned}\int f(x)\mathrm{d}x&=\frac{1}{N}\sum_{i=1}^N\frac{f(X_i)}{p(X_i)}\quad&X_i\sim p(x)\end{aligned}</script><p>Some notes: </p>
+<p>一些注意事项：</p>
+<ul>
+<li><p>The more samples, the less variance.</p>
+<p>样本越多，方差越小。</p>
+</li>
+<li><p>Sample on $x$, integrate on $x$.</p>
+<p>在 $x$ 上采样，在 $x$ 上积分。</p>
+</li>
+</ul>
+<h3 id="Path-Tracing"><a href="#Path-Tracing" class="headerlink" title="Path Tracing"></a>Path Tracing</h3><p>​    路径追踪</p>
+<p><strong>Motivation: Whitted-Style Ray Tracing</strong></p>
+<p>​    动机：Whitted 式光线追踪</p>
+<p>Whitted-style ray tracing: </p>
+<p>​    Whitted 式光线追踪：</p>
+<ul>
+<li><p>Always perform specular reflections / refractions</p>
+<p>始终执行镜面反射/折射</p>
+</li>
+<li><p>Stop bouncing at diffuse surfaces</p>
+<p>停止在漫反射表面反弹</p>
+</li>
+</ul>
+<p>Are these simplifications reasonable?</p>
+<p>​    这些简化合理吗？</p>
+<p>High level: let&#39; s progressively improve upon Whitted-Style Ray Tracing and lead to our path tracing algorithm!</p>
+<p>​    高层次：让我们逐步改进 Whitted 风格的光线追踪并引出我们的路径追踪算法！</p>
+<hr>
+<p><strong>Whitted-Style Ray Tracing: Problem 1</strong></p>
+<p>​    Whitted 式光线追踪：问题 1</p>
+<p>Where should the ray be reflected for glossy materials?</p>
+<p>​    对于光泽材质来说，射线应该在哪里反射？</p>
+<p><img src="/images/loading.webp" data-original="16.4.png" alt="png"></p>
+<p>​    应为 Glossy reflection，物体接受光和其它物体反射过来的光。</p>
+<hr>
+<p>No reflections between diffuse materials?</p>
+<p>​    漫反射材质之间没有反射吗？</p>
+<p><img src="/images/loading.webp" data-original="16.5.png" alt="png"></p>
+<p>​    应为右边，物体（如长方体）接受光和其它物体反射（如红墙壁）过来的光。</p>
+<hr>
+<p><strong>Whitted-Style Ray Tracing is Wrong</strong></p>
+<p>​    Whitted 式光线追踪是错误的</p>
+<p>But the rendering equation is correct</p>
+<p>​    但渲染方程是正确的</p>
+<script type="math/tex; mode=display">L_o(p,\omega_o)=L_e(p,\omega_o)+\int_{\Omega^+}L_i(p,\omega_i)f_r(p,\omega_i,\omega_o)(n\cdot\omega_i)\mathrm{d}\omega_i</script><p>But it involves</p>
+<p>​    但它涉及</p>
+<ul>
+<li><p>Solving an integral over the hemisphere, and</p>
+<p>求解半球上的积分，以及</p>
+</li>
+<li><p>Recursive execution</p>
+<p>递归执行</p>
+</li>
+</ul>
+<p>How do you solve an integral numerically?</p>
+<p>​    如何用数值方法求解积分？</p>
+<hr>
+<p><strong>A Simple Monte Carlo Solution</strong></p>
+<p>​    简单的蒙特卡罗解决方案</p>
+<p>Suppose we want to render <strong>one pixel (point)</strong> in the following scene for <strong>direct illumination</strong> only</p>
+<p>​    假设我们想在以下场景中渲染一个像素（点），仅用于直接照明</p>
+<p>Note: this is an area light</p>
+<p><img src="/images/loading.webp" data-original="16.6.png" alt="png"></p>
+<p>Abuse the concept of Reflection Equation a little bit</p>
+<p>​    稍微滥用一下反射方程的概念</p>
+<script type="math/tex; mode=display">L_o(p,\omega_o)=\int_{\Omega^+}L_i(p,\omega_i)f_r(p,\omega_i,\omega_o)(n\cdot\omega_i)\mathrm{d}\omega_i</script><p>(again, we assume all directions are pointing outwards)</p>
+<p>​    （再次假设所有方向都指向外面）</p>
+<p>Fancy as it is, it&#39; s still just an integration over directions</p>
+<p>​    尽管很花哨，但它仍然只是对方向的整合</p>
+<p><img src="/images/loading.webp" data-original="15.13.png" alt="png"></p>
+<p>So, of course we can solve it using Monte Carlo integration!</p>
+<p>​    因此，我们当然可以使用蒙特卡洛积分来解决这个问题！</p>
+<p>We want to compute the radiance at $p$ towards the camera</p>
+<p>​    我们想要计算 $p$ 处朝向相机的辐射度</p>
+<script type="math/tex; mode=display">\begin{aligned}L_o(p,\omega_o)=\int_{\Omega^+}L_i(p,\omega_i)f_r(p,\omega_i,\omega_o)(n\cdot\omega_i)\mathrm d\omega_i\end{aligned}</script><p>Monte Carlo integration: </p>
+<p>​    蒙特卡洛积分：</p>
+<script type="math/tex; mode=display">\int_a^bf(x)\mathrm{d}x\approx\frac1N\sum_{k=1}^N\frac{f(X_k)}{p(X_k)}\quad X_k\sim p(x)</script><p>What&#39; s our &quot;$f(x)$&quot;?</p>
+<script type="math/tex; mode=display">L_i(p,\omega_i)f_r(p,\omega_i,\omega_o)(n\cdot\omega_i)</script><p>What&#39; s our pdf?</p>
+<script type="math/tex; mode=display">p(\omega_i)=1/2\pi</script><p>(assume uniformly sampling the hemisphere)</p>
+<p>​    （假设对半球进行均匀采样）</p>
+<p>So, in general</p>
+<script type="math/tex; mode=display">\begin{aligned}
+L_o(p,\omega_o)& \begin{aligned}=\int_{\Omega^+}L_i(p,\omega_i)f_r(p,\omega_i,\omega_o)(n\cdot\omega_i)\mathrm d\omega_i\end{aligned}  \\
+&\approx\frac1N\sum_{i=1}^N\frac{L_i(p,\omega_i)f_r(p,\omega_i,\omega_o)(n\cdot\omega_i)}{p(\omega_i)}
+\end{aligned}</script><p>(note: abuse notation a little bit for $i$)</p>
+<p>​    （注意：对 $i$ 的符号有点滥用）</p>
+<p>What does it mean? </p>
+<p>​    这是什么意思？</p>
+<p>A correct shading algorithm for direct illumination!</p>
+<p>​    直接照明的正确着色算法！</p>
+<script type="math/tex; mode=display">L_o(p,\omega_o)\approx\frac{1}{N}\sum_{i=1}^N\frac{L_i(p,\omega_i)f_r(p,\omega_i,\omega_o)(n\cdot\omega_i)}{p(\omega_i)}</script><hr>
+<p>shade(p, wo)</p>
+<p>​    Randomly choose N directions wi~pdf</p>
+<p>​    Lo = 0.0</p>
+<p>​    For each wi</p>
+<p>​        Trace a ray r(p, wi)</p>
+<p>​        If ray r hit the light</p>
+<p>​            Lo += (1 / N) <em> L_i </em> f_r * cosine / pdf(wi)</p>
+<p>​    Return Lo</p>
+<hr>
+<p><strong>Introducing Global Illumination</strong></p>
+<p>​    全局照明简介</p>
+<p>One more step forward: what if a ray hits an object?</p>
+<p><img src="/images/loading.webp" data-original="16.7.png" alt="png"></p>
+<p>$Q$ also reflects light to $P$! How much? The dir. illum. at $Q$!</p>
+<p>​    $Q$ 也反射光到 $P$！反射了多少？$Q$ 处的方向光！</p>
+<hr>
+<p>shade(p, wo)</p>
+<p>​    Randomly choose N directions wi~pdf</p>
+<p>​    Lo = 0.0</p>
+<p>​    For each wi</p>
+<p>​        Trace a ray r(p, wi)</p>
+<p>​        If ray r hit the light</p>
+<p>​            Lo += (1 / N) <em> L_i </em> f_r * cosine / pdf(wi)</p>
+<p>​        Else If ray r hit an object at q</p>
+<p>​            Lo += (1 / N) <em> shade(q, -wi) </em> f_r * cosine  / pdf(wi)</p>
+<p>​    Return Lo</p>
+<hr>
+<p><strong>Path Tracing</strong></p>
+<p>​    路径追踪</p>
+<p><strong>Problem 1</strong>: Explosion of #rays as #bounces go up:</p>
+<p><img src="/images/loading.webp" data-original="16.8.png" alt="png"></p>
+<p>​    光线经过几次反射，所产生的光线数量就过多了，显卡就算不过来了。</p>
+<p>From now on, we always assume that only 1 ray is traced at each shading point:</p>
+<p>​    从现在开始，我们始终假设每个着色点只追踪 1 条射线：</p>
+<hr>
+<p>shade(p, wo)</p>
+<p>​    Randomly choose <strong>ONE</strong> direction wi~pdf(w) // 不用 for 循环了</p>
+<p>​    Trace a ray r(p, wi)</p>
+<p>​    If ray r hit the light</p>
+<p>​        Return L_i <em> f_r </em> cosine / pdf(wi)</p>
+<p>​    Else If ray r hit an object at q</p>
+<p>​        Return shade(q, -wi) <em> f_r </em> cosine / pdf(wi)</p>
+<hr>
+<p>This is path tracing! (FYI, Distributed Ray Tracing if $N \ne 1$)</p>
+<p>​    这是路径追踪！ （仅供参考，如果 $N\ne 1$，则为分布式光线追踪）</p>
+<hr>
+<p><strong>Ray Generation</strong></p>
+<p>​    射线生成</p>
+<p><img src="/images/loading.webp" data-original="16.9.png" alt="png"></p>
+<p>But this will be noisy! </p>
+<p>​    但是这样会产生很多噪声！</p>
+<p>No problem, just trace more paths through each pixel and average their radiance!</p>
+<p>​    但这样会很吵！没问题，只需在每个像素上追踪更多路径并平均它们的辐射度！</p>
+<hr>
+<p>Very similar to ray casting in ray tracing</p>
+<p>​    与光线追踪中的光线投射非常相似</p>
+<hr>
+<p>ray_generation(camPos, pixel)</p>
+<p>​    Uniformly choose N sample positions within the pixel</p>
+<p>​    pixel_radiance = 0.0</p>
+<p>​    For each sample in the pixel</p>
+<p>​        Shoot a ray r(camPos, cam_to_sample)</p>
+<p>​        If ray r hit the scene at p</p>
+<p>​            pixel_radiance += 1 / N <em> <em>*shade(p, sample_to_cam)</em></em></p>
+<p>​    Return pixel_radiance</p>
+<hr>
+<p>Now are we good? Any other problems in shade()?</p>
+<hr>
+<p><strong>shade</strong>(p, wo)</p>
+<p>​    Randomly choose ONE direction wi~pdf(w)</p>
+<p>​    Trace a ray r(p, wi)</p>
+<p>​    If ray r hit the light</p>
+<p>​        Return L_i <em> f_r </em> cosine / pdf(wi)</p>
+<p>​    Else If ray r hit an object at q</p>
+<p>​        Return <strong>shade</strong>(q, -wi) <em> f_r </em> cosine / pdf(wi)</p>
+<hr>
+<p><strong>Problem 2</strong>: The recursive algorithm will never stop! 递归算法，无限递归！</p>
+<hr>
+<p>​    如果人为限定光线反弹次数：</p>
+<p>Dilemma: the light does not stop bouncing indeed! </p>
+<p>​    困境：光线确实不会停止反弹！</p>
+<p>Cutting #bounces == cutting energy!</p>
+<p>​    减少反弹 == 减少能量！</p>
+<p><img src="/images/loading.webp" data-original="16.10.png" alt="png"></p>
+<p><img src="/images/loading.webp" data-original="16.11.png" alt="png"></p>
+<p>​    如此做，3 bounces 和 17 bounces 的亮度是不一样的。</p>
+<hr>
+<p><strong>Solution: Russian Roulette (RR)</strong></p>
+<p>​    解决方案：俄罗斯轮盘赌（RR）</p>
+<p>Russian Roulette is all about probability</p>
+<p>​    俄罗斯轮盘赌完全是概率游戏</p>
+<p>With probability $0 &lt; P &lt; 1$, you are fine</p>
+<p>​    概率 $0 &lt; P &lt; 1$，则没问题</p>
+<p>With probability $1 - P$, otherwise</p>
+<p>​    概率 $1 - P$，另外情况</p>
+<p><img src="/images/loading.webp" data-original="16.12.png" alt="png"></p>
+<p>Previously, we always shoot a ray at a shading point and get the shading result $L_o$</p>
+<p>​    以前，我们总是向着色点发射射线并得到着色结果 $L_o$</p>
+<p>Suppose we manually set a probability $P (0 &lt; P &lt; 1)$ </p>
+<p>​    假设我们手动设置一个概率 $P (0 &lt; P &lt; 1)$</p>
+<p>With probability $P$, shoot a ray and return the shading result divided by $P$: $L_o / P$</p>
+<p>​    以概率 $P$，发射一条射线并返回除以 $P$ 的着色结果：$L_o / P$</p>
+<p>With probability $1-P$, don&#39; t shoot a ray and you&#39; ll get $0$</p>
+<p>​    以概率 $1-P$，不发射射线，您将得到 $0$</p>
+<p>In this way, you can still expect to get $L_o$! : </p>
+<p>​    这样，您仍然可以期望得到 $L_o$！：</p>
+<p>$E = P <em> (L_o / P) + (1 - P) </em> 0 = L_o$</p>
+<hr>
+<p><strong>shade</strong>(p, wo)</p>
+<p>​    <span style="color: red;">Manually specify a probability P_RR</span></p>
+<p>​    <span style="color: red;">Randomly select ksi in a uniform dist. in [0, 1]</span></p>
+<p>​    <span style="color: red;">If (ksi &gt; P_RR) return 0.0;</span></p>
+<p>​    Randomly choose ONE direction wi~pdf(w)</p>
+<p>​    Trace a ray r(p, wi)</p>
+<p>​    If ray r hit the light</p>
+<p>​        Return L_i <em> f_r </em> cosine / pdf(wi) <span style="color: red;">/ P_RR</span></p>
+<p>​    Else If ray r hit an object at q</p>
+<p>​        Return shade(q, -wi) <em> f_r </em> cosine / pdf(wi) <span style="color: red;">/ P_RR</span></p>
+<hr>
+<p>Now we already have a correct version of path tracing! </p>
+<p>​    现在我们已经有了正确版本的路径追踪！</p>
+<p>But it&#39; s not really efficient.</p>
+<p>​    但它并不是很高效。</p>
+<p><img src="/images/loading.webp" data-original="16.13.png" alt="png"></p>
+<hr>
+<p><strong>Sampling the Light</strong></p>
+<p>​    光采样</p>
+<p>Understanding the reason of being inefficient</p>
+<p>​    了解效率低下的原因</p>
+<p><img src="/images/loading.webp" data-original="16.14.png" alt="png"></p>
+<p>there will be 1 ray hitting the light. So a lot of rays are &quot;wasted&quot;  if we uniformly sample the hemisphere at the shading point.</p>
+<p>​    会有 1 条射线击中光源。因此，如果我们在着色点处均匀采样半球，则很多射线都会被“浪费”。</p>
+<hr>
+<p><strong>Sampling the Light (pure math)</strong></p>
+<p>​    光采样（纯数学）</p>
+<p><img src="/images/loading.webp" data-original="16.15.png" alt="png"></p>
+<p>Monte Carlo methods allows any sampling methods, so we can sample the light (therefore no rays are “wasted”)</p>
+<p>​    蒙特卡罗方法允许任何采样方法，因此我们可以对光进行采样（因此不会“浪费”任何光线）</p>
+<p>Assume uniformly sampling on the light: </p>
+<p>​    假设对光进行均匀采样：</p>
+<p>$\text{pdf} = 1 / A (\text{because} \int\text{pdf d}A = 1)$ </p>
+<p>But the rendering equation integrates on the solid angle 但渲染方程在立体角上积分: $L_o = \int L_i fr \cos d\omega$. </p>
+<p>Recall Monte Carlo Integration</p>
+<p>​    回想一下蒙特卡罗积分: </p>
+<p>Sample on $x$ &amp; integrate on $x$</p>
+<p>​    在 $x$ 上采样并在 $x$ 上积分</p>
+<p>Since we sample on the light, can we integrate on the light?</p>
+<p>​    由于我们在光上采样，我们可以在光上积分吗？</p>
+<p>Need to make the rendering equation as an integral of $\text dA$ </p>
+<p>​    需要将渲染方程作为 $\text dA$ 的积分</p>
+<p>Need the relationship between $\text d\omega$ and $\text dA$</p>
+<p>​    需要 $\text d\omega$ 和 $\text d A$ 之间的关系</p>
+<p>Easy! Recall the alternative def. of solid angle: </p>
+<p>​    简单！回想一下立体角的另一种定义：</p>
+<p>Projected area on the unit sphere</p>
+<p>​    单位球面上的投影面积</p>
+<script type="math/tex; mode=display">d\omega=\frac{dA\cos\theta^{\prime}}{\|x^{\prime}-x\|^2}</script><p>Then we can rewrite the rendering equation as</p>
+<p>​    然后我们可以将渲染方程重写为</p>
+<script type="math/tex; mode=display">\begin{aligned}
+L_o(x,\omega_o)& \begin{aligned}=\int_{\Omega^+}L_i(x,\omega_i)f_r(x,\omega_i,\omega_o)\cos\theta\mathrm d\omega_i\end{aligned}  \\
+&\begin{aligned}&=\int_AL_i(x,\omega_i)f_r(x,\omega_i,\omega_o)\frac{\cos\theta\cos\theta'}{\|x'-x\|^2}\mathrm dA\end{aligned}
+\end{aligned}</script><p>Now an integration on the light! </p>
+<p>​    现在对光进行积分！</p>
+<p>Monte Carlo integration:  </p>
+<p>​    蒙特卡洛积分：</p>
+<p>“$f(x)$”: everything inside 里面的一切</p>
+<p>$\text{Pdf}: 1 / A$</p>
+<p><img src="/images/loading.webp" data-original="16.16.png" alt="png"></p>
+<p>Previously, we assume the light is “accidentally” shot by uniform hemisphere sampling </p>
+<p>​    之前，我们假设光线是“意外地”通过均匀半球采样射出的</p>
+<p>Now we consider the radiance coming from two parts: </p>
+<p>​    现在我们考虑来自两部分的辐射：</p>
+<ol>
+<li><p>light source (direct, no need to have RR) </p>
+<p>光源（直接，不需要 RR）</p>
+</li>
+<li><p>other reflectors (indirect, RR)</p>
+<p>其他反射器（间接，RR）</p>
+</li>
+</ol>
+<hr>
+<p><strong>shade</strong>(p, wo)</p>
+<p>​    # Contribution from the light source.</p>
+<p>​    <strong>Uniformly</strong> sample the light at x’ (pdf_light = 1 / A)</p>
+<p>​    L_dir = L_i <em> f_r </em> cos θ * cos θ’ / |x’ - p|^2 / pdf_light </p>
+<p>​    # Contribution from other reflectors.</p>
+<p>​    L_indir = 0.0</p>
+<p>​    Test Russian Roulette with probability P_RR</p>
+<p>​    <strong>Uniformly</strong> sample the hemisphere toward wi (pdf_hemi = 1 / 2pi)</p>
+<p>​    Trace a ray r(p, wi)</p>
+<p>​    If ray r hit a <strong>non-emitting</strong> object at q</p>
+<p>​        L_indir = shade(q, -wi) <em> f_r </em> cos θ / pdf_hemi / P_RR</p>
+<p>​    Return L_dir + L_indir</p>
+<hr>
+<p>One final thing: how do we know if the sample on the light is  not blocked or not? </p>
+<p>​    最后一件事：我们如何知道光上的样本是否被遮挡？</p>
+<p><img src="/images/loading.webp" data-original="16.17.png" alt="png"></p>
+<hr>
+<p># Contribution from the light source.</p>
+<p>L_dir = 0.0</p>
+<p>Uniformly sample the light at x&#39; (pdf_light = 1 / A)</p>
+<p>Shoot a ray from p to x&#39;</p>
+<p>If the ray is not blocked <strong>in the middle</strong></p>
+<p>​    L_dir = …</p>
+<hr>
+<p>Now path tracing is finally done!</p>
+<hr>
+<p><strong>Some Side Notes</strong></p>
+<p>​    一些补充说明</p>
+<ul>
+<li><p>Path tracing (PT) is indeed difficult</p>
+<p>路径追踪 (PT) 确实很难</p>
+<ul>
+<li><p>Consider it the most challenging in undergrad CS</p>
+<p>认为它是本科计算机科学中最具挑战性的</p>
+</li>
+<li><p>Why: physics, probability, calculus, coding</p>
+<p>原因：物理、概率、微积分、编码</p>
+</li>
+<li><p>Learning PT will help you understand deeper in these</p>
+<p>学习 PT 将帮助您更深入地理解这些</p>
+</li>
+</ul>
+</li>
+<li><p>Is it still “Introductory”? </p>
+<p>它仍然是“入门级”吗？</p>
+<ul>
+<li><p>Not really, but it’s “modern&quot; :) </p>
+<p>不是，但它是“现代” :)</p>
+</li>
+<li><p>And so learning it will be rewarding also because …</p>
+<p>因此学习它也会很有价值，因为……</p>
+</li>
+</ul>
+</li>
+</ul>
+<hr>
+<p><strong>Is Path Tracing Correct?</strong></p>
+<p>​    Yes, almost 100% correct, a.k.a. PHOTO-REALISTIC</p>
+<p>​    是的，几乎 100% 正确，又名照片级真实感</p>
+<p><img src="/images/loading.webp" data-original="16.18.png" alt="png"></p>
+<ul>
+<li><a target="_blank" rel="noopener" href="http://www.graphics.cornell.edu/online/box/compare.html">Cornell Box Comparison</a></li>
+</ul>
+<hr>
+<p><strong>Ray tracing: Previous vs. Modern Concepts</strong></p>
+<p>​    光线追踪：过去与现代概念</p>
+<ul>
+<li><p>Previous</p>
+<p>早期</p>
+<ul>
+<li><p>Ray tracing == Whitted-style ray tracing</p>
+<p>光线追踪 == Whitted 式光线追踪</p>
+</li>
+</ul>
+</li>
+<li><p>Modern (my own definition) </p>
+<p>现代（我自己的定义）</p>
+<ul>
+<li><p>The general solution of light transport, including</p>
+<p>光传输的一般解决方案，包括</p>
+</li>
+<li><p>(Unidirectional &amp; bidirectional) path tracing</p>
+<p>（单向和双向）路径追踪</p>
+</li>
+<li><p>Photon mapping</p>
+<p>光子映射</p>
+</li>
+<li><p>Metropolis light transport</p>
+<p>Metropolis 光传输</p>
+</li>
+<li><p>VCM / UPBP… </p>
+</li>
+</ul>
+</li>
+</ul>
+<hr>
+<p><strong>Things we haven&#39; t covered / won&#39; t cover</strong></p>
+<p>​    我们没有涉及/不会涉及的内容</p>
+<ul>
+<li><p>Uniformly sampling the hemisphere</p>
+<p>均匀采样半球</p>
+<ul>
+<li><p>How? And in general, how to sample any function?  (sampling) </p>
+<p>如何采样？一般来说，如何采样任何函数？ （采样） </p>
+</li>
+</ul>
+</li>
+<li><p>Monte Carlo integration allows arbitrary pdfs</p>
+<p>蒙特卡罗积分允许任意 pdf</p>
+<ul>
+<li><p>What&#39;s the best choice? (importance sampling) </p>
+<p>最佳选择是什么？ （重要性采样）</p>
+</li>
+</ul>
+</li>
+<li><p>Do random numbers matter?</p>
+<p>随机数重要吗？</p>
+<ul>
+<li><p>Yes! (low discrepancy sequences)</p>
+<p>是的！ （低差异序列）</p>
+</li>
+</ul>
+</li>
+<li><p>I can sample the hemisphere and the light</p>
+<p>我可以对半球和光线进行采样</p>
+<ul>
+<li><p>Can I combine them? Yes! (multiple imp. sampling)  </p>
+<p>我可以将它们结合起来吗？是的！（多重采样）</p>
+</li>
+</ul>
+</li>
+<li><p>The radiance of a pixel is the average of radiance on all<br> paths passing through it</p>
+<p>像素的辐射度是通过它的所有路径的辐射度的平均值</p>
+<ul>
+<li><p>Why? (pixel reconstruction filter)  </p>
+<p>为什么？（像素重建滤波器）</p>
+</li>
+</ul>
+</li>
+<li><p>Is the radiance of a pixel the color of a pixel? </p>
+<p>像素的辐射度是像素的颜色吗？</p>
+<ul>
+<li><p>No. (gamma correction, curves, color space) </p>
+<p>不是。（伽马校正、曲线、色彩空间）</p>
+</li>
+</ul>
+</li>
+<li><p>Asking again, is path tracing still “Introductory”? </p>
+<p>再次询问，路径追踪仍然是“入门级”吗？</p>
+<ul>
+<li><p>This time, yes. Fear the science, my friends.</p>
+<p>这次是的。朋友们，敬畏科学吧。</p>
+</li>
+</ul>
+</li>
+</ul>
 
         
     
