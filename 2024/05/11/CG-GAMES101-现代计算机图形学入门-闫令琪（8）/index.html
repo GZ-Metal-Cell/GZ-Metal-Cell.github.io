@@ -899,6 +899,335 @@
 <p>​    《阿凡达》就是用面部动作捕捉拍的。</p>
 <h3 id="The-Production-Pipeline"><a href="#The-Production-Pipeline" class="headerlink" title="The Production Pipeline"></a>The Production Pipeline</h3><p><img src="/images/loading.webp" data-original="21.37.png" alt="png"></p>
 <p>​    动画制作流程。</p>
+<h2 id="Lecture-22-Animation-cont"><a href="#Lecture-22-Animation-cont" class="headerlink" title="Lecture 22: Animation (cont.)"></a>Lecture 22: Animation (cont.)</h2><p><strong>Single Particle Simulation</strong></p>
+<p><img src="/images/loading.webp" data-original="22.1.png" alt="png"></p>
+<p>First study motion of a single particle</p>
+<p>​    首次研究单个粒子的运动</p>
+<ul>
+<li><p>Later, generalize to a multitude of particles</p>
+<p>随后，推广到多个粒子</p>
+</li>
+</ul>
+<p>To start, assume motion of particle determined by a velocity vector field that is a function of position and time:</p>
+<p>​    首先，假设粒子的运动由速度矢量场确定，速度矢量场是位置和时间的函数：</p>
+<script type="math/tex; mode=display">v(x,t)</script><p>​    粒子所处的位置决定了它的速度。</p>
+<hr>
+<p><strong>Ordinary Differential Equation (ODE)</strong></p>
+<p>​    常微分方程 (ODE)</p>
+<p>Computing position of particle over time requires solving a firstorder ordinary differential equation:</p>
+<p>​    计算粒子随时间的位置需要求解一阶常微分方程：</p>
+<script type="math/tex; mode=display">\frac{dx}{dt}=\dot{x}=v(x,t)</script><p>&quot;First-order&quot; refers to the first derivative being taken.</p>
+<p>​    “一阶”是指所取的一阶导数。</p>
+<p>&quot;Ordinary&quot; means no &quot;partial&quot; derivatives, i.e. $x$ is just a function of $t$</p>
+<p>​    “普通”意味着没有“偏”导数，即 $x$ 只是 $t$ 的函数</p>
+<p><img src="/images/loading.webp" data-original="22.2.png" alt="png"></p>
+<p>We can solve the ODE, subject to a given initial particle position $x_0$, by using forward numerical integration</p>
+<p>​    我们可以在给定初始粒子位置 $x_0$ 的情况下，通过使用前向数值积分来求解 ODE</p>
+<hr>
+<p><strong>Euler&#39; s Method</strong></p>
+<blockquote>
+<p>​    欧拉方法（Euler&#39;s Method）是一种常用的数值解微分方程的方法。它由瑞士数学家莱昂哈德·欧拉在18世纪提出，并且被广泛应用于工程、物理、计算机图形学等领域。</p>
+<p>​    欧拉方法主要用于解决常微分方程（ODE）的初值问题，即已知某个点上的初始条件，求解该点附近的微分方程的近似解。其基本思想是通过离散化的步骤逐步逼近微分方程的解。</p>
+<p>​    这里简要说明欧拉方法的步骤：</p>
+<ol>
+<li><p><strong>离散化时间</strong>：首先，我们将自变量的定义域（通常是时间）分成小的时间间隔。令 $\Delta t$ 表示时间步长。</p>
+</li>
+<li><p><strong>近似初始值</strong>：根据初始条件，确定初始值。例如，对于常微分方程 $\text dy/\text dx = f(x, y$)，我们需要初始值 $y(x_0) = y_0$，其中 $(x_0, y_0)$ 是已知的。</p>
+</li>
+<li><p><strong>迭代逼近</strong>：利用微分方程的近似线性关系，在每个时间步长上，根据当前点的斜率（即微分方程在该点处的导数值），通过线性近似来计算下一个点的值。</p>
+<p>具体地，对于欧拉方法，迭代公式如下： $[ y_{n+1} = y_n + f(x_n, y_n) \cdot \Delta t ]$</p>
+<p>其中，$( x_n = x_0 + n \cdot \Delta t )$ 是第 $n$ 个时间步长的自变量值，$( y_n )$ 是第 $n$ 个时间步长上的近似解，$( f(x_n, y_n) )$ 是微分方程在 $( (x_n, y_n) )$ 处的斜率（即导数值）。</p>
+</li>
+<li><p><strong>重复迭代</strong>：重复上述步骤，直到达到所需的时间点或满足某个终止条件。</p>
+</li>
+</ol>
+<p>​    欧拉方法的优点是简单易实现，但它的精度通常较低，特别是在处理步长较大、导数变化剧烈的情况下。因此，在实际应用中，可能需要考虑其他更高阶的数值积分方法来提高精度。</p>
+</blockquote>
+<p>Euler&#39; s Method (a.k.a. Forward Euler, Explicit Euler)</p>
+<p>​    欧拉方法（又称前向欧拉、显式欧拉）</p>
+<ul>
+<li><p>Simple iterative method</p>
+<p>简单的迭代方法</p>
+</li>
+<li><p>Commonly used</p>
+<p>常用</p>
+</li>
+<li><p>Very inaccurate</p>
+<p>很不准确</p>
+</li>
+<li><p>Most often goes unstable</p>
+<p>通常会变得不稳定</p>
+</li>
+</ul>
+<script type="math/tex; mode=display">\boldsymbol{x}^{t+\Delta t}=\boldsymbol{x}^t+\Delta t\boldsymbol{\dot{x}}^t\\\boldsymbol{\dot{x}}^{t+\Delta t}=\boldsymbol{\dot{x}}^t+\Delta t\boldsymbol{\ddot{x}}^t</script><hr>
+<p><strong>Euler&#39; s Method - Errors</strong></p>
+<p>With numerical integration, errors accumulate</p>
+<p>​    通过数值积分，误差会累积</p>
+<p>Euler integration is particularly bad</p>
+<p>​    欧拉积分特别糟糕</p>
+<p><img src="/images/loading.webp" data-original="22.3.png" alt="png"></p>
+<p><strong>Example: </strong></p>
+<script type="math/tex; mode=display">x^{t+\Delta t}=x^t+\Delta t\boldsymbol{v}(\boldsymbol{x},t)</script><hr>
+<p><strong>Instability of the Euler Method</strong></p>
+<p>The Euler method (explicit / forward)</p>
+<p>​    欧拉方法（显式/前向）</p>
+<script type="math/tex; mode=display">x^{t+\Delta t}=x^t+\Delta t\boldsymbol{v}(\boldsymbol{x},t)</script><p><img src="/images/loading.webp" data-original="22.4.png" alt="png"></p>
+<p>Two key problems:</p>
+<p>​    两个关键问题：</p>
+<ul>
+<li><p>Inaccuracies increase as time step $\Delta t$ increases</p>
+<p>误差随着时间步 $\Delta t$ 的增加而增加</p>
+</li>
+<li><p>Instability is a common, serious problem that can cause simulation to diverge</p>
+<p>不稳定是一个常见的严重问题，可能导致模拟出现偏差</p>
+</li>
+</ul>
+<hr>
+<p><strong>Errors and Instability</strong></p>
+<p>Solving by numerical integration with finite differences leads to two problems:</p>
+<p>​    通过有限差分数值积分求解会导致两个问题：</p>
+<p>Errors</p>
+<p>​    错误</p>
+<ul>
+<li><p>Errors at each time step accumulate.</p>
+<p>每个时间步的错误都会累积。</p>
+<p>Accuracy decreases as simulation proceeds</p>
+<p>随着模拟的进行，准确性会降低</p>
+</li>
+<li><p>Accuracy may not be critical in graphics applications</p>
+<p>准确性在图形应用程序中可能并不重要</p>
+</li>
+</ul>
+<p>Instability</p>
+<p>​    不稳定</p>
+<ul>
+<li><p>Errors can compound, causing the simulation to diverge even when the underlying system does not</p>
+<p>错误可能会复合，导致模拟出现偏差，即使底层系统没有出现偏差</p>
+</li>
+<li><p>Lack of stability is a fundamental problem in simulation, and cannot be ignored</p>
+<p>缺乏稳定性是仿真中的一个根本问题，不容忽视</p>
+</li>
+</ul>
+<h3 id="Combating-Instability"><a href="#Combating-Instability" class="headerlink" title="Combating Instability"></a>Combating Instability</h3><p>​    对抗不稳定</p>
+<p><strong>Some Methods to Combat Instability</strong></p>
+<p>​    应对不稳定的一些方法</p>
+<p>Midpoint method / Modified Euler</p>
+<p>​    中点法/修正欧拉法</p>
+<ul>
+<li><p>Average velocities at start and endpoint</p>
+<p>起点和终点的平均速度</p>
+</li>
+</ul>
+<p>Adaptive step size</p>
+<p>​    自适应步长</p>
+<ul>
+<li><p>Compare one step and two half-steps, recursively, until error is acceptable</p>
+<p>递归地比较一步和两个半步，直到误差可以接受</p>
+</li>
+</ul>
+<p>Implicit methods</p>
+<p>​    隐式方法</p>
+<ul>
+<li><p>Use the velocity at the next time step (hard)</p>
+<p>在下一个时间步使用速度（困难）</p>
+</li>
+</ul>
+<p>Position-based / Verlet integration</p>
+<p>​    基于位置/Verlet 集成</p>
+<ul>
+<li><p>Constrain positions and velocities of particles after time step</p>
+<p>时间步长后约束粒子的位置和速度</p>
+</li>
+</ul>
+<hr>
+<p><strong>Midpoint Method</strong></p>
+<p>​    中点法</p>
+<p><img src="/images/loading.webp" data-original="22.5.png" alt="png"></p>
+<ul>
+<li><p>Compute Euler step (a)</p>
+<p>计算欧拉步骤 (a)</p>
+</li>
+<li><p>Compute derivative at midpoint of Euler step (b)</p>
+<p>计算欧拉步骤 (b) 中点的导数</p>
+</li>
+<li><p>Update position using midpoint derivative (c)</p>
+<p>使用中点导数更新位置 (c)</p>
+</li>
+</ul>
+<script type="math/tex; mode=display">\begin{aligned}x_{\mathrm{mid}}&=x(t)+\Delta t/2\cdot v(x(t),t)\\x(t+\Delta t)&=x(t)+\Delta t\cdot v(x_{\mathrm{mid}},t)\end{aligned}</script><hr>
+<p><strong>Modified Euler</strong></p>
+<p>​    修改欧拉</p>
+<ul>
+<li><p>Average velocity at start and end of step</p>
+<p>步骤开始和结束时的平均速度</p>
+</li>
+<li><p>Better results</p>
+<p>更好的结果</p>
+</li>
+</ul>
+<script type="math/tex; mode=display">\begin{aligned}
+&\boldsymbol{x}^{t+\Delta t}=\boldsymbol{x}^t+\frac{\Delta t}{2}(\dot{\boldsymbol{x}}^t+\dot{\boldsymbol{x}}^{t+\Delta t}) \\
+&\dot{\boldsymbol{x}}^{t+\Delta t}=\dot{\boldsymbol{x}}^t+\Delta t\ddot{\boldsymbol{x}}^t \\
+&\boldsymbol{x}^{t+\Delta t}=\boldsymbol{x}^t+\Delta t\dot{\boldsymbol{x}}^t+\frac{(\Delta t)^2}{2}\ddot{\boldsymbol{x}}^t
+\end{aligned}</script><hr>
+<p><strong>Adaptive Step Size</strong></p>
+<p><img src="/images/loading.webp" data-original="22.6.png" alt="png"></p>
+<ul>
+<li><p>Technique for choosing step size based on error estimate</p>
+<p>基于误差估计选择步长的技术</p>
+</li>
+<li><p>Very practical technique</p>
+<p>非常实用的技术</p>
+</li>
+<li><p>But may need very small steps!</p>
+<p>但可能需要非常小的步骤！</p>
+</li>
+</ul>
+<p>Repeat until error is below threshold:</p>
+<p>​    重复直到误差低于阈值：</p>
+<ul>
+<li><p>Compute $x_T$ an Euler step, size $T$</p>
+<p>计算 $x_T$ 欧拉步，大小 $T$</p>
+</li>
+<li><p>Compute $x_T/2$ two Euler steps, size $T/2$</p>
+<p>计算 $x_T/2$ 两个欧拉步，大小 $T/2$</p>
+</li>
+<li><p>Compute error $|| x_T – x_{T/2} ||$</p>
+<p>计算错误 $|| x_T – x_{T/2} ||$</p>
+</li>
+<li><p>If (error &gt; threshold) reduce step size and try again</p>
+<p>如果（错误&gt;阈值）减小步长并重试</p>
+</li>
+</ul>
+<hr>
+<p><strong>Implicit Euler Method</strong></p>
+<p>​    隐式欧拉法</p>
+<ul>
+<li><p>Informally called backward methods</p>
+<p>非正式地称为后向方法</p>
+</li>
+<li><p>Use derivatives in the future, for the current step</p>
+<p>在未来使用衍生品，用于当前步骤</p>
+</li>
+</ul>
+<script type="math/tex; mode=display">\boldsymbol{x}^{t+\Delta t}=\boldsymbol{x}^t+\Delta t\boldsymbol{\dot{x}}^{t+\Delta t}\\\boldsymbol{\dot{x}}^{t+\Delta t}=\boldsymbol{\dot{x}}^t+\Delta t\boldsymbol{\ddot{x}}^{t+\Delta t}</script><ul>
+<li><p>Solve nonlinear problem for $\boldsymbol{x}^{t+\Delta t}$ and $\boldsymbol{\dot{x}}^{t+\Delta t}$</p>
+<p>求解 $\boldsymbol{x}^{t+\Delta t}$ 和 $\boldsymbol{\dot{x}}^{t+\Delta t}$ 的非线性问题</p>
+</li>
+<li><p>Use root-finding algorithm, e.g. Newton&#39; s method</p>
+<p>使用寻根算法，例如 牛顿法</p>
+</li>
+<li><p>Offers much better stability</p>
+<p>提供更好的稳定性</p>
+</li>
+</ul>
+<p>How to determine / quantize &quot;stability&quot;?</p>
+<p>​    如何确定/量化“稳定性”？</p>
+<ul>
+<li><p>We use the local truncation error (every step) / total accumulated error (overall)</p>
+<p>我们使用局部截断误差（每一步）/总累积误差（总体）</p>
+</li>
+<li><p>Absolute values do not matter, but the orders w.r.t. step</p>
+<p>绝对值并不重要，但顺序是重要的。</p>
+</li>
+<li><p>Implicit Euler has order $1$, which means that</p>
+<p>隐式欧拉的阶数为 $1$，这意味着</p>
+<ul>
+<li><p>Local truncation error: $O(h^2)$ and</p>
+<p>局部截断错误：$O(h^2)$ 和</p>
+</li>
+<li><p>Global truncation error: $O(h)$ ($h$ is the step, i.e. $\Delta t$)</p>
+<p>全局截断错误：$O(h)$（$h$ 是步长，即 $\Delta t$）</p>
+</li>
+</ul>
+</li>
+<li><p>Understanding of $O(h)$</p>
+<p>对$ O(h)$ 的理解</p>
+</li>
+<li><p>If we halve $h$, we can expect the error to halve as well</p>
+<p>如果我们将 $h$ 减半，我们可以预期误差也会减半</p>
+</li>
+</ul>
+<hr>
+<p><strong>Runge-Kutta Families</strong></p>
+<p>A family of advanced methods for solving ODEs</p>
+<p>​    一系列求解 ODE 的高级方法</p>
+<ul>
+<li><p>Especially good at dealing with non-linearity</p>
+<p>特别擅长处理非线性</p>
+</li>
+<li><p>It&#39; s order-four version is the most widely used, a.k.a. RK4</p>
+<p>它的四阶版本是使用最广泛的，又名 RK4</p>
+</li>
+</ul>
+<p>Initial condition:</p>
+<script type="math/tex; mode=display">\frac{dy}{dt}=f(t,y),\quad y(t_0)=y_0.</script><p>RK4 solution:</p>
+<script type="math/tex; mode=display">\begin{aligned}&y_{n+1}=y_n+\frac16h\left(k_1+2k_2+2k_3+k_4\right),\\&t_{n+1}=t_n+h\end{aligned}</script><p>where</p>
+<script type="math/tex; mode=display">\begin{aligned}k_1=&f(t_n,y_n),&k_3&=f\left(t_n+\frac h2,y_n+h\frac{k_2}2\right),\\k_2=&f\left(t_n+\frac h2,y_n+h\frac{k_1}2\right),&k_4=&f\left(t_n+h,y_n+hk_3\right).\end{aligned}</script><hr>
+<p><strong>Position-Based / Verlet Integration</strong></p>
+<p>​    基于位置/Verlet 集成</p>
+<p>Idea:</p>
+<p>​    主意：</p>
+<ul>
+<li><p>After modified Euler forward-step, constrain positions of particles to prevent divergent, unstable behavior</p>
+<p>修改欧拉前步后，约束粒子的位置以防止发散、不稳定的行为</p>
+</li>
+<li><p>Use constrained positions to calculate velocity</p>
+<p>使用约束位置来计算速度</p>
+</li>
+<li><p>Both of these ideas will dissipate energy, stabilize</p>
+<p>这两种想法都会消耗能量，稳定</p>
+</li>
+</ul>
+<p>Pros / cons</p>
+<p>​    优点缺点</p>
+<ul>
+<li><p>Fast and simple</p>
+<p>快速且简单</p>
+</li>
+<li><p>Not physically based, dissipates energy (error)</p>
+<p>不基于物理，消耗能量（错误）</p>
+</li>
+</ul>
+<hr>
+<p><strong>Rigid Body Simulation</strong></p>
+<p>​    刚体模拟</p>
+<p>Simple case</p>
+<p>​    简单案例</p>
+<ul>
+<li><p>Similar to simulating a particle</p>
+<p>类似于模拟粒子</p>
+</li>
+<li><p>Just consider a bit more properties</p>
+<p>只需考虑更多属性</p>
+</li>
+</ul>
+<script type="math/tex; mode=display">\frac{d}{dt}\left(\begin{array}{c}\mathrm{X}\\\theta\\\mathrm{\dot{X}}\\\omega\end{array}\right)=\left(\begin{array}{c}\mathrm{\dot{X}}\\\omega\\\mathrm{F}/M\\\Gamma/I\end{array}\right)</script><ul>
+<li><p>$X$:</p>
+<p>positions</p>
+<p>位置</p>
+</li>
+<li><p>$\theta$:</p>
+<p>rotation angle</p>
+<p>旋转角度</p>
+</li>
+<li><p>$\omega$:</p>
+<p>angular velocity</p>
+<p>角速度</p>
+</li>
+<li><p>$F$:</p>
+<p>forces</p>
+<p>力</p>
+</li>
+<li><p>$\Gamma$:</p>
+<p>torque</p>
+<p>扭矩</p>
+</li>
+<li><p>$I$:</p>
+<p>momentum of inertia</p>
+<p>惯性动量</p>
+</li>
+</ul>
 
         
     
