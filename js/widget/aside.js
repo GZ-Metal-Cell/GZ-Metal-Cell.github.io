@@ -39,11 +39,11 @@ function hbeShowAsideButton() {
 
 function createToc() {
     var toc = $('<ol>').addClass('toc');
-    var headings = $('.post-content').find('h1, h2, h3, h4, h5, h6');
+    var headings = $('.post-content').find(headerString);
     var currentLevel = 1;
     var currentParent = toc;
 
-    headings.each(function(index, heading) {
+    headings.each(function (index, heading) {
         if (/^[0-9]/.test($(heading).attr('id'))) {
             $(heading).attr('id', '_' + $(heading).attr('id'));
         }
@@ -51,7 +51,7 @@ function createToc() {
             return;
 
         var level = parseInt(heading.tagName.charAt(1));
-        
+
         // 创建列表项和链接
         var li = $('<li>').addClass('toc-item toc-level-' + level);
         var a = $('<a>').addClass('toc-link').attr('href', '#' + heading.id);
@@ -105,7 +105,7 @@ function onShowAsideButton() {
 }
 
 function getTopHeadingId() {
-    const headings = document.querySelector('.post-content-info').querySelectorAll('h1, h2, h3, h4, h5, h6');
+    const headings = document.querySelector('.post-content-info').querySelectorAll(headerString);
     let topHeadingId = null;
     let minDistanceFromTop = Infinity;
     for (const heading of headings) {
