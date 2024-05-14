@@ -1,11 +1,12 @@
-function initAside() {
-    hbeToc();
-    createToc();
-    activeTocItem();
-    hbeShowAsideButton();
-    document.addEventListener("scroll", function (event) {
+function initToc() {
+    if (typeof headerString !== 'undefined') {
+        hbeToc();
+        createToc();
         activeTocItem();
-    });
+        document.addEventListener("scroll", function (event) {
+            activeTocItem();
+        });
+    }
 }
 
 function showAside() {
@@ -15,25 +16,15 @@ function showAside() {
         value = true;
     }
     if (localStorage.getItem('aside-status') === "false") {
-        $(".post-content").addClass("close-aside");
+        $("main").addClass("close-aside");
     }
 }
 
 function hbeToc() {
     if ($('.hbe-content').length > 0) {
-        $('.post-content').addClass('hbe-toc');
+        $('main').addClass('hbe-toc');
     } else {
-        $('.post-content').removeClass('hbe-toc');
-    }
-}
-
-function hbeShowAsideButton() {
-    if ($('#js-aside').length > 0) {
-        if ($('.hbe-content').length > 0) {
-            $('#js-aside').addClass('hbe-toc');
-        } else {
-            $('#js-aside').removeClass('hbe-toc');
-        }
+        $('main').removeClass('hbe-toc');
     }
 }
 
@@ -94,10 +85,10 @@ function createToc() {
 
 
 function onShowAsideButton() {
-    document.querySelector('.post-content').classList.toggle('close-aside');
+    document.querySelector('main').classList.toggle('close-aside');
 
     var value = localStorage.getItem('aside-status');
-    if (value === "false") {
+    if (value === "false" && typeof headerString !== 'undefined') {
         activeTocItem();
         activeSeriesItem();
     }
@@ -105,7 +96,7 @@ function onShowAsideButton() {
 }
 
 function getTopHeadingId() {
-    const headings = document.querySelector('.post-content-info').querySelectorAll(headerString);
+    const headings = document.querySelector('article').querySelectorAll(headerString);
     let topHeadingId = null;
     let minDistanceFromTop = Infinity;
     for (const heading of headings) {
