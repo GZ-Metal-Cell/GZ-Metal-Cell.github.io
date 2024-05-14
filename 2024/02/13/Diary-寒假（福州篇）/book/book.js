@@ -1,4 +1,4 @@
-const $headings = $('.post-content').find('h1, h2, h3, h4, h5, h6');
+const $headings = $('article').find('h1, h2, h3, h4, h5, h6');
 var topHeadingId = null;
 var pages = {};
 var $book = $('#book');
