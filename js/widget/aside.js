@@ -29,10 +29,8 @@ function hbeToc() {
 }
 
 function createToc() {
-    var toc = $('<ol>').addClass('toc');
-    var headings = $('.post-content').find(headerString);
-    var currentLevel = 1;
-    var currentParent = toc;
+    var toc = $('<ol>').addClass('aside-bottom-toc-content');
+    var headings = $('article').find(headerString);
 
     headings.each(function (index, heading) {
         if (/^[0-9]/.test($(heading).attr('id'))) {
@@ -63,24 +61,13 @@ function createToc() {
 
         li.append(a);
 
-        // 确定父级
-        if (level > currentLevel) {
-            var parentList = $('<ol>').addClass('toc-child');
-            currentParent.find('li:last').append(parentList);
-            currentParent = parentList;
-        } else if (level < currentLevel) {
-            for (var i = level; i < currentLevel; i++) {
-                currentParent = currentParent.parent().parent();
-            }
-        }
-
         // 将列表项添加到父级
-        currentParent.append(li);
+        toc.append(li);
 
         currentLevel = level;
     });
 
-    $('.toc').replaceWith(toc); // 将原来的目录替换为新的目录
+    $('.aside-bottom-toc-content').replaceWith(toc); // 将原来的目录替换为新的目录
 }
 
 
@@ -120,7 +107,7 @@ function activeTocItem() {
         if (href == topHeadingId) {
             if (!link.classList.contains('active')) {
                 link.parentNode.classList.add("active");
-                var toc = document.querySelector(".toc");
+                var toc = document.querySelector(".aside-bottom-toc-content");
                 var activeItem = toc.querySelector(".active");
                 if (activeItem) {
                     toc.scrollTo({
