@@ -468,34 +468,52 @@
 <div class="tabs" id="course4"><div class="nav-tabs"><button type="button" class="tab  active" data-href="course4-1">LineCollision</button><button type="button" class="tab " data-href="course4-2">LineController</button></div><div class="tab-contents"><div class="tab-item-content active" id="course4-1"><figure class="highlight c#"><table><tr><td class="code"><pre><code class="hljs C#"><span class="hljs-keyword">using</span> System.Collections;<br><span class="hljs-keyword">using</span> System.Collections.Generic;<br><span class="hljs-keyword">using</span> System.Linq;<br><span class="hljs-keyword">using</span> UnityEngine;<br><br>[<span class="hljs-meta">RequireComponent(typeof(LineController), typeof(PolygonCollider2D))</span>]<br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">LineCollision</span> : <span class="hljs-title">MonoBehaviour</span> &#123;<br><br>    LineController lineController;<br>    PolygonCollider2D polygonCollider;<br><br>    <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Awake</span>()</span> &#123;<br>        lineController = GetComponent&lt;LineController&gt;();<br>        polygonCollider = GetComponent&lt;PolygonCollider2D&gt;();<br>    &#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">LateUpdate</span>()</span> &#123; <br><br>        <span class="hljs-comment">//Get all the positions from the line renderer</span><br>        Vector3[] positions = lineController.GetPositions();<br><br>        <span class="hljs-comment">//If we have enough points to draw a line</span><br>        <span class="hljs-keyword">if</span> (positions.Count() &gt;= <span class="hljs-number">2</span>) &#123;<br><br>            <span class="hljs-comment">//Get the number of line between two points</span><br>            <span class="hljs-built_in">int</span> numberOfLines = positions.Length - <span class="hljs-number">1</span>;<br><br>            <span class="hljs-comment">//Make as many paths for each different line as we have lines</span><br>            polygonCollider.pathCount = numberOfLines;<br><br>            <span class="hljs-comment">//Get Collider points between two consecutive points</span><br>            <span class="hljs-keyword">for</span> (<span class="hljs-built_in">int</span> i = <span class="hljs-number">0</span>; i &lt; numberOfLines; i++) &#123;<br>                <span class="hljs-comment">//Get the two next points</span><br>                List&lt;Vector2&gt; currentPositions = <span class="hljs-keyword">new</span> List&lt;Vector2&gt; &#123;<br>                    positions[i],<br>                    positions[i+<span class="hljs-number">1</span>]<br>                &#125;;<br><br>                List&lt;Vector2&gt; currentColliderPoints = CalculateColliderPoints(currentPositions);<br>                polygonCollider.SetPath(i, currentColliderPoints.ConvertAll(p =&gt; (Vector2)transform.InverseTransformPoint(p)));<br>            &#125;<br>        &#125;<br>        <span class="hljs-keyword">else</span> &#123;<br><br>            polygonCollider.pathCount = <span class="hljs-number">0</span>;<br>        &#125;<br>    &#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">private</span> List&lt;Vector2&gt; <span class="hljs-title">CalculateColliderPoints</span>(<span class="hljs-params">List&lt;Vector2&gt; positions</span>)</span> &#123;<br>        <span class="hljs-comment">//Get The Width of the Line</span><br>        <span class="hljs-built_in">float</span> width = lineController.GetWidth();<br><br>        <span class="hljs-comment">// m = (y2 - y1) / (x2 - x1)</span><br>        <span class="hljs-built_in">float</span> m = (positions[<span class="hljs-number">1</span>].y - positions[<span class="hljs-number">0</span>].y) / (positions[<span class="hljs-number">1</span>].x - positions[<span class="hljs-number">0</span>].x);<br>        <span class="hljs-built_in">float</span> deltaX = (width / <span class="hljs-number">2f</span>) * (m / Mathf.Pow(m * m + <span class="hljs-number">1</span>, <span class="hljs-number">0.5f</span>));<br>        <span class="hljs-built_in">float</span> deltaY = (width / <span class="hljs-number">2f</span>) * (<span class="hljs-number">1</span> / Mathf.Pow(<span class="hljs-number">1</span> + m * m, <span class="hljs-number">0.5f</span>));<br><br>        <span class="hljs-comment">//Calculate Vertex Offset from Line Point</span><br>        Vector2[] offsets = <span class="hljs-keyword">new</span> Vector2[<span class="hljs-number">2</span>];<br>        offsets[<span class="hljs-number">0</span>] = <span class="hljs-keyword">new</span> Vector2(-deltaX, deltaY);<br>        offsets[<span class="hljs-number">1</span>] = <span class="hljs-keyword">new</span> Vector2(deltaX, -deltaY);<br><br>        List&lt;Vector2&gt; colliderPoints = <span class="hljs-keyword">new</span> List&lt;Vector2&gt; &#123;<br>            positions[<span class="hljs-number">0</span>] + offsets[<span class="hljs-number">0</span>],<br>            positions[<span class="hljs-number">1</span>] + offsets[<span class="hljs-number">0</span>],<br>            positions[<span class="hljs-number">1</span>] + offsets[<span class="hljs-number">1</span>],<br>            positions[<span class="hljs-number">0</span>] + offsets[<span class="hljs-number">1</span>]<br>        &#125;;<br><br>        <span class="hljs-keyword">return</span> colliderPoints;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure></div><div class="tab-item-content" id="course4-2"><figure class="highlight c#"><table><tr><td class="code"><pre><code class="hljs c#"><span class="hljs-keyword">using</span> System.Collections;<br><span class="hljs-keyword">using</span> System.Collections.Generic;<br><span class="hljs-keyword">using</span> UnityEngine;<br><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">LineController</span> : <span class="hljs-title">MonoBehaviour</span><br>&#123;<br>    <span class="hljs-keyword">private</span> LineRenderer lr;<br>    <span class="hljs-keyword">private</span> List&lt;DotController&gt; dots;<br><br>    <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Awake</span>()</span> &#123;<br>        lr = GetComponent&lt;LineRenderer&gt;();<br>        lr.positionCount = <span class="hljs-number">0</span>;<br><br>        dots = <span class="hljs-keyword">new</span> List&lt;DotController&gt;();<br>    &#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> DotController <span class="hljs-title">GetFirstPoint</span>()</span> &#123;<br>        <span class="hljs-keyword">return</span> dots[<span class="hljs-number">0</span>];<br>    &#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">AddDot</span>(<span class="hljs-params">DotController dot</span>)</span> &#123;<br><br>        dot.SetLine(<span class="hljs-keyword">this</span>);<br>        dot.SetIndex(dots.Count);<br><br>        lr.positionCount++;<br>        dots.Add(dot);<br>    &#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">SplitPointsAtIndex</span>(<span class="hljs-params"><span class="hljs-built_in">int</span> index, <span class="hljs-keyword">out</span> List&lt;DotController&gt; beforePoints, <span class="hljs-keyword">out</span> List&lt;DotController&gt; afterPoints</span>)</span> &#123;<br>        List&lt;DotController&gt; before = <span class="hljs-keyword">new</span> List&lt;DotController&gt;();<br>        List&lt;DotController&gt; after = <span class="hljs-keyword">new</span> List&lt;DotController&gt;();<br><br>        <span class="hljs-built_in">int</span> i = <span class="hljs-number">0</span>;<br>        <span class="hljs-keyword">for</span> (; i &lt; index; i++) &#123;<br>            before.Add(dots[i]);<br>        &#125;<br>        i++;<br>        <span class="hljs-keyword">for</span> (; i &lt; dots.Count; i++) &#123;<br>            after.Add(dots[i]);<br>        &#125;<br><br>        beforePoints = before;<br>        afterPoints = after;<br><br>        dots.RemoveAt(index);<br>    &#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">SetColor</span>(<span class="hljs-params">Color color</span>)</span> &#123;<br>        lr.startColor = color;<br>        lr.endColor = color;<br>    &#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">ToggleLoop</span>()</span> &#123;<br>        lr.loop = !lr.loop;<br>    &#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-built_in">bool</span> <span class="hljs-title">isLooped</span>()</span> &#123;<br>        <span class="hljs-keyword">return</span> lr.loop;<br>    &#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">LateUpdate</span>()</span> &#123;<br>        <span class="hljs-keyword">if</span> (dots.Count &gt;= <span class="hljs-number">2</span>) &#123;<br>            <span class="hljs-keyword">for</span> (<span class="hljs-built_in">int</span> i = <span class="hljs-number">0</span>; i &lt; dots.Count; i++) &#123;<br>                Vector3 position = dots[i].transform.position;<br>                position += <span class="hljs-keyword">new</span> Vector3(<span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">5</span>);<br><br>                lr.SetPosition(i, position);<br>            &#125;<br>        &#125;<br>    &#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> Vector3[] <span class="hljs-title">GetPositions</span>()</span> &#123;<br>        Vector3[] positions = <span class="hljs-keyword">new</span> Vector3[lr.positionCount];<br>        lr.GetPositions(positions);<br>        <span class="hljs-keyword">return</span> positions;<br>    &#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-built_in">float</span> <span class="hljs-title">GetWidth</span>()</span> &#123;<br>        <span class="hljs-keyword">return</span> lr.startWidth;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure></div></div></div>
 <p>​    如此，生成线条时就会附带对应的碰撞体。</p>
 
-            
+        </article>
+        <div class="post-bottom">
+    
+        <div class="post-paging">     
+            <div class="post-paging-last">
+                
+                    <a href="/2024/03/22/Hexo-Artitalk/">
+                        上一篇：Hexo-Artitalk
+                    </a>
+                
+            </div>
+            <div class="post-paging-next">
+                
+                    <a href="/2024/03/21/Unity-XCharts/">
+                        下一篇：Unity-XCharts
+                    </a>
+                
+            </div>
+        </div>
+    
+
     
         
-<link rel="stylesheet" href="/css/third-party/giscus.css">
-
-        <div class="giscus comments"></div>
-        <script>
-            var scriptElement = document.createElement('script');
-            scriptElement.src = 'https://giscus.app/client.js';
-            scriptElement.setAttribute('data-repo', 'GZ-Metal-Cell/GZ-Metal-Cell.github.io');
-            scriptElement.setAttribute('data-repo-id', 'R_kgDOIHLEOQ');
-            scriptElement.setAttribute('data-category', 'Announcements');
-            scriptElement.setAttribute('data-category-id', 'DIC_kwDOIHLEOc4CcVwP');
-            scriptElement.setAttribute('data-mapping', 'title');
-            scriptElement.setAttribute('data-strict', '1');
-            scriptElement.setAttribute('data-reactions-enabled', '');
-            scriptElement.setAttribute('data-emit-metadata', '0');
-            scriptElement.setAttribute('data-input-position', 'bottom');
-            scriptElement.setAttribute('data-theme', localStorage.getItem('theme') === 'light' ? 'light' : 'dark_high_contrast');
-            scriptElement.setAttribute('data-lang', 'zh-CN');
-            
-            scriptElement.setAttribute('crossorigin', 'anonymous');
-            scriptElement.async = true;
-            document.head.appendChild(scriptElement);
-        </script>
+            <div class="giscus comments"></div>
+            <script>
+                var scriptElement = document.createElement('script');
+                scriptElement.src = 'https://giscus.app/client.js';
+                scriptElement.setAttribute('data-repo', 'GZ-Metal-Cell/GZ-Metal-Cell.github.io');
+                scriptElement.setAttribute('data-repo-id', 'R_kgDOIHLEOQ');
+                scriptElement.setAttribute('data-category', 'Announcements');
+                scriptElement.setAttribute('data-category-id', 'DIC_kwDOIHLEOc4CcVwP');
+                scriptElement.setAttribute('data-mapping', 'title');
+                scriptElement.setAttribute('data-strict', '1');
+                scriptElement.setAttribute('data-reactions-enabled', '');
+                scriptElement.setAttribute('data-emit-metadata', '0');
+                scriptElement.setAttribute('data-input-position', 'bottom');
+                scriptElement.setAttribute('data-theme', localStorage.getItem('theme') === 'light' ? 'light' : 'dark_high_contrast');
+                scriptElement.setAttribute('data-lang', 'zh-CN');
+                
+                scriptElement.setAttribute('crossorigin', 'anonymous');
+                scriptElement.async = true;
+                document.head.appendChild(scriptElement);
+            </script>
+        
     
-
-        </article>
+</div>
     </div>
     
         <div class="aside">
@@ -580,28 +598,6 @@
 </div>
     
 </main>
-
-
-    <div class="post-paging">
-        
-        <a href="/2024/03/22/Hexo-Artitalk/">
-            <div class="post-paging-last">
-                <span>上一篇</span>
-                <p>Hexo-Artitalk</p>
-            </div>
-        </a>
-        
-
-        
-        <a href="/2024/03/21/Unity-XCharts/">
-            <div class="post-paging-next">
-                <span>下一篇</span>
-                <p>Unity-XCharts</p>
-            </div>
-        </a>
-        
-    </div>
-
 		
 	<div class="rightside">
 	

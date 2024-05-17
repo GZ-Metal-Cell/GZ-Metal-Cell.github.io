@@ -588,34 +588,52 @@ B_{i,j} =
 <p>​    还有些数据错的更复杂，算了能跑就行吧。</p>
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">import</span> cv2<br><span class="hljs-keyword">import</span> os<br><span class="hljs-keyword">import</span> matplotlib.pyplot <span class="hljs-keyword">as</span> plt<br><span class="hljs-keyword">from</span> shapely.geometry <span class="hljs-keyword">import</span> Polygon<br><span class="hljs-keyword">from</span> tqdm <span class="hljs-keyword">import</span> tqdm<br><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">check_intersection</span>(<span class="hljs-params">rectangle, rectangle_list</span>):<br>    <span class="hljs-keyword">for</span> other_rectangle <span class="hljs-keyword">in</span> rectangle_list:<br>        <span class="hljs-keyword">if</span> rectangle != other_rectangle:<br>            other_polygon = Polygon(other_rectangle)<br><br>            <span class="hljs-keyword">if</span> polygon.intersects(other_polygon):<br>                <span class="hljs-keyword">return</span> <span class="hljs-literal">True</span><br><br>    <span class="hljs-keyword">return</span> <span class="hljs-literal">False</span><br><br><br>image_dir = <span class="hljs-string">r&#x27;F:\dataset\Synth3D-10K\img\\&#x27;</span><br>label_dir = <span class="hljs-string">r&#x27;F:\dataset\Synth3D-10K\label\\&#x27;</span><br>save_dir = <span class="hljs-string">r&#x27;D:\mindOCR_dataset\SynthText3D\Txts\Train\\&#x27;</span><br>error_list = []<br><br><span class="hljs-keyword">for</span> index <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">1</span>, <span class="hljs-number">10000</span> + <span class="hljs-number">1</span>):<br>    image_path = os.path.join(image_dir, <span class="hljs-built_in">str</span>(index) + <span class="hljs-string">&#x27;.jpg&#x27;</span>)<br>    label_path = os.path.join(label_dir, <span class="hljs-built_in">str</span>(index) + <span class="hljs-string">&#x27;.txt&#x27;</span>)<br><br>    image_origin = cv2.imread(image_path)<br>    image = image_origin.copy()<br>    height, width, _ = image.shape<br><br>    <span class="hljs-keyword">with</span> <span class="hljs-built_in">open</span>(label_path, <span class="hljs-string">&quot;r&quot;</span>) <span class="hljs-keyword">as</span> file:<br>        data = file.read()<br><br>    lines = data.split(<span class="hljs-string">&quot;\n&quot;</span>)  <span class="hljs-comment"># 按行分割文本</span><br>    result = []<br>    <span class="hljs-keyword">for</span> line <span class="hljs-keyword">in</span> lines:<br>        <span class="hljs-keyword">if</span> <span class="hljs-built_in">len</span>(line) &gt; <span class="hljs-number">1</span>:<br>            values = line.split(<span class="hljs-string">&quot;,&quot;</span>)  <span class="hljs-comment"># 按逗号分割字符串</span><br>            result.extend([<span class="hljs-built_in">float</span>(s) <span class="hljs-keyword">for</span> s <span class="hljs-keyword">in</span> values])<br><br>    x_list = [result[::<span class="hljs-number">2</span>][i:i+<span class="hljs-number">4</span>] <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">0</span>, <span class="hljs-built_in">len</span>(result[::<span class="hljs-number">2</span>]), <span class="hljs-number">4</span>)]<br>    y_list = [result[<span class="hljs-number">1</span>::<span class="hljs-number">2</span>][i:i+<span class="hljs-number">4</span>] <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">0</span>, <span class="hljs-built_in">len</span>(result[<span class="hljs-number">1</span>::<span class="hljs-number">2</span>]), <span class="hljs-number">4</span>)]<br>    points_list = []<br>    is_error = <span class="hljs-literal">False</span><br>    <br>    <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-built_in">len</span>(x_list)):<br>        x = x_list[i]<br>        y = y_list[i]<br>        points_list.append(Polygon(np.array([x, y], np.int32).T))<br>    <br>    <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> is_error:     <br>        string = <span class="hljs-string">&quot;&quot;</span><br>        <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-built_in">len</span>(x_list)):<br>            x = <span class="hljs-built_in">list</span>(<span class="hljs-built_in">map</span>(<span class="hljs-built_in">int</span>, x_list[i]))<br>            y = <span class="hljs-built_in">list</span>(<span class="hljs-built_in">map</span>(<span class="hljs-built_in">int</span>, y_list[i]))<br>            <br>            polygon = Polygon(np.array([x, y], np.int32).T)<br>            <br>            <span class="hljs-keyword">if</span> polygon.area &lt; <span class="hljs-number">200</span>:<br>                is_error = <span class="hljs-literal">True</span><br>                error_list.append(index)<br>                <span class="hljs-built_in">print</span>(index, <span class="hljs-string">&quot;四边形太小&quot;</span>, polygon.area)<br>                <span class="hljs-keyword">continue</span><br><br>            <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> (polygon.is_valid <span class="hljs-keyword">and</span> <span class="hljs-built_in">len</span>(polygon.exterior.coords) == <span class="hljs-number">5</span>):<br>                is_error = <span class="hljs-literal">True</span><br>                error_list.append(index)<br>                <span class="hljs-built_in">print</span>(index, <span class="hljs-string">&quot;不构成四边形&quot;</span>)<br>                <span class="hljs-keyword">continue</span><br>        <br>            <span class="hljs-keyword">if</span> <span class="hljs-built_in">min</span>(y) &lt; <span class="hljs-number">0</span> <span class="hljs-keyword">or</span> <span class="hljs-built_in">min</span>(x) &lt; <span class="hljs-number">0</span> <span class="hljs-keyword">or</span> <span class="hljs-built_in">max</span>(x) &gt; width <span class="hljs-keyword">or</span> <span class="hljs-built_in">max</span>(y) &gt; height:<br>                is_error = <span class="hljs-literal">True</span><br>                error_list.append(index)<br>                <span class="hljs-built_in">print</span>(index, <span class="hljs-string">&quot;越界&quot;</span>)<br>                <span class="hljs-keyword">continue</span><br>                <br>            <span class="hljs-keyword">if</span> check_intersection(polygon, points_list):<br>                is_error = <span class="hljs-literal">True</span><br>                error_list.append(index)<br>                <span class="hljs-built_in">print</span>(index, <span class="hljs-string">&quot;相交&quot;</span>, polygon.area)<br>                <span class="hljs-keyword">continue</span><br>            <br>            string += <span class="hljs-string">&#x27;x: [[&#x27;</span><br>            string += <span class="hljs-string">&#x27; &#x27;</span>.join(<span class="hljs-built_in">map</span>(<span class="hljs-built_in">str</span>, x))<br>            string += <span class="hljs-string">&#x27;]], y: [[&#x27;</span><br>            string += <span class="hljs-string">&#x27; &#x27;</span>.join(<span class="hljs-built_in">map</span>(<span class="hljs-built_in">str</span>, y))<br>            string += <span class="hljs-string">&quot;]], ornt: [u&#x27;h&quot;</span><br>            string += <span class="hljs-string">&quot;&#x27;], transcriptions: [u&#x27;&quot;</span><br>            string += <span class="hljs-string">&quot;A&quot;</span><br>            string += <span class="hljs-string">&quot;&#x27;]\n&quot;</span><br>        <span class="hljs-keyword">if</span> <span class="hljs-built_in">len</span>(string) &gt; <span class="hljs-number">0</span>:<br>            <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;写入&quot;</span>, index)<br>            <span class="hljs-keyword">with</span> <span class="hljs-built_in">open</span>(os.path.join(save_dir, <span class="hljs-string">&quot;poly_gt_img&quot;</span> + <span class="hljs-built_in">str</span>(index) + <span class="hljs-string">&quot;.txt&quot;</span>), <span class="hljs-string">&#x27;w&#x27;</span>, encoding=<span class="hljs-string">&#x27;UTF-8&#x27;</span>) <span class="hljs-keyword">as</span> file:<br>                file.write(string)<br></code></pre></td></tr></table></figure>
 
-            
+        </article>
+        <div class="post-bottom">
+    
+        <div class="post-paging">     
+            <div class="post-paging-last">
+                
+                    <a href="/2023/09/14/Diary-1-%E6%A2%A7%E6%A1%90%E4%B8%8E%E9%93%B6%E6%9D%8F/">
+                        上一篇：Diary-1-梧桐与银杏
+                    </a>
+                
+            </div>
+            <div class="post-paging-next">
+                
+                    <a href="/2023/09/11/Paper-3D-FRONT-3D%20Furnished%20Rooms%20with%20layOuts%20and%20semaNTics/">
+                        下一篇：Paper-3D-FRONT-3D Furnished Rooms with layOuts and semaNTics
+                    </a>
+                
+            </div>
+        </div>
+    
+
     
         
-<link rel="stylesheet" href="/css/third-party/giscus.css">
-
-        <div class="giscus comments"></div>
-        <script>
-            var scriptElement = document.createElement('script');
-            scriptElement.src = 'https://giscus.app/client.js';
-            scriptElement.setAttribute('data-repo', 'GZ-Metal-Cell/GZ-Metal-Cell.github.io');
-            scriptElement.setAttribute('data-repo-id', 'R_kgDOIHLEOQ');
-            scriptElement.setAttribute('data-category', 'Announcements');
-            scriptElement.setAttribute('data-category-id', 'DIC_kwDOIHLEOc4CcVwP');
-            scriptElement.setAttribute('data-mapping', 'title');
-            scriptElement.setAttribute('data-strict', '1');
-            scriptElement.setAttribute('data-reactions-enabled', '');
-            scriptElement.setAttribute('data-emit-metadata', '0');
-            scriptElement.setAttribute('data-input-position', 'bottom');
-            scriptElement.setAttribute('data-theme', localStorage.getItem('theme') === 'light' ? 'light' : 'dark_high_contrast');
-            scriptElement.setAttribute('data-lang', 'zh-CN');
-            
-            scriptElement.setAttribute('crossorigin', 'anonymous');
-            scriptElement.async = true;
-            document.head.appendChild(scriptElement);
-        </script>
+            <div class="giscus comments"></div>
+            <script>
+                var scriptElement = document.createElement('script');
+                scriptElement.src = 'https://giscus.app/client.js';
+                scriptElement.setAttribute('data-repo', 'GZ-Metal-Cell/GZ-Metal-Cell.github.io');
+                scriptElement.setAttribute('data-repo-id', 'R_kgDOIHLEOQ');
+                scriptElement.setAttribute('data-category', 'Announcements');
+                scriptElement.setAttribute('data-category-id', 'DIC_kwDOIHLEOc4CcVwP');
+                scriptElement.setAttribute('data-mapping', 'title');
+                scriptElement.setAttribute('data-strict', '1');
+                scriptElement.setAttribute('data-reactions-enabled', '');
+                scriptElement.setAttribute('data-emit-metadata', '0');
+                scriptElement.setAttribute('data-input-position', 'bottom');
+                scriptElement.setAttribute('data-theme', localStorage.getItem('theme') === 'light' ? 'light' : 'dark_high_contrast');
+                scriptElement.setAttribute('data-lang', 'zh-CN');
+                
+                scriptElement.setAttribute('crossorigin', 'anonymous');
+                scriptElement.async = true;
+                document.head.appendChild(scriptElement);
+            </script>
+        
     
-
-        </article>
+</div>
     </div>
     
         <div class="aside">
@@ -700,28 +718,6 @@ B_{i,j} =
 </div>
     
 </main>
-
-
-    <div class="post-paging">
-        
-        <a href="/2023/09/14/Diary-1-%E6%A2%A7%E6%A1%90%E4%B8%8E%E9%93%B6%E6%9D%8F/">
-            <div class="post-paging-last">
-                <span>上一篇</span>
-                <p>Diary-1-梧桐与银杏</p>
-            </div>
-        </a>
-        
-
-        
-        <a href="/2023/09/11/Paper-3D-FRONT-3D%20Furnished%20Rooms%20with%20layOuts%20and%20semaNTics/">
-            <div class="post-paging-next">
-                <span>下一篇</span>
-                <p>Paper-3D-FRONT-3D Furnished Rooms with layOuts and semaNTics</p>
-            </div>
-        </a>
-        
-    </div>
-
 		
 	<div class="rightside">
 	
