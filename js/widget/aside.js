@@ -122,7 +122,7 @@ function activeTocItem() {
 }
 
 function activeSeriesItem() {
-    var series = document.querySelector(".series");
+    var series = document.querySelector(".aside-top-series-content");
     if (series) {
         var activeItem = series.querySelector(".active");
         if (activeItem) {

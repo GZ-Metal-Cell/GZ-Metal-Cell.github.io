@@ -3,8 +3,8 @@ snowing = true;
 (function ($) {
     $.fn.snow = function (options) {
         var $flake = $('<div id="snowbox" />').css({ 'position': 'fixed', 'z-index': '100', 'top': '-50px', 'user-select': 'none'}).html('&#10052;'),
-            documentHeight = $(document).height(),
-            documentWidth = $(document).width(),
+            windowHeight = $(window).height(),
+            windowWidth = $(window).width() * 2,
             defaults = {
                 minSize: 10,
                 maxSize: 20,
@@ -15,12 +15,12 @@ snowing = true;
         setInterval(function () {
             if(!snowing)
                 return;
-            var startPositionLeft = Math.random() * documentWidth - 100,
+            var startPositionLeft = Math.random() * windowWidth - 100,
                 startOpacity = 0.5 + Math.random(),
                 sizeFlake = options.minSize + Math.random() * options.maxSize,
-                endPositionTop = documentHeight - 50,
+                endPositionTop = windowHeight - 50,
                 endPositionLeft = startPositionLeft - 500 + Math.random() * 500,
-                durationFall = documentHeight * 2 + Math.random() * 5000;
+                durationFall = windowHeight * 2 + Math.random() * 5000;
             $flake.clone().appendTo('body').css({
                 left: startPositionLeft,
                 opacity: startOpacity,
