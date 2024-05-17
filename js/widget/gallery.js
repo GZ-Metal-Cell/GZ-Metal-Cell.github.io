@@ -1,26 +1,29 @@
 function initGallery()
 {
-    var $grid = $('.grid').masonry({
-        itemSelector: '.grid-item',
-        percentPosition: true,
-        columnWidth: '.grid-sizer'
-    });
-    if(lazyLoad)
-    {  
-        window.imageLazyLoadSetting = {
-            onImageLoaded: function() {
-            $grid.masonry();
-            }
-        };
-    }
-    else
-    {
-        // layout Masonry after each image loads
-        $grid.imagesLoaded().progress(function() {
-            $grid.masonry();
+    $(document).ready(function() {
+        var $grid = $('.grid').masonry({
+            itemSelector: '.grid-item',
+            percentPosition: true,
+            columnWidth: '.grid-sizer'
         });
-    }
-    galleryBottom();
+        if(lazyLoad)
+        {  
+            window.imageLazyLoadSetting = {
+                onImageLoaded: function() {
+                    $grid.masonry();
+                }
+            };
+        }
+        else
+        {
+            // layout Masonry after each image loads
+            $grid.imagesLoaded().progress(function() {
+                $grid.masonry();
+            });
+        }
+        if ($('.description-container').length > 0)
+            galleryBottom();
+    });
 }
 
 function galleryBottom() {

@@ -6,6 +6,9 @@ function handleHexoBlogDecryptEvent() {
 }
 
 function initJS(){
+    if (typeof initGallery === 'function') {
+        initGallery();
+    }
     if (typeof initToc === 'function') {
         initToc();
     }
