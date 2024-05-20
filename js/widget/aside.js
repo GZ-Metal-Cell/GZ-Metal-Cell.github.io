@@ -48,13 +48,11 @@ function createToc() {
 
         a.append(span);
 
-        a.on("click", function (event) {
-            event.preventDefault();
-            var heading = $($(this).attr("href"));
-            var rect = heading[0].getBoundingClientRect();
-            var topOffset = rect.top + window.scrollY - 70;
+        a.on("click", function (e) {
+            e.preventDefault();
+            var target = $($(this).attr("href"));
             window.scrollTo({
-                top: topOffset,
+                top: $(target).offset().top - 70,
                 behavior: "smooth"
             });
         });

@@ -1,11 +1,11 @@
 function handleHexoBlogDecryptEvent() {
     console.log("handleHexoBlogDecryptEvent()");
-    $(document).ready(function() {
+    $(document).ready(function () {
         initJS();
     });
 }
 
-function initJS(){
+function initJS() {
     if (typeof initGallery === 'function') {
         initGallery();
     }
@@ -33,11 +33,14 @@ function initJS(){
     if (typeof initKatex === 'function') {
         initKatex();
     }
-    if (typeof initHighlightTools === 'function'){
+    if (typeof initHighlightTools === 'function') {
         initHighlightTools();
     }
-    if (typeof initWordCount === 'function'){
+    if (typeof initWordCount === 'function') {
         initWordCount();
+    }
+    if (typeof initRef === 'function') {
+        initRef();
     }
 }
 
