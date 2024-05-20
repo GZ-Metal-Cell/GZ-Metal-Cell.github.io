@@ -8,11 +8,10 @@ function initGallery()
         });
         if(lazyLoad)
         {  
-            window.imageLazyLoadSetting = {
-                onImageLoaded: function() {
-                    $grid.masonry();
-                }
-            };
+            window.imageLazyLoadSetting.processImages(true);
+            window.imageLazyLoadSetting.onImageLoaded = function() {
+                $grid.masonry();
+            }
         }
         else
         {
