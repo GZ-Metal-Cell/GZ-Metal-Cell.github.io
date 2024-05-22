@@ -1815,6 +1815,492 @@ L_{o}(x,\omega_{o})& =\int_{H^{2}}(k_{d}f_{Lambert}+f_{CookTorance})L_{i}(x,\ome
 <li><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/49069689">Shader交叉编译之梦 - 知乎 (zhihu.com)</a></li>
 <li><a target="_blank" rel="noopener" href="https://github.com/KhronosGroup/SPIRV-Cross">KhronosGroup/SPIRV-Cross: SPIRV-Cross is a practical tool and library for performing reflection on SPIR-V and disassembling SPIR-V back to high level languages. (github.com)</a> 让 shader 语言能够交叉编译。</li>
 </ul>
+<h2 id="第六节-上-：游戏中地形大气和云的渲染"><a href="#第六节-上-：游戏中地形大气和云的渲染" class="headerlink" title="第六节(上)：游戏中地形大气和云的渲染"></a>第六节(上)：游戏中地形大气和云的渲染</h2><p>​    MD 天书……</p>
+<h3 id="Rendering-on-Game-Engine-3"><a href="#Rendering-on-Game-Engine-3" class="headerlink" title="Rendering on Game Engine"></a>Rendering on Game Engine</h3><p>The Challenges and Fun of Rendering the Beautiful Mother Nature</p>
+<p>​    渲染美丽大自然的挑战和乐趣</p>
+<h4 id="Real-World-Landscape"><a href="#Real-World-Landscape" class="headerlink" title="Real-World Landscape"></a>Real-World Landscape</h4><p><img src="/images/loading.webp" data-original="6.1.webp" alt="webp"></p>
+<ul>
+<li><p>Huge geospatial scale</p>
+<p>巨大的地理空间尺度</p>
+</li>
+<li><p>Rich geomorphological</p>
+<p>地貌丰富</p>
+<ul>
+<li><p>Vegetation</p>
+<p>植被</p>
+</li>
+<li><p>Rivers</p>
+<p>河流</p>
+</li>
+<li><p>Undulating peaks</p>
+<p>起伏的山峰</p>
+</li>
+<li><p>Alpine snow</p>
+<p>高山雪</p>
+</li>
+<li><p>.......</p>
+</li>
+</ul>
+</li>
+</ul>
+<p>Too Complex for Rendering Using Traditional Mesh + Material</p>
+<p>​    使用传统网格 + 材质渲染过于复杂</p>
+<h4 id="Environment-Components-in-Games"><a href="#Environment-Components-in-Games" class="headerlink" title="Environment Components in Games"></a>Environment Components in Games</h4><p><img src="/images/loading.webp" data-original="6.2.webp" alt="webp"></p>
+<h4 id="Simple-Idea-Heightfield"><a href="#Simple-Idea-Heightfield" class="headerlink" title="Simple Idea - Heightfield"></a>Simple Idea - Heightfield</h4><p><img src="/images/loading.webp" data-original="6.3.webp" alt="webp"></p>
+<p>Height Map</p>
+<p>​    高度图</p>
+<p>Contour Map</p>
+<p>​    等高线图</p>
+<ul>
+<li><p>Satellite image and google earth</p>
+<p>卫星图像和谷歌地球</p>
+</li>
+</ul>
+<h4 id="Expressive-Heightfield-Terrains"><a href="#Expressive-Heightfield-Terrains" class="headerlink" title="Expressive Heightfield Terrains"></a>Expressive Heightfield Terrains</h4><p>​    富有表现力的高度场地形</p>
+<h4 id="Render-Terrain-with-Heightfield"><a href="#Render-Terrain-with-Heightfield" class="headerlink" title="Render Terrain with Heightfield"></a>Render Terrain with Heightfield</h4><p>​    使用高度场渲染地形</p>
+<p><img src="/images/loading.webp" data-original="6.4.webp" alt="webp"></p>
+<h4 id="Adaptive-Mesh-Tessellation"><a href="#Adaptive-Mesh-Tessellation" class="headerlink" title="Adaptive Mesh Tessellation"></a>Adaptive Mesh Tessellation</h4><p>​    自适应网格细分</p>
+<p><img src="/images/loading.webp" data-original="6.5.webp" alt="webp"></p>
+<p>​    fov 内的网格密集，外的不密集。</p>
+<h4 id="Two-Golden-Rules-of-Optimization"><a href="#Two-Golden-Rules-of-Optimization" class="headerlink" title="Two Golden Rules of Optimization"></a>Two Golden Rules of Optimization</h4><p>​    两条优化黄金法则</p>
+<p><img src="/images/loading.webp" data-original="6.6.webp" alt="webp"></p>
+<p>View-dependent error bound</p>
+<p>​    视图相关的错误界限</p>
+<ul>
+<li><p>Distance to camera and FoV</p>
+<p>到相机和 FoV 的距离</p>
+</li>
+<li><p>Error compare to ground truth (pre-computation)</p>
+<p>与真实情况相比的误差（预计算）</p>
+</li>
+</ul>
+<h4 id="Triangle-Based-Subdivision"><a href="#Triangle-Based-Subdivision" class="headerlink" title="Triangle-Based Subdivision"></a>Triangle-Based Subdivision</h4><p>​    基于三角形的细分</p>
+<p><img src="/images/loading.webp" data-original="6.7.webp" alt="webp"></p>
+<h4 id="Subdivision-and-T-Junctions"><a href="#Subdivision-and-T-Junctions" class="headerlink" title="Subdivision and T-Junctions"></a>Subdivision and T-Junctions</h4><blockquote>
+<p>​    T-Junctions（T 字连接）是在计算机图形学中用于描述三角形网格连接关系的术语。当两个或多个三角形共享一个边时，它们在连接点形成了 T 字型的结构。这种连接在三维网格模型的拓扑结构中相当常见。</p>
+<p>​    T-Junctions 通常出现在网格的边缘、拐角或交叉点附近。它们可能会出现在几何体的建模、网格编辑、或者在进行几何操作（如网格合并、分割、细分等）时。在渲染阶段，T-Junctions 可能会导致一些问题，尤其是在基于三角形的图形渲染中，因为它们可能会导致不正确的图形拓扑和渲染结果。</p>
+</blockquote>
+<p><img src="/images/loading.webp" data-original="6.8.webp" alt="webp"></p>
+<p>Continuously partitioning triangles and their children based on the idea of binary trees</p>
+<p>​    基于二叉树的思想连续划分三角形及其子节点</p>
+<h4 id="Triangle-Based-Subdivision-on-GPU"><a href="#Triangle-Based-Subdivision-on-GPU" class="headerlink" title="Triangle-Based Subdivision on GPU"></a>Triangle-Based Subdivision on GPU</h4><p><img src="/images/loading.webp" data-original="6.9.webp" alt="webp"></p>
+<center>54 x 54 km terrarin on GPU using Unity game engine</center>
+
+<p>​    根据 GPU 架构设计的算法。</p>
+<h4 id="QuadTree-Based-Subdivision"><a href="#QuadTree-Based-Subdivision" class="headerlink" title="QuadTree-Based Subdivision"></a>QuadTree-Based Subdivision</h4><p>​    基于四叉树的细分</p>
+<p><img src="/images/loading.webp" data-original="6.10.webp" alt="webp"></p>
+<p>Pros</p>
+<ul>
+<li><p>Easy to construct</p>
+<p>易于建造</p>
+</li>
+<li><p>Easy management of data under geospatial, including objects culling and data streaming</p>
+<p>轻松管理地理空间下的数据，包括对象剔除和数据流</p>
+</li>
+</ul>
+<p>Cons</p>
+<ul>
+<li><p>Mesh subdivision is not as flexible as triangle mesh</p>
+<p>网格细分不如三角形网格灵活</p>
+</li>
+<li><p>The grid level of the leaf nodes needs to be consistent</p>
+<p>叶子节点的网格层级需要一致</p>
+</li>
+</ul>
+<p><img src="/images/loading.webp" data-original="6.11.webp" alt="webp"></p>
+<h4 id="Solving-T-Junctions-among-Quad-Grids"><a href="#Solving-T-Junctions-among-Quad-Grids" class="headerlink" title="Solving T-Junctions among Quad Grids"></a>Solving T-Junctions among Quad Grids</h4><p>​    求解四边形网格之间的 T 型连接点</p>
+<p><img src="/images/loading.webp" data-original="6.12.webp" alt="webp"></p>
+<p>Terrain Rendering with Quad Grid</p>
+<p>​    使用四网格进行地形渲染</p>
+<h4 id="Triangulated-lrregular-Network-TlN"><a href="#Triangulated-lrregular-Network-TlN" class="headerlink" title="Triangulated lrregular Network (TlN)"></a>Triangulated lrregular Network (TlN)</h4><p>​    不规则三角网络 (TlN)</p>
+<p><img src="/images/loading.webp" data-original="6.13.webp" alt="webp"></p>
+<h4 id="Density-Variants-in-TlN"><a href="#Density-Variants-in-TlN" class="headerlink" title="Density Variants in TlN"></a>Density Variants in TlN</h4><p>​    TlN 中的密度变量</p>
+<p><img src="/images/loading.webp" data-original="6.14.webp" alt="webp"></p>
+<h4 id="Triangulated-lrregular-Network-vs-Adpative-Tessellation"><a href="#Triangulated-lrregular-Network-vs-Adpative-Tessellation" class="headerlink" title="Triangulated lrregular Network vs. Adpative Tessellation"></a>Triangulated lrregular Network vs. Adpative Tessellation</h4><p>​    不规则三角网络与自适应曲面细分</p>
+<p><img src="/images/loading.webp" data-original="6.15.webp" alt="webp"></p>
+<p>Pros</p>
+<ul>
+<li><p>Easy in runtime rendeirng</p>
+<p>易于运行时渲染</p>
+</li>
+<li><p>Less triangls in certain terrain types</p>
+<p>某些地形类型中的三角形较少</p>
+</li>
+</ul>
+<p><img src="/images/loading.webp" data-original="6.16.webp" alt="webp"></p>
+<p>Cons</p>
+<ul>
+<li><p>Requires certain pre-processing steps</p>
+<p>需要一定的预处理步骤</p>
+</li>
+<li><p>Poor reusability</p>
+<p>可重用性差</p>
+</li>
+</ul>
+<h4 id="GPU-Based-Tessellation"><a href="#GPU-Based-Tessellation" class="headerlink" title="GPU-Based Tessellation"></a>GPU-Based Tessellation</h4><p>​    基于 GPU 的曲面细分</p>
+<p><img src="/images/loading.webp" data-original="6.17.webp" alt="webp"></p>
+<h4 id="Hardware-Tesselation"><a href="#Hardware-Tesselation" class="headerlink" title="Hardware Tesselation"></a>Hardware Tesselation</h4><p>​    硬件曲面细分</p>
+<p><img src="/images/loading.webp" data-original="6.18.webp" alt="webp"></p>
+<p><strong>Hul-Shader Stage</strong> - transforms basis functions from base mesh to surface patches</p>
+<p>​    <strong>Hul-Shader Stage</strong> - 将基础函数从基础网格转换为表面补丁</p>
+<p><strong>Tessellator Stage</strong> - produces a semi-regular tessellation pattern for each patch</p>
+<p>​    <strong>Tessellator Stage</strong> - 为每个补丁生成半规则的镶嵌图案</p>
+<p><strong>Domain-Shader Stage</strong> - a programmable shader stage that calculates the vertex position that corresponds to each domain sample</p>
+<p>​    <strong>Domain-Shader Stage</strong> - 一个可编程着色器阶段，用于计算与每个域样本对应的顶点位置</p>
+<p><img src="/images/loading.webp" data-original="6.19.webp" alt="webp"></p>
+<h4 id="Mesh-Shader-Pipeline"><a href="#Mesh-Shader-Pipeline" class="headerlink" title="Mesh Shader Pipeline"></a>Mesh Shader Pipeline</h4><p><img src="/images/loading.webp" data-original="6.20.webp" alt="webp"></p>
+<ul>
+<li><p><strong>Amplification Shader Stage</strong> - decides how many Mesh shader groups to run and passes data to those groups</p>
+<p><strong>放大着色器阶段</strong> - 决定运行多少个网格着色器组并将数据传递到这些组</p>
+</li>
+<li><p><strong>Mesh Shader Stage</strong> - produces a semi-regulartessellation pattern for each patch, and outputscomprise vertices and primitives</p>
+<p><strong>网格着色器阶段</strong> - 为每个补丁生成半规则曲面细分图案，输出包含顶点和图元</p>
+</li>
+</ul>
+<h4 id="Real-Time-Deformable-Terrain"><a href="#Real-Time-Deformable-Terrain" class="headerlink" title="Real-Time Deformable Terrain"></a>Real-Time Deformable Terrain</h4><p><img src="/images/loading.webp" data-original="6.21.webp" alt="webp"></p>
+<p>​    在游戏运行时，地表模型会改变（如车压路上）</p>
+<h4 id="Dig-a-Hole-in-Terrain"><a href="#Dig-a-Hole-in-Terrain" class="headerlink" title="Dig a Hole in Terrain"></a>Dig a Hole in Terrain</h4><p><img src="/images/loading.webp" data-original="6.22.webp" alt="webp"></p>
+<p>​    给地表挖洞。</p>
+<h4 id="Crazy-ldea-Volumetric-Representation"><a href="#Crazy-ldea-Volumetric-Representation" class="headerlink" title="Crazy ldea - Volumetric Representation"></a>Crazy ldea - Volumetric Representation</h4><p>​    疯狂的想法-体积表示</p>
+<p><img src="/images/loading.webp" data-original="6.23.webp" alt="webp"></p>
+<p>In 3D computer graphics, a voxel represents a value on a regular grid in three-dimensional space. As pixels in a 2D bitmap, voxels themselves do not typically have their position (i.e. coordinates) explicitly encoded with their values</p>
+<p>​    在 3D 计算机图形学中，体素表示三维空间中规则网格上的值。作为 2D 位图中的像素，体素本身通常不会使用其值显式编码其位置（即坐标）</p>
+<h4 id="Marching-Cubes"><a href="#Marching-Cubes" class="headerlink" title="Marching Cubes"></a>Marching Cubes</h4><p>​    行进立方体</p>
+<p><img src="/images/loading.webp" data-original="6.24.webp" alt="webp"></p>
+<center>MARCHING CUBES: A HIGH RESOLUTION 3D SURFACE CONSTRUCTION ALGORITHM', Computer Graphics, volume 21, Number 4, July 1987</center>
+
+<p>​    给模型作切片。</p>
+<h4 id="Transition-Cell-Lookup-Table"><a href="#Transition-Cell-Lookup-Table" class="headerlink" title="Transition Cell Lookup Table"></a>Transition Cell Lookup Table</h4><p>​    过渡单元查找表</p>
+<p><img src="/images/loading.webp" data-original="6.25.webp" alt="webp"></p>
+<p><img src="/images/loading.webp" data-original="6.26.webp" alt="webp"></p>
+<p>Transvoxel Algorithm</p>
+<p>​    跨体素算法</p>
+<ul>
+<li><p>Constructs the triangulation of transition cells to form a lookup table, and uses this lookup table to do the triangulation of LOD voxel cubes</p>
+<p>构造过渡单元的三角剖分以形成查找表，并使用该查找表进行 LOD 体素立方体的三角剖分</p>
+</li>
+</ul>
+<p>Make AAA as Flexible as Minecraft??? :-)</p>
+<p>​    我的世界是一个自由度很高的游戏，目前 3A 大作很难对场景环境做出改变。</p>
+<h4 id="Terrain-Materials"><a href="#Terrain-Materials" class="headerlink" title="Terrain Materials"></a>Terrain Materials</h4><p><img src="/images/loading.webp" data-original="6.27.webp" alt="webp"></p>
+<p>​    一个 Terrain 往往包含多种 Materials。</p>
+<h4 id="Simple-Texture-Splatting"><a href="#Simple-Texture-Splatting" class="headerlink" title="Simple Texture Splatting"></a>Simple Texture Splatting</h4><p>​    简单的纹理喷溅</p>
+<p><img src="/images/loading.webp" data-original="6.28.webp" alt="webp"></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><code class="hljs C">float3 <span class="hljs-title function_">blend</span><span class="hljs-params">(float4 texturel,<span class="hljs-type">float</span> al, float4 texture2, <span class="hljs-type">float</span> a2)</span> &#123;<br>    <span class="hljs-keyword">return</span> texturel.rgb * al + texture2.rgb * a2;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>​    terrain 上的纹理从一个过渡到另一个时，如果简单地使用混合，则平滑但不自然。</p>
+<h4 id="Advanced-Texture-Splatting"><a href="#Advanced-Texture-Splatting" class="headerlink" title="Advanced Texture Splatting"></a>Advanced Texture Splatting</h4><p><img src="/images/loading.webp" data-original="6.29.webp" alt="webp"></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><code class="hljs C">float3 <span class="hljs-title function_">blend</span><span class="hljs-params">(float4 texture1, <span class="hljs-type">float</span> height1, float4 texture2, <span class="hljs-type">float</span> height2)</span> &#123;<br>    <span class="hljs-keyword">return</span> height1 &gt; height2 ? texture1.rgb : texture2.rgb;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>​    根据高度图实现材质的过渡。</p>
+<h4 id="Advanced-Texture-Splatting-Biased"><a href="#Advanced-Texture-Splatting-Biased" class="headerlink" title="Advanced Texture Splatting - Biased"></a>Advanced Texture Splatting - Biased</h4><p><img src="/images/loading.webp" data-original="6.30.webp" alt="webp"></p>
+<p>​    引入 Height Bias。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><code class="hljs C">float3 <span class="hljs-title function_">blend</span><span class="hljs-params">(float4 texture1, <span class="hljs-type">float</span> height1, float4 texture2, <span class="hljs-type">float</span> height2)</span> &#123;<br>	<span class="hljs-type">float</span> depth = <span class="hljs-number">0.2</span>;<br>    <span class="hljs-type">float</span> ma = max(texture1.a + height1, texture2.a + height2) - depth;<br>    <span class="hljs-type">float</span> b1 = max(texture1.a + height1 - ma, <span class="hljs-number">0</span>);<br>    <span class="hljs-type">float</span> b2 = max(texture2.a + height2 - ma, <span class="hljs-number">0</span>);<br>    <span class="hljs-keyword">return</span> (texture1.rgb * b1 + texture2.rgb * b2) / (b1 + b2);<br>&#125;<br></code></pre></td></tr></table></figure>
+<h4 id="Sampling-from-Material-Texture-Array"><a href="#Sampling-from-Material-Texture-Array" class="headerlink" title="Sampling from Material Texture Array"></a>Sampling from Material Texture Array</h4><p>​    从材质纹理数组采样</p>
+<p><img src="/images/loading.webp" data-original="6.31.webp" alt="webp"></p>
+<h4 id="Parallax-and-Displacement-Mapping"><a href="#Parallax-and-Displacement-Mapping" class="headerlink" title="Parallax and Displacement Mapping"></a>Parallax and Displacement Mapping</h4><p>​    视差和位移贴图</p>
+<p><img src="/images/loading.webp" data-original="6.32.webp" alt="webp"></p>
+<p>Parallax Mapping: Due to the height of the surface, the eye sees point B instead of pointA. lt creates a sense of dimensionality.</p>
+<p>​    视差映射：由于表面的高度，眼睛看到的是 B 点而不是 A 点。它创造了一种维度感。</p>
+<h4 id="Expensive-Material-Blending"><a href="#Expensive-Material-Blending" class="headerlink" title="Expensive Material Blending"></a>Expensive Material Blending</h4><p><img src="/images/loading.webp" data-original="6.33.webp" alt="webp"></p>
+<ul>
+<li><p><strong>Many Texturing</strong> - Low performance whenmultiple materials are sampled too many times</p>
+<p><strong>许多纹理</strong> - 对多种材质采样太多次时性能较低</p>
+</li>
+<li><p><strong>Huge Splat Map</strong> - We only see a small set ofterrain, but we load splat maps for 100 square kminto video memory</p>
+<p><strong>巨大的 Splat 地图</strong> - 我们只能看到一小部分地形，但我们将 100 平方公里的 Splat 地图加载到显存中</p>
+</li>
+</ul>
+<h4 id="Virtual-Texture"><a href="#Virtual-Texture" class="headerlink" title="Virtual Texture"></a>Virtual Texture</h4><blockquote>
+<p>​    虚拟纹理（Virtual Texture）是一种用于实时图形渲染的技术，旨在解决在有限的显存中管理大量纹理数据的挑战。传统上，图形渲染中使用的纹理数据通常是预加载到显存中的，但这种方法在需要处理大规模纹理数据时会遇到限制，尤其是在高分辨率的场景中。</p>
+<p>​    虚拟纹理通过将纹理数据分割成较小的块，并根据视野和需求动态地加载和卸载这些块，以优化显存利用率并允许处理大规模纹理数据。虚拟纹理技术的核心思想是将纹理数据存储在较大的物理存储介质（如硬盘或固态硬盘）中，然后根据需要将其部分加载到显存中供渲染使用。</p>
+</blockquote>
+<p><img src="/images/loading.webp" data-original="6.34.webp" alt="webp"></p>
+<ul>
+<li><p>Build a virtual indexed texture to represent allblended terrain materials for whole scene</p>
+<p>构建虚拟索引纹理来表示整个场景的所有混合地形材质</p>
+</li>
+<li><p>Only load materials data of tiles based on view-depend LOD</p>
+<p>仅根据视图相关的 LOD 加载图块的材质数据</p>
+</li>
+<li><p>Pre-bake materials blending into tile and store them into physical textures</p>
+<p>预烘烤混合到瓷砖中的材料并将其存储到物理纹理中</p>
+</li>
+</ul>
+<h4 id="VT-implementation-DirectStorage-amp-DMA"><a href="#VT-implementation-DirectStorage-amp-DMA" class="headerlink" title="VT implementation, DirectStorage &amp; DMA"></a>VT implementation, DirectStorage &amp; DMA</h4><p>​    VT 实现、DirectStorage 和 DMA</p>
+<p><img src="/images/loading.webp" data-original="6.35.webp" alt="webp"></p>
+<h4 id="Floating-point-Precision-Error"><a href="#Floating-point-Precision-Error" class="headerlink" title="Floating-point Precision Error"></a>Floating-point Precision Error</h4><p>​    浮点精度误差</p>
+<p><img src="/images/loading.webp" data-original="6.36.webp" alt="webp"></p>
+<p>​    计算中 float 的精度可能不够，导致很远的物体会出现波动。</p>
+<h4 id="Camera-Relative-Rendering"><a href="#Camera-Relative-Rendering" class="headerlink" title="Camera-Relative Rendering"></a>Camera-Relative Rendering</h4><p><img src="/images/loading.webp" data-original="6.37.webp" alt="webp"></p>
+<ul>
+<li><p>Translates objects by the negated world space camera position before any other geometric transformations affect them</p>
+<p>在任何其他几何变换影响对象之前，通过否定的世界空间相机位置来平移对象</p>
+</li>
+<li><p>It then sets the world space camera position to 0 and modifies all relevant matrices accordingly</p>
+<p>然后将世界空间相机位置设置为 0 并相应地修改所有相关矩阵</p>
+</li>
+</ul>
+<h4 id="Integration-with-other-world-elements-rocks-trees-grass"><a href="#Integration-with-other-world-elements-rocks-trees-grass" class="headerlink" title="Integration with other world elements (rocks, trees, grass)"></a>Integration with other world elements (rocks, trees, grass)</h4><p>​    与其他世界元素（岩石、树木、草）的融合</p>
+<h4 id="Tree-Rendering"><a href="#Tree-Rendering" class="headerlink" title="Tree Rendering"></a>Tree Rendering</h4><p><img src="/images/loading.webp" data-original="6.38.webp" alt="webp"></p>
+<p>​    近处树模型复杂，远处简单</p>
+<h4 id="Decorator-Rendering"><a href="#Decorator-Rendering" class="headerlink" title="Decorator Rendering"></a>Decorator Rendering</h4><p><img src="/images/loading.webp" data-original="6.39.webp" alt="webp"></p>
+<p>​    装饰渲染。近处复杂，远处简单</p>
+<h4 id="Road-and-Decals-Rendering"><a href="#Road-and-Decals-Rendering" class="headerlink" title="Road and Decals Rendering"></a>Road and Decals Rendering</h4><p>​    道路和贴花渲染</p>
+<p><img src="/images/loading.webp" data-original="6.40.webp" alt="webp"></p>
+<p>Terrain Editing in Game Engine、Procedure Terrain creation……</p>
+<h2 id="第六节-下-：游戏中地形大气和云的渲染"><a href="#第六节-下-：游戏中地形大气和云的渲染" class="headerlink" title="第六节(下)：游戏中地形大气和云的渲染"></a>第六节(下)：游戏中地形大气和云的渲染</h2><h3 id="Sky-and-Atmosphere"><a href="#Sky-and-Atmosphere" class="headerlink" title="Sky and Atmosphere"></a>Sky and Atmosphere</h3><h4 id="How-to-quot-Paint-quot-Everything-in-the-Sky"><a href="#How-to-quot-Paint-quot-Everything-in-the-Sky" class="headerlink" title="How to &quot;Paint&quot; Everything in the Sky"></a>How to &quot;Paint&quot; Everything in the Sky</h4><p><img src="/images/loading.webp" data-original="6.41.webp" alt="webp"></p>
+<p>​    主要讲渲染天空和云。</p>
+<h3 id="Atmosphere"><a href="#Atmosphere" class="headerlink" title="Atmosphere"></a>Atmosphere</h3><h4 id="Analytic-Atmosphere-Appearance-Modeling"><a href="#Analytic-Atmosphere-Appearance-Modeling" class="headerlink" title="Analytic Atmosphere Appearance Modeling"></a>Analytic Atmosphere Appearance Modeling</h4><p>​    大气外观分析建模</p>
+<p><img src="/images/loading.webp" data-original="6.42.webp" alt="webp"></p>
+<script type="math/tex; mode=display">\begin{aligned}
+\mathbb{F}(\theta,\gamma)=& (1+Ae^{\frac{B}{\cos\theta+0.01}})\cdot(C+De^{E\gamma}+  \\
+&+F\cos^2\gamma+G\cdot\chi(H,\gamma)+I\cdot\cos^{\frac{1}{2}}\theta)
+\end{aligned}</script><script type="math/tex; mode=display">L_{\lambda}=\mathbb{F}(\theta,\gamma)\cdot L_{M\lambda}</script><p>用这么个方程就表示了整个大气外观！</p>
+<p>Pros</p>
+<ul>
+<li><p>Calculation is simple and efficient</p>
+<p>计算简单高效</p>
+</li>
+</ul>
+<p>Cons</p>
+<ul>
+<li><p>Limited to ground view</p>
+<p>仅限地面视图</p>
+</li>
+<li><p>Atmosphere parameters can&#39;t be changed freely</p>
+<p>气氛参数不能随意更改</p>
+</li>
+</ul>
+<h4 id="Participating-Media"><a href="#Participating-Media" class="headerlink" title="Participating Media"></a>Participating Media</h4><p>​    参与媒体</p>
+<p><img src="/images/loading.webp" data-original="6.42.webp" alt="webp"></p>
+<p>Volume filled with particles</p>
+<p>​    充满颗粒的体积</p>
+<p>Interact differently with light depending on its composition</p>
+<p>​    与光的相互作用不同，具体取决于其成分</p>
+<h4 id="How-Light-Interacts-with-Participating-Media-Particles"><a href="#How-Light-Interacts-with-Participating-Media-Particles" class="headerlink" title="How Light Interacts with Participating Media Particles?"></a>How Light Interacts with Participating Media Particles?</h4><p>​    光如何与参与的介质粒子相互作用？</p>
+<p><img src="/images/loading.webp" data-original="6.44.webp" alt="webp"></p>
+<ul>
+<li><p>Absorption</p>
+<p>吸收</p>
+</li>
+<li><p>Out-scattering</p>
+<p>外散射</p>
+</li>
+<li><p>Emission</p>
+<p>排放</p>
+</li>
+<li><p>In-scattering</p>
+<p>内散射</p>
+</li>
+</ul>
+<h4 id="Volume-Rendering-Equation-VRE"><a href="#Volume-Rendering-Equation-VRE" class="headerlink" title="Volume Rendering Equation (VRE)"></a>Volume Rendering Equation (VRE)</h4><p>​    体绘制方程 (VRE)</p>
+<p><img src="/images/loading.webp" data-original="6.45.webp" alt="webp"></p>
+<script type="math/tex; mode=display">L(P,\omega)=\int_{x=0}^{d}T(x)[\sigma_{a}\cdot L_{e}(x,\omega)+\sigma_{s}\cdot L_{i}(x,\omega)]dx+T(M)L(M,\omega)</script><script type="math/tex; mode=display">T(x)=e^{-\int_x^P\sigma_t(s)ds}</script><p>Transmittance: the net reduction factor from absorption and out-scattering</p>
+<p>​    透射率：吸收和外散射的净减少因子</p>
+<script type="math/tex; mode=display">L_{i}(x,\omega)=\int_{S^{2}}f_{p}(x,\omega,\omega^{\prime})L(x,\omega^{\prime})d\omega^{\prime}</script><p>The net increase factor from in-scattering</p>
+<p>​    内散射的净增加因子</p>
+<h4 id="Real-Physics-in-Atmosphere"><a href="#Real-Physics-in-Atmosphere" class="headerlink" title="Real Physics in Atmosphere"></a>Real Physics in Atmosphere</h4><p><img src="/images/loading.webp" data-original="6.46.webp" alt="webp"></p>
+<p>学习计算机图形学还要对气象学有所涉猎！</p>
+<h4 id="Scattering-Types"><a href="#Scattering-Types" class="headerlink" title="Scattering Types"></a>Scattering Types</h4><p>​    散射类型</p>
+<p><img src="/images/loading.webp" data-original="6.47.webp" alt="webp"></p>
+<ul>
+<li><p>Rayleigh Scattering</p>
+<p>瑞利散射</p>
+<p>Scattering of light by particles that have a diameter <strong>much smaller than</strong> the wavelength of the radiation (eg. air molecules)</p>
+<p>直径<strong>远小于</strong>辐射波长的粒子（例如空气分子）对光进行散射</p>
+</li>
+<li><p>Mie scattering</p>
+<p>米氏散射</p>
+<p>Scattering of light by particles that have a diameter <strong>similar to or larger than</strong> the wavelength of the incident light (eg. aerosols)</p>
+<p>直径<strong>类似于或大于</strong>入射光波长的颗粒（例如气溶胶）对光进行散射</p>
+</li>
+</ul>
+<h4 id="Rayleigh-Scattering"><a href="#Rayleigh-Scattering" class="headerlink" title="Rayleigh Scattering"></a>Rayleigh Scattering</h4><p>​    瑞利散射</p>
+<p><img src="/images/loading.webp" data-original="6.48.webp" alt="webp"></p>
+<ul>
+<li><p>Certain directions receive more light than others front-back symmetry</p>
+<p>某些方向比其他方向接收更多的光线，前后对称</p>
+</li>
+<li><p>Shorter wavelengths (eg. blue) are scattered more strongly than longer wavelengths (eg.red)</p>
+<p>较短波长（例如蓝色）比较长波长（例如红色）散射更强烈</p>
+</li>
+</ul>
+<p><img src="/images/loading.webp" data-original="6.49.webp" alt="webp"></p>
+<h4 id="Why-Sky-is-Blue"><a href="#Why-Sky-is-Blue" class="headerlink" title="Why Sky is Blue"></a>Why Sky is Blue</h4><p><img src="/images/loading.webp" data-original="6.50.webp" alt="webp"></p>
+<p>​    由于大气层的存在，折射出蓝色，直射出红色。</p>
+<h4 id="Mie-Scattering"><a href="#Mie-Scattering" class="headerlink" title="Mie Scattering"></a>Mie Scattering</h4><p>​    米氏散射</p>
+<p><img src="/images/loading.webp" data-original="6.51.webp" alt="webp"></p>
+<ul>
+<li><p>Scatter light of all wavelength nearly equally</p>
+<p>几乎均匀地散射所有波长的光</p>
+</li>
+<li><p>Exhibit a strong forward directivity</p>
+<p>表现出强烈的前向方向性</p>
+</li>
+</ul>
+<h4 id="Mie-Scattering-Equation"><a href="#Mie-Scattering-Equation" class="headerlink" title="Mie Scattering Equation"></a>Mie Scattering Equation</h4><p><img src="/images/loading.webp" data-original="6.52.webp" alt="webp"></p>
+<h4 id="Mie-Scattering-in-Daily-Life"><a href="#Mie-Scattering-in-Daily-Life" class="headerlink" title="Mie Scattering in Daily Life"></a>Mie Scattering in Daily Life</h4><p>​    日常生活中的三重散射</p>
+<p><img src="/images/loading.webp" data-original="6.53.webp" alt="webp"></p>
+<ul>
+<li><p>Exhibit a strong forward directivity (halo effects around sun)</p>
+<p>表现出强烈的前向方向性（太阳周围的光晕效应）</p>
+</li>
+<li><p>Scatter light of all wavelength nearly equally (fog effects)</p>
+<p>几乎均匀地散射所有波长的光（雾效应）</p>
+</li>
+</ul>
+<h4 id="Variant-Air-Molecules-Absorption"><a href="#Variant-Air-Molecules-Absorption" class="headerlink" title="Variant Air Molecules Absorption"></a>Variant Air Molecules Absorption</h4><p>​    不同的空气分子吸收</p>
+<p><img src="/images/loading.webp" data-original="6.54.webp" alt="webp"></p>
+<ul>
+<li><p>Ozone (O3)<br>Absorb strongly at longer wavelengths to filter out the reds, oranges, yellows</p>
+<p>强烈吸收较长波长，滤除红色、橙色、黄色</p>
+</li>
+<li><p>Methane (CH4)</p>
+<p>Well-known for absorbing red light</p>
+<p>以吸收红光而闻名</p>
+</li>
+</ul>
+<h4 id="Single-Scattering-vs-Multi-Scattering"><a href="#Single-Scattering-vs-Multi-Scattering" class="headerlink" title="Single Scattering vs. Multi Scattering"></a>Single Scattering vs. Multi Scattering</h4><p><img src="/images/loading.webp" data-original="6.55.webp" alt="webp"></p>
+<script type="math/tex; mode=display">L_1=\int_A^BL_{P->A}ds</script><p><img src="/images/loading.webp" data-original="6.56.webp" alt="webp"></p>
+<script type="math/tex; mode=display">L_{n+1}=\int_{A}^{B}\int_{4\pi}L_{n}(p,v^{\prime})\cdot S(\lambda,\theta,h)\cdot T(p\to A)dv^{\prime}ds</script><p><img src="/images/loading.webp" data-original="6.57.webp" alt="webp"></p>
+<h4 id="Ray-Marching"><a href="#Ray-Marching" class="headerlink" title="Ray Marching"></a>Ray Marching</h4><ul>
+<li><p><strong>Ray marching</strong> is a popular method to integrate function along a path</p>
+<p><strong>射线行进</strong>是一种沿路径集成功能的流行方法</p>
+</li>
+<li><p>We use ray marching to calculate final radiance for a given point by single scattering</p>
+<p>我们使用光线行进通过单次散射计算给定点的最终辐射率</p>
+</li>
+<li><p>The integrated radiance is usually stored in <strong>look-up tables (LUT)</strong></p>
+<p>综合辐射率通常存储在<strong>查找表（LUT）</strong>中</p>
+</li>
+</ul>
+<p><img src="/images/loading.webp" data-original="6.58.webp" alt="webp"></p>
+<h4 id="Precomputed-Atmospheric-Scattering"><a href="#Precomputed-Atmospheric-Scattering" class="headerlink" title="Precomputed Atmospheric Scattering"></a>Precomputed Atmospheric Scattering</h4><p>​    预先计算的大气散射</p>
+<p><img src="/images/loading.webp" data-original="6.59.webp" alt="webp"></p>
+<p><img src="/images/loading.webp" data-original="6.60.webp" alt="webp"></p>
+<p><img src="/images/loading.webp" data-original="6.61.webp" alt="webp"></p>
+<h4 id="Challenges-of-Precomputed-Atmospheric-Scattering"><a href="#Challenges-of-Precomputed-Atmospheric-Scattering" class="headerlink" title="Challenges of Precomputed Atmospheric Scattering"></a>Challenges of Precomputed Atmospheric Scattering</h4><p>​    预计算大气散射的挑战</p>
+<ul>
+<li><p>Precomputation Cost</p>
+<p>预计算成本</p>
+<ul>
+<li><p>Multi-scattering iterations are very expensive</p>
+<p>多次散射迭代非常昂贵</p>
+</li>
+<li><p>Hard to generate atmosphere LUT on low-end devices (ie. mobile)</p>
+<p>难以在低端设备（即移动设备）上生成氛围 LUT</p>
+</li>
+</ul>
+</li>
+<li><p>Authoring and Dynamic Adjustment of Environments</p>
+<p>环境的创作和动态调整</p>
+<ul>
+<li><p>Artist can&#39;t change scattering coefficients on the fly</p>
+<p>艺术家无法即时更改散射系数</p>
+</li>
+<li><p>Hard to render effects like weather from sunny to rain fog, space travel among planets</p>
+<p>难以渲染天气从晴朗到雨雾、行星间太空旅行等效果</p>
+</li>
+</ul>
+</li>
+<li><p>Runtime Rendering Cost</p>
+<p>运行时渲染成本</p>
+<ul>
+<li><p>Expensive per-pixel multi high dimensional texture sampling for transmittance LUT and multi scattering LUT (always need to down-sample for efficiency)</p>
+<p>昂贵的每像素多高维纹理采样，用于透射 LUT 和多散射 LUT（始终需要下采样以提高效率）</p>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="Production-Friendly-Quick-Sky-and-Atmosphere-Rendering"><a href="#Production-Friendly-Quick-Sky-and-Atmosphere-Rendering" class="headerlink" title="Production Friendly Quick Sky and Atmosphere Rendering"></a>Production Friendly Quick Sky and Atmosphere Rendering</h4><p>​    制作友好的快速天空和大气渲染</p>
+<p><img src="/images/loading.webp" data-original="6.62.webp" alt="webp"></p>
+<p><img src="/images/loading.webp" data-original="6.63.webp" alt="webp"></p>
+<script type="math/tex; mode=display">\begin{aligned}&G_{n+1}=G_{n}*f_{ms}\\&\mathbf{F_{ms}}=1+\mathbf{f_{ms}}+\mathbf{f_{ms}^{2}}+\mathbf{f_{ms}^{3}}+...=\frac{1}{1-\mathbf{f_{ms}}}\\&\Psi_{\mathbf{ms}}=\mathbf{L_{2^{nd}order}}\mathbf{F_{ms}}\end{aligned}</script><p>Simplify Multi-scattering Assumption</p>
+<p>​    简化多重散射假设</p>
+<ul>
+<li><p>Scattering events with order greater or equal to 2 are executed using an <strong>isotropic phase function</strong></p>
+<p>使用<strong>各向同性相位函数</strong>执行阶数大于或等于 2 的散射事件</p>
+</li>
+<li><p>All points within the neighborhood of the position wecurrently shade <strong>receive the same amount of second order scattered light</strong></p>
+<p>当前阴影位置附近的所有点<strong>接收相同量的二阶散射光</strong></p>
+</li>
+<li><p><strong>Visibility is ignored</strong></p>
+<p><strong>忽略可见性</strong></p>
+</li>
+</ul>
+<p><img src="/images/loading.webp" data-original="6.64.webp" alt="webp"></p>
+<p>Fixed view position and sun position to remove 2 dimensions out of LUT</p>
+<p>​    固定视图位置和太阳位置以从 LUT 中删除 2 个维度</p>
+<p><img src="/images/loading.webp" data-original="6.65.webp" alt="webp"></p>
+<ul>
+<li><p>Generated a 3D LUT to evaluate aerial-perspective effects by ray marching</p>
+<p>生成 3D LUT 以通过光线行进评估空气透视效果</p>
+</li>
+</ul>
+<h4 id="Good-Balance-of-Performance-and-Effect"><a href="#Good-Balance-of-Performance-and-Effect" class="headerlink" title="Good Balance of Performance and Effect"></a>Good Balance of Performance and Effect</h4><p>​    性能与效果的良好平衡</p>
+<p><img src="/images/loading.webp" data-original="6.66.webp" alt="webp"></p>
+<h3 id="quot-Paint-quot-Cloud"><a href="#quot-Paint-quot-Cloud" class="headerlink" title="&quot;Paint&quot; Cloud"></a>&quot;Paint&quot; Cloud</h3><h4 id="Cloud-Type"><a href="#Cloud-Type" class="headerlink" title="Cloud Type"></a>Cloud Type</h4><p><img src="/images/loading.webp" data-original="6.67.webp" alt="webp"></p>
+<p>​    云被分成了这么多种。</p>
+<h4 id="Mesh-Based-Cloud-Modeling"><a href="#Mesh-Based-Cloud-Modeling" class="headerlink" title="Mesh-Based Cloud Modeling"></a>Mesh-Based Cloud Modeling</h4><p>​    基于网格的云建模</p>
+<p><img src="/images/loading.webp" data-original="6.68.webp" alt="webp"></p>
+<p>Pros</p>
+<ul>
+<li><p>High quality</p>
+<p>高质量</p>
+</li>
+</ul>
+<p>Cons</p>
+<ul>
+<li><p>Overall expensive</p>
+<p>代价高</p>
+</li>
+<li><p>Do not support dynamic weather</p>
+<p>不支持动态天气</p>
+</li>
+</ul>
+<h4 id="Billboard-Cloud"><a href="#Billboard-Cloud" class="headerlink" title="Billboard Cloud"></a>Billboard Cloud</h4><p><img src="/images/loading.webp" data-original="6.69.webp" alt="webp"></p>
+<p>​    早期游戏使用贴图描述云。</p>
+<p>Pros</p>
+<ul>
+<li><p>Efficient</p>
+<p>高效的</p>
+</li>
+</ul>
+<p>Cons</p>
+<ul>
+<li><p>Limited visual effect</p>
+<p>视觉效果有限</p>
+</li>
+<li><p>Limited cloud type</p>
+<p>有限的云类型</p>
+</li>
+</ul>
+<h4 id="Volumetric-Cloud-Modeling"><a href="#Volumetric-Cloud-Modeling" class="headerlink" title="Volumetric Cloud Modeling"></a>Volumetric Cloud Modeling</h4><p>​    体积云建模</p>
+<p><img src="/images/loading.webp" data-original="6.70.webp" alt="webp"></p>
+<p>Pros</p>
+<ul>
+<li><p>Realistic cloud shapes</p>
+<p>逼真的云形状</p>
+</li>
+<li><p>Large scale clouds possible</p>
+<p>可能出现大规模云</p>
+</li>
+<li><p>Dynamic weather supported</p>
+<p>支持动态天气</p>
+</li>
+<li><p>Dynamic volumetric lighting and shadowing</p>
+<p>动态体积照明和阴影</p>
+</li>
+</ul>
+<p>Cons</p>
+<ul>
+<li><p>Efficiency must be considered</p>
+<p>必须考虑效率</p>
+</li>
+</ul>
+<h4 id="Weather-Texture"><a href="#Weather-Texture" class="headerlink" title="Weather Texture"></a>Weather Texture</h4><p><img src="/images/loading.webp" data-original="6.71.webp" alt="webp"></p>
+<h4 id="Noise-Functions"><a href="#Noise-Functions" class="headerlink" title="Noise Functions"></a>Noise Functions</h4><p><img src="/images/loading.webp" data-original="6.72.webp" alt="webp"></p>
+<h4 id="Cloud-Density-Model"><a href="#Cloud-Density-Model" class="headerlink" title="Cloud Density Model"></a>Cloud Density Model</h4><p><img src="/images/loading.webp" data-original="6.73.webp" alt="webp"></p>
+<h4 id="Rednering-Cloud-by-Ray-Marching"><a href="#Rednering-Cloud-by-Ray-Marching" class="headerlink" title="Rednering Cloud by Ray Marching"></a>Rednering Cloud by Ray Marching</h4><p><img src="/images/loading.webp" data-original="6.74.webp" alt="webp"></p>
 
         </article>
         <div class="post-bottom">
