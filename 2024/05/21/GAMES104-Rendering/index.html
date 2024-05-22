@@ -983,6 +983,838 @@
 <p>随着 GPU 越来越强大，越来越多的工作转移到 GPU 上，这就是 GPU 驱动</p>
 </li>
 </ol>
+<h2 id="第五节：渲染中光和材质的数学魔法"><a href="#第五节：渲染中光和材质的数学魔法" class="headerlink" title="第五节：渲染中光和材质的数学魔法"></a>第五节：渲染中光和材质的数学魔法</h2><h3 id="Rendering-on-Game-Engine-2"><a href="#Rendering-on-Game-Engine-2" class="headerlink" title="Rendering on Game Engine"></a>Rendering on Game Engine</h3><p>Lighting, Materials and Shaders</p>
+<h4 id="Participants-of-Rendering-Computation"><a href="#Participants-of-Rendering-Computation" class="headerlink" title="Participants of Rendering Computation"></a>Participants of Rendering Computation</h4><p>​    渲染计算参与者</p>
+<ul>
+<li><p>Lighting</p>
+<p>灯光</p>
+<ul>
+<li><p>Photon emit, bounce, absorb and perception is the origin of everything in rendering</p>
+<p>光子的发射、反弹、吸收和感知是渲染中一切的起源</p>
+</li>
+</ul>
+</li>
+<li><p>Material</p>
+<p>材料</p>
+<ul>
+<li><p>How matter react to photon</p>
+<p>物质如何对光子做出反应</p>
+</li>
+</ul>
+</li>
+<li><p>Shader</p>
+<p>着色器</p>
+<ul>
+<li><p>How to train and organize those micro-slaves to finish such a vast and dirty computation job between photon and materials</p>
+<p>如何训练和组织这些微型奴隶来完成光子和材料之间如此庞大而肮脏的计算工作</p>
+</li>
+</ul>
+</li>
+</ul>
+<p>An interesting adventure story joined by smart graphics <strong>scientists</strong> and <strong>engineers</strong> based on evolution of <strong>hardware</strong>.</p>
+<p>​    智能图形<strong>科学家</strong>和<strong>工程师</strong>基于<strong>硬件</strong>的演变而加入的有趣冒险故事。</p>
+<h4 id="The-Rendering-Equation"><a href="#The-Rendering-Equation" class="headerlink" title="The Rendering Equation"></a>The Rendering Equation</h4><p>​    James Kajiya 在 1986 年的 SIGGRAPH 提出了渲染方程：</p>
+<script type="math/tex; mode=display">L_o(x,\omega_o)=L_e(x,\omega_o)+\int_{H^2}f_r(x,\omega_o,\omega_i)L_i(x,\omega_i)\cos\theta_id\omega_i</script><center>出射 outgoing = 自发光 emitted + 反射光 reflected </center>
+
+<blockquote>
+<p>​    Radiance（辐射度）指的是在给定方向上单位面积上的能量辐射量。它表示了光线从光源或物体表面出射的能量。Radiance 与发射光线的方向、面积以及能量有关，通常用符号L表示，单位为 $W/(sr*m^2)$（瓦特/球面弧度平方米）。</p>
+<p>​    Irradiance（入射照度）指的是单位面积上受到的来自各个方向的光能量的总和。它表示了光线对物体表面的照射强度。Irradiance 与入射光线的方向、面积以及能量有关，通常用符号E表示，单位为 $W/m^2$（瓦特/平方米）。</p>
+</blockquote>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/539740506">辐射度量学（Radiometry/Photometry）和物理光照 - 知乎 (zhihu.com)</a></li>
+</ul>
+<p><img src="/images/loading.webp" data-original="5.1.webp" alt="webp"></p>
+<p>​    虽然这个方程很早就被提出，但是想要正确又高效地计算这个方程太困难了。</p>
+<p><img src="/images/loading.webp" data-original="5.2.webp" alt="webp"></p>
+<h4 id="Complexity-of-Real-Rendering"><a href="#Complexity-of-Real-Rendering" class="headerlink" title="Complexity of Real Rendering"></a>Complexity of Real Rendering</h4><p><img src="/images/loading.webp" data-original="5.3.webp" alt="webp"></p>
+<p>​    现实生活中的光太复杂了。</p>
+<ul>
+<li><p>Indirect light</p>
+<p>间接光</p>
+</li>
+<li><p>Indirect shadow</p>
+<p>间接阴影</p>
+</li>
+<li><p>Direct light</p>
+<p>直射光</p>
+</li>
+<li><p>Scattering</p>
+<p>散射</p>
+</li>
+<li><p>Caustics</p>
+<p>焦散</p>
+</li>
+<li><p>Glossy reflections</p>
+<p>光泽反射</p>
+</li>
+</ul>
+<h4 id="The-1st-Challenge-1a-Visibility-to-Lights"><a href="#The-1st-Challenge-1a-Visibility-to-Lights" class="headerlink" title="The 1st Challenge: 1a Visibility to Lights"></a>The 1st Challenge: 1a Visibility to Lights</h4><p><img src="/images/loading.webp" data-original="5.4.webp" alt="webp"></p>
+<p>​    第一困难：计算光照是否可见</p>
+<h4 id="The-1st-Challenge-1b-Light-Source-Complexity"><a href="#The-1st-Challenge-1b-Light-Source-Complexity" class="headerlink" title="The 1st Challenge: 1b Light Source Complexity"></a>The 1st Challenge: 1b Light Source Complexity</h4><p><img src="/images/loading.webp" data-original="5.5.webp" alt="webp"></p>
+<p>​    第一困难：光照种类复杂</p>
+<h4 id="The-2nd-Challenge-How-to-do-Integral-Efficiently-on-Hardware"><a href="#The-2nd-Challenge-How-to-do-Integral-Efficiently-on-Hardware" class="headerlink" title="The 2nd Challenge: How to do Integral Efficiently on Hardware"></a>The 2nd Challenge: How to do Integral Efficiently on Hardware</h4><p>​    第二个挑战：如何在硬件上高效地进行积分</p>
+<p><img src="/images/loading.webp" data-original="5.1.webp" alt="webp"></p>
+<ul>
+<li><p>Brute-force way sampling</p>
+<p>暴力方式采样</p>
+</li>
+<li><p>Smarter sampling, i.e., Monta Carlo</p>
+<p>更智能的采样，即蒙塔卡罗</p>
+</li>
+<li><p>Derive fast analytical solutions</p>
+<p>得出快速分析解决方案</p>
+<ul>
+<li><p>Simplify the $f_r$ :</p>
+<p>简化 $f_r$ ：</p>
+<ul>
+<li><p>Assumptions the optical properties of materials</p>
+<p>假设材料的光学特性</p>
+</li>
+<li><p>Mathematical representation of materials</p>
+<p>材料的数学表示</p>
+</li>
+</ul>
+</li>
+<li><p>Simplify the $L_i$ :</p>
+<p>简化$L_i$：</p>
+<ul>
+<li><p>Deal with directional light, point light and spot light only</p>
+<p>仅处理定向光、点光和聚光灯</p>
+</li>
+<li><p>A mathematical representation of incident light sampling on a hemisphere, for ex: lBL and SH</p>
+<p>半球上入射光采样的数学表示，例如：lBL 和 SH</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="The-3rd-Challenge-Any-matter-will-be-light-source"><a href="#The-3rd-Challenge-Any-matter-will-be-light-source" class="headerlink" title="The 3rd Challenge: Any matter will be light source"></a>The 3rd Challenge: Any matter will be light source</h4><p>​    挑战之三：任何物质都可以成为光源（会反射光）</p>
+<p><img src="/images/loading.webp" data-original="5.6.webp" alt="webp"></p>
+<h3 id="Starting-from-Simple"><a href="#Starting-from-Simple" class="headerlink" title="Starting from Simple"></a>Starting from Simple</h3><p>Forget some abstract concepts for a while, ie. radiosity, microfacet and BRDF etc</p>
+<p>​    暂时忘记一些抽象概念，即。光能传递、微面、BRDF 等</p>
+<h4 id="Simple-Light-Solution"><a href="#Simple-Light-Solution" class="headerlink" title="Simple Light Solution"></a>Simple Light Solution</h4><p><img src="/images/loading.webp" data-original="5.7.webp" alt="webp"></p>
+<figure class="highlight glsl"><table><tr><td class="code"><pre><code class="hljs glsl">glLightfv(GL_LIGHTO, GL_AMBIENT, light_ambient);<br>glLightfv(GL_LIGHTO, GL_DIFFUSE, light_diffuse);<br>glLightfv(GL_LIGHTO，GL_SPECULAR, light_specular);<br>glLightfv(GL_LIGHTO, GL_POSITION, light_position);<br></code></pre></td></tr></table></figure>
+<ul>
+<li><p>Using simple light source as main light</p>
+<p>使用简单光源作为主光</p>
+<ul>
+<li><p>Directional light in most cases</p>
+<p>大多数情况下是定向光</p>
+</li>
+<li><p>Point and spot light in special case</p>
+<p>特殊情况下的点光源和聚光灯</p>
+</li>
+</ul>
+</li>
+<li><p>Using ambient light to hack others</p>
+<p>利用环境光攻击他人</p>
+<ul>
+<li><p>A constant to represent mean of complex hemisphere irradiance</p>
+<p>表示复半球辐照度平均值的常数</p>
+</li>
+</ul>
+</li>
+<li><p>Supported in graphics APl</p>
+<p>图形 API 支持</p>
+</li>
+</ul>
+<h4 id="Environment-Map-Reflection"><a href="#Environment-Map-Reflection" class="headerlink" title="Environment Map Reflection"></a>Environment Map Reflection</h4><p><img src="/images/loading.webp" data-original="5.8.webp" alt="webp"></p>
+<ul>
+<li><p>Using environment map to enhance glossary surface reflection</p>
+<p>使用环境贴图增强词汇表（？）表面反射</p>
+</li>
+<li><p>Using environment mipmap to represent roughness of surface</p>
+<p>使用环境 mipmap 来表示表面的粗糙度</p>
+</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="code"><pre><code class="hljs C"><span class="hljs-type">void</span> <span class="hljs-title function_">main</span><span class="hljs-params">()</span><br>&#123;<br>    vec3 N = normalize(normal);<br>    vec3 V = normalize(camera position - world position);<br>    vec3 R = reflect(v, N);<br>    FragColor = texture(cube texture, R);<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>Early stage exploration of image-based lighting</p>
+<p>​    基于图像的照明的早期探索</p>
+<h4 id="Math-Behind-Light-Combo"><a href="#Math-Behind-Light-Combo" class="headerlink" title="Math Behind Light Combo"></a>Math Behind Light Combo</h4><p>​    光组合背后的数学</p>
+<p><img src="/images/loading.webp" data-original="5.9.webp" alt="webp"></p>
+<ul>
+<li><p>Main Light</p>
+<p>主光源</p>
+<ul>
+<li><p>Dominant Light</p>
+<p>主光源</p>
+</li>
+</ul>
+</li>
+<li><p>Ambient Light</p>
+<p>环境光</p>
+<ul>
+<li><p>Low-frequency of irradiance sphere distribution</p>
+<p>低频辐照度球体分布</p>
+</li>
+</ul>
+</li>
+<li><p>Environment Map</p>
+<p>环境贴图</p>
+<ul>
+<li><p>High-frequency of irradiance sphere distribution</p>
+<p>高频辐照度球体分布</p>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="Blinn-Phong-Materials"><a href="#Blinn-Phong-Materials" class="headerlink" title="Blinn-Phong Materials"></a>Blinn-Phong Materials</h4><p><img src="/images/loading.webp" data-original="5.10.webp" alt="webp"></p>
+<p>​    冯光照模型是个很经典的光照模型，虽然现在有点过时了。</p>
+<h4 id="Problem-of-Blinn-Phong"><a href="#Problem-of-Blinn-Phong" class="headerlink" title="Problem of Blinn-Phong"></a>Problem of Blinn-Phong</h4><ul>
+<li><p>Not energy conservative</p>
+<p>不符合能量守恒定律（可能越反射越亮）</p>
+<ul>
+<li><p>Unstable in ray-tracing</p>
+<p>光线追踪不稳定</p>
+</li>
+</ul>
+</li>
+</ul>
+<p><img src="/images/loading.webp" data-original="5.11.webp" alt="webp"></p>
+<p>Left non-energy conserving model lead a lot of noise compare Right energy conserving model</p>
+<p>​    左边的非节能模型与右边的节能模型相比会产生很多噪音</p>
+<ul>
+<li><p>Hard to model complex realistic material</p>
+<p>难以模拟复杂材质（冯模型模拟出来都有一股塑料感）</p>
+</li>
+</ul>
+<p><img src="/images/loading.webp" data-original="5.12.webp" alt="webp"></p>
+<h4 id="Shadow"><a href="#Shadow" class="headerlink" title="Shadow"></a>Shadow</h4><p><img src="/images/loading.webp" data-original="5.13.webp" alt="webp"></p>
+<ul>
+<li><p>Shadow is nothing but space when the light is blocked by an opaque object</p>
+<p>当光线被不透明物体阻挡时，阴影只不过是空间</p>
+</li>
+<li><p>Already obsolete method</p>
+<p>已经过时的方法</p>
+<ul>
+<li><p>planar shadow</p>
+<p>平面阴影</p>
+</li>
+<li><p>shadow volume</p>
+<p>阴影体积</p>
+</li>
+<li><p>projective texture</p>
+<p>投影纹理</p>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="Shadow-Map"><a href="#Shadow-Map" class="headerlink" title="Shadow Map"></a>Shadow Map</h4><blockquote>
+<p>​    Shadow Map 是计算机图形学中用于实现阴影的一种技术。它基于光线追踪的概念，将场景从光源的视角渲染到一个深度纹理贴图上，以便在后续的渲染中使用这个纹理来确定哪些表面处于阴影之中。</p>
+</blockquote>
+<p>​    计算出阴影贴图。用一张 texture 表示阴影。</p>
+<p><img src="/images/loading.webp" data-original="5.14.webp" alt="webp"></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><code class="hljs C"><span class="hljs-comment">// project our 3D position to the shadow map</span><br>vec4 proj_pos = shadow viewproj * pos;<br><span class="hljs-comment">// from homogeneous space to clip space</span><br>vec2 shadow_uv = proj_pos.xy / proj_pos.w;<br><span class="hljs-comment">// from clip space to uv space</span><br>shadow_uv = shadow_uv * <span class="hljs-number">0.5</span> + vec2(<span class="hljs-number">0.5</span>)<br><span class="hljs-comment">// get point depth (from -1 to 1)</span><br><span class="hljs-type">float</span> real_depth = proj_pos.z / proj_pos.w;<br><span class="hljs-comment">// normalize from [-1..+1] to [0..+1]</span><br>real_depth = real_depth * <span class="hljs-number">0.5</span> + <span class="hljs-number">0.5</span>;<br><span class="hljs-comment">// read depth from depth buffer in [0..+1]</span><br><span class="hljs-type">float</span> shadow_depth = texture(shadowmap, shadow_uv).x;<br><span class="hljs-comment">// compute final shadow factor by comparing</span><br><span class="hljs-type">float</span> shadow_factor = <span class="hljs-number">1.0</span>;<br><span class="hljs-keyword">if</span>(shadow_depth &lt; real_depth)<br>    shadow_factor =<span class="hljs-number">0.0</span>;<br></code></pre></td></tr></table></figure>
+<h4 id="Problem-of-Shadow-Map"><a href="#Problem-of-Shadow-Map" class="headerlink" title="Problem of Shadow Map"></a>Problem of Shadow Map</h4><p><img src="/images/loading.webp" data-original="5.15.webp" alt="webp"></p>
+<p>Resolution is limited on texture</p>
+<p>​    分辨率受纹理限制</p>
+<p><img src="/images/loading.webp" data-original="5.16.webp" alt="webp"></p>
+<p>Depth precision is limited in texture</p>
+<p>​    深度精度受到纹理的限制</p>
+<h4 id="Basic-Shading-Solution"><a href="#Basic-Shading-Solution" class="headerlink" title="Basic Shading Solution"></a>Basic Shading Solution</h4><ul>
+<li><p>Simple light + Ambient</p>
+<p>简单光 + 环境光</p>
+<ul>
+<li><p>dominent light solves No. 1b</p>
+<p>主光解决了第 1b 项挑战</p>
+</li>
+<li><p>ambient and EnvMap solves No.3 challanges</p>
+<p>环境光和 EnvMap 解决了第 3 项挑战</p>
+</li>
+</ul>
+</li>
+<li><p>Blinn-Phong material</p>
+<ul>
+<li><p>solve No.2 challange</p>
+<p>解决第 2 项挑战</p>
+</li>
+</ul>
+</li>
+<li><p>Shadow map</p>
+<p>阴影贴图</p>
+<ul>
+<li><p>solve No.1a challange</p>
+<p>解决第 1a 项挑战</p>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="Cheap-Robust-and-Easy-Modification"><a href="#Cheap-Robust-and-Easy-Modification" class="headerlink" title="Cheap, Robust and Easy Modification"></a>Cheap, Robust and Easy Modification</h4><p>​    便宜、鲁棒且易于修改</p>
+<h3 id="First-Wave-of-AAA-Quality"><a href="#First-Wave-of-AAA-Quality" class="headerlink" title="First Wave of AAA Quality"></a>First Wave of AAA Quality</h3><p>​    3A 游戏的渲染技术不断发展。</p>
+<h3 id="Pre-computed-Global-Illumination"><a href="#Pre-computed-Global-Illumination" class="headerlink" title="Pre-computed Global Illumination"></a>Pre-computed Global Illumination</h3><p>​    用一个环境光常量来模拟其他物体反射出的所有光，减少计算。</p>
+<h4 id="Why-Global-llumination-is-lmportant"><a href="#Why-Global-llumination-is-lmportant" class="headerlink" title="Why Global llumination is lmportant"></a>Why Global llumination is lmportant</h4><p><img src="/images/loading.webp" data-original="5.17.webp" alt="webp"></p>
+<p>​    如果不考虑光的反射，大片面积将会一坨黑。</p>
+<h4 id="How-to-Represent-indirect-Light"><a href="#How-to-Represent-indirect-Light" class="headerlink" title="How to Represent indirect Light"></a>How to Represent indirect Light</h4><p><img src="/images/loading.webp" data-original="5.18.webp" alt="webp"></p>
+<ul>
+<li><p>Good compression rate</p>
+<p>良好的压缩率</p>
+<ul>
+<li><p>We need to store millions of radiance probes in a level</p>
+<p>我们需要在一个水平仪中存储数百万个辐射探头</p>
+</li>
+</ul>
+</li>
+<li><p>Easy to do integration with material function</p>
+<p>易于与材料功能集成</p>
+<ul>
+<li><p>Use polynomial calculation to convolute withmaterial BRDF</p>
+<p>使用多项式计算与材质 BRDF 进行卷积</p>
+</li>
+</ul>
+</li>
+</ul>
+<p>​    计算光照用到了下面数学工具：</p>
+<h4 id="Fourier-Transform"><a href="#Fourier-Transform" class="headerlink" title="Fourier Transform"></a>Fourier Transform</h4><p><img src="/images/loading.webp" data-original="5.19.webp" alt="webp"></p>
+<script type="math/tex; mode=display">f(x)=\frac{A}{2}+\frac{2A\cos(t\omega)}{\pi}-\frac{2A\cos(3t\omega)}{3\pi}+\frac{2A\cos(5t\omega)}{5\pi}-\frac{2A\cos(7t\omega)}{7\pi}+\cdots</script><p>​    傅里叶变换让函数在时域和空域之间转换。</p>
+<h4 id="Convolution-Theorem"><a href="#Convolution-Theorem" class="headerlink" title="Convolution Theorem"></a>Convolution Theorem</h4><p><img src="/images/loading.webp" data-original="5.20.webp" alt="webp"></p>
+<p>​    引入傅里叶变换，让卷积速度更快！</p>
+<h4 id="Spherical-Harmonics"><a href="#Spherical-Harmonics" class="headerlink" title="Spherical Harmonics"></a>Spherical Harmonics</h4><p>​    球谐函数</p>
+<blockquote>
+<p>​    Spherical Harmonics（球谐函数）是一组用于描述球面上函数的数学函数系列。在计算机图形学中，球谐函数被广泛应用于光照和环境光的表示与计算。</p>
+</blockquote>
+<p><img src="/images/loading.webp" data-original="5.21.webp" alt="webp"></p>
+<p><img src="/images/loading.webp" data-original="5.22.webp" alt="webp"></p>
+<p>Spherical Harmonics, a mathematical system analogous to the Fourier transform but defined across the surface of a sphere. The SH functions in general are defined on imaginary numbers</p>
+<p>​    球谐函数，一种类似于傅立叶变换的数学系统，但定义在球体表面。 SH 函数一般是根据虚数定义的</p>
+<h4 id="Spherical-Harmonics-Encoding"><a href="#Spherical-Harmonics-Encoding" class="headerlink" title="Spherical Harmonics Encoding"></a>Spherical Harmonics Encoding</h4><p><img src="/images/loading.webp" data-original="5.23.webp" alt="webp"></p>
+<h4 id="Sampling-lrradiance-Probe-Anywhere"><a href="#Sampling-lrradiance-Probe-Anywhere" class="headerlink" title="Sampling lrradiance Probe Anywhere"></a>Sampling lrradiance Probe Anywhere</h4><p><img src="/images/loading.webp" data-original="5.24.webp" alt="webp"></p>
+<h4 id="Compress-lrradiance-Probe-to-SH1"><a href="#Compress-lrradiance-Probe-to-SH1" class="headerlink" title="Compress lrradiance Probe to SH1"></a>Compress lrradiance Probe to SH1</h4><blockquote>
+<p>​    Lrradiance Probe（辐照度探针）是计算机图形学中用于捕捉和近似表示环境光照信息的技术。它通过在场景中放置一系列探针来采样场景中的辐照度（irradiance），并将这些采样结果存储起来，以便在渲染过程中使用。</p>
+</blockquote>
+<p><img src="/images/loading.webp" data-original="5.25.webp" alt="webp"></p>
+<ul>
+<li><p>Source lrradiance Probe</p>
+<p>光源辐照度探头</p>
+</li>
+<li><p>Compressed lrradiance Probe By SH1</p>
+<p>SH1 的压缩辐照度探头</p>
+</li>
+<li><p>Reconstruct lrradiance In Shader</p>
+<p>在着色器中重建光照度</p>
+</li>
+</ul>
+<h4 id="Store-and-Shading-with-SH"><a href="#Store-and-Shading-with-SH" class="headerlink" title="Store and Shading with SH"></a>Store and Shading with SH</h4><p>Just RGBA8 color</p>
+<ul>
+<li><p>Use 4 RGB textures to store 12 SH coefficients</p>
+<p>使用 4 个 RGB 纹理来存储 12 个 SH 系数</p>
+<ul>
+<li><p>$L0$ coefficients in HDR (BC6H texture)</p>
+<p>HDR 中的 $L0$ 系数（BC6H 纹理）</p>
+</li>
+<li><p>$L1$ coefficients in LDR (3x Bc7 or BC1 textures)</p>
+<p>LDR 中的 $L1$ 系数（3x Bc7 或 BC1 纹理）</p>
+</li>
+</ul>
+</li>
+<li><p>Total footprint for RGB SH lightmaps:</p>
+<p>RGB SH 光照贴图的总占用空间：</p>
+<ul>
+<li><p>32 bits (4 bytes)/texel for Bc6+Bc7, high quality mode</p>
+<p>Bc6+Bc7 32 位（4 字节）/texel，高质量模式</p>
+</li>
+<li><p>20 bits (2.5 bytes) texel for Bc6+Bc1, low quality mode</p>
+<p>Bc6+Bc1 的 20 位（2.5 字节）纹理元素，低质量模式</p>
+</li>
+</ul>
+</li>
+</ul>
+<p>Simple diffuse shading</p>
+<p><img src="/images/loading.webp" data-original="5.26.webp" alt="webp"></p>
+<h4 id="SH-Lightmap-Precomputed-GI"><a href="#SH-Lightmap-Precomputed-GI" class="headerlink" title="SH Lightmap: Precomputed GI"></a>SH Lightmap: Precomputed GI</h4><p>​    SH 光照贴图：预计算 GI</p>
+<p>​    空间换时间。</p>
+<blockquote>
+<p>​    SH Lightmap 是一种基于球谐函数（Spherical Harmonics）的光照贴图技术，可以用于近似表示场景中的光照信息。它通过将场景的光照信息转换为球谐系数并存储到贴图上，以便在渲染时快速计算每个片元的光照贡献。</p>
+</blockquote>
+<p><img src="/images/loading.webp" data-original="5.27.webp" alt="webp"></p>
+<ul>
+<li><p>Parameterized all scene into huge 2D lightmap atlas</p>
+<p>将所有场景参数化为巨大的 2D 光照图集</p>
+</li>
+<li><p>Using offline lighting farm to calculate irradiance probes for all surface points</p>
+<p>使用离线照明场计算所有表面点的辐照度探头</p>
+</li>
+<li><p>Compress those irradiance probes into SH coefficients</p>
+<p>将这些辐照度探头压缩为 SH 系数</p>
+</li>
+<li><p>Store SH coefficients into 2D atlas lightmap textures</p>
+<p>将 SH 系数存储到 2D 图集光照贴图纹理中</p>
+</li>
+</ul>
+<h4 id="Lightmap-UV-Atlas"><a href="#Lightmap-UV-Atlas" class="headerlink" title="Lightmap: UV Atlas"></a>Lightmap: UV Atlas</h4><p><img src="/images/loading.webp" data-original="5.28.webp" alt="webp"></p>
+<p>Lightmap density</p>
+<p>​    光照贴图密度</p>
+<ul>
+<li><p>Low-poly proxy geometry</p>
+<p>低多边形代理几何体</p>
+</li>
+<li><p>Fewer UV charts/islands</p>
+<p>更少的紫外线图表/岛屿</p>
+</li>
+<li><p>Fewer lightmap texels are wasted</p>
+<p>浪费的光照贴图纹理像素更少</p>
+</li>
+</ul>
+<h4 id="Lightmap-Lighing"><a href="#Lightmap-Lighing" class="headerlink" title="Lightmap: Lighing"></a>Lightmap: Lighing</h4><p><img src="/images/loading.webp" data-original="5.29.webp" alt="webp"></p>
+<p>Indirect lighting, finalgeometry</p>
+<p>​    间接照明，最终几何</p>
+<ul>
+<li><p>Project lightmap from proxiesto all LODs</p>
+<p>将光照贴图从代理投影到所有 LOD</p>
+</li>
+<li><p>Apply mesh details</p>
+<p>应用网格细节</p>
+</li>
+<li><p>Add short-range, high-frequency lighting detail by HBAO</p>
+<p>通过 HBAO 添加短距离、高频照明细节</p>
+</li>
+</ul>
+<h4 id="Lightmap-Lighting-Direct-Lighting"><a href="#Lightmap-Lighting-Direct-Lighting" class="headerlink" title="Lightmap: Lighting + Direct Lighting"></a>Lightmap: Lighting + Direct Lighting</h4><p><img src="/images/loading.webp" data-original="5.30.webp" alt="webp"></p>
+<p>​    光照贴图：光照+直接光照</p>
+<p>Direct + indirect lighting, final geometry</p>
+<p>​    直接+间接照明，最终几何形状</p>
+<ul>
+<li><p>Compute direct lighting dynamically</p>
+<p>动态计算直接照明</p>
+</li>
+</ul>
+<h4 id="Final-Shading-with-Materials"><a href="#Final-Shading-with-Materials" class="headerlink" title="Final Shading with Materials"></a>Final Shading with Materials</h4><p><img src="/images/loading.webp" data-original="5.31.webp" alt="webp"></p>
+<p>Final frame</p>
+<p>​    最终帧</p>
+<ul>
+<li><p>Combined with materials</p>
+<p>与材质结合</p>
+</li>
+</ul>
+<h4 id="Lightmap"><a href="#Lightmap" class="headerlink" title="Lightmap"></a>Lightmap</h4><ul>
+<li><p>Pros</p>
+<p>优点</p>
+<ul>
+<li><p>Very efficient on runtime</p>
+<p>运行时非常高效</p>
+</li>
+<li><p>Bake a lot of fine details of Gl on environment</p>
+<p>在环境上烘焙了 GL 的很多细节</p>
+</li>
+</ul>
+</li>
+<li><p>Cons</p>
+<p>缺点</p>
+<ul>
+<li><p>Long and expensive precomputation (lightmap farm)</p>
+<p>漫长而昂贵的预计算（光照贴图农场）</p>
+</li>
+<li><p>Only can handle static scene and static light</p>
+<p>只能处理静态场景和静态灯光</p>
+</li>
+<li><p>Storage cost on package and GPU</p>
+<p>包和 GPU 的存储成本</p>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="Light-Probe-Probes-in-Game-Space"><a href="#Light-Probe-Probes-in-Game-Space" class="headerlink" title="Light Probe: Probes in Game Space"></a>Light Probe: Probes in Game Space</h4><p><img src="/images/loading.webp" data-original="5.32.webp" alt="webp"></p>
+<h4 id="Light-Probe-Point-Generation"><a href="#Light-Probe-Point-Generation" class="headerlink" title="Light Probe Point Generation"></a>Light Probe Point Generation</h4><p><img src="/images/loading.webp" data-original="5.33.webp" alt="webp"></p>
+<h4 id="Reflection-Probe"><a href="#Reflection-Probe" class="headerlink" title="Reflection Probe"></a>Reflection Probe</h4><p><img src="/images/loading.webp" data-original="5.34.webp" alt="webp"></p>
+<h4 id="Light-Probes-Reflection-Probes"><a href="#Light-Probes-Reflection-Probes" class="headerlink" title="Light Probes + Reflection Probes"></a>Light Probes + Reflection Probes</h4><ul>
+<li><p>Pros</p>
+<p>优点</p>
+<ul>
+<li><p>Very efficient on runtime</p>
+<p>运行时非常高效</p>
+</li>
+<li><p>Can be applied to both static and dynamic objects</p>
+<p>可应用于静态和动态对象</p>
+</li>
+<li><p>Handle both diffuse and specular shading</p>
+<p>处理漫反射和镜面反射着色</p>
+</li>
+</ul>
+</li>
+<li><p>Cons</p>
+<p>缺点</p>
+<ul>
+<li><p>A bunch of SH light probes need some precomputation</p>
+<p>一堆 SH 光探头需要一些预计算</p>
+</li>
+<li><p>Can not handle fine detail of Gl. l.e, soft shadow on overlapped structures</p>
+<p>无法处理 GL 的精细细节。即，重叠结构上的软阴影。</p>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="Physical-Based-Material"><a href="#Physical-Based-Material" class="headerlink" title="Physical-Based Material"></a>Physical-Based Material</h3><h4 id="Microfacet-Theory"><a href="#Microfacet-Theory" class="headerlink" title="Microfacet Theory"></a>Microfacet Theory</h4><p>​    微平面理论。</p>
+<p><img src="/images/loading.webp" data-original="5.35.webp" alt="webp"></p>
+<h4 id="BRDF-Model-Based-on-Microfacet"><a href="#BRDF-Model-Based-on-Microfacet" class="headerlink" title="BRDF Model Based on Microfacet"></a>BRDF Model Based on Microfacet</h4><p>​    基于 Microfacet 的 BRDF 模型</p>
+<p><img src="/images/loading.webp" data-original="5.36.webp" alt="webp"></p>
+<h4 id="Normal-Distribution-Function"><a href="#Normal-Distribution-Function" class="headerlink" title="Normal Distribution Function"></a>Normal Distribution Function</h4><p><img src="/images/loading.webp" data-original="5.37.webp" alt="webp"></p>
+<script type="math/tex; mode=display">f_{CookTorrance}=\frac{DFG}{4(\omega_{o}\cdot n)(\omega_{i}\cdot n)}</script><script type="math/tex; mode=display">NDF_{GGX}(n,h,\alpha)=\frac{\alpha^{2}}{\pi\left((n\cdot h)^{2}(\alpha^{2}-1)+1\right)^{2}}</script><h4 id="Geometric-Attenuation-Term-self-shadowing"><a href="#Geometric-Attenuation-Term-self-shadowing" class="headerlink" title="Geometric Attenuation Term (self-shadowing)"></a>Geometric Attenuation Term (self-shadowing)</h4><blockquote>
+<p>​    在计算机图形学中，几何衰减项（self-shadowing）是指在渲染过程中考虑物体自身阴影对光照效果的影响。当光线射向一个物体表面时，如果该表面的某些部分被遮挡，这些被遮挡的部分就会处于阴影之中，从而无法直接受到光的照射，导致其表面变暗。</p>
+<p>​    几何衰减项通常用于模拟光线在渲染过程中如何与物体表面相互作用，从而影响最终的光照结果。这种效应特别明显的情况是当光源和观察者之间有障碍物时，如一个物体投射的阴影落在自身表面上。</p>
+<p>​    几何衰减项可以通过各种方式来实现，其中一种常见的方式是使用阴影映射（shadow mapping）技术。在阴影映射中，首先从光源的视角渲染场景，并将渲染结果保存在一个深度贴图（depth map）中。然后，对于每个像素，通过比较深度贴图中的深度值来确定该像素是否在阴影之中。如果某个像素被深度贴图中的深度值所遮挡，那么该像素就被认为处于阴影之中，从而进行相应的颜色调整，实现几何衰减效果。</p>
+</blockquote>
+<p><img src="/images/loading.webp" data-original="5.38.webp" alt="webp"></p>
+<script type="math/tex; mode=display">\begin{gathered}
+f_{CookTorrance}=\frac{DFG}{4(\omega_o\cdot n)(\omega_i\cdot n)} \\
+G_{Smith}(l,\nu)=G_{GGX}(l)\cdot G_{GGX}(\nu) \\
+G_{GGX}(\nu)=\frac{n\cdot\nu}{(n\cdot\nu)(1-k)+k}\quad k=\frac{(\alpha+1)^{2}}{8} 
+\end{gathered}</script><figure class="highlight c"><table><tr><td class="code"><pre><code class="hljs C"><span class="hljs-comment">// Geometry Term: Geometry masking/shadowing due to microfacets</span><br><span class="hljs-type">float</span> <span class="hljs-title function_">GGr</span><span class="hljs-params">(<span class="hljs-type">float</span> Ndotv, <span class="hljs-type">float</span> k)</span> &#123;<br>    <span class="hljs-keyword">return</span> Ndotv / (Ndotv * (<span class="hljs-number">1.0</span> - k) + k);<br>&#125;<br><span class="hljs-type">float</span> <span class="hljs-title function_">G_Smith</span><span class="hljs-params">(<span class="hljs-type">float</span> Ndotv, <span class="hljs-type">float</span> NdotL, <span class="hljs-type">float</span> roughness)</span> &#123;<br>	<span class="hljs-type">float</span> k = <span class="hljs-built_in">pow</span>(roughness + <span class="hljs-number">1.0</span>, <span class="hljs-number">2.0</span>) / <span class="hljs-number">8.0</span>;<br>    <span class="hljs-keyword">return</span> GGX(NdotL, k) * GGr(Ndotv, k);<br>&#125;<br></code></pre></td></tr></table></figure>
+<h4 id="Fresnel-Equation"><a href="#Fresnel-Equation" class="headerlink" title="Fresnel Equation"></a>Fresnel Equation</h4><p>​    当视角接近反射平面时，反射率会急剧上升。</p>
+<p><img src="/images/loading.webp" data-original="5.39.webp" alt="webp"></p>
+<script type="math/tex; mode=display">\begin{aligned}&f_{CookTorrance}=\frac{DFG}{4(\omega_{o}\cdot n)(\omega_{i}\cdot n)}\\&F_{Schlick}(h,\nu,F_{0})=F_{0}+(1-F_{0})\left(1-(\nu\cdot h)\right)^{5}\end{aligned}</script><p>​    这个 5 次方是数学家推导出来的。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><code class="hljs C"><span class="hljs-comment">// Fresnel term with scalar optimization</span><br><span class="hljs-type">float</span> F <span class="hljs-title function_">Schlick</span><span class="hljs-params">(<span class="hljs-type">float</span> VoH, <span class="hljs-type">float</span> f0)</span> &#123;<br>    <span class="hljs-type">float</span> f = <span class="hljs-built_in">pow</span>(<span class="hljs-number">1.0</span> - VoH, <span class="hljs-number">5.0</span>);<br>    <span class="hljs-keyword">return</span> f0 + (<span class="hljs-number">1.0</span> - f0) * f;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h4 id="Physical-Measured-Material"><a href="#Physical-Measured-Material" class="headerlink" title="Physical Measured Material"></a>Physical Measured Material</h4><p><img src="/images/loading.webp" data-original="5.40.webp" alt="webp"></p>
+<p>MERL BRDF Database of measured materials</p>
+<p>​    这个数据集测量了各种材质的数据。</p>
+<h4 id="Disney-Principled-BRDF"><a href="#Disney-Principled-BRDF" class="headerlink" title="Disney Principled BRDF"></a>Disney Principled BRDF</h4><p>Principles to follow when implementing model:</p>
+<p>​    实施模型时应遵循的原则：</p>
+<ul>
+<li><p>Intuitive rather than physical parameters should be used</p>
+<p>应使用直观参数而不是物理参数</p>
+</li>
+<li><p>There should be as few parameters as possible</p>
+<p>参数应该尽可能少</p>
+</li>
+<li><p>Parameters should be zero to one over their plausible range</p>
+<p>参数在其合理范围内应为 0 到 1</p>
+</li>
+<li><p>Parameters should be allowed to be pushed beyond their plausible range where it makes sense</p>
+<p>应允许参数超出其合理范围</p>
+</li>
+<li><p>All combinations of parameters should be as robust and plausible as possible</p>
+<p>所有参数组合应尽可能稳健且合理</p>
+</li>
+</ul>
+<h4 id="Disney-Principle-Material-Parameters"><a href="#Disney-Principle-Material-Parameters" class="headerlink" title="Disney Principle Material Parameters"></a>Disney Principle Material Parameters</h4><blockquote>
+<p>​    Disney Principled BRDF 是迪士尼（Disney）开发的一种基于物理的渲染表面模型，用于在计算机图形学中模拟材质的外观。BRDF 是 Bidirectional Reflectance Distribution Function 的缩写，用于描述光线从表面反射的方式。Disney Principled BRDF 将多个常见的渲染表面模型（如 Lambert、Blinn-Phong、Cook-Torrance 等）融合成一个单一的、参数化的模型，使得艺术家和技术人员可以更简单地控制材质的外观，并且更好地满足物理真实性的要求。</p>
+<p>​    Disney Principled BRDF 的主要特点和参数包括：</p>
+<ol>
+<li><p><strong>基础颜色（Base Color）：</strong> 表示表面的颜色，即在没有其他光照影响的情况下表面的颜色。</p>
+</li>
+<li><p><strong>金属度（Metallic）：</strong> 表示表面是否具有金属质感。金属度为 0 表示非金属材质，金属度为 1 表示完全是金属材质。</p>
+</li>
+<li><p><strong>粗糙度（Roughness）：</strong> 表示表面的光滑程度。粗糙度为 0 表示表面非常光滑，反射光线呈现清晰的镜面反射，而粗糙度为 1 表示表面非常粗糙，反射光线呈现模糊的散射。</p>
+</li>
+<li><p><strong>法线（Normal）：</strong> 表示表面的法线方向，用于模拟表面的微观凹凸结构。</p>
+</li>
+<li><p><strong>环境遮挡（Ambient Occlusion）：</strong> 用于模拟光线在表面附近的阴影效果，增强表面的立体感。</p>
+<p>Disney Principled BRDF 的优点在于它简化了材质创建的流程，减少了需要调整的参数数量，同时也更符合物理真实性。通过调整基础颜色、金属度和粗糙度等参数，可以实现多种不同类型材质的外观，包括金属材质、塑料、玻璃等。</p>
+<p>这种模型的广泛应用使得它成为了许多计算机图形学软件和引擎中的标准渲染模型之一，例如 Pixar 的 RenderMan、Blender 内置的 Cycles 渲染引擎等。</p>
+</li>
+</ol>
+</blockquote>
+<p><img src="/images/loading.webp" data-original="5.41.webp" alt="webp"></p>
+<h4 id="PBR-Specular-Glossiness"><a href="#PBR-Specular-Glossiness" class="headerlink" title="PBR Specular Glossiness"></a>PBR Specular Glossiness</h4><blockquote>
+<p>​    Specular Glossiness（高光光泽度）是一种用于描述材质表面反射特性的属性。它通常被用于渲染引擎和材质编辑器中，用于控制物体表面的光泽程度以及高光的大小和清晰度。</p>
+</blockquote>
+<p><img src="/images/loading.webp" data-original="5.42.webp" alt="webp"></p>
+<p><img src="/images/loading.webp" data-original="5.43.webp" alt="webp"></p>
+<h4 id="PBR-Metallic-Roughness"><a href="#PBR-Metallic-Roughness" class="headerlink" title="PBR Metallic Roughness"></a>PBR Metallic Roughness</h4><blockquote>
+<p>​    Metallic Roughness 是一种用于描述材质外观的参数化模型，通常用于计算机图形学中的渲染。它是 Disney Principled BRDF 中的两个主要参数之一，用于控制材质的金属度和粗糙度，从而影响表面的反射和散射行为。</p>
+<ol>
+<li><strong>金属度（Metallic）：</strong> 这个参数表示表面材质的金属属性程度。金属度为 0 表示非金属材质，例如塑料、木材等，而金属度为 1 表示完全是金属材质，例如铁、铜等。金属材质具有较强的镜面反射特性，因此在光照下会产生清晰的高光反射，而非金属材质则通常具有更多的漫反射。</li>
+<li><strong>粗糙度（Roughness）：</strong> 这个参数表示表面的光滑程度。粗糙度为 0 表示表面非常光滑，反射光线呈现清晰的镜面反射，而粗糙度为 1 表示表面非常粗糙，反射光线呈现模糊的散射。具有较高粗糙度的表面会导致光线在各个方向上散射，产生柔和的光照效果，而较低粗糙度的表面则会产生更锐利的反射光线。</li>
+</ol>
+</blockquote>
+<p><img src="/images/loading.webp" data-original="5.44.webp" alt="webp"></p>
+<h4 id="Covert-MR-to-SG"><a href="#Covert-MR-to-SG" class="headerlink" title="Covert MR to SG"></a>Covert MR to SG</h4><p><img src="/images/loading.webp" data-original="5.45.webp" alt="webp"></p>
+<h4 id="PBR-Pipeline-MR-vs-SG"><a href="#PBR-Pipeline-MR-vs-SG" class="headerlink" title="PBR Pipeline MR vs SG"></a>PBR Pipeline MR vs SG</h4><p><img src="/images/loading.webp" data-original="5.46.webp" alt="webp"></p>
+<p>MR</p>
+<ul>
+<li><p>Pros</p>
+<ul>
+<li><p>Can be easier to author and less prone to errors caused by supplying incorrect dielectric F0 data</p>
+<p>可以更轻松地编写，并且不易因提供不正确的介电 F0 数据而导致错误</p>
+</li>
+<li><p>Uses less texture memory, as metallic and roughness are both grayscale maps</p>
+<p>使用更少的纹理内存，因为金属和粗糙度都是灰度图</p>
+</li>
+</ul>
+</li>
+<li><p>Cons</p>
+<ul>
+<li><p>No control over F0 for dielectrics in map creation. However, most implementations have a specular control to override thebase 4% value</p>
+<p>在创建地图时无法控制电介质的 F0。然而，大多数实现都有镜面反射控制来覆盖 4% 的基本值</p>
+</li>
+<li><p>Edge artifacts are more noticeable, especially at lowerresolutions</p>
+<p>边缘伪影更加明显，尤其是在较低分辨率下</p>
+</li>
+</ul>
+</li>
+</ul>
+<p>SG</p>
+<ul>
+<li><p>Pros</p>
+<ul>
+<li><p>Edge artifacts are less apparent</p>
+<p>边缘伪影不太明显</p>
+</li>
+<li><p>Control over dielectric F0 in the specular map</p>
+<p>控制镜面反射图中的电介质 F0</p>
+</li>
+</ul>
+</li>
+<li><p>Cons</p>
+<ul>
+<li><p>Because the specular map provides control over dielectric F0, it is more susceptible to use of incorrect values. lt is possible to break the law of conservation if handled incorrectly in the shader</p>
+<p>由于镜面反射贴图提供对电介质 F0 的控制，因此更容易使用不正确的值。如果在着色器中处理不当，可能会违反守恒定律</p>
+</li>
+<li><p>Uses more texture memory with an additional RGB map</p>
+<p>使用更多纹理内存和额外的 RGB 贴图</p>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="Image-Based-Lighting-IBL"><a href="#Image-Based-Lighting-IBL" class="headerlink" title="Image-Based Lighting (IBL)"></a>Image-Based Lighting (IBL)</h3><h4 id="Basic-Idea-of-IBL"><a href="#Basic-Idea-of-IBL" class="headerlink" title="Basic Idea of IBL"></a>Basic Idea of IBL</h4><blockquote>
+<p>​    IBL（Image-Based Lighting）是一种计算机图形学中常用的光照技术，用于模拟真实世界中的光照效果。它基于图像的方式来描述光照信息，通过对环境中的光照进行捕捉和处理，来为场景中的物体赋予逼真的光照效果。</p>
+<p>​    IBL 的基本原理是利用环境贴图（Environment Map）来模拟环境中的光照。环境贴图通常是一个球形或立方体贴图，捕捉了环境中的光照信息，包括天空、周围物体的反射等。这些贴图可以是基于真实场景拍摄的全景图像，也可以是通过计算得到的环境光照信息。</p>
+</blockquote>
+<p><img src="/images/loading.webp" data-original="5.47.webp" alt="webp"></p>
+<ul>
+<li><p>An image representing distant lighting from alldirections.</p>
+<p>代表来自各个方向的远处照明的图像。</p>
+</li>
+<li><p>How to shade a point under the lighting?</p>
+<p>如何在灯光下对点进行着色？</p>
+<p>Solving the rendering equation:</p>
+<p>求解渲染方程：</p>
+<p>$L_{o}(x,\omega_{o})=\int_{H^{2}}f_{r}(x,\omega_{o},\omega_{i})L_{i}(x,\omega_{i})\cos\theta_{i}d\omega_{i}$</p>
+</li>
+<li><p>Using Monte Carlo integration</p>
+<p>使用蒙特卡罗积分</p>
+<p>Large amount of sampling-Slow!</p>
+<p>采样量大-慢！</p>
+</li>
+</ul>
+<p><img src="/images/loading.webp" data-original="5.48.webp" alt="webp"></p>
+<h3 id="Recall-BRDF-Function"><a href="#Recall-BRDF-Function" class="headerlink" title="Recall BRDF Function"></a>Recall BRDF Function</h3><script type="math/tex; mode=display">L_{o}(\boldsymbol{x},\omega_{o})=\int_{H^{2}}f_{r}(\boldsymbol{x},\omega_{o},\omega_{i})L_{i}(\boldsymbol{x},\omega_{i})\cos\theta_{i}d\omega_{i}\\f_{r}=k_{d}f_{Lambert}+f_{CookTorrance}</script><ul>
+<li>$f_{Lambert}$ diffuse</li>
+<li>$f_{CookTorrance}$ specular</li>
+</ul>
+<script type="math/tex; mode=display">\begin{aligned}
+L_{o}(x,\omega_{o})& =\int_{H^{2}}(k_{d}f_{Lambert}+f_{CookTorance})L_{i}(x,\omega_{i})\cos\theta_{i}d\omega_{i}  \\
+&=\int_{H^{2}}k_{d}f_{Lambert}L_{i}(\boldsymbol{x},\omega_{i})\cos\theta_{i}d\omega_{i}+\int_{H^{2}}f_{CookTorrances}L_{i}(\boldsymbol{x},\omega_{i})\cos\theta_{i}d\omega_{i} \\
+&=L_d(x,\omega_o)+L_s(x,\omega_o)
+\end{aligned}</script><h4 id="Diffuse-Irraiance-Map"><a href="#Diffuse-Irraiance-Map" class="headerlink" title="Diffuse Irraiance Map"></a>Diffuse Irraiance Map</h4><ul>
+<li>Irraiance Map</li>
+</ul>
+<p><img src="/images/loading.webp" data-original="5.49.webp" alt="webp"></p>
+<h4 id="Specular-Approximation"><a href="#Specular-Approximation" class="headerlink" title="Specular Approximation"></a>Specular Approximation</h4><p><img src="/images/loading.webp" data-original="5.50.webp" alt="webp"></p>
+<h4 id="Approximation-part-1-2"><a href="#Approximation-part-1-2" class="headerlink" title="Approximation: part (1/2)"></a>Approximation: part (1/2)</h4><p><img src="/images/loading.webp" data-original="5.51.webp" alt="webp"></p>
+<h4 id="Approximation-part-2-2"><a href="#Approximation-part-2-2" class="headerlink" title="Approximation: part (2/2)"></a>Approximation: part (2/2)</h4><p><img src="/images/loading.webp" data-original="5.52.webp" alt="webp"></p>
+<h4 id="Quick-Shading-with-Precomputation"><a href="#Quick-Shading-with-Precomputation" class="headerlink" title="Quick Shading with Precomputation"></a>Quick Shading with Precomputation</h4><p>​    通过预计算进行快速着色</p>
+<p><img src="/images/loading.webp" data-original="5.53.webp" alt="webp"></p>
+<h4 id="Shading-PBR-with-IBL"><a href="#Shading-PBR-with-IBL" class="headerlink" title="Shading PBR with IBL"></a>Shading PBR with IBL</h4><p>​    加入环境贴图后，效果更加真实。</p>
+<p><img src="/images/loading.webp" data-original="5.54.webp" alt="webp"></p>
+<h3 id="Classic-Shadow-Solution"><a href="#Classic-Shadow-Solution" class="headerlink" title="Classic Shadow Solution"></a>Classic Shadow Solution</h3><h4 id="Big-World-and-Cascade-Shadow"><a href="#Big-World-and-Cascade-Shadow" class="headerlink" title="Big World and Cascade Shadow"></a>Big World and Cascade Shadow</h4><p><img src="/images/loading.webp" data-original="5.55.webp" alt="webp"></p>
+<ul>
+<li><p>Partition the frustum into multiple frustums</p>
+<p>将视锥体划分为多个视锥体</p>
+</li>
+<li><p>A shadow map is rendered for each sub frustum</p>
+<p>为每个子视锥体渲染阴影贴图</p>
+</li>
+<li><p>The pixel shader then samples from the map that most closely matches the required resolution</p>
+<p>像素着色器然后从与所需分辨率最匹配的贴图中进行采样</p>
+</li>
+</ul>
+<h4 id="Steps-of-Cascade-Shadow"><a href="#Steps-of-Cascade-Shadow" class="headerlink" title="Steps of Cascade Shadow"></a>Steps of Cascade Shadow</h4><p>​    层叠影阶</p>
+<blockquote>
+<p>​    Cascade Shadow Mapping（级联阴影映射）是一种用于实时渲染中实现高质量阴影的技术。它被广泛应用于游戏引擎和其他实时渲染应用程序中，以提供更逼真的场景光照效果。</p>
+<p>​    Cascade Shadow Mapping 的基本思想是将场景中的光源视锥体（例如平行光源的视锥体）分成多个不同分辨率的子区域，每个子区域被称为一个级联（cascade）。然后，为每个级联计算一个独立的深度贴图（depth map），用于记录从光源视角下每个像素到场景中可见点的距离。</p>
+<p>​    通常，级联的数量和分辨率会根据距离光源的远近而动态调整，以确保远处的物体能够得到足够高的深度分辨率，从而减少阴影的锯齿状边缘（aliasing），同时避免过度消耗资源。通常情况下，近处级联具有更高的分辨率，而远处级联具有较低的分辨率。</p>
+<p>​    一旦每个级联的深度贴图都准备好了，就可以在渲染阴影的阶段使用它们。具体来说，对于每个要接受阴影的像素，都会根据其在世界空间中的位置和光源的视角来计算其在每个级联深度贴图中的深度值。然后，通过比较每个像素的深度值与相应级联深度贴图中的深度值，就可以确定像素是否在阴影中。</p>
+</blockquote>
+<p><img src="/images/loading.webp" data-original="5.56.webp" alt="webp"></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><code class="hljs C">splitFrustumToSubfrusta();<br>calculateOrthoProjectionsForEachSubfrustum();<br>renderShadowMapForEachSubfrustum();<br>renderScene();<br><br>vs_main() &#123;<br>	calculateWorldPosition()<br>&#125;<br><br>ps_main() &#123;<br>	transformWorldPositionsForEachProjections()<br>    	sampleAllShadowMaps()<br>        compareDepthAndLightingPixel()<br>        ...<br>&#125;<br></code></pre></td></tr></table></figure>
+<h4 id="Blend-between-Cascade-Layers"><a href="#Blend-between-Cascade-Layers" class="headerlink" title="Blend between Cascade Layers"></a>Blend between Cascade Layers</h4><p>​    级联层之间的混合</p>
+<p><img src="/images/loading.webp" data-original="5.57.webp" alt="webp"></p>
+<ol>
+<li><p>A visible seam can be seen where cascades overlap</p>
+<p>级联重叠处可以看到明显的接缝</p>
+</li>
+<li><p>between cascade layers because the resolution does not match</p>
+<p>级联层之间因为分辨率不匹配</p>
+</li>
+<li><p>The shader then linearly interpolates between the two values based on the pixel&#39;s location in the blend band</p>
+<p>然后，着色器根据像素在混合带中的位置在两个值之间进行线性插值</p>
+</li>
+</ol>
+<h4 id="Pros-and-Cons-of-Cascade-Shadow"><a href="#Pros-and-Cons-of-Cascade-Shadow" class="headerlink" title="Pros and Cons of Cascade Shadow"></a>Pros and Cons of Cascade Shadow</h4><ul>
+<li><p>Pros</p>
+<ul>
+<li><p>best way to prevalent errors with shadowing: perspective aliasing</p>
+<p>解决阴影常见错误的最佳方法：透视锯齿</p>
+</li>
+<li><p>fast to generate depth map, 3x up when depth writing only</p>
+<p>快速生成深度图，仅深度写入时提高 3 倍</p>
+</li>
+<li><p>provide fairly good results</p>
+<p>提供相当好的结果</p>
+</li>
+</ul>
+</li>
+<li><p>Cons</p>
+<ul>
+<li><p>Nearly impossible to generate high quality area shadows</p>
+<p>几乎不可能生成高质量的区域阴影</p>
+</li>
+<li><p>No colored shadows. Translucent surfaces cast opaque shadows</p>
+<p>没有彩色阴影。半透明表面投射不透明阴影</p>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="Hard-Shadow-vs-Realistic-Shadow"><a href="#Hard-Shadow-vs-Realistic-Shadow" class="headerlink" title="Hard Shadow vs Realistic Shadow"></a>Hard Shadow vs Realistic Shadow</h4><p><img src="/images/loading.webp" data-original="5.58.webp" alt="webp"></p>
+<h4 id="PCF-Percentage-Closer-Filter"><a href="#PCF-Percentage-Closer-Filter" class="headerlink" title="PCF - Percentage Closer Filter"></a>PCF - Percentage Closer Filter</h4><p>​    PCF - 百分比接近过滤器</p>
+<blockquote>
+<p>​    PCF（Percentage Closer Filter）是一种用于改善阴影质量的技术，特别是在阴影映射中使用。它的目的是减少阴影边缘的锯齿（aliasing），使阴影更加柔和和逼真。</p>
+<p>​    阴影映射通常会生成一个深度贴图（depth map），用于记录从光源视角下到场景中各个点的距离。在渲染场景时，为了确定一个像素是否在阴影中，通常会比较场景中的点与光源的深度值。然而，简单地使用深度比较可能会导致锯齿状边缘，特别是在阴影投射到接近相机的表面上时。</p>
+<p>​    PCF 解决了这个问题。它通过对深度贴图中的深度值进行多次采样，并计算每次采样时像素与深度值的关系，以确定像素是否在阴影中。这些采样通常是在深度贴图的附近进行的，并且通常是在一个较小的范围内。这样，即使像素与阴影边缘接近，也能够准确地检测出阴影的存在，从而减少锯齿状边缘的问题。</p>
+</blockquote>
+<p><img src="/images/loading.webp" data-original="5.59.webp" alt="webp"></p>
+<ul>
+<li><p>Target problem</p>
+<p>目标问题</p>
+<ul>
+<li><p>The shadows that result from shadow mapping aliasing is serious</p>
+<p>阴影贴图锯齿导致的阴影很严重</p>
+</li>
+</ul>
+</li>
+<li><p>Basic idea</p>
+<p>基本思想</p>
+<ul>
+<li><p>Sample from the shadow map around the current pixel and compare its depth to all the samples</p>
+<p>从当前像素周围的阴影贴图进行采样，并将其深度与所有样本进行比较</p>
+</li>
+<li><p>By averaging out the results we get a smoother line between light and shadow</p>
+<p>通过对结果进行平均，我们可以得到光影之间更平滑的线条</p>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="PCSS-Percentage-Closer-Soft-Shadow"><a href="#PCSS-Percentage-Closer-Soft-Shadow" class="headerlink" title="PCSS - Percentage Closer Soft Shadow"></a>PCSS - Percentage Closer Soft Shadow</h4><p>​    PCSS - 百分比接近软阴影</p>
+<blockquote>
+<p>​    Percentage Closer Soft Shadow（PCSS）是一种用于实时渲染中生成柔和阴影的技术。它是 Percentage Closer Filter（PCF）的一种变体，旨在在阴影边缘产生更加柔和和逼真的效果。</p>
+<p>​    PCSS 通过在每个像素处进行多个样本的深度比较，并根据深度比较结果和光源距离来计算阴影的柔和度。与传统的硬阴影相比，PCSS 考虑了阴影边缘周围的光线传播和遮挡，以模拟真实世界中光线的衍射和散射效应。</p>
+<p>PCSS 的实现通常包括以下步骤：</p>
+<ol>
+<li><strong>生成阴影贴图（Shadow Map）：</strong> 首先，生成场景的深度贴图，用于记录从光源视角下到场景中各个点的距离。</li>
+<li><strong>多样本采样：</strong> 在渲染阶段，对于每个要接受阴影的像素，进行多个样本的深度比较。这些样本通常位于阴影边缘周围，并且可以通过多次采样来模拟光线的传播。</li>
+<li><strong>计算柔和阴影：</strong> 根据每个样本的深度比较结果以及光源与表面的距离，计算阴影的柔和度。通常，较远离光源的像素会产生较宽的阴影区域，而较接近光源的像素会产生较窄的阴影区域。</li>
+<li><strong>混合阴影：</strong> 将多个样本的阴影值进行加权平均，以获得最终的柔和阴影结果。这样可以使阴影边缘呈现出逐渐变化的过渡效果，减少锯齿状边缘。</li>
+</ol>
+</blockquote>
+<p><img src="/images/loading.webp" data-original="5.60.webp" alt="webp"></p>
+<ul>
+<li><p>Target problem</p>
+<p>目标问题</p>
+<ul>
+<li><p>Suffers from aliasing and under sampling artifacts</p>
+<p>存在混叠和采样不足的问题</p>
+</li>
+</ul>
+</li>
+<li><p>Basic idea</p>
+<p>基本思想</p>
+<ul>
+<li><p>Search the shadow map and average the depths that are closer to the light source</p>
+<p>搜索阴影贴图并平均靠近光源的深度</p>
+</li>
+<li><p>Using a parallel planes approximation</p>
+<p>使用平行平面近似</p>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="Variance-Soft-Shadow-Map"><a href="#Variance-Soft-Shadow-Map" class="headerlink" title="Variance Soft Shadow Map"></a>Variance Soft Shadow Map</h4><p><img src="/images/loading.webp" data-original="5.61.webp" alt="webp"></p>
+<ul>
+<li><p>Target problem</p>
+<p>目标问题</p>
+<ul>
+<li><p>Rendering plausible soft shadow in real-time</p>
+<p>实时渲染合理的软阴影</p>
+</li>
+</ul>
+</li>
+<li><p>Basic idea</p>
+<p>基本思想</p>
+<ul>
+<li><p>Based on Chebyshev&#39;s inequality, using the average and variance of depth, we can approximate the percentage of depth distribution directly instead of comparing a single depth to a particular region (PCSS)</p>
+<p>基于切比雪夫不等式，使用深度的平均值和方差，我们可以直接近似深度分布的百分比，而不是将单个深度与特定区域进行比较（PCSS）</p>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="Summary-of-Popular-AAA-Rendering"><a href="#Summary-of-Popular-AAA-Rendering" class="headerlink" title="Summary of Popular AAA Rendering"></a>Summary of Popular AAA Rendering</h4><p>​    目前 3A 渲染广泛用到的技术：</p>
+<ul>
+<li>Lightmap + Light probe</li>
+<li>PBR + IBL</li>
+<li>Cascade shadow + VSSM</li>
+</ul>
+<h3 id="Moving-Wave-of-High-Quality"><a href="#Moving-Wave-of-High-Quality" class="headerlink" title="Moving Wave of High Quality"></a>Moving Wave of High Quality</h3><h4 id="Quick-Evolving-of-GPU"><a href="#Quick-Evolving-of-GPU" class="headerlink" title="Quick Evolving of GPU"></a>Quick Evolving of GPU</h4><p>​    得益于 GPU 的发展，计算能力不断增强。</p>
+<ul>
+<li><p>More flexible new shader model</p>
+<p>更灵活的新着色器模型</p>
+<ul>
+<li><p>Compute shader</p>
+<p>计算着色器</p>
+</li>
+<li><p>Mesh shader</p>
+<p>网格着色器</p>
+</li>
+<li><p>Ray-tracing shader</p>
+<p>光线追踪着色器</p>
+</li>
+</ul>
+</li>
+<li><p>High performance parallel architecture</p>
+<p>高性能并行架构</p>
+<ul>
+<li><p>Warp or wave architecture</p>
+<p>扭曲或波浪结构</p>
+</li>
+</ul>
+</li>
+<li><p>Fully opened graphics APl</p>
+<p>完全开放的图形 APl</p>
+<ul>
+<li><p>DirectX 12 and Vulkan</p>
+<p>DirectX 12 和 Vulkan</p>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="Real-Time-Ray-Tracing-on-GPU"><a href="#Real-Time-Ray-Tracing-on-GPU" class="headerlink" title="Real-Time Ray-Tracing on GPU"></a>Real-Time Ray-Tracing on GPU</h4><p><img src="/images/loading.webp" data-original="5.62.webp" alt="webp"></p>
+<p>​    新的 GPU 支持实时光线追踪。</p>
+<h4 id="Real-Time-Global-lllumination"><a href="#Real-Time-Global-lllumination" class="headerlink" title="Real-Time Global lllumination"></a>Real-Time Global lllumination</h4><p><img src="/images/loading.webp" data-original="5.63.webp" alt="webp"></p>
+<h4 id="More-Complex-Material-Model"><a href="#More-Complex-Material-Model" class="headerlink" title="More Complex Material Model"></a>More Complex Material Model</h4><p><img src="/images/loading.webp" data-original="5.64.webp" alt="webp"></p>
+<h4 id="Virtual-Shadow-Maps"><a href="#Virtual-Shadow-Maps" class="headerlink" title="Virtual Shadow Maps"></a>Virtual Shadow Maps</h4><p><img src="/images/loading.webp" data-original="5.65.webp" alt="webp"></p>
+<h3 id="Shader-Management"><a href="#Shader-Management" class="headerlink" title="Shader Management"></a>Shader Management</h3><h4 id="Ocean-of-Shaders"><a href="#Ocean-of-Shaders" class="headerlink" title="Ocean of Shaders"></a>Ocean of Shaders</h4><p>​    大游戏里用到的 Shader 非常多。</p>
+<h4 id="Blow-of-Shaders"><a href="#Blow-of-Shaders" class="headerlink" title="Blow of Shaders"></a>Blow of Shaders</h4><p>​    要求在每帧中渲染场景中的多个 shader。</p>
+<h4 id="Artist-Create-infinite-More-Shaders"><a href="#Artist-Create-infinite-More-Shaders" class="headerlink" title="Artist Create infinite More Shaders"></a>Artist Create infinite More Shaders</h4><p>​    艺术家创造无限更多的着色器</p>
+<h4 id="Uber-Shader-and-Variants"><a href="#Uber-Shader-and-Variants" class="headerlink" title="Uber Shader and Variants"></a>Uber Shader and Variants</h4><p>​    Uber 着色器和变体</p>
+<p>A combination of shader for all possible light types, render passes and material types</p>
+<p>​    适用于所有可能的灯光类型、渲染通道和材质类型的着色器组合</p>
+<ul>
+<li><p>Shared many state and codes</p>
+<p>共享许多状态和代码</p>
+</li>
+<li><p>Compile to many variant short shaders by pre-defined macro</p>
+<p>通过预定义宏编译为许多变体短着色器</p>
+</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="code"><pre><code class="hljs C"><span class="hljs-comment">// sky light</span><br><span class="hljs-meta">#<span class="hljs-keyword">if</span> ENABLE SKY LIGHT</span><br>    <span class="hljs-meta">#<span class="hljs-keyword">if</span> MATERIAL TWOSIDED &amp;&amp; LQ_TEXTURE_LIGHTMAP</span><br>    <span class="hljs-keyword">if</span>(NoL == <span class="hljs-number">0</span>) &#123;<br>    <span class="hljs-meta">#<span class="hljs-keyword">endif</span></span><br><br>    <span class="hljs-meta">#<span class="hljs-keyword">if</span> MATERIAL_SHADINGMODEL_SINGLELAYERWATER</span><br>        ShadingModelContext.WaterDiffuseIndirectLuminance += SkyDiffuselighting;<br>    <span class="hljs-meta">#<span class="hljs-keyword">endif</span></span><br>        <br>    Color += SkyDiffuselighting * half3(ResolvedView.SkylightColor.rgb) * ShadingModelContext.DiffuseColor * MaterialA0;<br>    <span class="hljs-meta">#<span class="hljs-keyword">if</span> MATERIAL_TWOSIDED &amp;&amp; LQ_TEXTURE_LIGHTMAP</span><br>    &#125;<br>    <span class="hljs-meta">#<span class="hljs-keyword">endif</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">endif</span></span><br></code></pre></td></tr></table></figure>
+<h4 id="Shader-Variants-Example-In-Real-Game"><a href="#Shader-Variants-Example-In-Real-Game" class="headerlink" title="Shader Variants Example In Real Game"></a>Shader Variants Example In Real Game</h4><p>​    真实游戏中的着色器变体示例</p>
+<p><img src="/images/loading.webp" data-original="5.66.webp" alt="webp"></p>
+<p>​    一大堆。为了降低耦合性，每个 shader 都是单独存在的。</p>
+<h4 id="Cross-Platform-Shader-Compile"><a href="#Cross-Platform-Shader-Compile" class="headerlink" title="Cross Platform Shader Compile"></a>Cross Platform Shader Compile</h4><p><img src="/images/loading.webp" data-original="5.67.webp" alt="webp"></p>
+<p>​    写 shader 也演变出了一堆语言！</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/49069689">Shader交叉编译之梦 - 知乎 (zhihu.com)</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/KhronosGroup/SPIRV-Cross">KhronosGroup/SPIRV-Cross: SPIRV-Cross is a practical tool and library for performing reflection on SPIR-V and disassembling SPIR-V back to high level languages. (github.com)</a> 让 shader 语言能够交叉编译。</li>
+</ul>
 
         </article>
         <div class="post-bottom">
