@@ -412,8 +412,8 @@
 </center>
 
 <h1 id="写一写"><a href="#写一写" class="headerlink" title="写一写"></a>写一写</h1><p>​    <a target="_blank" rel="noopener" href="https://github.com/D0n9X1n/hexo-blog-encrypt">hexo-blog-encrypt</a> 这个插件只可以加密整个文章，却不能只加密文章中的某个片段，不够灵活。借助 CryptoJS-AES 开发一个简易的文章片段加密插件！这样就可以在我的日记中方便地隐藏我不想公开的部分（比如说 pro 哥坏话）！</p>
-<h2 id="前端"><a href="#前端" class="headerlink" title="前端"></a>前端</h2><p>​     研究一下 <code>crypto-js</code> 中 AES 的使用。我想让我的文章在前端中只会暴露公钥，密码和内容未知。目前 AES 还不能被破解（小小怪如此说道），因此在只有公钥的情况下，不输入正确的密码是无法看到内容的：</p>
-<div id="Hello"></div><script>new AESContainer('密码是"123"~', 'U2FsdGVkX1887XYm+DASuGUMGaUExwqJpmbbYbef1pa9B57ueXSaQawG2bQhv62m').render('#Hello');</script>
+<h2 id="前端"><a href="#前端" class="headerlink" title="前端"></a>前端</h2><p>​     研究一下 <code>crypto-js</code> 中 AES 的使用。我想让我的文章在前端中只暴露公钥，不暴露密码和内容。目前 AES 还不能被破解（小小怪如此说道），因此在只有公钥的情况下，不输入正确的密码是无法看到内容的：</p>
+<div id="Hello"></div><script>new AESContainer('密码是"123"~', 'U2FsdGVkX19wqfKpvumW4QxKz1ABUZIp9haqSmXauojBVLgh6rYExYghUaWK8Hu1').render('#Hello');</script>
 <hr>
 <p>​    在网页中引入 <code>crypto-js</code>：</p>
 <figure class="highlight html"><table><tr><td class="code"><pre><code class="hljs html"><span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">&quot;crypto-js.min.js&quot;</span> <span class="hljs-attr">defer</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span><br></code></pre></td></tr></table></figure>
@@ -434,7 +434,7 @@
 <p>​    如果公钥和私钥正确，将会正确返回内容，如果错误则返回空。</p>
 <p>​    有时候解密时会出现 <code>Error: Malformed UTF-8 data</code> 错误导致解密失败，参考一下 <a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/58111929/why-i-get-malformed-utf-8-data-error-on-crypto-js">javascript - Why I get Malformed UTF-8 data error on crypto-js? - Stack Overflow</a>……我也不知道具体啥情况，多检查几遍吧……</p>
 <hr>
-<p>​    好的，现在我们正确掌握了内容、公钥和私钥之间的转换逻辑。如果内容的字符串是一段 HTML 代码，则我们可以将其渲染出来。</p>
+<p>​    好的，现在我们正确掌握了内容、公钥和私钥之间的转换逻辑。<strong>如果内容的字符串是一段 HTML 代码，则我们可以将其渲染出来</strong>。</p>
 <p>​    基于此，我们可以定义一个 <code>AESContainer</code> 类：</p>
 <figure class="highlight js"><table><tr><td class="code"><pre><code class="hljs js"><span class="hljs-keyword">class</span> <span class="hljs-title class_">AESContainer</span> &#123;<br>    <span class="hljs-title function_">constructor</span>(<span class="hljs-params">label, pubkey</span>) &#123;<br>        <span class="hljs-variable language_">this</span>.<span class="hljs-property">pubkey</span> = pubkey;<br>        <span class="hljs-variable language_">this</span>.<span class="hljs-property">container</span> = $(<span class="hljs-string">&#x27;&lt;div&gt;&#x27;</span>).<span class="hljs-title function_">addClass</span>(<span class="hljs-string">&#x27;AES-container&#x27;</span>);<br>        <span class="hljs-variable language_">this</span>.<span class="hljs-property">inputContainer</span> = $(<span class="hljs-string">&#x27;&lt;div&gt;&#x27;</span>).<span class="hljs-title function_">addClass</span>(<span class="hljs-string">&#x27;AES-input&#x27;</span>);<br>        <span class="hljs-variable language_">this</span>.<span class="hljs-property">inputField</span> = $(<span class="hljs-string">&#x27;&lt;input&gt;&#x27;</span>).<span class="hljs-title function_">attr</span>(&#123;<span class="hljs-attr">type</span>: <span class="hljs-string">&#x27;password&#x27;</span>, <span class="hljs-attr">required</span>: <span class="hljs-literal">true</span>&#125;);<br>        <span class="hljs-variable language_">this</span>.<span class="hljs-property">highlight</span> = $(<span class="hljs-string">&#x27;&lt;span&gt;&#x27;</span>).<span class="hljs-title function_">addClass</span>(<span class="hljs-string">&#x27;hl&#x27;</span>);<br>        <span class="hljs-variable language_">this</span>.<span class="hljs-property">bar</span> = $(<span class="hljs-string">&#x27;&lt;span&gt;&#x27;</span>).<span class="hljs-title function_">addClass</span>(<span class="hljs-string">&#x27;bar&#x27;</span>);<br>        <span class="hljs-variable language_">this</span>.<span class="hljs-property">label</span> = $(<span class="hljs-string">&#x27;&lt;label&gt;&#x27;</span>).<span class="hljs-title function_">text</span>(label);<br><br>        <span class="hljs-variable language_">this</span>.<span class="hljs-property">inputContainer</span>.<span class="hljs-title function_">append</span>(<span class="hljs-variable language_">this</span>.<span class="hljs-property">inputField</span>, <span class="hljs-variable language_">this</span>.<span class="hljs-property">highlight</span>, <span class="hljs-variable language_">this</span>.<span class="hljs-property">bar</span>, <span class="hljs-variable language_">this</span>.<span class="hljs-property">label</span>);<br>        <span class="hljs-variable language_">this</span>.<span class="hljs-property">container</span>.<span class="hljs-title function_">append</span>(<span class="hljs-variable language_">this</span>.<span class="hljs-property">inputContainer</span>);<br><br>        <span class="hljs-variable language_">this</span>.<span class="hljs-property">inputField</span>.<span class="hljs-title function_">on</span>(<span class="hljs-string">&#x27;keypress&#x27;</span>, <span class="hljs-variable language_">this</span>.<span class="hljs-property">handleKeyPress</span>.<span class="hljs-title function_">bind</span>(<span class="hljs-variable language_">this</span>));<br>    &#125;<br><br>    <span class="hljs-title function_">handleKeyPress</span>(<span class="hljs-params">event</span>) &#123;<br>        <span class="hljs-keyword">if</span> (event.<span class="hljs-property">key</span> === <span class="hljs-string">&#x27;Enter&#x27;</span>) &#123;<br>            <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-variable language_">this</span>.<span class="hljs-property">pubkey</span>, <span class="hljs-variable language_">this</span>.<span class="hljs-property">inputField</span>.<span class="hljs-title function_">val</span>());<br>            <span class="hljs-variable language_">this</span>.<span class="hljs-property">decrypted</span> = <span class="hljs-title class_">CryptoJS</span>.<span class="hljs-property">AES</span>.<span class="hljs-title function_">decrypt</span>(<span class="hljs-variable language_">this</span>.<span class="hljs-property">pubkey</span>, <span class="hljs-variable language_">this</span>.<span class="hljs-property">inputField</span>.<span class="hljs-title function_">val</span>()).<span class="hljs-title function_">toString</span>(<span class="hljs-title class_">CryptoJS</span>.<span class="hljs-property">enc</span>.<span class="hljs-property">Utf8</span>);<br>            <span class="hljs-keyword">if</span> (<span class="hljs-variable language_">this</span>.<span class="hljs-property">decrypted</span>) &#123;<br>                <span class="hljs-variable language_">this</span>.<span class="hljs-property">inputContainer</span>.<span class="hljs-title function_">remove</span>();<br>                <span class="hljs-variable language_">this</span>.<span class="hljs-property">container</span>.<span class="hljs-title function_">append</span>($(<span class="hljs-variable language_">this</span>.<span class="hljs-property">decrypted</span>));<br>            &#125;<br>        &#125;<br>    &#125;<br><br>    <span class="hljs-title function_">render</span>(<span class="hljs-params">targetElement</span>) &#123;<br>        $(targetElement).<span class="hljs-title function_">replaceWith</span>(<span class="hljs-variable language_">this</span>.<span class="hljs-property">container</span>);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>​    再<del>设计</del>偷一个好看的 CSS：</p>
@@ -475,16 +475,20 @@
 <p>​    重新编译，大功告成。</p>
 <h1 id="试一试"><a href="#试一试" class="headerlink" title="试一试"></a>试一试</h1><h2 id="念桥边红药"><a href="#念桥边红药" class="headerlink" title="念桥边红药"></a>念桥边红药</h2><p>​    在下面的框框中输入密码 <code>promefire</code> 即可产生 promefire 最喜欢的诗句！</p>
 <figure class="highlight markdown"><table><tr><td class="code"><pre><code class="hljs markdown">&#123;% AES promefire,&#x27;promefire&#x27;,&#x27;密码是&quot;promefire&quot;~&#x27; %&#125;<br><span class="language-xml"><span class="hljs-tag">&lt;<span class="hljs-name">marquee</span> <span class="hljs-attr">behavior</span>=<span class="hljs-string">&quot;scroll&quot;</span> <span class="hljs-attr">direction</span>=<span class="hljs-string">&quot;right&quot;</span> <span class="hljs-attr">scrollamount</span>=<span class="hljs-string">&quot;15&quot;</span>&gt;</span></span><span class="language-xml"><span class="hljs-tag">&lt;<span class="hljs-name">font</span> <span class="hljs-attr">color</span>=<span class="hljs-string">&quot;red&quot;</span> <span class="hljs-attr">size</span>=<span class="hljs-string">&quot;4px&quot;</span>&gt;</span></span>念桥边红药，年年知为谁生？<span class="language-xml"><span class="hljs-tag">&lt;/<span class="hljs-name">font</span>&gt;</span></span><span class="language-xml"><span class="hljs-tag">&lt;/<span class="hljs-name">marquee</span>&gt;</span></span><br>&#123;% endAES %&#125;<br></code></pre></td></tr></table></figure>
-<div id="promefire"></div><script>new AESContainer('密码是"promefire"~', 'U2FsdGVkX18lVnb3Xsk6N7FnuJqOWVfUhRnTP5dSaaSliSD7Zn0fs5r6pqgNh2wfE5RjbViXZEdm8lwCOIKC6ySkOV4hStiET4l3vH1sLRbJcqm/8Jo+E685RWAp7aQC0xLiJrYi8zsYK5jl5eI6zx+srs+mTeeUfckWtMIAwlS1KoxVokoJUaqVXa0qTMVltAEpV+WPaI9dH2TbDzSP/Hm2cUCdPZM5CyTNaV8JTn8=').render('#promefire');</script>
+<div id="promefire"></div><script>new AESContainer('密码是"promefire"~', 'U2FsdGVkX1+DrdZvCxaauMJg4rTRsyyBjtWekxSHYQcFs8p/WRT28nMfgCQg7LhAgSFTGghyqnYM65UCencYBy5hXiAC+PShF9NxKOk8N+iV1SdLYboVBh6XtkVbdtfEkrgqCWQ43Y7yXjon2agtFUT2Bj1B4NcWfEDR6s+ENrscMVVWdgptuLxw1zrXuqf9YWFfVu1yuXhce4sKHKB3r5/aqup8KYja8Qtza1ah330=').render('#promefire');</script>
 <h2 id="大故宫"><a href="#大故宫" class="headerlink" title="大故宫"></a>大故宫</h2><p>​    在下面的框框中输入密码 <code>12345678</code> 即可欣赏大故宫！</p>
 <figure class="highlight markdown"><table><tr><td class="code"><pre><code class="hljs markdown">&#123;% AES peking,&#x27;12345678&#x27;,&#x27;密码是&quot;12345678&quot;~&#x27; %&#125;<br>![<span class="hljs-string">人去楼不空 往昔的叱咤化作春色满园</span>](<span class="hljs-link">/2024/05/20/Diary-老儿北儿京儿/1435.webp</span>)<br><span class="language-xml"><span class="hljs-tag">&lt;<span class="hljs-name">center</span>&gt;</span></span>人去楼不空 往昔的叱咤化作春色满园<span class="language-xml"><span class="hljs-tag">&lt;/<span class="hljs-name">center</span>&gt;</span></span><br><span class="language-xml"><span class="hljs-tag">&lt;<span class="hljs-name">script</span>&gt;</span></span>initFancybox();<span class="language-xml"><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span></span><br>&#123;% endAES %&#125;<br></code></pre></td></tr></table></figure>
 <p>​    请注意：解密后的显示的内容可能需要<strong>重新调用一下网页初始化的相关函数</strong>（这里是 <code>&lt;script&gt;initFancybox();&lt;/script&gt;</code>）才能达到未加密的显示效果！</p>
-<div id="peking"></div><script>new AESContainer('密码是"12345678"~', 'U2FsdGVkX19MxlDfiXjkepZ0FRdYbj4y5L/XjoZfkbylgA7wuIJ7OpTrVgSdVUSG5CwQujAOpdKPe5aDuEIfOmTfBNKbQIDNxTji4yEMQz4D7a6r5CTFPlGSVuQZqpKQGPzkRYlcNwKO8+bOip6rBtySmCrFCOQjeKGS55SOEtGtb8/AbU9KiHM5AoR00DDaRNAM/O3dKmB1nj3+PrNtOIlx3G9NwQ0At1CZYotiRXPUQAHDHG3A9/AzhZKnl358ng6l4Oxh/Hs2q3iXM9hnCOQUE1mG7TuiX47PTKHDgJNNlFZwQ45r6ssJD0yxqZRgELkv7Tp0ilLCrXZCOIxSIw==').render('#peking');</script>
+<div id="peking"></div><script>new AESContainer('密码是"12345678"~', 'U2FsdGVkX1+nd3IuQ73ufUGJFaMRV8X+ktNVmLyi02pjiknOIoTQoGBDuKlELZ0hOiis1A6z/ufmq/8x8C6oMfzJQagLwNrAlT9JvAOlj7Rt+V+UvCtA1cLLzL3slAfF35/vZ+iBG8iR58mtOS3URSkiS802GCxUIFCzDv0Om8sCTBvajT+UxxlPdeUVoQljoYLzA1JkAY79dBiaZbh4CkLh5fGX3WSfoyvTJSdsMeBhFTWHBEVyyijSpCE0SNl+kshYpycGrwScsqAsc0DuHANeP6fo7R290ZTGdmhzpDQ9cJlcKlyZHUAXOJGEzRRdjAVaJdq/mglzbdSV8NsXVQ==').render('#peking');</script>
         </article>
         <div class="post-bottom">
     
         <div class="post-paging">     
             <div class="post-paging-last">
+                
+                    <a href="/2024/05/25/GAMES104-Animation/">
+                        上一篇：GAMES104-Animation
+                    </a>
                 
             </div>
             <div class="post-paging-next">
@@ -548,11 +552,11 @@
                 </a>
                 <a href="/tags" class="aside-top-about-site-item">
                     <span class="title">标签</span>
-                    <span class="count">90</span>
+                    <span class="count">91</span>
                 </a>
                 <a href="/archives" class="aside-top-about-site-item">
                     <span class="title">归档</span>
-                    <span class="count">315</span>
+                    <span class="count">316</span>
                 </a>
             </div>
             <div class="aside-top-about-contact">
@@ -2713,6 +2717,35 @@
                             
                                 
                             
+                                
+                            
+                        
+                    
+                        
+                        
+                            
+                                
+                            
+                                
+                            
+                        
+                    
+                        
+                        
+                            
+                                
+                            
+                                
+                            
+                        
+                    
+                        
+                        
+                            
+                                
+                            
+                                
+                            
                         
                     
                         
@@ -2728,25 +2761,6 @@
                         
                             
                                 
-                            
-                        
-                    
-                        
-                        
-                            
-                                
-                            
-                        
-                    
-                        
-                        
-                            
-                                
-                            
-                        
-                    
-                        
-                        
                             
                                 
                             
@@ -3682,6 +3696,15 @@
                                 
                             
                                 
+                            
+                                
+                            
+                                
+                            
+                        
+                    
+                        
+                        
                             
                                 
                             
