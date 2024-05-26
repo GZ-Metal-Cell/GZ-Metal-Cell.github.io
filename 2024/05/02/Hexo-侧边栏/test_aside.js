@@ -345,6 +345,6 @@ function createNode_2() {
 }
 
 $(document).ready(function() {
-    document.querySelector(".post-content-aside-top").appendChild(createNode_1());
-    document.querySelector(".post-content-aside-bottom").appendChild(createNode_2());
+    document.querySelector(".aside-top").appendChild(createNode_1());
+    document.querySelector(".aside-bottom").appendChild(createNode_2());
 });

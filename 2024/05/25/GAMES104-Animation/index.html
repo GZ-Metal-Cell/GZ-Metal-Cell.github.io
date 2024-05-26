@@ -1595,7 +1595,468 @@ q_{t1}\cdot q_{t2}& =ae+bf+cg+dh  \\
 </ul>
 <p>FBX: the industry-standard 3D asset exchange file format for games. lt isdeveloped by Autodesk as a proprietary format.</p>
 <p>​    FBX：游戏的行业标准 3D 资产交换文件格式。它是由 Autodesk 开发的专有格式。</p>
-<h2 id="第九节：高级动画技术：动画树、IK和表情动画"><a href="#第九节：高级动画技术：动画树、IK和表情动画" class="headerlink" title="第九节：高级动画技术：动画树、IK和表情动画"></a>第九节：高级动画技术：动画树、IK和表情动画</h2>
+<h2 id="第九节：高级动画技术：动画树、IK和表情动画"><a href="#第九节：高级动画技术：动画树、IK和表情动画" class="headerlink" title="第九节：高级动画技术：动画树、IK和表情动画"></a>第九节：高级动画技术：动画树、IK和表情动画</h2><p>Animation System</p>
+<h3 id="Advanced-Animation-Technology"><a href="#Advanced-Animation-Technology" class="headerlink" title="Advanced Animation Technology"></a>Advanced Animation Technology</h3><p>​    高级动画技术</p>
+<h3 id="How-to-Achieve-the-Animation-Effect-in-Real-Game"><a href="#How-to-Achieve-the-Animation-Effect-in-Real-Game" class="headerlink" title="How to Achieve the Animation Effect in Real Game?"></a>How to Achieve the Animation Effect in Real Game?</h3><p>​    如何实现真实游戏中的动画效果？</p>
+<p><img src="/images/loading.webp" data-original="9.1.webp" alt="webp"></p>
+<p>​    将动画师制作的各种 simple animation clips 混合成 complex animations。</p>
+<h3 id="Animation-Blending"><a href="#Animation-Blending" class="headerlink" title="Animation Blending"></a>Animation Blending</h3><ul>
+<li><p>The term animation blending refers to any technique that allows more than one animation clip to contribute to the final pose of the character</p>
+<p>术语“动画混合”是指允许多个动画剪辑为角色的最终姿势做出贡献的任何技术</p>
+</li>
+</ul>
+<h4 id="Case-Walking-to-Running"><a href="#Case-Walking-to-Running" class="headerlink" title="Case: Walking to Running"></a>Case: Walking to Running</h4><p><img src="/images/loading.webp" data-original="9.2.webp" alt="webp"></p>
+<ul>
+<li><p>Assume the character walks at 1.5m/s and runs at 3.0m/s in our game</p>
+<p>假设角色在我们的游戏中以 1.5m/s 的速度行走并以 3.0m/s 的速度奔跑</p>
+</li>
+<li><p>As the character&#39;s speed increase, we want to switch its animation from walking to running</p>
+<p>随着角色速度的增加，我们希望将其动画从步行切换为跑步</p>
+</li>
+</ul>
+<h4 id="Math-of-Blending-LERP"><a href="#Math-of-Blending-LERP" class="headerlink" title="Math of Blending: LERP"></a>Math of Blending: LERP</h4><p><img src="/images/loading.webp" data-original="9.3.webp" alt="webp"></p>
+<p>Use LERP to get intermediate frame from poses of different clips</p>
+<p>​    使用 LERP 从不同剪辑的姿势中获取中间帧</p>
+<p>Weight is controlled by game parameters, i.e, character speed</p>
+<p>​    重量由游戏参数控制，即角色速度</p>
+<h4 id="Calculate-Blend-Weight"><a href="#Calculate-Blend-Weight" class="headerlink" title="Calculate Blend Weight"></a>Calculate Blend Weight</h4><p>​    计算混合权重（依据速度）</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>$\text{speed}_{\text{current}}$</td>
+<td>current speed</td>
+</tr>
+<tr>
+<td>$\text{speed}_{\text{1}}$</td>
+<td>speed of clip1</td>
+</tr>
+<tr>
+<td>$\text{speed}_{\text{2}}$</td>
+<td>speed of clip2</td>
+</tr>
+<tr>
+<td>$\text{weight}_1$</td>
+<td>calculated weight of clip1</td>
+</tr>
+<tr>
+<td>$\text{weight}_2$</td>
+<td>calculated weight of clip2</td>
+</tr>
+</tbody>
+</table>
+</div>
+<script type="math/tex; mode=display">weight_1=\frac{speed_{current}-speed_2}{speed_1-speed_2}</script><script type="math/tex; mode=display">\mathrm{weight}_2=\frac{\mathrm{speed}_{current}-\mathrm{speed}_1}{\mathrm{speed}_2-\mathrm{speed}_1}</script><h4 id="Align-Blend-Timeline"><a href="#Align-Blend-Timeline" class="headerlink" title="Align Blend Timeline"></a>Align Blend Timeline</h4><p>​    对齐混合时间线</p>
+<p><img src="/images/loading.webp" data-original="9.4.webp" alt="webp"></p>
+<h4 id="Case-Walking-to-Running-1"><a href="#Case-Walking-to-Running-1" class="headerlink" title="Case: Walking to Running"></a>Case: Walking to Running</h4><p>In order to achieve the desired effect, we need a lot of animation clips with intermediate speeds.</p>
+<p>​    为了达到想要的效果，我们需要大量中等速度的动画片段。</p>
+<p>Let the animators produce a whole bunch?</p>
+<p>​    让动画师制作一大堆？（这是不可能的）</p>
+<h3 id="Blend-Space"><a href="#Blend-Space" class="headerlink" title="Blend Space"></a>Blend Space</h3><p>​    混合空间</p>
+<h4 id="1D-Blend-Space-Directional-Movement"><a href="#1D-Blend-Space-Directional-Movement" class="headerlink" title="1D Blend Space: Directional Movement"></a>1D Blend Space: Directional Movement</h4><p>​    一维混合空间：定向运动</p>
+<p><img src="/images/loading.webp" data-original="9.5.webp" alt="webp"></p>
+<p>Players can move forward from multiple angles</p>
+<p>​    玩家可以从多个角度前进</p>
+<p>We can blend any angle from three clips:</p>
+<p>​    我们可以混合三个剪辑中的任意角度：</p>
+<ul>
+<li>Strafe Left clip</li>
+<li>Run Forward clip</li>
+<li>Strafe Right clip</li>
+</ul>
+<p>The technique is called 1D Blend Space.</p>
+<p>​    该技术称为一维混合空间。</p>
+<h4 id="Directional-Walking-and-Running"><a href="#Directional-Walking-and-Running" class="headerlink" title="Directional Walking and Running"></a>Directional Walking and Running</h4><p>​    定向步行和跑步</p>
+<p><img src="/images/loading.webp" data-original="9.6.webp" alt="webp"></p>
+<p>Players can change direction and speed at the same time</p>
+<p>​    玩家可以同时改变方向和速度</p>
+<p>We simply place the two 1D Blend Spaces orthogonally and we get an 2D Blend Space</p>
+<p>​    我们只需将两个一维混合空间正交放置，就得到一个二维混合空间</p>
+<h4 id="2D-Blend-Space"><a href="#2D-Blend-Space" class="headerlink" title="2D Blend Space"></a>2D Blend Space</h4><p><img src="/images/loading.webp" data-original="9.7.webp" alt="webp"></p>
+<p>Since the movement speed in the lateral direction is lower in the forward direction, the character should enter the running state in a lower speed in the lateral direction</p>
+<p>​    由于横向移动速度在前进方向上较低，因此角色应该以较低的横向速度进入奔跑状态</p>
+<h4 id="Case-Applauding-on-Different-Poses"><a href="#Case-Applauding-on-Different-Poses" class="headerlink" title="Case: Applauding on Different Poses"></a>Case: Applauding on Different Poses</h4><p>​    案例：不同姿势鼓掌</p>
+<p><img src="/images/loading.webp" data-original="9.8.webp" alt="webp"></p>
+<p>There are multiple robots in different poses in the scene</p>
+<p>​    场景中有多个机器人摆出不同的姿势</p>
+<p>We need to make applause animations for various poses separately</p>
+<p>​    我们需要分别为各种姿势制作掌声动画</p>
+<p>Is it possible to make a single applauding animation that can be applied to all poses?</p>
+<p>​    是否可以制作一个可以应用于所有姿势的鼓掌动画？</p>
+<h4 id="Skeleton-Masked-Blending"><a href="#Skeleton-Masked-Blending" class="headerlink" title="Skeleton Masked Blending"></a>Skeleton Masked Blending</h4><p>​    骨架蒙版混合</p>
+<p><img src="/images/loading.webp" data-original="9.9.webp" alt="webp"></p>
+<p>The set of all blend percentages for the entire skeleton $\{\beta_j\}|^{N-1}_{j=0}$ is sometimes called a blend mask $b$</p>
+<p>​    整个骨架的所有混合百分比的集合 $\{\beta_j\}|^{N-1}_{j=0}$ 有时称为混合蒙版 $b$</p>
+<h4 id="Case-Warm-Welcome-from-the-Robots"><a href="#Case-Warm-Welcome-from-the-Robots" class="headerlink" title="Case: Warm Welcome from the Robots"></a>Case: Warm Welcome from the Robots</h4><p>​    案例：机器人的热烈欢迎</p>
+<p><img src="/images/loading.webp" data-original="9.10.webp" alt="webp"></p>
+<p>We will let robots <strong>applauding</strong> in different poses</p>
+<p>​    我们会让机器人以不同的姿势鼓掌（用蒙版结合两个动画 clips）</p>
+<h4 id="Additive-Blending"><a href="#Additive-Blending" class="headerlink" title="Additive Blending"></a>Additive Blending</h4><p><img src="/images/loading.webp" data-original="9.11.webp" alt="webp"></p>
+<p>Add a difference clip into a regular clip to produce a new clip</p>
+<p>​    将差异剪辑添加到常规剪辑中以生成新剪辑</p>
+<p>Additive Blending introduces a new kind of animation called a <strong>difference clip</strong>, which represents the difference between two regular animation clips.</p>
+<p>​    添加剂混合引入了一种称为<strong>差异剪辑</strong>的新型动画，它表示两个常规动画剪辑之间的差异。</p>
+<p>A difference clip can be added into a regular animation clip in order to produce interesting variations in thepose and movement of the character.</p>
+<p>​    可以将差异剪辑添加到常规动画剪辑中，以便在角色的姿势和运动中产生有趣的变化。</p>
+<h4 id="Nodding-to-Camera"><a href="#Nodding-to-Camera" class="headerlink" title="Nodding to Camera"></a>Nodding to Camera</h4><p><img src="/images/loading.webp" data-original="9.12.webp" alt="webp"></p>
+<p>​    朝向摄像机点头的动画。</p>
+<h4 id="Additive-Blending-Abnormal-Bone-Results"><a href="#Additive-Blending-Abnormal-Bone-Results" class="headerlink" title="Additive Blending - Abnormal Bone Results"></a>Additive Blending - Abnormal Bone Results</h4><p>​    添加剂混合 - 骨骼结果异常</p>
+<p><img src="/images/loading.webp" data-original="9.13.webp" alt="webp"></p>
+<p>Additive blends are more likely to have abnormal bone results</p>
+<p>​    添加剂混合物更有可能产生异常的骨骼结果</p>
+<h4 id="Animation-Blending-Summary"><a href="#Animation-Blending-Summary" class="headerlink" title="Animation Blending Summary"></a>Animation Blending Summary</h4><p>​    动画混合总结</p>
+<p><img src="/images/loading.webp" data-original="9.14.webp" alt="webp"></p>
+<ul>
+<li><p>1D Blend Space</p>
+<p>一维混合空间</p>
+<ul>
+<li><p>Blend poses based on a single input value</p>
+<p>基于单个输入值混合姿势</p>
+</li>
+</ul>
+</li>
+<li><p>2D Blend space</p>
+<ul>
+<li><p>Blend poses based on two input values</p>
+<p>基于两个输入值混合姿势</p>
+</li>
+<li><p>Triangular blend</p>
+<p>三角形混合</p>
+</li>
+</ul>
+</li>
+<li><p>Masked Blending</p>
+<p>蒙版混合</p>
+</li>
+<li><p>Additive Blending</p>
+<p>添加剂混合</p>
+</li>
+</ul>
+<h3 id="Action-State-Machine-ASM"><a href="#Action-State-Machine-ASM" class="headerlink" title="Action State Machine (ASM)"></a>Action State Machine (ASM)</h3><p>​    有限动画状态机</p>
+<h4 id="Case-Jumping"><a href="#Case-Jumping" class="headerlink" title="Case: Jumping"></a>Case: Jumping</h4><p><img src="/images/loading.webp" data-original="9.15.webp" alt="webp"></p>
+<p>How to animate jump?</p>
+<p>​    如何制作跳跃动画？</p>
+<p>Blend Space is synchronous, but jump is stateful</p>
+<p>​    混合空间是同步的，但跳跃是有状态的</p>
+<p>We usually model the jumping action via a finite state machine, commonly known as the Action State Machine (ASM)</p>
+<p>​    我们通常通过有限状态机（通常称为动作状态机（ASM））来模拟跳跃动作</p>
+<h4 id="ASM-Definition"><a href="#ASM-Definition" class="headerlink" title="ASM Definition"></a>ASM Definition</h4><p>​    ASM 定义</p>
+<p><img src="/images/loading.webp" data-original="9.16.webp" alt="webp"></p>
+<ul>
+<li><p>ASM consists of nodes and transitions</p>
+<p>ASM 由节点和转换组成</p>
+</li>
+<li><p>Node types</p>
+<p>节点类型</p>
+<ul>
+<li><p>Blend space</p>
+<p>混合空间</p>
+</li>
+<li><p>Clip</p>
+<p>片段</p>
+</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight c#"><table><tr><td class="code"><pre><code class="hljs C#"><span class="hljs-keyword">class</span> <span class="hljs-title">ActionstateMachineclipNode</span><br>&#123;<br>	Animationclip m_clip;<br>    <span class="hljs-built_in">bool</span> m_is_loop;<br>&#125;;<br><br><span class="hljs-keyword">class</span> <span class="hljs-title">ActionstateMachineBlendSpaceNode</span><br>&#123;<br>	Blendspace m_blend_space;<br>    <span class="hljs-built_in">bool</span> m_is_loop;<br>&#125;;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><p>Transition type</p>
+<p>过渡型</p>
+<ul>
+<li><p>simply “pop&quot; from one state to another</p>
+<p>只需从一种状态“弹出”到另一种状态</p>
+</li>
+<li><p>cross-fade from one state to the next</p>
+<p>从一种状态交叉淡入淡出到另一种状态</p>
+</li>
+<li><p>Special transitional states</p>
+<p>特殊过渡状态</p>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="Cross-Fades"><a href="#Cross-Fades" class="headerlink" title="Cross Fades"></a>Cross Fades</h4><p>​    交叉淡入淡出</p>
+<p><img src="/images/loading.webp" data-original="9.17.webp" alt="webp"></p>
+<p>Two common ways</p>
+<p>​    两种常见方式</p>
+<ul>
+<li><p>Smooth transition</p>
+<p>平稳过渡</p>
+<ul>
+<li><p>restriction: the two clips must be looping animations, and their timelines must be synchronized</p>
+<p>限制：两个剪辑必须是循环动画，并且它们的时间线必须同步</p>
+</li>
+</ul>
+</li>
+<li><p>Frozen transition</p>
+<p>冻结过渡</p>
+</li>
+</ul>
+<h4 id="Cross-Fades-Curve"><a href="#Cross-Fades-Curve" class="headerlink" title="Cross Fades Curve"></a>Cross Fades Curve</h4><p><img src="/images/loading.webp" data-original="9.18.webp" alt="webp"></p>
+<p>Different cross fades curve could be used for different demands</p>
+<p>​    不同的交叉淡入淡出曲线可用于不同的需求</p>
+<h4 id="Animation-State-Machine-in-Unreal"><a href="#Animation-State-Machine-in-Unreal" class="headerlink" title="Animation State Machine in Unreal"></a>Animation State Machine in Unreal</h4><p>​    虚幻中的动画状态机</p>
+<p><img src="/images/loading.webp" data-original="9.19.webp" alt="webp"></p>
+<ul>
+<li><p>State: a blueprint graph which outputs a pose</p>
+<p>状态：输出姿势的蓝图</p>
+</li>
+<li><p>Transition : control when to change state and how to blend (Multi)</p>
+<p>过渡：控制何时改变状态以及如何混合（多）</p>
+</li>
+</ul>
+<h4 id="Layered-ASM"><a href="#Layered-ASM" class="headerlink" title="Layered ASM"></a>Layered ASM</h4><p>​    分层状态机</p>
+<p><img src="/images/loading.webp" data-original="9.20.webp" alt="webp"></p>
+<p>different parts of a character&#39;s body to be doing different, independent or semi-independent actions simultaneously</p>
+<p>​    角色身体的不同部位同时做不同的、独立或半独立的动作</p>
+<h3 id="Animation-Blend-Tree"><a href="#Animation-Blend-Tree" class="headerlink" title="Animation Blend Tree"></a>Animation Blend Tree</h3><p>​    现代游戏引擎常用的方法——动画混合树</p>
+<h4 id="Blend-Tree"><a href="#Blend-Tree" class="headerlink" title="Blend Tree"></a>Blend Tree</h4><p>​    混合树</p>
+<p><img src="/images/loading.webp" data-original="9.21.webp" alt="webp"></p>
+<p>Structure layered ASMs and operations as a tree</p>
+<p>​    将分层 ASM 和操作构建为树</p>
+<ul>
+<li><p>Inspired by expression tree</p>
+<p>受到表达式树的启发</p>
+</li>
+<li><p>Easy to understand for animators</p>
+<p>动画师易于理解</p>
+</li>
+</ul>
+<p>For a blend tree</p>
+<p>​    对于混合树</p>
+<ul>
+<li><p>Non-terminal nodes and terminal nodes (leaf nodes)</p>
+<p>非终端节点和终端节点（叶节点）</p>
+</li>
+<li><p>The result of each non-terminal node is a pose</p>
+<p>每个非终端节点的结果是一个位姿</p>
+</li>
+</ul>
+<h4 id="LERP-Blend-Node"><a href="#LERP-Blend-Node" class="headerlink" title="LERP Blend Node"></a>LERP Blend Node</h4><p>​    LERP 混合节点</p>
+<p><img src="/images/loading.webp" data-original="9.22.webp" alt="webp"></p>
+<ul>
+<li><p>Binary LERP node</p>
+<p>二进制 LERP 节点</p>
+<ul>
+<li><p>Basic non-terminal node in blend tree</p>
+<p>混合树中的基本非终端节点</p>
+</li>
+<li><p>LERP two input poses with weight $\beta$ into one output pose</p>
+<p>LERP 将权重 $\beta$ 的两个输入姿势转化为一个输出姿势</p>
+</li>
+</ul>
+</li>
+</ul>
+<p>Usually extended to handle multiple inputs(e.g. Ternary/Quad LERP node)</p>
+<p>​    通常扩展为处理多个输入（例如三元/四元 LERP 节点）</p>
+<h4 id="Additive-Blend-Node"><a href="#Additive-Blend-Node" class="headerlink" title="Additive Blend Node"></a>Additive Blend Node</h4><p>​    加法混合节点</p>
+<p><img src="/images/loading.webp" data-original="9.23.webp" alt="webp"></p>
+<ul>
+<li><p>Basic non-ternimal node in blend tree</p>
+<p>混合树中的基本非终止节点</p>
+</li>
+<li><p>Add the second input pose (usually a difference one) into the first input pose by weight $\beta$</p>
+<p>按权重 $\beta$ 将第二个输入姿势（通常是差异姿势）添加到第一个输入姿势中</p>
+</li>
+</ul>
+<h4 id="Express-Layered-ASM-in-Blend-Tree"><a href="#Express-Layered-ASM-in-Blend-Tree" class="headerlink" title="Express Layered ASM in Blend Tree"></a>Express Layered ASM in Blend Tree</h4><p>​    在混合树中表达分层 ASM</p>
+<p><img src="/images/loading.webp" data-original="9.24.webp" alt="webp"></p>
+<p>Use a blend tree to describe the desired final pose of ASMs</p>
+<p>​    使用混合树来描述 ASM 所需的最终姿态</p>
+<h4 id="Blend-Tree-Nodes"><a href="#Blend-Tree-Nodes" class="headerlink" title="Blend Tree Nodes"></a>Blend Tree Nodes</h4><p>​    混合树节点</p>
+<p><img src="/images/loading.webp" data-original="9.25.webp" alt="webp"></p>
+<p>Terminal node (Leaf Nodes)</p>
+<p>​    终端节点（叶节点）</p>
+<ul>
+<li>Clip</li>
+<li>Blend Space</li>
+<li>ASM</li>
+</ul>
+<p>Non-terminal node (No-Leaf Nodes)</p>
+<p>​    非终端节点（No-Leaf Nodes）</p>
+<ul>
+<li><p>Binary LERP blend node</p>
+<p>二进制 LERP 混合节点</p>
+</li>
+<li><p>Ternary (triangular) LERP blend node</p>
+<p>三元（三角形）LERP 混合节点</p>
+</li>
+<li><p>Binary additive blend node</p>
+<p>二元加法混合节点</p>
+</li>
+</ul>
+<h4 id="Unreal-Animation-Blueprint"><a href="#Unreal-Animation-Blueprint" class="headerlink" title="Unreal Animation Blueprint"></a>Unreal Animation Blueprint</h4><p>​    虚幻动画蓝图</p>
+<p><img src="/images/loading.webp" data-original="9.26.webp" alt="webp"></p>
+<p>A blueprint graph which outputs a final pose</p>
+<p>​    输出最终姿势的蓝图</p>
+<ul>
+<li><p>Take clip poses or the results of ASMs as input</p>
+<p>将剪辑姿势或 ASM 结果作为输入</p>
+</li>
+<li><p>Blend input poses by different methods</p>
+<p>通过不同的方法混合输入姿势</p>
+</li>
+</ul>
+<h3 id="Bend-Tree-Control-Parameters"><a href="#Bend-Tree-Control-Parameters" class="headerlink" title="Bend Tree Control Parameters"></a>Bend Tree Control Parameters</h3><p>​    弯曲树控制参数</p>
+<ul>
+<li><p>node search</p>
+<p>节点搜索</p>
+<p>provide a way for higher-level code to find blend nodes in the tree</p>
+<p>为高层代码提供一种在树中查找混合节点的方法</p>
+</li>
+<li><p>named variable</p>
+<p>命名变量</p>
+<p>allow names to be assigned to the individual control parameters. The controlling code can look up a control parameter by name in order to adjust its value</p>
+<p>允许为各个控制参数分配名称。控制代码可以通过名称查找控制参数以调整其值</p>
+</li>
+<li><p>control structure</p>
+<p>控制结构</p>
+<p>a simple data structure, contains all of the control parameters for the entire character. The nodes in the blend tree(s) are connected to particular control parameters</p>
+<p>一个简单的数据结构，包含整个角色的所有控制参数。混合树中的节点连接到特定的控制参数</p>
+</li>
+</ul>
+<p>Animation blend tree is way more complicated that those classic notes (i,e, event nodes, calculation/logic nodes and special blending and flow control nodes)</p>
+<p>​    动画混合树比那些经典注释（即事件节点、计算/逻辑节点以及特殊混合和流程控制节点）要复杂得多。</p>
+<h4 id="Unreal-Animation-Blueprint-Control"><a href="#Unreal-Animation-Blueprint-Control" class="headerlink" title="Unreal Animation Blueprint Control"></a>Unreal Animation Blueprint Control</h4><p>​    虚幻动画蓝图控制</p>
+<p><img src="/images/loading.webp" data-original="9.27.webp" alt="webp"></p>
+<p>Named variables as members in animation blueprint</p>
+<p>​    命名变量作为动画蓝图中的成员</p>
+<ul>
+<li><p>Can be updated through blueprint</p>
+<p>可以通过蓝图进行更新</p>
+</li>
+<li><p>Can be used anywhere inside the Blend Tree</p>
+<p>可以在混合树内的任何地方使用</p>
+</li>
+</ul>
+<h4 id="Unreal5-Animation-Tree-Sample"><a href="#Unreal5-Animation-Tree-Sample" class="headerlink" title="Unreal5 Animation Tree Sample"></a>Unreal5 Animation Tree Sample</h4><p><img src="/images/loading.webp" data-original="9.28.webp" alt="webp"></p>
+<h3 id="Inverse-Kinematices-IK"><a href="#Inverse-Kinematices-IK" class="headerlink" title="Inverse Kinematices (IK)"></a>Inverse Kinematices (IK)</h3><p>​    逆运动学 (IK)</p>
+<h4 id="Basic-Comcepts"><a href="#Basic-Comcepts" class="headerlink" title="Basic Comcepts"></a>Basic Comcepts</h4><p><img src="/images/loading.webp" data-original="9.29.webp" alt="webp"></p>
+<ul>
+<li><p>End-effector</p>
+<p>末端执行器</p>
+<p>The bone which is expected to be movedto a desired position</p>
+<p>预计将移动到所需位置的骨骼</p>
+</li>
+<li><p>lK (inverse kinematics)</p>
+<p>lK（逆运动学）</p>
+<p>The use of kinematic equations to determine the joint parameters of a manipulator so that the end-effector moves to a desired position</p>
+<p>利用运动学方程确定机械手的关节参数，使末端执行器移动到所需位置</p>
+</li>
+<li><p>FK (Forward Kinematics)</p>
+<p>FK（正向运动学）</p>
+<p>The use of the kinematics equations of a robot to compute the position of the end-effectors from specified values for the joint parameters</p>
+<p>使用机器人的运动学方程根据关节参数的指定值计算末端执行器的位置</p>
+</li>
+</ul>
+<h4 id="How-to-Touch-the-Ground"><a href="#How-to-Touch-the-Ground" class="headerlink" title="How to Touch the Ground?"></a>How to Touch the Ground?</h4><p><img src="/images/loading.webp" data-original="9.30.webp" alt="webp"></p>
+<p>​    让角色踏入凹凸不平的地面时，脚能正确踏在地面上。</p>
+<h4 id="Intuitive-ldea-Adjust-Feet-Position-for-Each-Step"><a href="#Intuitive-ldea-Adjust-Feet-Position-for-Each-Step" class="headerlink" title="Intuitive ldea: Adjust Feet Position for Each Step"></a>Intuitive ldea: Adjust Feet Position for Each Step</h4><p>​    直观想法：每一步调整脚的位置</p>
+<h4 id="Two-Bones-IK"><a href="#Two-Bones-IK" class="headerlink" title="Two Bones IK"></a>Two Bones IK</h4><p><img src="/images/loading.webp" data-original="9.31.webp" alt="webp"></p>
+<p>​    在脚和低面建立 IK 约束。</p>
+<ul>
+<li>3D space</li>
+</ul>
+<p><img src="/images/loading.webp" data-original="9.32.webp" alt="webp"></p>
+<ul>
+<li><p>Determine the final pose by a reference vector</p>
+<p>通过参考向量确定最终姿态</p>
+</li>
+</ul>
+<p><img src="/images/loading.webp" data-original="9.33.webp" alt="webp"></p>
+<h4 id="More-Complicated-IK-Scenarios"><a href="#More-Complicated-IK-Scenarios" class="headerlink" title="More Complicated IK Scenarios"></a>More Complicated IK Scenarios</h4><p>​    更复杂的 IK 场景</p>
+<p><img src="/images/loading.webp" data-original="9.34.webp" alt="webp"></p>
+<h4 id="Complexity-of-Multi-Joint-lK-Solving"><a href="#Complexity-of-Multi-Joint-lK-Solving" class="headerlink" title="Complexity of Multi-Joint lK Solving"></a>Complexity of Multi-Joint lK Solving</h4><p>​    多关节 lK 求解的复杂性</p>
+<p><img src="/images/loading.webp" data-original="9.35.webp" alt="webp"></p>
+<ul>
+<li><p>Computation cost: high dimension non-linear function solving in real-time</p>
+<p>计算成本：实时求解高维非线性函数</p>
+</li>
+<li><p>May have multiple solutions, unique solution or nosolution</p>
+<p>可能有多种解决方案、唯一解决方案或无解决方案</p>
+</li>
+</ul>
+<h4 id="Check-Reachability-of-the-Target"><a href="#Check-Reachability-of-the-Target" class="headerlink" title="Check Reachability of the Target"></a>Check Reachability of the Target</h4><p>​    检查目标的可达性</p>
+<p><img src="/images/loading.webp" data-original="9.36.webp" alt="webp"></p>
+<h4 id="Constraints-of-Joints"><a href="#Constraints-of-Joints" class="headerlink" title="Constraints of Joints"></a>Constraints of Joints</h4><p><img src="/images/loading.webp" data-original="9.37.webp" alt="webp"></p>
+<p>​    人体的关节有多种，不同的关节能做出不同范围的变换。</p>
+<p>​    哦！游戏引擎开发者还要对解剖学有所涉猎。</p>
+<h4 id="Need-Treat-Constraints-Seriously"><a href="#Need-Treat-Constraints-Seriously" class="headerlink" title="Need Treat Constraints Seriously"></a>Need Treat Constraints Seriously</h4><p>​    需要认真对待约束</p>
+<p><img src="/images/loading.webp" data-original="9.38.webp" alt="webp"></p>
+<p>​    约束不充分，游戏中出现反关节运动。</p>
+<h4 id="Heuristics-Algorithm"><a href="#Heuristics-Algorithm" class="headerlink" title="Heuristics Algorithm"></a>Heuristics Algorithm</h4><p>​    启发式算法</p>
+<p>Why</p>
+<ul>
+<li><p>Too many joints + constraints, difficult to solve with analysis method</p>
+<p>关节 + 约束过多，难以用分析方法解决</p>
+</li>
+</ul>
+<p>Basic ldea</p>
+<p>​    基本思想</p>
+<p>Designed to solve problem in faster and more efficient fashion by sacrificing optimality, accuracy, precision, or completeness for speed</p>
+<p>​    旨在通过牺牲最优性、准确性、精密度或完整性来换取速度，以更快、更高效的方式解决问题</p>
+<ul>
+<li><p>Approximation</p>
+<p>近似值</p>
+</li>
+<li><p>Global optimality is not guaranteed</p>
+<p>不保证全局最优</p>
+</li>
+<li><p>lteration is usually used with a maximum limit</p>
+<p>迭代通常使用最大限制</p>
+</li>
+</ul>
+<h4 id="CCD-Cyclic-Coordinate-Decent"><a href="#CCD-Cyclic-Coordinate-Decent" class="headerlink" title="CCD (Cyclic Coordinate Decent)"></a>CCD (Cyclic Coordinate Decent)</h4><p>​    CCD（循环坐标系）</p>
+<p>Principle</p>
+<ul>
+<li><p>From joint-to-joint, rotates the end-effector as close as possible to the target, solves lK problem in orientation space</p>
+<p>从关节到关节，旋转末端执行器尽可能靠近目标，解决方向空间中的 lK 问题</p>
+</li>
+</ul>
+<p>Reachability</p>
+<p>​    可达性</p>
+<ul>
+<li><p>Algorithm can stop after certain number of iterations to avoid unreachable target problem</p>
+<p>算法可以在一定次数的迭代后停止，以避免无法达到目标的问题</p>
+</li>
+</ul>
+<p>Contraints</p>
+<p>​    限制条件</p>
+<ul>
+<li><p>Angular limits is allowed, by checking after each iteration</p>
+<p>通过在每次迭代后检查，允许角度限制</p>
+</li>
+</ul>
+<h4 id="Optimized-CCD-1-2"><a href="#Optimized-CCD-1-2" class="headerlink" title="Optimized CCD (1/2)"></a>Optimized CCD (1/2)</h4><p>​    优化 CCD (1/2)</p>
+<p><img src="/images/loading.webp" data-original="9.39.webp" alt="webp"></p>
+<p>Add tolerance regions to each bone&#39;s goal</p>
+<p>​    为每个骨骼的目标添加容差区域</p>
+<ul>
+<li><p>Each bone stops rotating and moves onto the next bone within tolerance region</p>
+<p>每个骨骼停止旋转并移动到公差范围内的下一个骨骼</p>
+</li>
+<li><p>Helps to produce poses that are less rigid and more comfortable looking</p>
+<p>有助于塑造不那么僵硬且看起来更舒适的姿势</p>
+</li>
+</ul>
+<h4 id="Optimized-CCD-2-2"><a href="#Optimized-CCD-2-2" class="headerlink" title="Optimized CCD (2/2)"></a>Optimized CCD (2/2)</h4><p><img src="/images/loading.webp" data-original="9.40.webp" alt="webp"></p>
+<p>Use under-damped angle scaling</p>
+<p>​    使用欠阻尼角度缩放</p>
+<ul>
+<li><p>Each ioint moves only a small amount toward the goal and distributes the movement across multiple bones</p>
+<p>每个关节仅向目标移动少量，并将移动分布到多个骨骼上</p>
+</li>
+<li><p>Produce less abrupt joint changes and more smooth and casual poses for character movement</p>
+<p>减少突然的关节变化，并为角色运动提供更平滑和随意的姿势</p>
+</li>
+</ul>
+
         </article>
         <div class="post-bottom">
     
