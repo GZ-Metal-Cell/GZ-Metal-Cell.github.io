@@ -16,7 +16,6 @@ class AESContainer {
 
     handleKeyPress(event) {
         if (event.key === 'Enter') {
-            console.log(this.pubkey, this.inputField.val());
             this.decrypted = CryptoJS.AES.decrypt(this.pubkey, this.inputField.val()).toString(CryptoJS.enc.Utf8);
             if (this.decrypted) {
                 this.inputContainer.remove();
@@ -25,7 +24,7 @@ class AESContainer {
         }
     }
 
-    render(targetElement) {
-        $(targetElement).replaceWith(this.container);
+    render() {
+        $(document.currentScript).before(this.container);
     }
 }
