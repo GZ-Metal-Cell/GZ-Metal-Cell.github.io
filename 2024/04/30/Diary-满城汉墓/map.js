@@ -16,4 +16,4 @@ let baseLayer = L.tileLayer("http://webrd0{s}.is.autonavi.com/appmaptile?lang=zh
 map.addLayer(baseLayer);
 
 var marker = L.marker([38.94755011034871, 115.2979498412339]).addTo(map);
-marker.bindPopup("<b>开冲😍！</b>").openPopup();;
+marker.bindPopup("<b>开冲😍！</b>").openPopup();
