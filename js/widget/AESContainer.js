@@ -3,7 +3,7 @@ class AESContainer {
         this.pubkey = pubkey;
         this.container = $('<div>').addClass('AES-container');
         this.inputContainer = $('<div>').addClass('AES-input');
-        this.inputField = $('<input>').attr({type: 'password', required: true});
+        this.inputField = $('<input>').attr({ type: 'password', required: true });
         this.highlight = $('<span>').addClass('hl');
         this.bar = $('<span>').addClass('bar');
         this.label = $('<label>').text(label);
