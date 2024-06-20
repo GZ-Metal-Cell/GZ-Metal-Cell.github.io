@@ -1,12 +1,7 @@
 var exhibitsCount = 0;
 
 class Exhibits {
-    constructor(ravity, img, title, desc, quote="") {
-        this.img = img;
-        this.title = title;
-        this.desc = desc;
-        this.quote = quote;
-
+    constructor(ravity, img, title, desc="", quote="") {
         this.exhibitsContainer = $('<div>').addClass('exhibits-container').addClass(ravity);
         exhibitsCount += 1;
         if (exhibitsCount % 2 == 0) {
@@ -15,8 +10,8 @@ class Exhibits {
         const exhibitsContainerLeft = $('<div>').addClass('exhibits-container-left');
         const exhibitsImgContainer = $('<div>').addClass('exhibits-img-container');
 
-        if (this.img.length == 1) {
-            exhibitsImgContainer.append($('<img>').addClass('no-figcaption').attr('src', '/images/loading.webp').attr('data-original', this.img[0][0]).attr('alt', this.img[0][1]));
+        if (img.length == 1) {
+            exhibitsImgContainer.append($('<img>').addClass('no-figcaption').attr('src', '/images/loading.webp').attr('data-original', img[0][0]).attr('alt', img[0][1]));
         }
         else {
             const fCarousel = $('<div>').addClass('f-carousel');
@@ -25,7 +20,7 @@ class Exhibits {
             const fCarouselTrack = $('<div>').addClass('f-carousel__track');
             fCarouselViewport.append(fCarouselTrack);
 
-            for (const item of this.img) {
+            for (const item of img) {
                 let fCarouselSlide = $('<div>').addClass('f-carousel__slide');
                 fCarouselSlide.append($('<img>').addClass('no-figcaption').attr('src', '/images/loading.webp').attr('src', item[0]).attr('alt', item[1]));
                 fCarouselTrack.append(fCarouselSlide);
@@ -36,12 +31,17 @@ class Exhibits {
 
         exhibitsContainerLeft.append(exhibitsImgContainer);
         const exhibitsContainerRight = $('<div>').addClass('exhibits-container-right');
-        const titlePara = $('<p>').addClass('title').text(this.title);
-        const descPara = $('<p>').addClass('desc').text(this.desc);
-        exhibitsContainerRight.append(titlePara).append(descPara);
+        const titlePara = $('<p>').addClass('title').text(title);
 
-        if(this.quote != "") {
-            const quotePara = $('<blockquote>').append($('<p>').text(this.quote));
+        exhibitsContainerRight.append(titlePara);
+
+        if (desc != "") {
+            const descPara = $('<p>').addClass('desc').text(desc);
+            exhibitsContainerRight.append(descPara);
+        }
+
+        if(quote != "") {
+            const quotePara = $('<blockquote>').append($('<p>').text(quote));
             exhibitsContainerRight.append(quotePara);
         }
         
