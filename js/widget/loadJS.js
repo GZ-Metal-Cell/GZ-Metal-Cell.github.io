@@ -1,11 +1,11 @@
 function handleHexoBlogDecryptEvent() {
     console.log("handleHexoBlogDecryptEvent()");
     $(document).ready(function () {
-        initJS();
+        loadJS();
     });
 }
 
-function initJS() {
+function loadJS() {
     if (typeof initGallery === 'function') {
         initGallery();
     }
