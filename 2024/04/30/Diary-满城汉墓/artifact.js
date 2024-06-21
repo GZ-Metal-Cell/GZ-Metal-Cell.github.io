@@ -21,7 +21,7 @@ class Artifact {
         
         if(this.imgSrc)
         {
-            img1 = $('<img>').addClass('no-figcaption').attr('src', this.imgSrc).attr('alt', '保定仿品');
+            img1 = $('<img>').attr('no-figcaption', '').attr('src', this.imgSrc).attr('alt', '保定仿品');
             artifactImgContainer.append(img1);
             button1.addClass('pressed');
         } else {
@@ -32,7 +32,7 @@ class Artifact {
 
         if(this.imgTSrc)
         {
-            var img2 = $('<img>').addClass('no-figcaption').attr('src', this.imgTSrc).attr('alt', '庄里真品');
+            var img2 = $('<img>').attr('no-figcaption', '').attr('src', this.imgTSrc).attr('alt', '庄里真品');
             if(this.imgSrc)
                 img2.addClass('hidden');
             else

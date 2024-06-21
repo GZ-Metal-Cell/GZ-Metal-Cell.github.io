@@ -1,5 +1,11 @@
 function initHighlightTools() {
     var codeBlocks = $('.hljs').closest('pre');
+    if (codeBlocks.attr('highlight-tools') != undefined) {
+        return;
+    } else {
+        codeBlocks.attr('highlight-tools', '');
+    }
+
     $(codeBlocks).each(function() {
         var $this = $(this);
         var $container = createContainer($this);

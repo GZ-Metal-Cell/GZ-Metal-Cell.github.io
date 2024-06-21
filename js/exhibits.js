@@ -11,7 +11,7 @@ class Exhibits {
         const exhibitsImgContainer = $('<div>').addClass('exhibits-img-container');
 
         if (img.length == 1) {
-            exhibitsImgContainer.append($('<img>').addClass('no-figcaption').attr('src', '/images/loading.webp').attr('data-original', img[0][0]).attr('alt', img[0][1]));
+            exhibitsImgContainer.append($('<img>').attr('no-figcaption', '').attr('src', '/images/loading.webp').attr('data-original', img[0][0]).attr('alt', img[0][1]));
         }
         else {
             const fCarousel = $('<div>').addClass('f-carousel');
@@ -22,7 +22,7 @@ class Exhibits {
 
             for (const item of img) {
                 let fCarouselSlide = $('<div>').addClass('f-carousel__slide');
-                fCarouselSlide.append($('<img>').addClass('no-figcaption').attr('src', '/images/loading.webp').attr('src', item[0]).attr('alt', item[1]));
+                fCarouselSlide.append($('<img>').attr('no-figcaption', '').attr('src', '/images/loading.webp').attr('src', item[0]).attr('alt', item[1]));
                 fCarouselTrack.append(fCarouselSlide);
             }
             exhibitsImgContainer.append(fCarousel);
@@ -35,12 +35,12 @@ class Exhibits {
 
         exhibitsContainerRight.append(titlePara);
 
-        if (desc != "") {
+        if (desc.length > 0) {
             const descPara = $('<p>').addClass('desc').text(desc);
             exhibitsContainerRight.append(descPara);
         }
 
-        if(quote != "") {
+        if(quote.length > 0) {
             const quotePara = $('<blockquote>').append($('<p>').text(quote));
             exhibitsContainerRight.append(quotePara);
         }

@@ -1,7 +1,7 @@
 function initFancybox() {
 	$('article img').each(function () {
 		// 避免与 leaflet 冲突
-		if ($(this).parent().hasClass('fancybox') || $(this).closest('.no-fancybox').length > 0 || $(this).hasClass('no-fancybox')) return;
+		if ($(this).parent().hasClass('fancybox') || $(this).closest('no-fancybox').length > 0 || $(this).attr('no-fancybox') != undefined) return;
 		
 		var alt = this.alt;
 		$(this).wrap(

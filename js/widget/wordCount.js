@@ -6,7 +6,8 @@ function wordCount() {
     };
 
     var count = counter($('.post-content-info').text());
-    return Math.round(count / 100) / 10 + 'k';
+    
+    return (Math.round(count / 100) / 10 === 0) ? count : (Math.round(count / 100) / 10 + 'k');
 }
 
 function initWordCount(){
