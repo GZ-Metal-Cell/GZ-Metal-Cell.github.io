@@ -35,7 +35,7 @@ map.on('zoomstart', function () {
 
 // 给某个点做标记
 var marker = L.marker([26.081476491742904, 119.29704755981834]).addTo(map);
-marker.bindPopup("<b>这个地方真是太好玩了！</b><br>这是屁股树的坐标😍！");
+marker.bindPopup("<b>这个地方真是太好玩了！</b><br/>这是屁股树的坐标😍！");
 
 // 定义路径点的坐标数组
 var latlngs = [

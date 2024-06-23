@@ -88,7 +88,7 @@ img.onload = function () {
                                         return [
                                             '鼓楼区',
                                             '啊！三坊七巷真是太好玩了！'
-                                        ].join('<br>');
+                                        ].join('<br/>');
                                     }
                                 }
                             },
@@ -101,7 +101,7 @@ img.onload = function () {
                                         return [
                                             '仓山区',
                                             '我们的时代多美好~像朝霞漫天灿烂~'
-                                        ].join('<br>');
+                                        ].join('<br/>');
                                     }
                                 }
                             },
@@ -114,7 +114,7 @@ img.onload = function () {
                                         return [
                                             '闽侯县',
                                             '知明行笃~立诚致广~全面求发展~'
-                                        ].join('<br>');
+                                        ].join('<br/>');
                                     }
                                 }
                             },
@@ -127,7 +127,7 @@ img.onload = function () {
                                         return [
                                             '长乐区',
                                             '闽江江水都流向~流向长乐的海~'
-                                        ].join('<br>');
+                                        ].join('<br/>');
                                     }
                                 }
                             },
