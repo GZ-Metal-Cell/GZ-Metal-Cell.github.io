@@ -1,5 +1,6 @@
 function initHighlightTools() {
     var codeBlocks = $('.hljs').closest('pre');
+
     if (codeBlocks.attr('highlight-tools') != undefined) {
         return;
     } else {
@@ -8,6 +9,9 @@ function initHighlightTools() {
 
     $(codeBlocks).each(function() {
         var $this = $(this);
+        if ($this.children().hasClass('plaintext')) {
+            return;
+        }
         var $container = createContainer($this);
         createCopyButton($container, $this, copyIcon);
         createCodeLangText($container, $this);
