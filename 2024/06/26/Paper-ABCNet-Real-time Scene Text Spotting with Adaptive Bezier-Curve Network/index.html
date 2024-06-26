@@ -377,7 +377,59 @@
 <main class="main post">
     <div class="post-content article-container">
         <article class="post-content-info">
-            <h1 id="资源"><a href="#资源" class="headerlink" title="资源"></a>资源</h1><h1 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h1>
+            <h1 id="资源"><a href="#资源" class="headerlink" title="资源"></a>资源</h1><ul>
+<li><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/u011306419/article/details/105771615">ABCNet 精读：使用自适应贝塞尔曲线网络进行进行实时场景文本定位 OCR 文本定位 文本检测 CVPR_贝塞尔曲线目标检测-CSDN博客</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://arxiv.org/abs/2002.10200">[2002.10200] ABCNet: Real-time Scene Text Spotting with Adaptive Bezier-Curve Network (arxiv.org)</a></p>
+</li>
+<li><a target="_blank" rel="noopener" href="https://paperswithcode.com/paper/abcnet-real-time-scene-text-spotting-with">ABCNet: Real-time Scene Text Spotting with Adaptive Bezier-Curve Network | Papers With Code</a></li>
+</ul>
+<h1 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h1><h2 id="Abstract"><a href="#Abstract" class="headerlink" title="Abstract"></a>Abstract</h2><p>​    场景文本检测与识别受到越来越多的研究关注。现有的方法大致可以分为两类：基于字符的方法和基于分割的方法。这些方法要么对于字符注释来说代价高昂，要么需要维护复杂的流水线，这通常不适合实时应用。在这里，我们通过提出自适应贝塞尔曲线网络（ABCNet）来解决这个问题。我们的贡献有三个方面：</p>
+<ol>
+<li>第一次，我们<strong>通过参数化的 Bezier 曲线自适应地拟合定向或弯曲文本</strong>。</li>
+<li>设计了一种<strong>新颖的 BezierAlign 层，用于提取任意形状文本实例的精确卷积特征</strong>，与以往的方法相比，精度有了显著的提高。</li>
+<li>与标准包围盒检测相比，我们的 Bezier 曲线检测引入的计算开销可以忽略不计，从而使我们的方法<strong>在效率和精度上都具有优势</strong>。</li>
+</ol>
+<p>​    在面向或弯曲的基准数据集（即 Total-Text 和 CTW1500）上的实验表明，ABCNet 在达到最高精度的同时，显著提高了速度。特别是，在全文本上，我们的实时版本在识别准确率方面比最近最先进的方法快 10 倍以上。代码可在 <a target="_blank" rel="noopener" href="https://git.io/AdelaiDet">https://git.io/AdelaiDet</a> 上找到。</p>
+<h2 id="1-Introduction"><a href="#1-Introduction" class="headerlink" title="1. Introduction"></a>1. Introduction</h2><p>​    场景文本检测和识别由于其在计算机视觉中的众多应用而受到越来越多的关注。尽管最近取得了巨大进展，<strong>但由于其在大小、纵横比、字体样式、透视失真和形状方面的多样性</strong>，检测和识别野生文本在很大程度上仍未解决。尽管深度学习的出现显著提高了场景文本识别任务的性能，但当前现实世界应用的方法仍存在相当大的差距，尤其是在效率方面。</p>
+<p>​    近年来，许多端到端方法显著提高了定向或弯曲场景文本检测的性能。然而，这些方法<strong>要么使用维护复杂管道的基于分割的方法，要么需要大量昂贵的字符级注释。此外，几乎所有这些方法的推理速度都很慢</strong>，阻碍了部署到实时应用中。因此，我们的目标是设计一个简单而有效的端到端框架，用于在图像中定位定向或弯曲场景文本，<strong>确保快速的推理时间，同时获得与最先进的方法相当甚至更好的性能</strong>。</p>
+<p>​    为了实现这一目标，我们提出了<strong>自适应贝塞尔曲线网络（ABCNet）</strong>，这是一个端到端的可训练框架，用于定向或弯曲场景文本识别。ABCNet 支持使用 Bezier 曲线适配进行定向或弯曲场景文本检测，与标准矩形边界框检测相比，这引入的计算开销可以忽略不计。此外，我们设计了一种新的特征对齐层 BezierAlign，用于精确计算曲线形状文本实例的卷积特征，从而在不增加太多计算代价的情况下获得较高的识别精度。首次用参数化的 Bezier 曲线表示方向文本或弯曲文本，实验结果表明了该方法的有效性。</p>
+<p>​    请注意，以前的方法，如 TextAlign 和 FOTS，可以被视为 ABCNet 的特例，因为四边形边界框可以被视为具有 4 个直边界的最简单的定向或曲线边界框。此外，ABCNet 可以避免复杂的变换，如 2D 注意，使识别分支的设计变得相当简单。我们将我们的主要贡献总结如下。</p>
+<ul>
+<li><p>为了准确定位图像中的定向和弯曲场景文本，首次提出了<strong>一种新的基于 Bezier 曲线的曲面场景文本的简明参数表示方法</strong>。与标准边界框表示法相比，它引入的计算开销可以忽略不计。</p>
+</li>
+<li><p>我们提出了一种抽样方法，也称为 <strong>BezierAlign，用于精确的特征对齐</strong>，因此识别分支可以自然地连接到整体结构。通过共享主干特征，识别分支可以设计成轻量化的结构。</p>
+</li>
+<li><p>该方法的简单性使其能够实时地进行推理。<strong>ABCNet 在两个极具挑战性的数据集 Total-Text 和 CTW1500 上实现了最先进的性能，显示出在有效性和效率方面的优势</strong>。</p>
+</li>
+</ul>
+<h3 id="1-1-Related-Work"><a href="#1-1-Related-Work" class="headerlink" title="1.1. Related Work"></a>1.1. Related Work</h3><p>​    场景文本检测需要同时检测和识别文本，而不是只关注一个任务。近年来，基于深度学习的方法的出现极大地提高了文本识别的性能。检测和识别的性能都有了很大的提高。我们将几种有代表性的基于<strong>深度学习的场景文本检测方法</strong>归纳为以下两类。</p>
+<p>​    <strong>常规的端到端场景文本定位</strong></p>
+<p>​    Li 等人提出了第一种基于深度学习的端到端可训练场景文本检测方法。该方法成功地使用 ROI 池通过<strong>两阶段框架将检测和识别特征</strong>结合在一起，但它只能识别水平和聚焦的文本。它的改进版本显著提高了性能，但速度有限。He 等人和 Liu 等人采用无锚机制，提高训练和推理速度。它们分别使用相似的采样策略，即文本对齐采样和 ROI 旋转，来从四边形检测结果中提取特征。请注意，这两种方法都不能定位定向或弯曲场景文本。</p>
+<p>​    <strong>定向或弯曲的端到端场景文本</strong></p>
+<p>​    检测定向或弯曲的场景文本，廖等人提出了一种 MASK TextSpotter，它对 MASK R-CNN 进行了巧妙的提炼，并使用字符级监督来同时检测和识别角色和实例掩码。该方法显著提高了指向或弯曲场景文本的定位性能。然而，字符级的地面真理是昂贵的，并且使用免费的合成数据在实践中很难为真实数据产生字符级的地面真理。它的改进版本大大减轻了对角色级别的基本事实的依赖。该方法依赖于区域建议网络，这在一定程度上限制了算法的速度。Sun 等人提出了预先生成四边形检测包围盒的文本网，然后利用区域建议网络对检测特征进行反馈进行识别。虽然该方法可以直接从四边形检测中识别出方向文本或弯曲文本，但性能仍然有限。</p>
+<p>​    最近，Qin 等人提出了自己的观点。建议使用感兴趣区域掩码来聚焦于定向或弯曲的文本区域。然而，结果可能很容易受到离群点像素的影响。此外，分割分支增加了计算负担；拟合多边形过程也引入了额外的时间消耗；分组结果通常是锯齿状的，不平滑。某文献中的工作是第一个单级定向或弯曲场景文本定位方法，需要字符级别的地面真实数据来进行训练。某文献作者提出了一种新的采样方法 RoISlide，它使用了文本实例预测片段中的融合特征，因此对长方向或弯曲文本具有鲁棒性。</p>
+<p><img src="/images/loading.webp" data-original="F2.png" alt="png"></p>
+<center>概述了一些与我们最相关的端到端场景文本定位方法。在 GT（基本事实）框中，‘<b>W</b>’、‘<b>R</b>’ 和 ‘<b>C</b>’ 分别表示词级批注、文本内容和字符级批注。“<b>H</b>”、“<b>Q</b>”和“<b>P</b>”分别表示该方法能够检测水平、四边形和定向或弯曲文本。“<b>RP</b>”表示该方法可以识别四边形方框内的弯曲文本。‘<b>R</b>’：识别；‘<b>BBox</b>’：边界框。虚线框表示该方法无法检测到的文本的形状。</center> 
+
+<h2 id="2-Adaptive-Bezier-Curve-Network-ABCNet"><a href="#2-Adaptive-Bezier-Curve-Network-ABCNet" class="headerlink" title="2. Adaptive Bezier Curve Network (ABCNet)"></a>2. Adaptive Bezier Curve Network (ABCNet)</h2><p>​    ABCNet 是用于定位定向或弯曲场景文本的端到端可训练框架。在图3中可以看到直观的流水线。我们采用了单次激发、无锚点的卷积神经网络作为检测框架。移除锚盒大大简化了我们任务的检测。这里，在检测头的输出特征图上密集地预测检测，该检测头由 4 个堆叠的卷积层组成，步长为 $1$，填充为 $1$核为 $3\times 3$。接下来，我们从两个部分介绍了 ABCNet 的关键部分：</p>
+<ol>
+<li>Bezier 曲线检测；</li>
+<li>BezierAlign 和 Recognition 分支。</li>
+</ol>
+<p><img src="/images/loading.webp" data-original="F3.png" alt="png"></p>
+<center>拟议的 ABCNet 的框架。我们使用三次 Bezier 曲线和 BezierAlign 来提取曲线序列特征，利用 Bezier 曲线检测结果。整个框架是端到端可训练的，效率很高。紫色圆点表示三次 Bezier 曲线的控制点。</center>
+
+<h3 id="2-1-Bezier-Curve-Detection"><a href="#2-1-Bezier-Curve-Detection" class="headerlink" title="2.1. Bezier Curve Detection"></a>2.1. Bezier Curve Detection</h3><p>​    与<strong>基于分割的方法相比，基于回归的方法是定向或弯曲文本检测的更直接的解决方案</strong>。然而，以前的基于回归的方法需要复杂的预测来拟合文本边界，这在实践中对各种文本形状都不是很有效和健壮的。为了简化定向或弯曲场景文本的检测，遵循回归方法，我们发现 Bezier 曲线是曲线表示的一个最基本的概念，适合于弯曲文本的参数化。Bezier 曲线表示使用 Bernstein 多项式作为其基础的参数曲线$c(t)$。其定义如下面公式所示。</p>
+<script type="math/tex; mode=display">c(t)=\sum\limits_{i=0}^nb_iB_{i,n}(t),0\le t\le1,</script><p>​    其中，$n$ 表示次数，$b_i$ 表示第 $i$ 个控制点，而 $b_{i, n}(t)$ 表示 Bernstein 基多项式，如下式所示：</p>
+<script type="math/tex; mode=display">B_{i,n}(t)=\begin{pmatrix}n\\i\end{pmatrix}t^i(1-t)^{n-i},i=0,...,n,</script><p>​    式中，$\begin{pmatrix}n\\i\end{pmatrix}$为二项式系数。为了用 Bezier 曲线拟合任意形状的文本，我们从现有的数据集和现实世界中综合观察了定向或弯曲场景文本，并经验表明，一条三次 Bezier 曲线（即 $n$ 为 $3$ ）在实际应用中足以适应不同类型的定向或弯曲场景文本。三次贝塞尔曲线的图示如图所示。</p>
+<p><img src="/images/loading.webp" data-original="F4.png" alt="png"></p>
+<center>三次贝塞尔曲线。$b_i$ 表示控制点。绿色线条形成控制多边形，黑色曲线为三次贝塞尔曲线。请注意，在只有两个端点 $b_1$ 和 $b_4$ 的情况下，贝塞尔曲线退化为一条直线。</center>
+
+<p>​    <strong>基于三次 Bezier 曲线，我们可以将定向或弯曲场景的文本检测简化为一个总共有八个控制点的包围盒回归</strong>。请注意，具有四个控制点（四个顶点）的直线文本是定向或弯曲场景文本的典型情况。为了保持一致性，我们在每条长边的三段点上插入额外的两个控制点。</p>
+<p>​    对于每个文本实例，我们使用</p>
+<script type="math/tex; mode=display">\Delta_x=b_{ix}-x_{min},\Delta_y=b_{iy}-y_{min},</script><p>​    其中 $x_{min}$ 和 $y_{min}$ 分别表示 4 个顶点的最小 $x$ 和 $y$ 值。预测相对距离的优点是与 Bezier 曲线控制点是否超出图像边界无关。在探测头内部，我们只需要一个具有 16 个输出通道的卷积层来学习 $\Delta x$ 和 $\Delta y$，这几乎是免费的，同时结果仍然可以准确。</p>
+
         </article>
         <div class="post-bottom">
     
