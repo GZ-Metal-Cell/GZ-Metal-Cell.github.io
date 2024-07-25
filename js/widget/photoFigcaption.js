@@ -6,8 +6,9 @@ initPhotoFigcaption = () => {
         $(this).wrap('<figure></figure>');
         const altValue = $(this).attr('title') || $(this).attr('alt');
         if (!altValue) return;
-        const ele = $('<figcaption>').text(altValue);
-        $(this).after(ele);
+        const pEle = $('<p>').text(altValue).css('text-align', 'center');
+        const figEle = $('<figcaption>').append(pEle);
+        $(this).after(figEle);
         $(this).attr('has-figcaption', '');
     });
 }
