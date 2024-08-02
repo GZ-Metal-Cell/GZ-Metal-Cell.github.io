@@ -42,6 +42,9 @@ function loadJS() {
     if (typeof initRef === 'function') {
         initRef();
     }
+    if (typeof initMermaid === 'function') {
+        initMermaid();
+    }
 }
 
 window.addEventListener('hexo-blog-decrypt', handleHexoBlogDecryptEvent);

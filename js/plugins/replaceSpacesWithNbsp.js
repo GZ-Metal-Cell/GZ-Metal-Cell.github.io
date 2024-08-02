@@ -9,9 +9,7 @@ function replaceSpacesWithNbsp() {
             // 对于文本节点，将连续的两个及以上空格替换为相应数量的&nbsp;
             // 并使用html()来重新设置元素的内容以正确解析&nbsp;为不间断空格
             const newHtml = this.nodeValue.replace(/  +/g, match => '&nbsp;'.repeat(match.length));
-            // 创建一个新的span元素来替换原有的文本节点
-            const $newNode = $('<span>').html(newHtml); // 使用span包裹以保持inline特性
-            $(this).replaceWith($newNode); // 替换原有的文本节点
+            $(this).replaceWith(newHtml); // 替换原有的文本节点
         });
     });
 }
