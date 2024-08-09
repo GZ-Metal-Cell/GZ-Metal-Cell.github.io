@@ -16,15 +16,15 @@ function showAside() {
         value = true;
     }
     if (localStorage.getItem('aside-status') === "false") {
-        $("main").addClass("close-aside");
+        $(".main-wrapper").addClass("close-aside");
     }
 }
 
 function hbeToc() {
     if ($('.hbe-content').length > 0) {
-        $('main').addClass('hbe-toc');
+        $('.main-wrapper').addClass('hbe-toc');
     } else {
-        $('main').removeClass('hbe-toc');
+        $('.main-wrapper').removeClass('hbe-toc');
     }
 }
 
@@ -70,7 +70,7 @@ function createToc() {
 
 
 function onShowAsideButton() {
-    document.querySelector('main').classList.toggle('close-aside');
+    document.querySelector('.main-wrapper').classList.toggle('close-aside');
 
     var value = localStorage.getItem('aside-status');
     if (value === "false" && typeof headerString !== 'undefined') {
