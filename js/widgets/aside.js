@@ -3,20 +3,35 @@ function initToc() {
         hbeToc();
         createToc();
         activeTocItem();
-        document.addEventListener("scroll", function (event) {
+        tocPercentage();
+        document.addEventListener('scroll', function (event) {
             activeTocItem();
+            tocPercentage();
         });
     }
+}
+
+function tocPercentage() {
+    const top = $('article').offset().top;
+    const bottom = $('article').offset().top + $('article').outerHeight();
+    const scrollTop = $(window).scrollTop();
+    const scrollBottom = scrollTop + $(window).height();
+    const progress = (scrollTop - top) / bottom;
+    const scrollProgress = progress * scrollBottom + (1 - progress) * scrollTop;
+    if (scrollBottom > bottom)
+        $('.toc-percentage').text(100);
+    else
+        $('.toc-percentage').text(Math.max(0, Math.min(Math.round(((scrollProgress - (1 - progress) * top) / bottom) * 100), 100)));
 }
 
 function showAside() {
     var value = localStorage.getItem('aside-status');
     if (value === null) {
-        localStorage.setItem('aside-status', "true");
+        localStorage.setItem('aside-status', 'true');
         value = true;
     }
-    if (localStorage.getItem('aside-status') === "false") {
-        $(".main-wrapper").addClass("close-aside");
+    if (localStorage.getItem('aside-status') === 'false') {
+        $('.main-wrapper').addClass('close-aside');
     }
 }
 
@@ -48,12 +63,12 @@ function createToc() {
 
         a.append(span);
 
-        a.on("click", function (e) {
+        a.on('click', function (e) {
             e.preventDefault();
-            var target = $($(this).attr("href"));
+            var target = $($(this).attr('href'));
             window.scrollTo({
                 top: $(target).offset().top - 70,
-                behavior: "smooth"
+                behavior: 'smooth'
             });
         });
 
@@ -73,11 +88,11 @@ function onShowAsideButton() {
     document.querySelector('.main-wrapper').classList.toggle('close-aside');
 
     var value = localStorage.getItem('aside-status');
-    if (value === "false" && typeof headerString !== 'undefined') {
+    if (value === 'false' && typeof headerString !== 'undefined') {
         activeTocItem();
         activeSeriesItem();
     }
-    localStorage.setItem('aside-status', value === "true" ? "false" : "true");
+    localStorage.setItem('aside-status', value === 'true' ? 'false' : 'true');
 }
 
 function getTopHeadingId() {
@@ -104,9 +119,9 @@ function activeTocItem() {
         var href = decodeURIComponent(link.getAttribute('href')).replace(/^#/, '');
         if (href == topHeadingId) {
             if (!link.classList.contains('active')) {
-                link.parentNode.classList.add("active");
-                var toc = document.querySelector(".aside-bottom-toc-content");
-                var activeItem = toc.querySelector(".active");
+                link.parentNode.classList.add('active');
+                var toc = document.querySelector('.aside-bottom-toc-content');
+                var activeItem = toc.querySelector('.active');
                 if (activeItem) {
                     toc.scrollTo({
                         top: activeItem.offsetTop - 80
@@ -114,15 +129,15 @@ function activeTocItem() {
                 }
             }
         } else {
-            link.parentNode.classList.remove("active");
+            link.parentNode.classList.remove('active');
         }
     });
 }
 
 function activeSeriesItem() {
-    var series = document.querySelector(".aside-top-series-content");
+    var series = document.querySelector('.aside-top-series-content');
     if (series) {
-        var activeItem = series.querySelector(".active");
+        var activeItem = series.querySelector('.active');
         if (activeItem) {
             series.scrollTo({
                 top: activeItem.offsetTop - 400
