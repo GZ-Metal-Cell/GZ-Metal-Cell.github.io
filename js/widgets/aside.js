@@ -18,10 +18,7 @@ function tocPercentage() {
     const scrollBottom = scrollTop + $(window).height();
     const progress = (scrollTop - top) / bottom;
     const scrollProgress = progress * scrollBottom + (1 - progress) * scrollTop;
-    if (scrollBottom > bottom)
-        $('.toc-percentage').text(100);
-    else
-        $('.toc-percentage').text(Math.max(0, Math.min(Math.round(((scrollProgress - (1 - progress) * top) / bottom) * 100), 100)));
+    $('.toc-percentage').text(Math.max(0, Math.min(Math.round(((scrollProgress - (1 - progress) * top) / bottom) * 100), 100)));
 }
 
 function showAside() {
