@@ -448,7 +448,7 @@
 </ul>
 <h3 id="2-2-Domain-Adaptation"><a href="#2-2-Domain-Adaptation" class="headerlink" title="2.2 Domain Adaptation"></a>2.2 Domain Adaptation</h3><p>​    领域自适应减少了训练和测试数据之间的领域差距。</p>
 <h3 id="2-3-Self-Training"><a href="#2-3-Self-Training" class="headerlink" title="2.3 Self-Training"></a>2.3 Self-Training</h3><ul>
-<li><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/352712184">Self Training文章梳理 - 知乎 (zhihu.com)</a></li>
+<li><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/352712184">Self Training 文章梳理 - 知乎 (zhihu.com)</a></li>
 </ul>
 <p>​    先前的工作使用 self-training 来弥补分类信息的缺乏。</p>
 <h2 id="3-Proposed-Method"><a href="#3-Proposed-Method" class="headerlink" title="3 Proposed Method"></a>3 Proposed Method</h2><p>​    在本节中，将分析由域偏移引起的问题。此外，我们还介绍了 TST 和 ATA 的原理，以及如何使用它们进行域自适应。为了评估我们的方法，采用 EAST 作为基线。</p>
@@ -467,17 +467,17 @@
 <script type="math/tex; mode=display">L_d=-\sum_{i}(y_i\times ln^{p_i(x)}+(1-y_i)\times ln^{1-p_i(x)})</script><p><img src="/images/loading.webp" data-original="F2.png" alt="png"></p>
 <p>​    为了学习领域不变特征，我们以对抗性的方式优化参数。通过最小化上述域分类损失来优化域分类器的参数，并且通过最大化该损失来优化基础网络的参数。更详细地说，在 EAST 的主干和域分类器之间添加了梯度反向层（GRL），并且当通过 GRL 层时，梯度的符号被反转。</p>
 <p>​    特征金字塔网络（FPN）和骨干网在训练阶段都最小化了 EAST 的原始损耗 $L_{task}$。$L_{task}$ 具体表示 EAST 中的分数图损失和几何图形损失。$L_t$ 任务表示在目标域中使用伪标签进行训练，$L_s$ 任务表示在源域中进行训练。因此，不同参数空间的不同训练目标：</p>
-<script type="math/tex; mode=display">\begin{cases}L_f=min(L_{task}^t(\theta_f|x^t)+L_{task}^s(\theta_f|x^s)-\lambda L_d(\theta|(x^s,x^t)))&\theta_f\in F,\\L_d=min(L_d(\theta_d|(x^s,x^t)))&\theta_d\in C,\\L_h=min(L_{task}^t(\theta_h|x^t)+L_{task}^s(\theta_h|x^s))&\theta_h\in D,\end{cases}</script><p>​    其中 $F$，$C$，$D$ 是主干、域分类器和FPN的参数空间。总体训练目标如下：</p>
+<script type="math/tex; mode=display">\begin{cases}L_f=min(L_{task}^t(\theta_f|x^t)+L_{task}^s(\theta_f|x^s)-\lambda L_d(\theta|(x^s,x^t)))&\theta_f\in F,\\L_d=min(L_d(\theta_d|(x^s,x^t)))&\theta_d\in C,\\L_h=min(L_{task}^t(\theta_h|x^t)+L_{task}^s(\theta_h|x^s))&\theta_h\in D,\end{cases}</script><p>​    其中 $F$，$C$，$D$ 是主干、域分类器和 FPN 的参数空间。总体训练目标如下：</p>
 <script type="math/tex; mode=display">L=L_f+F_h+\lambda L_d</script><p>​    其中 $\lambda$ 是权衡参数，我们在所有实验中将其设置为 0.2。通过优化损失，网络可以学习更多的文本域不变特征，更好地从合成数据转换为真实数据。</p>
 <h3 id="3-3-Text-Self-Training"><a href="#3-3-Text-Self-Training" class="headerlink" title="3.3 Text Self-Training"></a>3.3 Text Self-Training</h3><p>​    先前的工作已经表明了自我训练对领域适应的有效性。然而，自我训练的两个主要问题仍有待进一步探索：伪标签中出现的假阳性（$\mathrm{FP}$）和假阴性（$\mathrm{FN}$）。不正确的伪标签会对我们的网络造成非常严重的负面影响。为了克服这些问题，TST 旨在最大限度地减少 $\mathrm{FP}$ 和 $\mathrm{FN}$ 的不利影响。</p>
-<h4 id="3-3-1-Reducing-False-Negatives"><a href="#3-3-1-Reducing-False-Negatives" class="headerlink" title="3.3.1 Reducing False Negatives."></a>3.3.1 Reducing False Negatives.</h4><p>​    使用了一种弱监督方式来最大限度地减少假阴性的影响。如EAST[47]中所定义，原始分数图损失为：</p>
+<h4 id="3-3-1-Reducing-False-Negatives"><a href="#3-3-1-Reducing-False-Negatives" class="headerlink" title="3.3.1 Reducing False Negatives."></a>3.3.1 Reducing False Negatives.</h4><p>​    使用了一种弱监督方式来最大限度地减少假阴性的影响。如 EAST[47]中所定义，原始分数图损失为：</p>
 <script type="math/tex; mode=display">L_s=-\sum_{i\in Pos}\beta Y^*log\widehat{Y}-\sum_{i\in Neg}(1-\beta)(1-Y^*)(1-\widehat{Y})</script><p>​    其中 $\widehat Y=F_s$ 是分数图的预测，$Y^*$ 是基本事实。</p>
 <p>​    虽然网络是通过反向传播学习背景损失（即负面例子）来优化的，但在伪标签中出现的 $\mathrm{FP}$ 误导了网络。我们假设 $\mathrm{FP}$ 主要是通过硬负挖掘来选择的，例如模糊的文本和与背景相似的不寻常字体。为了减少 $\mathrm{FP}$ 的不利影响，我们忽略了一些有可能成为置信度得分的前景的背景例子。</p>
 <p>​    EAST 的负面例子是像素图，一个像素更有可能被视为负面像素，而相应的置信度得分更高。</p>
 <p>​    因此，我们选择置信度得分最低的负样本像素（例如，$Neg/3$）的一部分作为最终的负示例，在图中表示为 $\widehat{Neg}/3$（红线）。相应的数学表达式为 $\widehat{Neg}=\eta Neg$，其中 $\eta$ 在所有实验中都设置为 $1/3$。对于那些具有高置信度分数的像素，网络不会优化该部分损失。最后，修改后的损失函数定义为：</p>
 <script type="math/tex; mode=display">\begin{aligned}L_{sw}&=-\sum_{i\in Pos}\beta Y_i^*log\widehat{Y}-\sum_{i\in\widehat{Ne}g}(1-\beta)(1-Y_i^*)(1-\widehat{Y})\end{aligned}</script><h4 id="3-3-2-Reducing-False-Positives"><a href="#3-3-2-Reducing-False-Positives" class="headerlink" title="3.3.2 Reducing False Positives."></a>3.3.2 Reducing False Positives.</h4><p>​    与假阴性相对应的是，假阳性也会对网络造成严重干扰。自然场景中的一些图案和设计极易被识别为文本，从而导致伪标签不准确。取支持区域可靠分数（SRRS），我们提出了一种更合理的笔划宽度分数（SWS），该分数利用笔划宽度变换（SWT）来评估文本实例的预测框。</p>
 <script type="math/tex; mode=display">SRRS(r^*)=\frac1{N_s}\sum_{i=1}^{N_s}IoU(r_i,r^*)\cdot P(c^*|r_i)</script><p><img src="/images/loading.webp" data-original="F3.png" alt="png"></p>
-<center>Up：提出了文本自我训练的框架。我们利用 SWS 对伪标签中的阳性样本进行过滤，以最大限度地减少假阳性，并选择三分之一置信度较低的阴性样本作为最终阴性样本，以最大程度地减少假阴性。<br/>Down：我们给出了伪标签的样本空间表示。（a）：薄弱的训练可以有效地过滤掉假阴性。<br/>（b） ：假阳性通过笔划宽度和SWS的标准偏差（σ）过滤掉。</center>
+<center>Up：提出了文本自我训练的框架。我们利用 SWS 对伪标签中的阳性样本进行过滤，以最大限度地减少假阳性，并选择三分之一置信度较低的阴性样本作为最终阴性样本，以最大程度地减少假阴性。<br/>Down：我们给出了伪标签的样本空间表示。（a）：薄弱的训练可以有效地过滤掉假阴性。<br/>（b）：假阳性通过笔划宽度和 SWS 的标准偏差（σ）过滤掉。</center>
 
 <h2 id="4-Experiments"><a href="#4-Experiments" class="headerlink" title="4 Experiments"></a>4 Experiments</h2><p>​    通过将场景文本检测器从合成数据集转移到真实数据集来评估所提出的方法。我们采用了几种纯合成数据和真实场景数据（即 SynthText 和 ICDAR2015），它们具有共同的注释风格（即单词级别）</p>
 <h3 id="4-1-Dataset-and-Experimental-Settings"><a href="#4-1-Dataset-and-Experimental-Settings" class="headerlink" title="4.1 Dataset and Experimental Settings"></a>4.1 Dataset and Experimental Settings</h3><h4 id="4-1-1-Pure-Synthetic-Datasets"><a href="#4-1-1-Pure-Synthetic-Datasets" class="headerlink" title="4.1.1 Pure Synthetic Datasets."></a>4.1.1 Pure Synthetic Datasets.</h4><ul>
@@ -488,13 +488,13 @@
 <li>ICDAR2015</li>
 <li>ICDAR2013</li>
 </ul>
-<h4 id="4-1-3-Implementation-Details"><a href="#4-1-3-Implementation-Details" class="headerlink" title="4.1.3 Implementation Details."></a>4.1.3 Implementation Details.</h4><p>​    在所有实验中，我们使用 EAST 作为基础网络。在原始论文之后，输入的大小被调整为 $512\times512$，我们应用了原始论文中使用的所有扩充。该网络使用由12 个图像、6 个来自源域的图像和其他 6 个来自目标域的图像组成的批量输入进行训练。Adam 优化器被用作我们的学习率方案。</p>
+<h4 id="4-1-3-Implementation-Details"><a href="#4-1-3-Implementation-Details" class="headerlink" title="4.1.3 Implementation Details."></a>4.1.3 Implementation Details.</h4><p>​    在所有实验中，我们使用 EAST 作为基础网络。在原始论文之后，输入的大小被调整为 $512\times512$，我们应用了原始论文中使用的所有扩充。该网络使用由 12 个图像、6 个来自源域的图像和其他 6 个来自目标域的图像组成的批量输入进行训练。Adam 优化器被用作我们的学习率方案。</p>
 <p>​    所有实验都使用了相同的训练策略：</p>
 <p>（1）用 ATA 对网络进行 80k 次迭代的预训练，以学习域不变特征；</p>
 <p>（2）使用预训练的模型为目标域中的每个图像生成相应的伪标签（即伪边界盒标签和负样本图），然后用生成的伪标签对预训练模型进行微调。</p>
 <p>​    在生成伪标签的过程中，我们将笔划宽度消除参数的 1 和 2 分别设置为 3.0 和 0.30。所有实验均在常规工作站上进行（CPU:Intel（R）Core（TM）i7-7800X CPU@3.50 GHz；</p>
 <h3 id="4-2-Performance-Comparison-and-Analysis"><a href="#4-2-Performance-Comparison-and-Analysis" class="headerlink" title="4.2 Performance Comparison and Analysis"></a>4.2 Performance Comparison and Analysis</h3><h4 id="4-2-1-Synthetic→ICDAR2015-Transfer"><a href="#4-2-1-Synthetic→ICDAR2015-Transfer" class="headerlink" title="4.2.1 Synthetic→ICDAR2015 Transfer."></a>4.2.1 Synthetic→ICDAR2015 Transfer.</h4><h4 id="4-2-2-Synthetic→ICDAR2013-Transfer"><a href="#4-2-2-Synthetic→ICDAR2013-Transfer" class="headerlink" title="4.2.2 Synthetic→ICDAR2013 Transfer."></a>4.2.2 Synthetic→ICDAR2013 Transfer.</h4><h4 id="4-2-2-Synthetic→ICDAR2013-Transfer-1"><a href="#4-2-2-Synthetic→ICDAR2013-Transfer-1" class="headerlink" title="4.2.2 Synthetic→ICDAR2013 Transfer."></a>4.2.2 Synthetic→ICDAR2013 Transfer.</h4><h3 id="4-3-Ablation-Study"><a href="#4-3-Ablation-Study" class="headerlink" title="4.3 Ablation Study"></a>4.3 Ablation Study</h3><h4 id="4-3-1-Component-Analysis"><a href="#4-3-1-Component-Analysis" class="headerlink" title="4.3.1 Component Analysis."></a>4.3.1 Component Analysis.</h4><h4 id="4-3-2-Parameter-Sensitivity-on-TST"><a href="#4-3-2-Parameter-Sensitivity-on-TST" class="headerlink" title="4.3.2 Parameter Sensitivity on TST."></a>4.3.2 Parameter Sensitivity on TST.</h4><h4 id="4-3-3-Qualitative-Analysis"><a href="#4-3-3-Qualitative-Analysis" class="headerlink" title="4.3.3 Qualitative Analysis."></a>4.3.3 Qualitative Analysis.</h4><p><img src="/images/loading.webp" data-original="T3.png" alt="png"></p>
-<h2 id="5-Conclusions"><a href="#5-Conclusions" class="headerlink" title="5 Conclusions"></a>5 Conclusions</h2><p>​    在本文中，我们首先介绍了一种合成到实域的自适应方法用于场景文本检测，它传递来自合成数据的知识（来源域）转换为真实数据（目标域）。所提出的文本自我训练（TST）有效地最大限度地减少了假阴性和假阳性对伪标签和对抗性文本实例对齐（ATA）帮助网络以对抗性的方式学习更多的域不变特征。我们用EAST在几种常见的合成和实数上对所提出的方法进行了评估数据集。实验表明，我们的方法对合成到真实的转移文本检测任务有很大的改进。</p>
+<h2 id="5-Conclusions"><a href="#5-Conclusions" class="headerlink" title="5 Conclusions"></a>5 Conclusions</h2><p>​    在本文中，我们首先介绍了一种合成到实域的自适应方法用于场景文本检测，它传递来自合成数据的知识（来源域）转换为真实数据（目标域）。所提出的文本自我训练（TST）有效地最大限度地减少了假阴性和假阳性对伪标签和对抗性文本实例对齐（ATA）帮助网络以对抗性的方式学习更多的域不变特征。我们用 EAST 在几种常见的合成和实数上对所提出的方法进行了评估数据集。实验表明，我们的方法对合成到真实的转移文本检测任务有很大的改进。</p>
 
             </article>
             

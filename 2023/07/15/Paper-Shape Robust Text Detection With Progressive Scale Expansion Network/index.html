@@ -19,7 +19,7 @@
 
 
 
-<meta name="keywords" content="Python,论文,Pytorch,实验相关,MindSpore,文本检测,代码复现,">
+<meta name="keywords" content="Python,Pytorch,论文,实验相关,MindSpore,文本检测,代码复现,">
 <meta name="description" content="论文阅读。">
 
 
@@ -313,9 +313,9 @@
 						
 							<li><a href="/tags/Python"><span>Python</span></a></li>
 						
-							<li><a href="/tags/论文"><span>论文</span></a></li>
-						
 							<li><a href="/tags/Pytorch"><span>Pytorch</span></a></li>
+						
+							<li><a href="/tags/论文"><span>论文</span></a></li>
 						
 							<li><a href="/tags/实验相关"><span>实验相关</span></a></li>
 						
@@ -418,9 +418,9 @@
 </ul>
 <p>本文提出了一种新的基于内核的框架，即<strong>渐进规模扩展网络（PSNet）</strong>。我们的 PSNet 有以下两个好处。首先，作为一种基于<strong>分割</strong>的方法，PSENet 进行像素级分割，能够精确定位任意形状的文本实例。其次，我们提出了一种<strong>渐进尺度扩展算法</strong>，使用该算法可以成功识别相邻的文本实例。</p>
 <p><img src="/images/loading.webp" data-original="P1.png" alt="png"></p>
-<p>（a） 是<strong>原始图像</strong>。</p>
-<p>（b） 是指<strong>基于回归</strong>的方法的结果，该方法显示了令人失望的检测结果，因为红框覆盖了绿框中几乎一半以上的上下文。</p>
-<p>（c） 是<strong>传统语义分割</strong>的结果，它将 3 个文本实例误认为 1 个实例，因为它们的边界像素是部分连接的。（d） 是我们提出的 <strong>PSENet</strong> 的结果，它成功地识别和检测了 4 个唯一的文本实例。</p>
+<p>（a）是<strong>原始图像</strong>。</p>
+<p>（b）是指<strong>基于回归</strong>的方法的结果，该方法显示了令人失望的检测结果，因为红框覆盖了绿框中几乎一半以上的上下文。</p>
+<p>（c）是<strong>传统语义分割</strong>的结果，它将 3 个文本实例误认为 1 个实例，因为它们的边界像素是部分连接的。（d）是我们提出的 <strong>PSENet</strong> 的结果，它成功地识别和检测了 4 个唯一的文本实例。</p>
 <h2 id="2-Related-Work"><a href="#2-Related-Work" class="headerlink" title="2 Related Work"></a>2 Related Work</h2><p>介绍了一下其它的场景文本识别的算法并分析其不足。</p>
 <h2 id="3-Proposed-Method"><a href="#3-Proposed-Method" class="headerlink" title="3 Proposed Method"></a>3 Proposed Method</h2><h3 id="3-1-Overall-Pipeline"><a href="#3-1-Overall-Pipeline" class="headerlink" title="3.1 Overall Pipeline"></a>3.1 Overall Pipeline</h3><p><img src="/images/loading.webp" data-original="P3.png" alt="png"></p>
 <ul>
@@ -433,16 +433,11 @@
 <li><p>使用渐进尺度扩展算法将 $S_1$ 中的所有实例的核逐渐扩展到 $S_n$ 中的完整形状，并获得最终的检测结果作为 $R$</p>
 </li>
 </ul>
-<h3 id="3-2-Network-Design"><a href="#3-2-Network-Design" class="headerlink" title="3.2 Network Design"></a>3.2 Network Design</h3><p>PSENet 的基本框架是从 FPN（特征金字塔） 中实现的。我们首先从主干中获得四个 256 通道的特征图（即 $P_2$、$P_3$、$P_4$、$P_5$）。为了进一步组合从低到高的语义特征，我们通过函数 $\mathbb C(·)$ 将四个特征图融合，得到具有 1024 个通道的特征图 $F$，如下所示：</p>
+<h3 id="3-2-Network-Design"><a href="#3-2-Network-Design" class="headerlink" title="3.2 Network Design"></a>3.2 Network Design</h3><p>PSENet 的基本框架是从 FPN（特征金字塔）中实现的。我们首先从主干中获得四个 256 通道的特征图（即 $P_2$、$P_3$、$P_4$、$P_5$）。为了进一步组合从低到高的语义特征，我们通过函数 $\mathbb C(·)$ 将四个特征图融合，得到具有 1024 个通道的特征图 $F$，如下所示：</p>
 <script type="math/tex; mode=display">F=\mathbb C(P_2,P_3,P_4,P_5)=P_2||\mathrm{Up}_{\times2}(P_3)||\mathrm{Up}_{\times4}(P_4)||\mathrm{Up}_{\times8}(P_5)</script><h3 id="3-3-Progressive-Scale-Expansion-Algorithm"><a href="#3-3-Progressive-Scale-Expansion-Algorithm" class="headerlink" title="3.3. Progressive Scale Expansion Algorithm"></a>3.3. Progressive Scale Expansion Algorithm</h3><p>基于分段的方法很难分离彼此接近的文本实例。为了解决这个问题，我们提出了一种渐进的规模扩展算法。</p>
-<h3 id="3-4-Label-Generation"><a href="#3-4-Label-Generation" class="headerlink" title="3.4 Label Generation"></a>3.4 Label Generation</h3><p><img src="/images/loading.webp" data-original="P5.png" alt="png"></p>
-<p>标签生成的图示。</p>
-<ul>
-<li>（a） 包含 $d$、$p_i$ 和 $p_n$ 的注释</li>
-<li>（b）显示了原始文本实例</li>
-<li>（c） 显示了具有不同内核尺度的分割掩码</li>
-</ul>
-<h3 id="3-5-Loss-Function"><a href="#3-5-Loss-Function" class="headerlink" title="3.5 Loss Function"></a>3.5 Loss Function</h3><script type="math/tex; mode=display">L=\lambda L_c+(1-\lambda)L_s</script><p>其中，$L_c$ 和 $L_s$ 分别表示完整文本实例和收缩文本实例的损失。</p>
+<h3 id="3-4Label-Generation"><a href="#3-4Label-Generation" class="headerlink" title="3.4Label Generation"></a>3.4Label Generation</h3><p><img src="/images/loading.webp" data-original="P5.png" alt="png"></p>
+<p>标签生成的图示。<br>-（a）包含 $d$、$p_i$ 和 $p_n$ 的注释<br>-（b）显示了原始文本实例<br>-（c）显示了具有不同内核尺度的分割掩码</p>
+<h3 id="3-5Loss-Function"><a href="#3-5Loss-Function" class="headerlink" title="3.5Loss Function"></a>3.5Loss Function</h3><script type="math/tex; mode=display">L=\lambda L_c+(1-\lambda)L_s</script><p>其中，$L_c$ 和 $L_s$ 分别表示完整文本实例和收缩文本实例的损失。</p>
 <h2 id="4-Experiment"><a href="#4-Experiment" class="headerlink" title="4. Experiment"></a>4. Experiment</h2><p>在最近四个具有挑战性的公共基准上评估了所提出的 PSENet：</p>
 <ul>
 <li>CTW1500</li>

@@ -469,9 +469,9 @@
 </ul>
 <h3 id="3-2-Two-stream-ConvNets"><a href="#3-2-Two-stream-ConvNets" class="headerlink" title="3.2 Two-stream ConvNets"></a>3.2 Two-stream ConvNets</h3><p><strong>Visual stream ConvNet</strong></p>
 <p>​    直接将文档图像作为输入，并使用 CNN 主干（如 ResNet 提取多尺度深度特征），生成视觉特征 $\{V_2,V_3,V_4,V_5\}$。</p>
-<p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/74687205">CNN多尺度特征提取 - 知乎 (zhihu.com)</a></p>
+<p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/74687205">CNN 多尺度特征提取 - 知乎 (zhihu.com)</a></p>
 <blockquote>
-<p>（1）去掉CNN的全连接层，利用卷积层提取Conv特征。<br>将图像进行缩放得到多个不同尺寸的图像，然后分别输入CNN提取Conv特征并作feature aggregation，最后将各尺寸图像对应的特征进行合并。论文“Transferring Deep Convolutional Neural Networks for the Scene Classification of High-Resolution Remote Sensing Imagery”使用的是该方法。<br>（2）采用多个CNN（filter大小不同）进行特征提取。<br>该方法与（1）中的方法相对应，（1）中方法在于改变输入图像尺寸而（2）种方法在于改变filter大小。</p>
+<p>（1）去掉 CNN 的全连接层，利用卷积层提取 Conv 特征。<br>将图像进行缩放得到多个不同尺寸的图像，然后分别输入 CNN 提取 Conv 特征并作 feature aggregation，最后将各尺寸图像对应的特征进行合并。论文“Transferring Deep Convolutional Neural Networks for the Scene Classification of High-Resolution Remote Sensing Imagery”使用的是该方法。<br>（2）采用多个 CNN（filter 大小不同）进行特征提取。<br>该方法与（1）中的方法相对应，（1）中方法在于改变输入图像尺寸而（2）种方法在于改变 filter 大小。</p>
 </blockquote>
 <p><strong>Semantic stream ConvNet</strong></p>
 <p>​    把文本嵌入映射 $S_0$ 作为卷积层的输入一阵卷，最后生成语义特征 $\{S_2,S_3,S_4,S_5\}$。</p>
@@ -482,14 +482,14 @@
 <script type="math/tex; mode=display">AM_i=h(g([V_i,S_i]))</script><p>​    然后再一阵操作得到聚合的多模态特征：</p>
 <script type="math/tex; mode=display">FM_i=AM_i\odot V_i + (1-AM_i)\odot S_i</script><p>​    得到 $FM=\{FM_2,FM_3,FM_4,FM_5\}$，扔 FPN（特征金字塔网络）中继续卷，提供增强的表示。</p>
 <blockquote>
-<p>Feature pyramid network是CVPR2017年的一篇文章，它在目标检测中融入了特征金字塔，提高了目标检测的准确率，尤其体现在小物体的检测上。</p>
+<p>Feature pyramid network 是 CVPR2017 年的一篇文章，它在目标检测中融入了特征金字塔，提高了目标检测的准确率，尤其体现在小物体的检测上。</p>
 </blockquote>
 <h3 id="3-4-Relation-Module"><a href="#3-4-Relation-Module" class="headerlink" title="3.4 Relation Module"></a>3.4 Relation Module</h3><p>​    其他人到这边就结束了？它们忽视了布局组件之间很强的关系。</p>
 <p>​    布局组件之间存在很强的关系。例如，同列段落的包围框应该对齐；表和表标题经常一起出现；组件之间没有重叠。利用这种关系可以进一步优化。</p>
 <ul>
 <li><p>使用 GNN 建模组件之间的关系，将文档视作一个图 $G=(O,E)$，$O$ 为节点集（表示之前目标检测模型生成的候选组件），$E$ 是边集（两个候选组件之间的关系）。</p>
 <ul>
-<li>节点集的特征 $z_j$ 包含位置坐标 $b_j$ 和深度特征 $f_j$：$z_j=LayerNorm(f_j+e_j^{pos}(b_j))$ ，$e^{pos}_j(b_j)$ 为第 $j$ 节点的位置嵌入向量。</li>
+<li>节点集的特征 $z_j$ 包含位置坐标 $b_j$ 和深度特征 $f_j$：$z_j=LayerNorm(f_j+e_j^{pos}(b_j))$，$e^{pos}_j(b_j)$ 为第 $j$ 节点的位置嵌入向量。</li>
 <li>节点间的关系用自注意力机制来表示：$\hat O =Attention(Q,K,V)=softmax(\frac{QK^T}{\sqrt{d_k}})V$，$Q,K,V$ 从节点特征集 $Z\{z_1,...,z_N\}$ 里整。</li>
 </ul>
 </li>

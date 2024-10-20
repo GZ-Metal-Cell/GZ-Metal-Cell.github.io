@@ -389,7 +389,7 @@
 <ul>
 <li><strong>Rescale</strong> 操作按给定的缩放因子调整图像的大小。缩放因子可以是单个浮点值，也可以是多个值——每个轴上都有一个。</li>
 <li><strong>Resize</strong> 也有同样的作用，但允许指定输出图像的形状而不是缩放因子。</li>
-<li><strong>Downscale</strong> 的目的是通过整数因子对n维图像进行下采样，使用作为函数参数的大小因子的每个块的元素的局部均值。</li>
+<li><strong>Downscale</strong> 的目的是通过整数因子对 n 维图像进行下采样，使用作为函数参数的大小因子的每个块的元素的局部均值。</li>
 </ul>
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> matplotlib <span class="hljs-keyword">import</span> pyplot <span class="hljs-keyword">as</span> plt<br><span class="hljs-keyword">from</span> skimage <span class="hljs-keyword">import</span> io, color<br><span class="hljs-keyword">from</span> skimage.transform <span class="hljs-keyword">import</span> rescale, resize, downscale_local_mean<br></code></pre></td></tr></table></figure>
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">img = io.imread(<span class="hljs-string">&#x27;images/Osteosarcoma_01.tif&#x27;</span>, as_gray=<span class="hljs-literal">True</span>)  <span class="hljs-comment"># 读取文件</span><br><br>img_rescaled = rescale(img, <span class="hljs-number">1.0</span> / <span class="hljs-number">4.0</span>, anti_aliasing=<span class="hljs-literal">False</span>)  <span class="hljs-comment"># 按比例缩放</span><br><br>img_resized = resize(img, (<span class="hljs-number">200</span>, <span class="hljs-number">200</span>), anti_aliasing=<span class="hljs-literal">True</span>)  <span class="hljs-comment"># 按大小缩放</span><br></code></pre></td></tr></table></figure>
@@ -439,7 +439,7 @@ Bottom right [ 42   0 255]
 <p><img src="/images/loading.webp" data-original="30_5.png" alt="png"></p>
 <h3 id="Canny-边缘检测"><a href="#Canny-边缘检测" class="headerlink" title="Canny 边缘检测"></a>Canny 边缘检测</h3><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> cv2<br><br>img = cv2.imread(<span class="hljs-string">&#x27;images/Osteosarcoma_01.tif&#x27;</span>, <span class="hljs-number">0</span>)<br>edges = cv2.Canny(img, <span class="hljs-number">100</span>, <span class="hljs-number">200</span>)<br><br>cv2.imshow(<span class="hljs-string">&#x27;Original Image&#x27;</span>, img)<br>cv2.imshow(<span class="hljs-string">&#x27;Canny&#x27;</span>, edges)<br>cv2.waitKey(<span class="hljs-number">0</span>)<br>cv2.destroyAllWindows()<br></code></pre></td></tr></table></figure>
 <p><img src="/images/loading.webp" data-original="30_6.png" alt="png"></p>
-<h2 id="Tutorial-31-Image-filtering-in-python-Unsharp-mask"><a href="#Tutorial-31-Image-filtering-in-python-Unsharp-mask" class="headerlink" title="Tutorial 31 - Image filtering in python - Unsharp mask"></a>Tutorial 31 - Image filtering in python - Unsharp mask</h2><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/lz0499/article/details/80963696">Unsharp Mask(USM)锐化算法的的原理及其实现。_大熊背的博客-CSDN博客_usm锐化算法</a></p>
+<h2 id="Tutorial-31-Image-filtering-in-python-Unsharp-mask"><a href="#Tutorial-31-Image-filtering-in-python-Unsharp-mask" class="headerlink" title="Tutorial 31 - Image filtering in python - Unsharp mask"></a>Tutorial 31 - Image filtering in python - Unsharp mask</h2><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/lz0499/article/details/80963696">Unsharp Mask(USM)锐化算法的的原理及其实现。_大熊背的博客-CSDN 博客_usm 锐化算法</a></p>
 <p><img src="/images/loading.webp" data-original="31_1.png" alt="png"></p>
 <p>$Unsharpened image = original + amount \times (original - blurred)$</p>
 <h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> skimage <span class="hljs-keyword">import</span> io, img_as_float<br><span class="hljs-keyword">from</span> skimage.filters <span class="hljs-keyword">import</span> unsharp_mask<br><span class="hljs-keyword">from</span> skimage.filters <span class="hljs-keyword">import</span> gaussian<br><br>img = img_as_float(io.imread(<span class="hljs-string">&#x27;images/sandstone_blur_2sigma.tif&#x27;</span>, as_gray=<span class="hljs-literal">True</span>))<br>gaussian_img = gaussian(img, sigma=<span class="hljs-number">2</span>, mode=<span class="hljs-string">&#x27;constant&#x27;</span>, cval=<span class="hljs-number">0.0</span>)<br>img2 = (img - gaussian_img) * <span class="hljs-number">2.</span><br>img3 = img + img2<br><br><span class="hljs-keyword">from</span> matplotlib <span class="hljs-keyword">import</span> pyplot <span class="hljs-keyword">as</span> plt<br><br>fig = plt.figure(figsize=(<span class="hljs-number">10</span>, <span class="hljs-number">10</span>))<br><br>ax1 = fig.add_subplot(<span class="hljs-number">131</span>)<br>ax1.imshow(img, cmap=<span class="hljs-string">&#x27;gray&#x27;</span>)<br>ax1.title.set_text(<span class="hljs-string">&#x27;1st&#x27;</span>)<br><br>ax2 = fig.add_subplot(<span class="hljs-number">132</span>)<br>ax2.imshow(img2, cmap=<span class="hljs-string">&#x27;gray&#x27;</span>)<br>ax2.title.set_text(<span class="hljs-string">&#x27;img2&#x27;</span>)<br><br>ax3 = fig.add_subplot(<span class="hljs-number">133</span>)<br>ax3.imshow(img3, cmap=<span class="hljs-string">&#x27;gray&#x27;</span>)<br>ax3.title.set_text(<span class="hljs-string">&#x27;img3&#x27;</span>)<br><br>plt.show()<br></code></pre></td></tr></table></figure>
@@ -452,14 +452,14 @@ Bottom right [ 42   0 255]
 <li><a target="_blank" rel="noopener" href="https://scikit-image.org/docs/dev/api/skimage.filters.html#skimage.filters.gaussian">skimage.filters.gaussian</a></li>
 </ul>
 <p><img src="/images/loading.webp" data-original="32_1.png" alt="png"></p>
-<figure class="highlight py"><table><tr><td class="code"><pre><code class="hljs py"><span class="hljs-keyword">import</span> cv2<br><span class="hljs-keyword">from</span> skimage <span class="hljs-keyword">import</span> io, img_as_float<br><span class="hljs-keyword">from</span> skimage.filters <span class="hljs-keyword">import</span> gaussian<br><br>img_gaussian_noise = img_as_float(io.imread(<span class="hljs-string">&#x27;images/Osteosarcoma_01_25Sigma_noise.tif&#x27;</span>, as_gray=<span class="hljs-literal">True</span>))<br>img_salt_pepper_noise = img_as_float(io.imread(<span class="hljs-string">&#x27;images/Osteosarcoma_01_8bit_salt_pepper.tif&#x27;</span>, as_gray=<span class="hljs-literal">True</span>))<br><br>img = img_gaussian_noise<br><br>gaussian_using_cv2 = cv2.GaussianBlur(img, (<span class="hljs-number">3</span>,<span class="hljs-number">3</span>), <span class="hljs-number">0</span>, borderType=cv2.BORDER_CONSTANT)<br><br>gaussian_using_skimage = gaussian(img, sigma=<span class="hljs-number">1</span>, mode=<span class="hljs-string">&#x27;constant&#x27;</span>, cval=<span class="hljs-number">0.0</span>)<br><span class="hljs-comment">#sigma defines the std dev of the gaussian kernel. SLightly different than </span><br><span class="hljs-comment">#how we define in cv2</span><br><br><br>cv2.imshow(<span class="hljs-string">&quot;Original&quot;</span>, img)<br>cv2.imshow(<span class="hljs-string">&quot;Using cv2 gaussian&quot;</span>, gaussian_using_cv2)<br>cv2.imshow(<span class="hljs-string">&quot;Using skimage&quot;</span>, gaussian_using_skimage)<br><span class="hljs-comment">#cv2.imshow(&quot;Using scipy2&quot;, conv_using_scipy2)</span><br><br>cv2.waitKey(<span class="hljs-number">0</span>)          <br>cv2.destroyAllWindows() <br></code></pre></td></tr></table></figure>
+<figure class="highlight py"><table><tr><td class="code"><pre><code class="hljs py"><span class="hljs-keyword">import</span> cv2<br><span class="hljs-keyword">from</span> skimage <span class="hljs-keyword">import</span> io, img_as_float<br><span class="hljs-keyword">from</span> skimage.filters <span class="hljs-keyword">import</span> gaussian<br><br>img_gaussian_noise = img_as_float(io.imread(<span class="hljs-string">&#x27;images/Osteosarcoma_01_25Sigma_noise.tif&#x27;</span>, as_gray=<span class="hljs-literal">True</span>))<br>img_salt_pepper_noise = img_as_float(io.imread(<span class="hljs-string">&#x27;images/Osteosarcoma_01_8bit_salt_pepper.tif&#x27;</span>, as_gray=<span class="hljs-literal">True</span>))<br><br>img = img_gaussian_noise<br><br>gaussian_using_cv2 = cv2.GaussianBlur(img, (<span class="hljs-number">3</span>,<span class="hljs-number">3</span>), <span class="hljs-number">0</span>, borderType=cv2.BORDER_CONSTANT)<br><br>gaussian_using_skimage = gaussian(img, sigma=<span class="hljs-number">1</span>, mode=<span class="hljs-string">&#x27;constant&#x27;</span>, cval=<span class="hljs-number">0.0</span>)<br><span class="hljs-comment">#sigma defines the std dev of the gaussian kernel. SLightly different than </span><br><span class="hljs-comment">#how we define in cv2</span><br><br><br>cv2.imshow(<span class="hljs-string">&quot;Original&quot;</span>, img)<br>cv2.imshow(<span class="hljs-string">&quot;Using cv2gaussian&quot;</span>, gaussian_using_cv2)<br>cv2.imshow(<span class="hljs-string">&quot;Using skimage&quot;</span>, gaussian_using_skimage)<br><span class="hljs-comment">#cv2.imshow(&quot;Using scipy2&quot;, conv_using_scipy2)</span><br><br>cv2.waitKey(<span class="hljs-number">0</span>)          <br>cv2.destroyAllWindows() <br></code></pre></td></tr></table></figure>
 <p><img src="/images/loading.webp" data-original="32_2.png" alt="png"></p>
 <h2 id="Tutorial-33-Image-filtering-in-python-Median-filter-for-denoising-images"><a href="#Tutorial-33-Image-filtering-in-python-Median-filter-for-denoising-images" class="headerlink" title="Tutorial 33 - Image filtering in python - Median filter for denoising images"></a>Tutorial 33 - Image filtering in python - Median filter for denoising images</h2><ul>
 <li>中值滤波清理椒盐噪声</li>
 </ul>
 <p><img src="/images/loading.webp" data-original="33_1.png" alt="png"></p>
 <h3 id="OpenCV"><a href="#OpenCV" class="headerlink" title="OpenCV"></a>OpenCV</h3><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> cv2<br><span class="hljs-comment"># Needs 8 bit, not float.</span><br>img_gaussian_noise = cv2.imread(<span class="hljs-string">&#x27;images/Osteosarcoma_01_25Sigma_noise.tif&#x27;</span>, <span class="hljs-number">0</span>)<br>img_salt_pepper_noise = cv2.imread(<span class="hljs-string">&#x27;images/Osteosarcoma_01_8bit_salt_pepper_cropped.tif&#x27;</span>, <span class="hljs-number">0</span>)<br><br>img = img_gaussian_noise<br><br>median_using_cv2 = cv2.medianBlur(img, <span class="hljs-number">3</span>)<br></code></pre></td></tr></table></figure>
-<h3 id="skimage"><a href="#skimage" class="headerlink" title="skimage"></a>skimage</h3><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> skimage.filters <span class="hljs-keyword">import</span> median<br><span class="hljs-keyword">from</span> skimage.morphology <span class="hljs-keyword">import</span> disk<br><br><span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">Disk creates a circular structuring element,</span><br><span class="hljs-string">similar to a mask with specific radius</span><br><span class="hljs-string">Disk创建一个圆形结构元素，类似于具有特定半径的掩码</span><br><span class="hljs-string">&quot;&quot;&quot;</span><br>disk(<span class="hljs-number">3</span>)<br></code></pre></td></tr></table></figure>
+<h3 id="skimage"><a href="#skimage" class="headerlink" title="skimage"></a>skimage</h3><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> skimage.filters <span class="hljs-keyword">import</span> median<br><span class="hljs-keyword">from</span> skimage.morphology <span class="hljs-keyword">import</span> disk<br><br><span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">Disk creates a circular structuring element,</span><br><span class="hljs-string">similar to a mask with specific radius</span><br><span class="hljs-string">Disk 创建一个圆形结构元素，类似于具有特定半径的掩码</span><br><span class="hljs-string">&quot;&quot;&quot;</span><br>disk(<span class="hljs-number">3</span>)<br></code></pre></td></tr></table></figure>
 <pre><code>array([[0, 0, 0, 1, 0, 0, 0],
        [0, 1, 1, 1, 1, 1, 0],
        [0, 1, 1, 1, 1, 1, 0],
@@ -468,7 +468,7 @@ Bottom right [ 42   0 255]
        [0, 1, 1, 1, 1, 1, 0],
        [0, 0, 0, 1, 0, 0, 0]], dtype=uint8)
 </code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">median_using_skimage = median(img, disk(<span class="hljs-number">3</span>), mode=<span class="hljs-string">&#x27;constant&#x27;</span>, cval=<span class="hljs-number">0.0</span>)<br></code></pre></td></tr></table></figure>
-<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">cv2.imshow(<span class="hljs-string">&#x27;Original&#x27;</span>, img)<br>cv2.imshow(<span class="hljs-string">&#x27;cv2 median&#x27;</span>, median_using_cv2)<br>cv2.imshow(<span class="hljs-string">&#x27;Using skimage median&#x27;</span>, median_using_skimage)<br><br>cv2.waitKey(<span class="hljs-number">0</span>)<br>cv2.destroyAllWindows()<br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">cv2.imshow(<span class="hljs-string">&#x27;Original&#x27;</span>, img)<br>cv2.imshow(<span class="hljs-string">&#x27;cv2median&#x27;</span>, median_using_cv2)<br>cv2.imshow(<span class="hljs-string">&#x27;Using skimage median&#x27;</span>, median_using_skimage)<br><br>cv2.waitKey(<span class="hljs-number">0</span>)<br>cv2.destroyAllWindows()<br></code></pre></td></tr></table></figure>
 <p><img src="/images/loading.webp" data-original="33_2.png" alt="png"></p>
 <h2 id="Tutorial-34-Image-filtering-in-python-Bilateral-filter-for-image-denoising"><a href="#Tutorial-34-Image-filtering-in-python-Bilateral-filter-for-image-denoising" class="headerlink" title="Tutorial 34 - Image filtering in python - Bilateral filter for image denoising"></a>Tutorial 34 - Image filtering in python - Bilateral filter for image denoising</h2><p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/180497579">双边滤波 - Bilateral Filter - 知乎 (zhihu.com)</a></p>
 <h3 id="OpenCV-1"><a href="#OpenCV-1" class="headerlink" title="OpenCV"></a>OpenCV</h3><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> cv2<br><br>img_gaussian_noise = cv2.imread(<span class="hljs-string">&#x27;images/Osteosarcoma_01_25Sigma_noise.tif&#x27;</span>, <span class="hljs-number">0</span>)<br>img = img_gaussian_noise<br>bilateral_using_cv2 = cv2.bilateralFilter(img, <span class="hljs-number">5</span>, <span class="hljs-number">20</span>, <span class="hljs-number">100</span>, borderType=cv2.BORDER_CONSTANT)<br><br>cv2.imshow(<span class="hljs-string">&quot;Original&quot;</span>, img)<br>cv2.imshow(<span class="hljs-string">&quot;cv2 bilateral&quot;</span>, bilateral_using_cv2)<br>cv2.waitKey(<span class="hljs-number">0</span>)          <br>cv2.destroyAllWindows() <br></code></pre></td></tr></table></figure>
@@ -476,7 +476,7 @@ Bottom right [ 42   0 255]
 <h3 id="Skimage"><a href="#Skimage" class="headerlink" title="Skimage"></a>Skimage</h3><p>视频上说很慢..好像确实挺慢</p>
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> cv2<br><span class="hljs-keyword">from</span> skimage.restoration <span class="hljs-keyword">import</span> denoise_bilateral<br><br>img_gaussian_noise = cv2.imread(<span class="hljs-string">&#x27;images/Osteosarcoma_01_25Sigma_noise.tif&#x27;</span>, <span class="hljs-number">0</span>)<br>img = img_gaussian_noise<br>bilateral_using_skimage = denoise_bilateral(img, sigma_color=<span class="hljs-number">0.05</span>, sigma_spatial=<span class="hljs-number">15</span>,<br>                multichannel=<span class="hljs-literal">False</span>)<br>cv2.imshow(<span class="hljs-string">&quot;Using skimage bilateral&quot;</span>, bilateral_using_skimage)<br>cv2.waitKey(<span class="hljs-number">0</span>)          <br>cv2.destroyAllWindows() <br></code></pre></td></tr></table></figure>
 <p><img src="/images/loading.webp" data-original="34_2.png" alt="png"></p>
-<h2 id="Tutorial-35-Image-filtering-in-python-Non-local-means-NLM-filter-for-image-denoising"><a href="#Tutorial-35-Image-filtering-in-python-Non-local-means-NLM-filter-for-image-denoising" class="headerlink" title="Tutorial 35 - Image filtering in python - Non-local means -NLM- filter for image denoising"></a>Tutorial 35 - Image filtering in python - Non-local means -NLM- filter for image denoising</h2><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/wsp_1138886114/article/details/106633364">NLM去噪算法_SongpingWang的博客-CSDN博客_nlm去噪</a></p>
+<h2 id="Tutorial-35-Image-filtering-in-python-Non-local-means-NLM-filter-for-image-denoising"><a href="#Tutorial-35-Image-filtering-in-python-Non-local-means-NLM-filter-for-image-denoising" class="headerlink" title="Tutorial 35 - Image filtering in python - Non-local means -NLM- filter for image denoising"></a>Tutorial 35 - Image filtering in python - Non-local means -NLM- filter for image denoising</h2><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/wsp_1138886114/article/details/106633364">NLM 去噪算法_SongpingWang 的博客-CSDN 博客_nlm 去噪</a></p>
 <p><img src="/images/loading.webp" data-original="35_1.png" alt="png"></p>
 <h3 id="OpenCV-2"><a href="#OpenCV-2" class="headerlink" title="OpenCV"></a>OpenCV</h3><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> cv2<br><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">from</span> skimage <span class="hljs-keyword">import</span> io, img_as_float<br><span class="hljs-keyword">from</span> skimage.restoration <span class="hljs-keyword">import</span> denoise_nl_means, estimate_sigma<br><br>img = img_as_float(io.imread(<span class="hljs-string">&#x27;images/Osteosarcoma_01_25Sigma_noise.tif&#x27;</span>, as_gray=<span class="hljs-literal">False</span>))<br>sigma_est = np.mean(estimate_sigma(img, multichannel=<span class="hljs-literal">True</span>))  <span class="hljs-comment"># 从所有三个通道中选取 Sigma</span><br></code></pre></td></tr></table></figure>
 <pre><code>C:\Users\gzjzx\AppData\Local\Temp\ipykernel_11200\3289355486.py:7: FutureWarning: `multichannel` is a deprecated argument name for `estimate_sigma`. It will be removed in version 1.0. Please use `channel_axis` instead.
@@ -487,7 +487,7 @@ Bottom right [ 42   0 255]
 </code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">cv2.imshow(<span class="hljs-string">&quot;Original&quot;</span>, img)<br>cv2.imshow(<span class="hljs-string">&quot;NLM Filtered&quot;</span>, denoise_img)<br>cv2.waitKey(<span class="hljs-number">0</span>)          <br>cv2.destroyAllWindows() <br></code></pre></td></tr></table></figure>
 <h3 id="Skimage-1"><a href="#Skimage-1" class="headerlink" title="Skimage"></a>Skimage</h3><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> skimage <span class="hljs-keyword">import</span> img_as_ubyte<br><span class="hljs-keyword">import</span> cv2<br><br>img_as_8btype = img_as_ubyte(img)<br>denoise_img_as_8byte = img_as_ubyte(denoise_img)<br><br>original_img = cv2.cvtColor(img_as_8btype, cv2.COLOR_BGR2RGB)<br>final_denoised_img = cv2.cvtColor(denoise_img_as_8byte, cv2.COLOR_BGR2RGB)<br><br>cv2.imshow(<span class="hljs-string">&quot;Original&quot;</span>, img)<br>cv2.imshow(<span class="hljs-string">&quot;NLM Filtered&quot;</span>, denoise_img)<br>cv2.waitKey(<span class="hljs-number">0</span>)          <br>cv2.destroyAllWindows() <br></code></pre></td></tr></table></figure>
 <p><img src="/images/loading.webp" data-original="35_2.png" alt="png"></p>
-<h2 id="Tutorial-36-Image-filtering-in-python-Total-variation-filter-TVF-for-image-denoising"><a href="#Tutorial-36-Image-filtering-in-python-Total-variation-filter-TVF-for-image-denoising" class="headerlink" title="Tutorial 36 - Image filtering in python - Total variation filter -TVF- for image denoising"></a>Tutorial 36 - Image filtering in python - Total variation filter -TVF- for image denoising</h2><p><a target="_blank" rel="noopener" href="https://www.zhihu.com/question/47162419">如何理解全变分（Total Variation，TV）模型？ - 知乎 (zhihu.com)</a></p>
+<h2 id="Tutorial-36-Image-filtering-in-python-Total-variation-filter-TVF-for-image-denoising"><a href="#Tutorial-36-Image-filtering-in-python-Total-variation-filter-TVF-for-image-denoising" class="headerlink" title="Tutorial 36 - Image filtering in python - Total variation filter -TVF- for image denoising"></a>Tutorial 36 - Image filtering in python - Total variation filter -TVF- for image denoising</h2><p><a target="_blank" rel="noopener" href="https://www.zhihu.com/question/47162419">如何理解全变分（Total Variation，TV）模型？- 知乎 (zhihu.com)</a></p>
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> cv2<br><span class="hljs-keyword">from</span> skimage <span class="hljs-keyword">import</span> io, img_as_float<br><span class="hljs-keyword">from</span> skimage.restoration <span class="hljs-keyword">import</span> denoise_tv_chambolle<br><br>img = img_as_float(io.imread(<span class="hljs-string">&#x27;images/Osteosarcoma_01_25Sigma_noise.tif&#x27;</span>))<br></code></pre></td></tr></table></figure>
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> matplotlib.pyplot <span class="hljs-keyword">as</span> plt<br><br>plt.hist(img.flat, bins=<span class="hljs-number">100</span>, <span class="hljs-built_in">range</span>=(<span class="hljs-number">0</span>, <span class="hljs-number">1</span>))<br></code></pre></td></tr></table></figure>
 <pre><code>(array([3.26417e+05, 3.28804e+05, 2.18786e+05, 3.22133e+05, 2.09763e+05,
@@ -535,7 +535,7 @@ Bottom right [ 42   0 255]
   denoise_img = denoise_tv_chambolle(img, weight=0.1, eps=0.0002, n_iter_max=200, multichannel=True)
 </code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">cv2.imshow(<span class="hljs-string">&#x27;Original&#x27;</span>, img)<br>cv2.imshow(<span class="hljs-string">&#x27;TV Filtered&#x27;</span>, denoise_img)<br>cv2.waitKey(<span class="hljs-number">0</span>)<br>cv2.destroyAllWindows()<br></code></pre></td></tr></table></figure>
 <p><img src="/images/loading.webp" data-original="36_2.png" alt="png"></p>
-<h2 id="Tutorial-37-Image-filtering-in-python-Block-matching-and-3D-filtering-BM3D-for-image-denoising"><a href="#Tutorial-37-Image-filtering-in-python-Block-matching-and-3D-filtering-BM3D-for-image-denoising" class="headerlink" title="Tutorial 37 - Image filtering in python - Block matching and 3D filtering -BM3D- for image denoising"></a>Tutorial 37 - Image filtering in python - Block matching and 3D filtering -BM3D- for image denoising</h2><p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/81856526">BM3D算法学习 - 知乎</a></p>
+<h2 id="Tutorial-37-Image-filtering-in-python-Block-matching-and-3D-filtering-BM3D-for-image-denoising"><a href="#Tutorial-37-Image-filtering-in-python-Block-matching-and-3D-filtering-BM3D-for-image-denoising" class="headerlink" title="Tutorial 37 - Image filtering in python - Block matching and 3D filtering -BM3D- for image denoising"></a>Tutorial 37 - Image filtering in python - Block matching and 3D filtering -BM3D- for image denoising</h2><p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/81856526">BM3D 算法学习 - 知乎</a></p>
 <p><img src="/images/loading.webp" data-original="37_1.png" alt="png"></p>
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">pip install bm3d<br></code></pre></td></tr></table></figure>
 <pre><code>Collecting bm3d
@@ -549,7 +549,7 @@ Successfully installed bm3d-3.0.9
 Note: you may need to restart the kernel to use updated packages.
 </code></pre><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> skimage <span class="hljs-keyword">import</span> io, img_as_float<br><span class="hljs-keyword">import</span> bm3d<br><span class="hljs-keyword">import</span> cv2<br><br>noisy_img = img_as_float(io.imread(<span class="hljs-string">&quot;images/Osteosarcoma_01_25Sigma_noise.tif&quot;</span>, as_gray=<span class="hljs-literal">True</span>))<br><br>BM3D_denoised_image = bm3d.bm3d(noisy_img, sigma_psd=<span class="hljs-number">0.2</span>, stage_arg=bm3d.BM3DStages.HARD_THRESHOLDING)<br></code></pre></td></tr></table></figure>
 <ul>
-<li>bm3d library is not well documented yet, but looking into source code....Bm3d库还没有很好的文档化，但是查看源代码....<ul>
+<li>bm3d library is not well documented yet, but looking into source code....Bm3d 库还没有很好的文档化，但是查看源代码....<ul>
 <li>sigma_psd - noise standard deviation 噪声标准差</li>
 <li>stage_arg: Determines whether to perform hard-thresholding or Wiener filtering. 确定是执行硬阈值还是维纳过滤。</li>
 <li>stage_arg = BM3DStages.HARD_THRESHOLDING or BM3DStages.ALL_STAGES (slow but powerful)<ul>
@@ -575,19 +575,19 @@ Note: you may need to restart the kernel to use updated packages.
 <p><img src="/images/loading.webp" data-original="38_1.png" alt="png"></p>
 <ul>
 <li><strong>Sobel</strong><ul>
-<li>Very similar to Roberts excerpt with a $3\times3$ operator. 与Roberts非常相似，只是使用了$3\times3$操作符</li>
+<li>Very similar to Roberts excerpt with a $3\times3$ operator. 与 Roberts 非常相似，只是使用了$3\times3$操作符</li>
 </ul>
 </li>
 </ul>
 <p><img src="/images/loading.webp" data-original="38_2.png" alt="png"></p>
 <ul>
 <li><strong>Scharr</strong><ul>
-<li>Typically used to identify gradients along the x-axis (dx=1, dy=0) and y-axis(dx=0, dy=1) independently. 通常用于分别识别沿x轴(dx=1, dy=0)和y轴(dx=0, dy=1)的梯度。</li>
+<li>Typically used to identify gradients along the x-axis (dx=1, dy=0) and y-axis(dx=0, dy=1) independently. 通常用于分别识别沿 x 轴(dx=1, dy=0)和 y 轴(dx=0, dy=1)的梯度。</li>
 <li>Performance is quite similar to Sobel filter. 其性能与 Sobel 滤波器非常相似。</li>
 </ul>
 </li>
 <li><strong>Farid</strong><ul>
-<li>Farid and Simoncelli propose to use a pair of kernels, one for interpolation and another for differentiation (similar to Sobel). Farid和Simoncelli建议使用一对核，一个用于插值，另一个用于微分(类似于Sobel)。</li>
+<li>Farid and Simoncelli propose to use a pair of kernels, one for interpolation and another for differentiation (similar to Sobel). Farid 和 Simoncelli 建议使用一对核，一个用于插值，另一个用于微分(类似于 Sobel)。</li>
 <li>Fixed size kernels: $5\times5$ (interpolation) and $7\times7$ (differentiation) 固定大小的内核:$5\times5$(插值)和$7\times7$(分化)</li>
 </ul>
 </li>
@@ -606,7 +606,7 @@ Note: you may need to restart the kernel to use updated packages.
 <h2 id="Tutorial-39-Image-filtering-in-python-Edge-detection-using-Canny"><a href="#Tutorial-39-Image-filtering-in-python-Edge-detection-using-Canny" class="headerlink" title="Tutorial 39 - Image filtering in python - Edge detection using Canny"></a>Tutorial 39 - Image filtering in python - Edge detection using Canny</h2><ul>
 <li>Multi stage algorithm for edge detection: 多阶段边缘检测算法<ul>
 <li>Step 1: Noise reduction - typically uses Gaussian (but any denoising can be used) 降噪-通常使用高斯(但也可以使用任何降噪)</li>
-<li>Step 2: Gradient calculation - detect edges, typically along 4 directions, horizontal, vertical, and two diagonals. (e.g. use Sobel) 梯度计算-检测边缘，通常沿4个方向，水平，垂直和两个对角线。<br>(如使用Sobel)</li>
+<li>Step 2: Gradient calculation - detect edges, typically along 4 directions, horizontal, vertical, and two diagonals. (e.g. use Sobel) 梯度计算-检测边缘，通常沿 4 个方向，水平，垂直和两个对角线。<br>(如使用 Sobel)</li>
 <li>Step 3: Non-maximum suppression - thin out edges by finding pixels with max value in the edge direction.  非最大抑制-通过在边缘方向上找到最大值像素来减少边缘。</li>
 <li>Step 4: Double threshold - determines potential edges by double thresholding to obtain strong, weak and irrelevant pixels for edges. 双阈值-通过双阈值确定潜在的边缘，获得边缘的强、弱和无关像素。</li>
 <li>Step 5: Edge tracking by hysteresis - covert weak edge pixels to strong based on neighboring pixels. 边缘跟踪的迟滞-隐藏弱边缘像素到强基于邻近像素。</li>
@@ -665,18 +665,18 @@ Note: you may need to restart the kernel to use updated packages.
 <h2 id="Tutorial-41-Image-filtering-using-Fourier-transform-in-python"><a href="#Tutorial-41-Image-filtering-using-Fourier-transform-in-python" class="headerlink" title="Tutorial 41 - Image filtering using Fourier transform in python"></a>Tutorial 41 - Image filtering using Fourier transform in python</h2><figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> cv2<br><span class="hljs-keyword">from</span> matplotlib <span class="hljs-keyword">import</span> pyplot <span class="hljs-keyword">as</span> plt<br><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><br>img = cv2.imread(<span class="hljs-string">&#x27;images/sandstone.tif&#x27;</span>, <span class="hljs-number">0</span>) <span class="hljs-comment"># load an image</span><br></code></pre></td></tr></table></figure>
 <ul>
 <li>Output is a 2D complex array. 1st channel real and 2nd imaginary <ul>
-<li>输出是一个2D复数数组。第一通道是实通道，第二通道是虚通道</li>
+<li>输出是一个 2D 复数数组。第一通道是实通道，第二通道是虚通道</li>
 </ul>
 </li>
 <li>For fft in opencv input image needs to be converted to float32<ul>
-<li>对于fft在opencv输入图像需要转换为float32</li>
+<li>对于 fft 在 opencv 输入图像需要转换为 float32</li>
 </ul>
 </li>
 </ul>
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">dft = cv2.dft(np.float32(img), flags=cv2.DFT_COMPLEX_OUTPUT)<br></code></pre></td></tr></table></figure>
 <ul>
 <li>Rearranges a Fourier transform X by shifting the zero-frequency component to the center of the array.<ul>
-<li>通过将零频率分量移到数组的中心来重新排列傅里叶变换X。</li>
+<li>通过将零频率分量移到数组的中心来重新排列傅里叶变换 X。</li>
 </ul>
 </li>
 <li>Otherwise it starts at the tope left corenr of the image (array)<ul>
@@ -687,15 +687,15 @@ Note: you may need to restart the kernel to use updated packages.
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">dft_shift = np.fft.fftshift(dft)<br></code></pre></td></tr></table></figure>
 <ul>
 <li>Magnitude of the function is 20.log(abs(f))<ul>
-<li>函数的大小为20.log(abs(f))</li>
+<li>函数的大小为 20.log(abs(f))</li>
 </ul>
 </li>
 <li>For values that are 0 we may end up with indeterminate values for log. <ul>
-<li>对于0的值，我们可能会得到log的不确定值。</li>
+<li>对于 0 的值，我们可能会得到 log 的不确定值。</li>
 </ul>
 </li>
 <li>So we can add 1 to the array to avoid seeing a warning. <ul>
-<li>因此，我们可以向数组中添加1以避免看到警告。</li>
+<li>因此，我们可以向数组中添加 1 以避免看到警告。</li>
 </ul>
 </li>
 </ul>
@@ -705,7 +705,7 @@ Note: you may need to restart the kernel to use updated packages.
 </li>
 <li><p>Circular HPF mask, center circle is 0, remaining all ones</p>
 <ul>
-<li>圆形HPF掩码，中心圆为0，其余均为1</li>
+<li>圆形 HPF 掩码，中心圆为 0，其余均为 1</li>
 </ul>
 </li>
 <li>Can be used for edge detection because low frequencies at center are blocked and only high frequencies are allowed.<ul>
@@ -724,7 +724,7 @@ Note: you may need to restart the kernel to use updated packages.
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">rows, cols = img.shape<br>crow, ccol = <span class="hljs-built_in">int</span>(rows / <span class="hljs-number">2</span>), <span class="hljs-built_in">int</span>(cols / <span class="hljs-number">2</span>)<br><br>mask = np.ones((rows, cols, <span class="hljs-number">2</span>), np.uint8)<br>r = <span class="hljs-number">80</span><br>center = [crow, ccol]<br>x, y = np.ogrid[:rows, :cols]<br>mask_area = (x - center[<span class="hljs-number">0</span>]) ** <span class="hljs-number">2</span> + (y - center[<span class="hljs-number">1</span>]) ** <span class="hljs-number">2</span> &lt;= r*r<br>mask[mask_area] = <span class="hljs-number">0</span><br></code></pre></td></tr></table></figure>
 <ul>
 <li>apply mask and inverse DFT: Multiply fourier transformed image (values) with the mask values. <ul>
-<li>应用掩模和反DFT:将傅里叶变换后的图像(值)与掩模值相乘。</li>
+<li>应用掩模和反 DFT:将傅里叶变换后的图像(值)与掩模值相乘。</li>
 </ul>
 </li>
 </ul>
@@ -747,7 +747,7 @@ Note: you may need to restart the kernel to use updated packages.
 <figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python">f_ishift = np.fft.ifftshift(fshift)<br></code></pre></td></tr></table></figure>
 <ul>
 <li>Inverse DFT to convert back to image domain from the frequency domain. <ul>
-<li>逆DFT: 从频域转换回图像域。</li>
+<li>逆 DFT: 从频域转换回图像域。</li>
 </ul>
 </li>
 <li>Will be complex numbers<ul>
@@ -770,7 +770,7 @@ Note: you may need to restart the kernel to use updated packages.
 <p><img src="/images/loading.webp" data-original="41_1.png" alt="png"></p>
 <ul>
 <li>Circular LPF mask, center circle is 1, remaining all zeros<ul>
-<li>圆形LPF掩码，中心圆为1，其余均为零</li>
+<li>圆形 LPF 掩码，中心圆为 1，其余均为零</li>
 </ul>
 </li>
 <li>Only allows low frequency components - smooth regions<ul>
@@ -4620,8 +4620,6 @@ Note: you may need to restart the kernel to use updated packages.
                     
                         
                         
-                            
-                                
                             
                                 
                             
