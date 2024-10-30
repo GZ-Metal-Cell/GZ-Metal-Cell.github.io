@@ -9,6 +9,7 @@ function initHighlightTools() {
 
     $(codeBlocks).each(function() {
         var $this = $(this);
+        setHighlightHeightLimit($this, HighlightHeightLimit);
         if ($this.children().hasClass('plaintext')) {
             return;
         }
@@ -16,7 +17,6 @@ function initHighlightTools() {
         createCopyButton($container, $this, copyIcon);
         createCodeLangText($container, $this);
         createCloseCodeBlockButton($container, $this, closeCodeBlockIcon, highlightShrink);
-        setHighlightHeightLimit($this, HighlightHeightLimit);
     });
 }
 
