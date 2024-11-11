@@ -41,6 +41,7 @@ function hbeToc() {
 }
 
 function createToc() {
+    var tocList = [];
     var toc = $('<ol>').addClass('aside-bottom-toc-content');
     var headings = $('article').find(headerString);
 
@@ -71,8 +72,32 @@ function createToc() {
 
         li.append(a);
 
-        // 将列表项添加到父级
-        toc.append(li);
+        if (tocList.length > 0) {
+            var flag = false;
+            for (let i = tocList.length - 1; i >= 0; i--) {
+                if (level > tocList[i].level) {
+                    var tocChild = tocList[i].li.children('ol.toc-child');
+                    if (tocChild.length === 0) {
+                        tocChild = $('<ol>').addClass('toc-child');
+                        tocList[i].li.append(tocChild);
+                    }
+                    tocChild.append(li);
+                    flag = true;
+                    break;
+                }
+            }
+            if (!flag) {
+                toc.append(li);
+            }
+        } else {
+            toc.append(li);
+        }
+
+        if (!tocCollapsed) {
+            li.addClass('active');
+        }
+
+        tocList.push({ li, level });
 
         currentLevel = level;
     });
@@ -112,21 +137,43 @@ function getTopHeadingId() {
 function activeTocItem() {
     const tocLinks = document.querySelectorAll('a.toc-link');
     const topHeadingId = getTopHeadingId();
+
+    tocLinks.forEach(link => {
+        link.classList.remove('active');
+        if (tocCollapsed) {
+            // 获取每个链接的父 <li> 元素
+            const parentLi = link.closest('li');
+
+            // 检查父 <li> 是否有 active 类
+            if (parentLi && parentLi.classList.contains('active')) {
+                // 移除 active 类
+                parentLi.classList.remove('active');
+            }
+        }
+    });
+
     tocLinks.forEach(link => {
         var href = decodeURIComponent(link.getAttribute('href')).replace(/^#/, '');
         if (href == topHeadingId) {
-            if (!link.classList.contains('active')) {
-                link.parentNode.classList.add('active');
-                var toc = document.querySelector('.aside-bottom-toc-content');
-                var activeItem = toc.querySelector('.active');
-                if (activeItem) {
-                    toc.scrollTo({
-                        top: activeItem.offsetTop - 80
-                    });
+            link.classList.add('active');
+            // 滚动到当前活动的 toc 项目
+            var toc = document.querySelector('.aside-bottom-toc-content');
+            var activeItem = toc.querySelector('.active');
+            if (activeItem) {
+                if (tocCollapsed) {
+                    let parent = link.parentNode;
+                    while (parent && ! parent.classList.contains('aside-bottom-toc-content')) {
+                        if (parent.classList && parent.classList.contains('toc-item')) {
+                            parent.classList.add('active');
+                        }
+                        parent = parent.parentNode; // 向上遍历
+                    }
                 }
+
+                toc.scrollTo({
+                    top: activeItem.offsetTop - 80
+                });
             }
-        } else {
-            link.parentNode.classList.remove('active');
         }
     });
 }
