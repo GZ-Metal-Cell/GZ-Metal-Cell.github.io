@@ -1,1 +1,1 @@
-# 你好！Promefire！
+博客网址：[主页 | Zi-Zi's Journey](https://gz-metal-cell.github.io/)
