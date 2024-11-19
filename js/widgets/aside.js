@@ -120,28 +120,30 @@ function onShowAsideButton() {
 
     var value = localStorage.getItem('aside-status');
     if (value === 'false' && typeof headerString !== 'undefined') {
-        activeTocItem();
-        activeSeriesItem();
+        initToc();
     }
     localStorage.setItem('aside-status', value === 'true' ? 'false' : 'true');
 }
 
 function getTopHeadingId(filteredHeadings) {
-    let topHeadingId = null;
-    let minDistanceFromTop = Infinity;
+    if (filteredHeadings) {
+        let topHeadingId = null;
+        let minDistanceFromTop = Infinity;
 
-    filteredHeadings.each(function (_, heading) {
-        const boundingRect = heading.getBoundingClientRect();
-        if (boundingRect.y < window.innerHeight) {
-            const distanceFromTop = Math.abs(boundingRect.y - 80);
-            if (distanceFromTop < minDistanceFromTop) {
-                minDistanceFromTop = distanceFromTop;
-                topHeadingId = heading.id;
+        filteredHeadings.each(function (_, heading) {
+            const boundingRect = heading.getBoundingClientRect();
+            if (boundingRect.y < window.innerHeight) {
+                const distanceFromTop = Math.abs(boundingRect.y - 80);
+                if (distanceFromTop < minDistanceFromTop) {
+                    minDistanceFromTop = distanceFromTop;
+                    topHeadingId = heading.id;
+                }
             }
-        }
-    });
-
-    return topHeadingId;
+        });
+        return topHeadingId;
+    } else {
+        return null;
+    }
 }
 
 function activeTocItem(filteredHeadings) {
