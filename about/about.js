@@ -2,15 +2,15 @@ var bodyBackground;
 var dropDownButton;
 
 const backgrounds = [
-    'images/0.webp', 
-    'images/1.webp', 
-    'images/2.webp', 
-    'images/3.webp', 
-    'images/4.webp', 
-    'images/5.webp', 
-    'images/6.webp', 
-    'images/7.webp', 
-    'images/8.webp', 
+    'images/0.webp',
+    'images/1.webp',
+    'images/2.webp',
+    'images/3.webp',
+    'images/4.webp',
+    'images/5.webp',
+    'images/6.webp',
+    'images/7.webp',
+    'images/8.webp',
     'images/9.webp'
 ];
 
@@ -29,7 +29,7 @@ const strings = [
 
 function setStep(step) {
     dropDownButton.css({ 'display': 'none' });
-    bodyBackground.css({'opacity': 0});
+    bodyBackground.css({ 'opacity': 0 });
     $('#stepContainer_' + step.toString()).css({ 'max-height': '300px' });
 
     new Typed('#typed_' + step.toString(), {
@@ -40,12 +40,12 @@ function setStep(step) {
         loop: false,
         onComplete: function (self) {
             self.cursor.style.display = 'none';
-            bodyBackground.css({'background-image': 'url("' + backgrounds[step] + '")'});
-            bodyBackground.css({'opacity': 1});
+            bodyBackground.css({ 'background-image': 'url("' + backgrounds[step] + '")' });
+            bodyBackground.css({ 'opacity': 1 });
             if (step < strings.length - 1) {
                 dropDownButton.css({ 'display': 'block' });
             } else {
-                $('.dropDownButtonContainer').css({'height' : '2px'});
+                $('.dropDownButtonContainer').css({ 'height': '2px' });
             }
         }
     });
@@ -53,14 +53,14 @@ function setStep(step) {
 
 $(document).ready(function () {
 
-    for(var i=0; i < backgrounds.length; i++) {
+    for (var i = 0; i < backgrounds.length; i++) {
         var img = new Image();
-        
+
         // 设置图片的src属性
         img.src = backgrounds[i];
-        
+
         // 在图片加载完成后执行的函数
-        $(img).on('load', function(){
+        $(img).on('load', function () {
             // 图片加载完成后的处理逻辑，例如显示图片等
         });
     }
@@ -71,7 +71,7 @@ $(document).ready(function () {
     // 将新的div元素添加到body下的第一个子元素位置
     $('body').prepend(bodyBackground);
 
-    bodyBackground.css({'opacity': 1});
+    bodyBackground.css({ 'opacity': 1 });
 
     var step = 0;
 
