@@ -52,7 +52,7 @@ function customBreadcrumb(breadcrumb, menusTitle) {
     }
 }
 
-function postsBreadcrumb(breadcrumb, categories, categoriesLink, categoriesName, categoriesNameLink) {
+function postsBreadcrumb(breadcrumb, categories, categoriesLink, categoriesName, categoriesNameLink, permalinkDepth) {
     breadcrumb.innerHTML = '';
     
     var li = document.createElement('li');
@@ -76,14 +76,14 @@ function postsBreadcrumb(breadcrumb, categories, categoriesLink, categoriesName,
     levels.shift();
     levels.pop();
 
-    for (var i = 3; i < levels.length; i++) {
+    for (var i = permalinkDepth; i < levels.length; i++) {
         var levelLink = '/';
         for (var j = 0; j <= i; j++) {
             levelLink += levels[j] + '/';
         }
     }
 
-    for (var i = 3; i < levels.length; i++) {
+    for (var i = permalinkDepth; i < levels.length; i++) {
         var levelLink = '/';
         for (var j = 0; j <= i; j++) {
             levelLink += levels[j] + '/';

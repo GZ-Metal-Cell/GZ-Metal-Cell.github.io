@@ -7,7 +7,7 @@ function initTextIndent() {
             return this.nodeType === Node.TEXT_NODE;
         }).each(function() {
             // 设置制表符的缩进;
-            let newHtml = this.nodeValue.replace(/\t/g, '<span class="tab"> </span>');
+            let newHtml = this.nodeValue.replace(/\t/g, '<span class="text-indent"> </span>');
             // 将连续的两个及以上空格替换为相应数量的 &nbsp;
             newHtml = newHtml.replace(/  +/g, match => '&nbsp;'.repeat(match.length));
             $(this).replaceWith(newHtml); // 替换原有的文本节点
