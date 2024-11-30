@@ -44,8 +44,6 @@
 
 
 
-
-
     
 <script src="/js/plugins/alert-title.js"></script>
 
@@ -479,7 +477,7 @@
 <p><strong>Z-Buffer Algorithm</strong></p>
 <p>将深度缓冲区初始化为 $\infty$<br>
 During rasterization 光栅化过程中:</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><code class="hljs C"><span class="hljs-keyword">for</span> (each triangle T)<br>  <span class="hljs-keyword">for</span> (each sample (x,y,z) in T)<br>    <span class="hljs-keyword">if</span> (z &lt; zbuffer[x,y]) <span class="hljs-comment">// closest sample so far 如果当前深度值比深度缓冲区里的还要小（这个三角形离摄像机更近）</span><br>      framebuffer[x,y] = rgb; <span class="hljs-comment">// update color 更新帧缓冲区里的颜色</span><br>      zbuffer[x,y] = z; <span class="hljs-comment">// update depth 更新深度缓冲区里的深度</span><br>    <span class="hljs-keyword">else</span><br>      ; <span class="hljs-comment">// do nothing, this sample is occluded 这个三角形被遮挡了，不管它了</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs C"><span class="hljs-keyword">for</span> (each triangle T)<br>  <span class="hljs-keyword">for</span> (each sample (x,y,z) in T)<br>    <span class="hljs-keyword">if</span> (z &lt; zbuffer[x,y]) <span class="hljs-comment">// closest sample so far 如果当前深度值比深度缓冲区里的还要小（这个三角形离摄像机更近）</span><br>      framebuffer[x,y] = rgb; <span class="hljs-comment">// update color 更新帧缓冲区里的颜色</span><br>      zbuffer[x,y] = z; <span class="hljs-comment">// update depth 更新深度缓冲区里的深度</span><br>    <span class="hljs-keyword">else</span><br>      ; <span class="hljs-comment">// do nothing, this sample is occluded 这个三角形被遮挡了，不管它了</span><br></code></pre></td></tr></table></figure>
 <p><img src="/images/loading.webp" data-original="7.4.png" alt="png"></p>
 <p>​	示例。一开始深度缓冲区里的深度值都是 $R$（无限）。先渲染红的，再渲染紫的。紫色的深度值如果比红的小，就覆盖掉。</p>
 <hr>
@@ -874,7 +872,7 @@ During rasterization 光栅化过程中:</p>
 <p>描述某个顶点或片元颜色的操作</p>
 </li>
 </ul>
-<figure class="highlight glsl"><table><tr><td class="code"><pre><code class="hljs glsl"><span class="hljs-keyword">uniform</span> <span class="hljs-type">sampler2D</span> myTexture; <span class="hljs-comment">// program parameter 程序参数</span><br><span class="hljs-keyword">uniform</span> <span class="hljs-type">vec3</span> lightDir; <span class="hljs-comment">// program parameter 程序参数</span><br><span class="hljs-keyword">varying</span> <span class="hljs-type">vec2</span> uv; <span class="hljs-comment">// per fragment value (interp. by rasterizer) 每个片元特有的值</span><br><span class="hljs-keyword">varying</span> <span class="hljs-type">vec3</span> norm; <span class="hljs-comment">// per fragment value (interp. by rasterizer) 每个片元特有的值</span><br><br><span class="hljs-type">void</span> diffuseShader() <br>&#123; <br>     <span class="hljs-type">vec3</span> kd; <span class="hljs-comment">// 漫反射系数（颜色）</span><br>     kd = texture2d(myTexture, uv); <span class="hljs-comment">// material color from texture 从 UV 贴图中获取材质颜色</span><br>     kd *= <span class="hljs-built_in">clamp</span>(<span class="hljs-built_in">dot</span>(–lightDir, norm), <span class="hljs-number">0.0</span>, <span class="hljs-number">1.0</span>); <span class="hljs-comment">// Lambertian shading model，应用兰伯特漫反射光照模型，将 kd 乘以后面这东西得到 Ld（漫反射光）</span><br>     <span class="hljs-built_in">gl_FragColor</span> = <span class="hljs-type">vec4</span>(kd, <span class="hljs-number">1.0</span>); <span class="hljs-comment">// output fragment color 输出片元颜色</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<figure class="highlight glsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs glsl"><span class="hljs-keyword">uniform</span> <span class="hljs-type">sampler2D</span> myTexture; <span class="hljs-comment">// program parameter 程序参数</span><br><span class="hljs-keyword">uniform</span> <span class="hljs-type">vec3</span> lightDir; <span class="hljs-comment">// program parameter 程序参数</span><br><span class="hljs-keyword">varying</span> <span class="hljs-type">vec2</span> uv; <span class="hljs-comment">// per fragment value (interp. by rasterizer) 每个片元特有的值</span><br><span class="hljs-keyword">varying</span> <span class="hljs-type">vec3</span> norm; <span class="hljs-comment">// per fragment value (interp. by rasterizer) 每个片元特有的值</span><br><br><span class="hljs-type">void</span> diffuseShader() <br>&#123; <br>     <span class="hljs-type">vec3</span> kd; <span class="hljs-comment">// 漫反射系数（颜色）</span><br>     kd = texture2d(myTexture, uv); <span class="hljs-comment">// material color from texture 从 UV 贴图中获取材质颜色</span><br>     kd *= <span class="hljs-built_in">clamp</span>(<span class="hljs-built_in">dot</span>(–lightDir, norm), <span class="hljs-number">0.0</span>, <span class="hljs-number">1.0</span>); <span class="hljs-comment">// Lambertian shading model，应用兰伯特漫反射光照模型，将 kd 乘以后面这东西得到 Ld（漫反射光）</span><br>     <span class="hljs-built_in">gl_FragColor</span> = <span class="hljs-type">vec4</span>(kd, <span class="hljs-number">1.0</span>); <span class="hljs-comment">// output fragment color 输出片元颜色</span><br>&#125;<br></code></pre></td></tr></table></figure>
 <p>Shader function executes once per fragment.</p>
 <p>Shader 函数对每个片元执行一次（因此不用像 C 语言那样遍历所有顶点，它自动帮你遍历好了）。</p>
 <ul>
@@ -1041,7 +1039,7 @@ During rasterization 光栅化过程中:</p>
 <h3 id="texture-queries" tabindex="-1" id="Texture-queries">Texture queries</h3>
 <p><strong>Simple Texture Mapping: Diffuse Color</strong></p>
 <p>简单纹理映射：漫反射颜色</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">for</span> each rasterized screen sample (x, y):  <span class="hljs-comment"># 对于每个栅格化屏幕样本(x, y)，通常是像素中心</span><br>    (u, v) = evaluate texture coordinate at (x, y)  <span class="hljs-comment"># 在 (x, y) 计算纹理坐标 (u, v)，Using barycentric coordinates!</span><br>    texcolor = texture.sample(u, v);  <span class="hljs-comment"># 从 (u, v) 出获取颜色</span><br>    <span class="hljs-built_in">set</span> sample’s color to texcolor;  <span class="hljs-comment"># 设置样本的颜色为 texcolor，通常是漫射反照率 Kd，（回想一下 Blinn-Phong 反射模型）</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">for</span> each rasterized screen sample (x, y):  <span class="hljs-comment"># 对于每个栅格化屏幕样本(x, y)，通常是像素中心</span><br>    (u, v) = evaluate texture coordinate at (x, y)  <span class="hljs-comment"># 在 (x, y) 计算纹理坐标 (u, v)，Using barycentric coordinates!</span><br>    texcolor = texture.sample(u, v);  <span class="hljs-comment"># 从 (u, v) 出获取颜色</span><br>    <span class="hljs-built_in">set</span> sample’s color to texcolor;  <span class="hljs-comment"># 设置样本的颜色为 texcolor，通常是漫射反照率 Kd，（回想一下 Blinn-Phong 反射模型）</span><br></code></pre></td></tr></table></figure>
 <hr>
 <p><strong>Texture Magnification - Easy Case</strong></p>
 <p>纹理贴图太小了怎么办？</p>
@@ -5168,6 +5166,8 @@ During rasterization 光栅化过程中:</p>
 		var highlightShrink = "";
 		var HighlightHeightLimit = "";
 	</script>
+
+	
 	
 	<!-- Analytics -->
 

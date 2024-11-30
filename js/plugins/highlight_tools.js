@@ -1,5 +1,5 @@
 function initHighlightTools() {
-    var codeBlocks = $('.hljs').closest('pre');
+    var codeBlocks = $('.highlight');  // $('.hljs').closest('pre');
 
     if (codeBlocks.attr('highlight-tools') != undefined) {
         return;
@@ -7,15 +7,16 @@ function initHighlightTools() {
         codeBlocks.attr('highlight-tools', '');
     }
 
-    $(codeBlocks).each(function() {
+    $(codeBlocks).each(function () {
         var $this = $(this);
         setHighlightHeightLimit($this, HighlightHeightLimit);
         if ($this.children().hasClass('plaintext')) {
             return;
         }
         var $container = createContainer($this);
-        createCopyButton($container, $this, copyIcon);
-        createCodeLangText($container, $this);
+        var $codeBlock = $this.find('.code');
+        createCopyButton($container, $codeBlock, copyIcon);
+        createCodeLangText($container, $codeBlock);
         createCloseCodeBlockButton($container, $this, closeCodeBlockIcon, highlightShrink);
     });
 }
@@ -23,35 +24,37 @@ function initHighlightTools() {
 function createContainer($codeBlock) {
     // 创建包裹代码块和按钮的容器元素
     var $container = $('<div class="highlight-tools"></div>');
-    // 将容器元素插入到代码块之前
-    $codeBlock.before($container);
+    // 将容器元素插入到代码块的第一个子元素之前
+    $codeBlock.children().first().before($container);
     return $container;
 }
 
 function createCopyButton($container, $codeBlock, icon) {
     // 创建复制按钮并设置样式
-    var $button = $('<button class="copy-button" type="button" title="copy-button"></button>').css('backgroundImage', 'url("' + icon + '")');
+    var $button = $('<button class="copy-button" type="button" title="复制代码"></button>').css('backgroundImage', 'url("' + icon + '")');
     $container.append($button);
 
     $button.click(function () {
         // 创建已复制提示文字
         var $span = $('<span class="copy-notice">已复制</span>');
         $container.append($span);
-        // 使用innerText获取文本内容，以保留格式
-        var code = $codeBlock.get(0).innerText; // 使用.get(0)来获取原生DOM元素
+        // 使用 innerText 获取文本内容，以保留格式
+        var innerText = $codeBlock.get(0).innerText; // 使用 .get(0) 来获取原生 DOM 元素
         // 执行复制操作
-        var $textarea = $('<textarea>').val(code).appendTo('body').select();
-        document.execCommand('copy');
-        $textarea.remove();
-
-        // 显示已复制提示，并在 1 秒后隐藏
-        $span.css('opacity', 1);
-        setTimeout(function () {
-            $span.css('opacity', 0);
+        navigator.clipboard.writeText(innerText).then(function () {
+            // 显示已复制提示，并在 1 秒后隐藏
+            $span.css('opacity', 1);
             setTimeout(function () {
-                $span.remove();
-            }, 500);
-        }, 1000);
+                $span.css('opacity', 0);
+                setTimeout(function () {
+                    $span.remove();
+                }, 500);
+            }, 1000);
+        }).catch(function (err) {
+            // 如果复制失败，显示错误信息
+            console.error('Failed to copy text:', err);
+            $span.remove();
+        });
     });
 }
 
@@ -77,13 +80,12 @@ function createCloseCodeBlockButton($container, $codeBlock, icon, highlightShrin
     }
 
     $button.click(function () {
-        var $hljs = $codeBlock.find('.hljs');
-        if (!$hljs.hasClass('closed')) {
+        if (!$codeBlock.hasClass('closed')) {
             $button.css('transform', "rotate(-90deg)");
-            $hljs.addClass("closed");
+            $codeBlock.addClass("closed");
         } else {
             $button.css('transform', "rotate(0deg)");
-            $hljs.removeClass("closed");
+            $codeBlock.removeClass("closed");
         }
     });
 }
@@ -91,6 +93,6 @@ function createCloseCodeBlockButton($container, $codeBlock, icon, highlightShrin
 function setHighlightHeightLimit($codeBlock, HighlightHeightLimit) {
     // 限制代码块最大长度
     if (HighlightHeightLimit != "") {
-        $codeBlock.find('.hljs').css('maxHeight', HighlightHeightLimit);
+        $codeBlock.find('table').css('maxHeight', HighlightHeightLimit);
     }
 }
