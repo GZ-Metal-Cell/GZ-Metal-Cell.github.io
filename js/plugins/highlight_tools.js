@@ -10,7 +10,7 @@ function initHighlightTools() {
     $(codeBlocks).each(function () {
         var $this = $(this);
         setHighlightHeightLimit($this, HighlightHeightLimit);
-        if ($this.children().hasClass('plaintext')) {
+        if ($this.hasClass('plaintext')) {
             return;
         }
         var $container = createContainer($this);

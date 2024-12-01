@@ -1,5 +1,5 @@
 function initAlertTitle() {
-    var titleMap = {
+    let titleMap = {
         'Note': '信息',
         'Tip': '提示',
         'Important': '重要',
@@ -8,7 +8,7 @@ function initAlertTitle() {
     };
 
     $('.markdown-alert-title').each(function() {
-        var text = $(this).text();
+        let text = $(this).text();
         if (titleMap[text]) {
             $(this).contents().filter(function() {
                 return this.nodeType === 3;  // 3 表示文本节点

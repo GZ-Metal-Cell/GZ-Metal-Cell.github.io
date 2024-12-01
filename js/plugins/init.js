@@ -4,50 +4,34 @@ function handleHexoBlogDecryptEvent() {
         init();
     });
 }
-
 function init() {
-    if (typeof initGallery === 'function') {
-        initGallery();
-    }
-    if (typeof initToc === 'function') {
-        initToc();
-    }
-    if (typeof initPhotoFigcaption === 'function') {
-        initPhotoFigcaption();
-    }
-    if (typeof initFancybox === 'function') {
-        initFancybox();
-    }
-    if (typeof initTextIndent === 'function') {
-        initTextIndent();
-    }
-    if (typeof initHighlightTools === 'function') {
-        initHighlightTools();
-    }
-    if (typeof initTabs === 'function') {
-        initTabs();
-    }
-    if (typeof initTagHide === 'function') {
-        initTagHide();
-    }
-    if (typeof initMathjax === 'function') {
-        initMathjax();
-    }
-    if (typeof initKatex === 'function') {
-        initKatex();
-    }
-    if (typeof initWordCount === 'function') {
-        initWordCount();
-    }
-    if (typeof initRef === 'function') {
-        initRef();
-    }
-    if (typeof initMermaid === 'function') {
-        initMermaid();
-    }
-    if (typeof initAlertTitle === 'function') {
-        initAlertTitle();
-    }
+    const functionsToInitialize = [
+        'initGallery',
+        'initToc',
+        'initPhotoFigcaption',
+        'initFancybox',
+        'initTextIndent',
+        'initHighlightTools',
+        'initTabs',
+        'initTagHide',
+        'initMathjax',
+        'initKatex',
+        'initWordCount',
+        'initRef',
+        'initMermaid',
+        'initAlertTitle'
+    ];
+
+    functionsToInitialize.forEach(funcName => {
+        const func = window[funcName];  // Attempt to access the function globally
+        if (typeof func === 'function') {
+            try {
+                func();
+            } catch (error) {
+                console.error(`Error initializing function: ${funcName}`, error);
+            }
+        }
+    });
 }
 
 window.addEventListener('hexo-blog-decrypt', handleHexoBlogDecryptEvent);
