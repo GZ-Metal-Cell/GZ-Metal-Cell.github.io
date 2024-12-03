@@ -20,7 +20,7 @@
 
 
 <meta name="keywords" content="Python,">
-<meta name="description" content="让电脑学会玩任意类棋牌游戏！">
+<meta name="description" content="研究棋牌类 AI！">
 
 
 
@@ -341,7 +341,7 @@
 							d="M778.24 117.76A46.08 46.08 0 0 1 824.32 163.84v430.08c0 8.4992-4.13696 16.01536-10.50624 20.6848l-0.24576 0.2048L587.5712 846.09024a35.84 35.84 0 0 1-61.48096-25.06752v-220.9792a46.08 46.08 0 0 1 46.08-46.08l200.94976-0.02048V168.96h-522.24v686.08H389.12c13.25056 0 24.1664 10.07616 25.47712 22.97856l0.12288 2.62144c0 14.1312-11.4688 25.6-25.6 25.6h-143.36A46.08 46.08 0 0 1 199.68 860.16V163.84A46.08 46.08 0 0 1 245.76 117.76h532.48z m-26.78784 487.38304h-174.16192v178.176l174.16192-178.176z m-45.19936-169.94304a25.6 25.6 0 0 1 0 51.2H307.2a25.6 25.6 0 0 1 0-51.2h399.0528z m0-122.88a25.6 25.6 0 0 1 0 51.2H307.2a25.6 25.6 0 0 1 0-51.2h399.0528z"
 							fill="#ffffff" p-id="1155"></path>
 						</svg>
-						<p>让电脑学会玩任意类棋牌游戏！</p>
+						<p>研究棋牌类 AI！</p>
 					</div>
 				
 		
@@ -407,6 +407,14 @@
 <ul>
 <li><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/51796570">AlphaZero登上《科学》封面：一个算法“通杀”三大棋，完整论文首次发布 - 知乎</a></li>
 </ul>
+<p>方法论：</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/333348915">【最佳实战】蒙特卡洛树搜索算法 - 知乎</a></li>
+<li><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/435437662">【Alpha Zero从入门到学废】1、序 - 知乎</a></li>
+</ul>
+<h1 id="%E8%AE%BA%E6%96%87" tabindex="-1">论文</h1>
+<p>A general reinforcement learning algorithm that masters chess, shogi and Go through self-play</p>
+<p><strong>一个通用的强化学习算法，通过自我发挥掌握国际象棋，将棋和围棋</strong></p>
 
 
 	<div class="row">
@@ -415,7 +423,317 @@
 
 
 
-<h1 id="cpu-optimized-alpha-zero-general" tabindex="-1">CPU-optimized Alpha Zero General</h1>
+<h2 id="abstract" tabindex="-1" id="Abstract">Abstract</h2>
+<p>​	AlphaGO Zero 通过自我游戏的强化学习在围棋比赛中效果优异，这篇论文将 AlphaZero 算法用于国际象棋和日本将棋领域（从随机游戏开始，除了游戏规则之外没有任何领域知识）。</p>
+<h2 id="%E6%AD%A3%E6%96%87" tabindex="-1" id="正文">正文</h2>
+<ul>
+<li>先前国际象棋的研究不能应用到其它领域中。</li>
+<li>AlphaGO Zero 使用深度卷积神经网络表示围棋知识，该网络仅通过自我对弈游戏中的强化学习进行训练。</li>
+<li>AlphaZero 是 AlphaGO Zero 算法的更通用版本，无需特殊情况，即可适应更广泛的游戏规则。</li>
+<li>本文将 AlphaZero 应用于<strong>国际象棋</strong>、<strong>将棋</strong>和<strong>围棋</strong>游戏，对这三种游戏使用相同的算法和网络架构。</li>
+<li>结果表明，通用强化学习算法可以在没有特定领域人类知识或数据的情况下学习，这一点可以从<strong>同一算法在多个领域取得成功</strong>中看出，它在多个具有挑战性的游戏中取得了超越人类的表现。</li>
+</ul>
+<hr>
+<ul>
+<li>AlphaZero 用<strong>深度神经网络</strong>、<strong>通用强化学习算法</strong>和<strong>通用树搜索算法</strong>取代了传统游戏程序中使用的手工知识和特定领域的增强。</li>
+<li>AlphaZero 使用了一个带参数 $\theta$ 的<strong>深度神经网络</strong> $(\mathbf{p}, v)=f_\theta(s)$，而不是一个手工制作的评估函数和移动排序启发式。
+<ul>
+<li>该神经网络 $f_\theta(s)$ 将棋局信息 $s$ 作为输入</li>
+<li>输出移动向量 $\mathbf{p}$，其中每个动作 $a$ 的分量 $p_a = \mathrm{Pr}(a|s)$</li>
+<li>标量值 $v$、用于估计位置 $s$ 下棋的预期位置 $z$，$v\approx\mathbb{E}[z|s]$</li>
+</ul>
+</li>
+<li>AlphaZero 完全从自我对弈中学习这些移动概率和价值估计；然后使用它们来指导其在未来游戏中的搜索。</li>
+<li>AlphaZero 使用通用的**蒙特卡洛树搜索（MCTS）**算法，每次搜索都由一系列模拟的自我对弈游戏组成，这些游戏从根状态 $s_\mathrm{root}$ 遍历一棵树，直到到达叶子状态。
+<ul>
+<li>每次模拟都根据当前神经网络 $f_\theta$ 在每个状态 $s$ 中选择一个<strong>访问次数少</strong>（以前不经常探索）、<strong>移动概率高且价值高</strong>的移动 $a$（在从 $s$ 中选择 $a$ 的模拟的叶子状态上取平均值）。搜索返回一个向量 $\mathbf{\pi}$，表示移动的概率分布，$\pi_a = \mathrm{Pr}(a|s_{\mathrm{root}})$。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<ul>
+<li>
+<p>AlphaZero 中：$(\mathbf{p},v)=f_\theta(s)$，深度神经网络的参数 $\theta$ 通过<strong>强化学习从自对弈游戏中进行训练</strong>，</p>
+<ul>
+<li>
+<p>初始时参数 $\theta$ 是随机初始化的。</p>
+</li>
+<li>
+<p>每一局游戏通过从当前状态 $s_{\mathrm{root}}$（第 $t$ 回合时的状态）开始运行<strong>蒙特卡洛树搜索（MCTS）</strong>，</p>
+</li>
+<li>
+<p>然后选择一个动作 $a_t \sim \pi_t$，该动作根据根状态的访问次数来选择，可能是<strong>按比例选择（用于探索）<strong>或者是</strong>贪心选择（用于利用）</strong>。</p>
+<ul>
+<li><strong>按比例选择（探索）</strong>：使用概率分布 $\pi_t$ 来随机选择一个动作。这个选择是基于当前模型的预测，但并非总是选择最有可能的动作，从而允许一定程度的探索。</li>
+<li><strong>贪心选择（利用）</strong>：在某些情况下，选择概率最高的动作（即模型认为最优的动作）。这种选择方式依赖于当前的知识和对局面的评估，目的是最大化当前的回报。</li>
+</ul>
+</li>
+<li>
+<p>在游戏结束时，终局状态 $s_T$ 会根据游戏规则计算游戏结果 $z$：失败为 $-1$，平局为 $0$，胜利为 $+1$。</p>
+</li>
+<li>
+<p>神经网络参数 $\theta$ 会更新，以最小化预测结果 $v_t$ 与游戏结果 $z$ 之间的误差，并最大化策略向量 $p_t$ 与搜索概率 $\pi_t$ 之间的相似性。具体而言，参数 $\theta$ 会通过对损失函数 $l$ 进行梯度下降调整，损失函数 $l$ 是<strong>均方误差</strong>和<strong>交叉熵损失</strong>的总和：</p>
+<p>$$l=(z-v)^2-\pi^\top\log\mathbf{p}+c||\theta||^2$$</p>
+<p>其中 $c$ 是控制 $L_2$ 权重正则化水平的参数。更新后的参数用于后续的自我游戏。</p>
+</li>
+</ul>
+</li>
+</ul>
+<hr>
+<ul>
+<li>
+<p>围棋棋盘具有对称性（旋转对称性、反射对称性），AlphaGo 和 AlphaGo Zero 在处理围棋时利用了这一对称性（实现了数据增强）。训练数据通过为每个棋盘位置生成八个对称变换来增强。其次，在进行蒙特卡洛树搜索（MCTS）时，棋盘位置会通过随机选择的旋转或反射进行变换，然后由神经网络进行评估，以便蒙特卡洛评估能够覆盖不同的偏差。</p>
+</li>
+<li>
+<p>为了适应更广泛的游戏类别，AlphaZero <strong>不假设对称性</strong>：国际象棋和将棋不具有这种对称性（兵只能向前移动，王车易位王侧和后侧规则不同，不具有反射对称性）。此时，AlphaZero 没有使用对称性来增强训练数据，也没有在 MCTS 中进行棋盘位置的变换。</p>
+</li>
+</ul>
+<hr>
+<ul>
+<li>在 AlphaGo Zero 中，<strong>自对弈游戏</strong>（<strong>self-play</strong>）是由所有先前迭代中的最佳玩家生成的。</li>
+<li>在每次训练迭代后，新玩家的表现会与最佳玩家进行对比；如果新玩家以 55% 的优势获胜，则它会取代最佳玩家。</li>
+<li>与此不同，AlphaZero 始终保持一个单一的神经网络，并持续不断地更新，而不是等待迭代完成。</li>
+<li>自对弈游戏始终使用该神经网络的最新参数生成。</li>
+<li>像 AlphaGo Zero 一样，
+<ul>
+<li><mark><strong>棋盘状态是通过仅基于每个游戏的基本规则的空间平面进行编码的</strong></mark>。</li>
+<li><mark><strong>动作则通过空间平面或平坦的向量进行编码，同样仅基于每个游戏的基本规则</strong></mark>。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<ul>
+<li>AlphaGo Zero 使用了一个卷积神经网络架构，这种架构特别适合围棋：围棋的规则具有平移不变性（与卷积网络的权重共享结构相匹配），并且规则是通过棋盘上点之间的相邻关系来定义的（与卷积网络的局部结构相匹配）。相比之下，国际象棋和将棋的规则是位置依赖的（例如，兵从第二排可以前进两步，并且在第八排升变），并且包含长程的交互作用（例如，皇后可以在一回合内横扫整个棋盘）。尽管存在这些差异，<strong>AlphaZero 在国际象棋、将棋和围棋中仍然使用与 AlphaGo Zero 相同的卷积网络架构。</strong></li>
+<li>AlphaGo Zero 的超参数是通过贝叶斯优化进行调整的。**在 AlphaZero 中，我们为所有游戏重用了相同的超参数、算法设置和网络架构，而没有进行针对特定游戏的调整。**唯一的例外是探索噪声和学习率调度。</li>
+<li>我们为国际象棋、将棋和围棋训练了独立的 AlphaZero 实例。训练进行了 700,000 步（每个小批量包含 4,096 个训练位置），从随机初始化的参数开始。</li>
+<li>在训练期间，使用了 5,000 个第一代张量处理单元（TPU）（19）来生成自对弈游戏，并使用了 16 个第二代 TPU 来训练神经网络。</li>
+<li>训练分别持续了约 9 小时（国际象棋）、12 小时（将棋）和 13 天（围棋）。</li>
+</ul>
+<p><img src="/images/loading.webp" data-original="F1.webp" alt="webp"></p>
+<ul>
+<li>上图中展示了 AlphaZero 在自对弈强化学习过程中的表现，训练步骤的函数关系，使用的是 Elo 等级。
+<ul>
+<li>在国际象棋中，AlphaZero 在仅 4 小时（300,000 步）后首次超越 Stockfish；</li>
+<li>在将棋中，AlphaZero 在 2 小时（110,000 步）后首次超越 Elmo；</li>
+<li>而在围棋中，AlphaZero 在 30 小时（74,000 步）后首次超越 AlphaGo Lee。</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>​	<strong>Elo 等级</strong>（Elo rating）是一种用于衡量棋手或其他对抗性游戏玩家水平的系统，广泛应用于国际象棋、围棋、足球等多个领域。该系统由匈牙利裔美国物理学家 <strong>阿尔帕德·厄尔欧</strong>（Arpad Elo）于 20 世纪 50 年代提出，旨在提供一种公平和准确的方式来评估玩家之间的实力差距。</p>
+<p><strong>Elo 等级的基本原理</strong></p>
+<p>​	Elo 等级系统的核心思想是通过对局结果来动态调整玩家的等级分数。每次对局后，根据比赛的胜负情况、对手的实力等因素，玩家的等级分数会发生变化。具体而言，Elo 等级系统有以下几个关键点：</p>
+<ol>
+<li>
+<p><strong>初始等级</strong>：</p>
+<ul>
+<li>每个玩家初始时会有一个基本的等级分数，通常是 1200 或 1500（具体数值可能因竞技项目而异）。</li>
+</ul>
+</li>
+<li>
+<p><strong>等级变化</strong>：</p>
+<ul>
+<li>每次比赛后，玩家的 Elo 等级会根据比赛结果进行调整。如果一个低等级的玩家击败了一个高等级的玩家，那么低等级玩家的 Elo 分数会增加得更多，而高等级玩家的 Elo 分数会下降得更多。</li>
+<li>相反，如果高等级玩家击败低等级玩家，胜者的 Elo 分数会略微增加，败者的 Elo 分数则会略微下降。</li>
+</ul>
+</li>
+<li>
+<p><strong>计算公式</strong>： Elo 等级的变化是通过以下公式计算的：</p>
+<p>$R’ = R + K \times (S - E)$</p>
+<ul>
+<li>
+<p>$R’$ 是比赛后的新等级分数。</p>
+</li>
+<li>
+<p>$R$ 是比赛前的等级分数。</p>
+</li>
+<li>
+<p>$K$ 是一个常数，决定了等级变化的幅度，通常在 10 到 40 之间。高等级的玩家通常使用较小的 $K$ 值，而新手玩家或较低等级玩家使用较大的 $K$ 值。</p>
+</li>
+<li>
+<p>$S$ 是比赛的实际结果，胜者为 1，平局为 0.5，失败者为 0。</p>
+</li>
+<li>
+<p>$E$ 是预期的比赛结果，通常通过双方的 Elo 等级差来计算。预期结果是基于两位玩家等级的差距，计算公式为：</p>
+<p>$E = \frac{1}{1 + 10^{(R_{\text{opponent}} - R) / 400}}$</p>
+<p>其中 $R_{\text{opponent}}$ 是对手的 Elo 等级，$R$ 是玩家的 Elo 等级。</p>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>胜负关系的影响</strong>：</p>
+<ul>
+<li>如果两个玩家的 Elo 等级差距很大，低等级的玩家获胜时，会获得更多的分数，而高等级的玩家会失去更多的分数。</li>
+<li>如果两位玩家的 Elo 等级相近，胜负的影响就会较小，等级的变动也会较为平缓。</li>
+</ul>
+</li>
+<li>
+<p><strong>平局的处理</strong>：</p>
+<ul>
+<li>在 Elo 系统中，平局的处理是通过赋予两个玩家中等的等级变化来进行的。例如，若两位玩家的等级差距较小，平局可能意味着双方等级都会略微变化。</li>
+</ul>
+</li>
+</ol>
+</blockquote>
+<ul>
+<li>我们分别将完全训练好的 AlphaZero 实例与国际象棋中的 Stockfish、将棋中的 Elmo 和围棋中的 AlphaGo Zero 进行了对抗评估。每个程序都运行在为其设计的硬件上：
+<ul>
+<li>Stockfish 和 Elmo 使用 44 个中央处理单元（CPU）核心（如同 TCEC 世界冠军赛中一样），而 AlphaZero 和 AlphaGo Zero 使用单台配备四个第一代 TPU 和 44 个 CPU 核心的机器（24）。国际象棋比赛与 2016 年 TCEC（第 9 赛季）世界冠军 Stockfish 对弈。</li>
+<li>将棋比赛与 2017 年 CSA 世界冠军版 Elmo 对弈。</li>
+<li>围棋比赛与之前发布的 AlphaGo Zero 版本对弈（该版本同样训练了 700,000 步）。</li>
+</ul>
+</li>
+<li>所有比赛都使用了每局 3 小时的时间控制，每步棋额外增加 15 秒。</li>
+</ul>
+<hr>
+<ul>
+<li><strong>围棋</strong>：AlphaZero 击败了 AlphaGo Zero，赢得了 61% 的比赛，证明通用方法能够恢复原本通过棋盘对称性获得更多数据的算法表现。</li>
+<li><strong>国际象棋</strong>：AlphaZero 击败了 Stockfish，在 1,000 场比赛中赢得了 155 场，输了 6 场。AlphaZero 在常见人类开局中表现优异，甚至在 2016 年 TCEC 世界冠军赛使用的开局中也获胜。此外，AlphaZero 在与不同版本的 Stockfish 对弈中均以大比分获胜。</li>
+<li><strong>将棋</strong>：AlphaZero 击败了 Elmo，在黑棋时赢得了 98.2% 的比赛，总胜率为 91.2%。在较短时间控制下的比赛中，AlphaZero 依然以大比分获胜。</li>
+</ul>
+<h2 id="mehtods" tabindex="-1" id="Mehtods">Mehtods</h2>
+<h3 id="anatomy-of-a-computer-chess-program" tabindex="-1" id="Anatomy-of-a-Computer-Chess-Program">Anatomy of a Computer Chess Program</h3>
+<p><strong>计算机国际象棋程序剖析</strong></p>
+<blockquote>
+<p>​	Alpha-beta 剪枝通过减少搜索树中不必要的分支来提高效率。其基本原理是，当一个分支的评估结果已经足够好（对于当前玩家来说），就可以提前停止对这个分支的进一步搜索。这样就避免了对不可能影响最终决策的分支进行计算，从而减少了搜索的状态数。</p>
+<p><strong>Alpha-beta 剪枝的工作原理</strong></p>
+<ol>
+<li><strong>Minimax 基本思想</strong>：在一个给定的局面中，Max 玩家（假设是“我方”）会选择能<strong>最大化其得分</strong>的动作，而 Min 玩家（假设是“对方”）会选择能<strong>最小化得分</strong>的动作。</li>
+<li><strong>Alpha 和 Beta 值</strong>：
+<ul>
+<li><strong>Alpha</strong>：当前 Max 玩家（“我方”）的最佳选择的最小值。在搜索过程中，Alpha 会随着每一层的 Max 玩家逐步更新，表示 Max 玩家能够保证的最低得分。</li>
+<li><strong>Beta</strong>：当前 Min 玩家（“对方”）的最佳选择的最大值。在搜索过程中，Beta 会随着每一层的 Min 玩家逐步更新，表示 Min 玩家能够保证的最高得分。</li>
+</ul>
+</li>
+<li><strong>剪枝的过程</strong>：
+<ul>
+<li>在搜索树的某个节点，Max 玩家已经知道，<strong>若继续搜索某个分支将无法改善其当前得分（因为 Beta &lt;= Alpha），就可以停止对该分支的搜索</strong>，称为<strong>剪枝</strong>。</li>
+<li>同理，Min 玩家也会剪枝那些其最优策略已不可能被改善的分支。</li>
+</ul>
+</li>
+</ol>
+</blockquote>
+<p>​	每个棋局位置 $s$ 由一个稀疏向量表示，向量包含<strong>手工设计的特征</strong> $\phi(s)$，其中包括中局/残局特定的棋子点值、棋子不平衡表、棋子-格表、棋子活动性和被困棋子、兵结构、王安全、前哨、象对等其他杂项评估模式。每个特征 $\phi_i$ 通过手动和自动调节的组合，分配一个相应的权重 $w_i$，并通过线性组合来评估位置：</p>
+<p>$$v(s, w) = \phi(s)^\top w$$</p>
+<p>​	然而，这个原始评估仅在“安静”位置（没有未解决的吃子或将军）时被认为是准确的。在应用评估函数之前，使用一个领域特定的静态搜索（quiescence search）来解决正在进行的战术情况。</p>
+<p>​	位置 $s$ 最终的评估通过极小化搜索（minimax search）来计算，该搜索使用静态搜索来评估每个叶子节点。Alpha-beta 剪枝用于安全地剪除任何被另一变化支配的分支。通过使用预期窗口和主要变化搜索，还可以实现额外的剪枝。其他剪枝策略包括空手走剪枝（null move pruning），它假设在不太可能处于逼迫位置（zugzwang）的情况下，传递走棋应比任何变化差，具体取决于简单的启发式方法；无效剪枝（futility pruning），它假设已知评估的最大可能变化；以及其他领域依赖的剪枝规则（它们假设已知被吃棋子的价值）。</p>
+<p>​	搜索的重点是有前途的变化，通过扩展有前途的变化的搜索深度，并通过减少搜索深度的基础上，如历史，静态交换评估（SEE）和移动件类型的无前途的变化。扩展是基于域独立的规则，识别奇异的移动没有合理的替代品，和域相关的规则，如扩展检查移动。减少，如后期移动减少，在很大程度上是基于领域知识。</p>
+<p>​	Alpha-beta 搜索的效率关键取决于考虑移动的顺序。因此，通过迭代深化（使用较浅的搜索来为更深的搜索排序移动）来排序移动。此外，结合领域独立的移动排序算法，如杀手启发式，历史启发式，反移动启发式，以及基于捕获（SEE）和潜在捕获（MVV/LVA）的领域相关知识。</p>
+<p>​	当多条路径到达同一位置时，换位表便于重新使用值和移动顺序。在某些变体中，可以使用仔细调整的开局书来在游戏开始时选择移动。一个残局表库，预先计算详尽的逆行分析残局的立场，提供了最佳的行动在所有立场与六个，有时七个或更少。</p>
+<p>​	其他强大的国际象棋程序，包括早期的程序如 Deep Blue，也使用了非常相似的架构，其中包括上述描述的大多数组件，尽管重要细节差异很大。</p>
+<p>​	<strong>本节中描述的技术都未被 AlphaZero 使用。<strong>尽管这些技术可能会进一步提升 AlphaZero 的性能，但我们</strong>专注于纯粹的自对弈强化学习方法，将这些扩展留待未来的研究。</strong></p>
+<h3 id="prior-work-on-computer-chess-and-shogi" tabindex="-1" id="Prior-Work-on-Computer-Chess-and-Shogi">Prior Work on Computer Chess and Shogi</h3>
+<p><strong>计算机国际象棋和将棋的前期工作</strong></p>
+<p>​	早期的 AI 都将其学习的评估功能与通过各种扩展增强的 alpha-beta 搜索相结合。</p>
+<p>​	相比之下，基于使用类似于 AlphaZero 的策略迭代算法训练双重策略和价值网络的方法成功应用于游戏 Hex。这项工作在几个方面与 AlphaZero 不同：策略网络是通过模仿预先存在的 MCTS 搜索算法来初始化的，并通过推出来增强；网络随后在每次迭代中从头开始重新训练；价值目标是基于使用原始策略网络的自玩游戏的结果，而不是 MCTS 搜索。</p>
+<h2 id="mcts-and-alpha-beta-search" tabindex="-1" id="MCTS-and-Alpha-Beta-Search">MCTS and Alpha-Beta Search</h2>
+<p>​	在至少四十年的时间里，最强大的计算机国际象棋程序都使用了带有手工设计评估函数的 alpha-beta 搜索。使用传统蒙特卡洛树搜索（MCTS）的国际象棋程序远弱于基于 alpha-beta 搜索的程序，而且基于神经网络的 alpha-beta 程序之前也无法与更快的手工设计评估函数竞争。</p>
+<p>​	令人惊讶的是，<strong>AlphaZero 通过有效地结合 MCTS 和神经网络超越了以往的方法</strong>。AlphaZero 使用深度神经网络非线性地评估棋局位置，而不是典型国际象棋程序中使用的线性评估函数。这提供了更强大的评估功能，但也可能引入更大的最坏情况泛化误差。当与 alpha-beta 搜索结合使用时，alpha-beta 搜索计算一个显式的极小化极大值（minimax），通常最大的误差会直接传播到子树的根节点。相比之下，AlphaZero 的 MCTS 对子树中的位置评估进行平均，而不是计算该子树的极小化极大值。我们推测，神经网络引入的近似误差在评估大型子树时往往会相互抵消。</p>
+<h2 id="domain-knowledge" tabindex="-1" id="Domain-Knowledge">Domain Knowledge</h2>
+<p>​	AlphaZero 被提供了关于每个游戏的以下领域知识：</p>
+<ol>
+<li>描述棋局位置的输入特征和描述棋步的输出特征被结构化为一组平面；<strong>即神经网络架构与棋盘的网格结构相匹配。</strong></li>
+<li>AlphaZero 被提供了完美的游戏规则知识。这些知识在 MCTS 中使用，用于模拟由一系列棋步产生的棋局位置，确定游戏结束，并对达到终局状态的任何模拟进行评分。</li>
+<li>游戏规则的知识还用于编码输入平面（即王车易位、重复局面、无进展等）和输出平面（如棋子的移动方式、升变、以及将棋中的棋子落子）。</li>
+<li>使用典型的合法棋步数量来调整探索噪声（见下文）。</li>
+<li>超过 512 步的国际象棋和将棋游戏会被终止，并赋予平局结果；超过 722 步的围棋游戏会被终止，并根据 Tromp-Taylor 规则（围棋中的一种规则）进行评分，类似于之前的工作。</li>
+</ol>
+<p>​	AlphaZero 没有使用开场书、残局表库或特定领域的语法。</p>
+<h2 id="search" tabindex="-1" id="Search">Search</h2>
+<p>​	我们简要描述了 AlphaZero 使用的蒙特卡洛树搜索（MCTS）算法；更多的细节可以在补充材料中的伪代码中找到。</p>
+<p>​	每个状态-动作对 $(s, a)$ 存储一组统计数据：</p>
+<p>$${N(s, a), W(s, a), Q(s, a), P(s, a)}$$</p>
+<p>，其中 $N(s, a)$ 是访问次数，$W(s, a)$ 是总动作值，$Q(s, a)$ 是平均动作值，$P(s, a)$ 是在状态 $s$ 中选择动作 $a$ 的先验概率。</p>
+<p>​	每次模拟从搜索树的根节点 $s_0$ 开始，在模拟到达叶节点 $s_L$ 的时间步 $L$ 时结束。在这些时间步 $t &lt; L$ 中，使用 PUCT 算法（47）的变体选择一个动作 $a_t = \arg \max_a \left( Q(s_t, a) + U(s_t, a) \right)$，其中</p>
+<p>$$U(s, a) = C(s)P(s, a) \frac{\sqrt{N(s)}}{1 + N(s, a)}$$</p>
+<p>其中 $N(s)$ 是父节点的访问次数，$C(s)$ 是探索率，随着搜索时间缓慢增长，定义为</p>
+<p>$$C(s) = \log \left( \frac{1 + N(s) + c_{\text{base}}}{c_{\text{base}}} \right) + c_{\text{init}},$$</p>
+<p>​	但在快速训练游戏中基本保持不变。叶节点 $s_L$ 被添加到一个队列中以进行神经网络评估，$(p, v) = f_\theta(s_L)$。然后展开叶节点，并且每个状态-动作对 $(s_L, a)$ 被初始化为</p>
+<p>$${N(s_L, a) = 0, W(s_L, a) = 0, Q(s_L, a) = 0, P(s_L, a) = p_a}.$$</p>
+<p>随后，在从步骤 $t \leq L$ 的反向传递中，更新访问次数和数值：</p>
+<p>$$N(s_t, a_t) = N(s_t, a_t) + 1, \quad W(s_t, a_t) = W(s_t, a_t) + v, \quad Q(s_t, a_t) = \frac{W(s_t, a_t)}{N(s_t, a_t)}.$$</p>
+<h2 id="representation" tabindex="-1" id="Representation">Representation</h2>
+<p>​	在本节中，我们描述了 AlphaZero 中<strong>神经网络使用的棋盘输入表示和动作输出表示</strong>。虽然可以使用其他表示方法，但在我们的实验中，训练算法在许多合理的选择下都能稳健地工作。</p>
+<h3 id="%E8%BE%93%E5%85%A5%E8%A1%A8%E7%A4%BA" tabindex="-1" id="输入表示">输入表示</h3>
+<ul>
+<li>神经网络的输入是一个 $N \times N \times (MT + L)$ 的图像堆栈，
+<ul>
+<li>使用 $T$ 组每组 $M$ 个大小为 $N \times N$ 的平面拼接来表示状态。每组平面表示时间步 $t - T + 1, …, t$ 时的棋盘位置，对于小于 1 的时间步，设置为零。</li>
+<li>棋盘朝向当前玩家的视角。$M$ 个特征平面由二进制特征平面组成，用于表示玩家棋子的位置，每个棋子类型对应一个平面，第二组平面表示对手棋子的位置。对于将棋，额外的平面表示每种类型被俘虏的棋子数量。</li>
+<li>还有 $L$ 个常量值的输入平面，表示玩家的颜色、走棋回合数和特殊规则的状态：在国际象棋中表示王车易位的合法性（王翼或后翼）；表示当前棋局的重复次数（在国际象棋中，三次重复为自动和棋，在将棋中为四次）；</li>
+<li>以及国际象棋中的无进展回合数（50 步无进展为自动和棋）。</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>​	在这里，“平面”（plane）指的是一个二维的矩阵或数组，通常用于表示棋盘中的不同特征或信息。每个平面包含了棋盘上每个位置（例如每个格子）的值。对于 AlphaZero 的神经网络而言，输入的每一个平面都代表了棋盘的一个特定特征，比如玩家的棋子、对手的棋子、棋子的移动范围等。</p>
+<p>具体解释：</p>
+<ul>
+<li><strong>平面的维度</strong>：每个平面是一个大小为 $N \times N$ 的矩阵，在国际象棋中，$N$ 通常是 $8$，因为棋盘是 $8\times8$ 的格子。在将棋中，$N$ 是 $9$，因为棋盘是 $9\times9$ 的格子。而在围棋中，$N$ 是 $19$。</li>
+<li><strong>每个平面的含义</strong>：
+<ul>
+<li><strong>棋子存在的平面</strong>：每个平面可能表示某一类棋子的位置（例如，所有白色棋子的平面、所有黑色棋子的平面）。</li>
+<li><strong>特殊规则的平面</strong>：例如，某个平面可能表示棋盘上是否发生了王车易位，或者表示某种特殊规则，如吃子或棋局是否无进展。</li>
+</ul>
+</li>
+<li><strong>多平面的堆叠</strong>：神经网络的输入是一个多个平面堆叠在一起的结构，每一组平面表示一个特定的棋盘状态。例如，AlphaZero 会将多个平面（如棋盘上每种棋子的分布）堆叠在一起，形成一个多层的表示，这样神经网络就能处理和理解更复杂的信息。</li>
+</ul>
+</blockquote>
+<p><img src="/images/loading.webp" data-original="S1.webp" alt="webp"></p>
+<p style="text-align: center;">AlphaZero 分别在围棋、国际象棋和将棋中使用的输入功能。在 $T=8$ 步历史中，对每个位置重复第一组特征。计数由单个实值输入表示；其他输入特征由使用指定数量的二进制输入平面的独热编码表示。当前玩家用 $\mathrm{P}1$ 表示，对手用 $\mathrm{P}2$ 表示。</p>
+<h3 id="%E5%8A%A8%E4%BD%9C%E8%A1%A8%E7%A4%BA" tabindex="-1" id="动作表示">动作表示</h3>
+<ul>
+<li>
+<p><strong>国际象棋</strong>中的一步棋可以分为两部分：首先选择要移动的棋子，然后选择该棋子可能的移动方式。我们通过一个 $8 \times 8 \times 73$ 的平面堆栈来表示策略 $\pi(a|s)$，该堆栈编码了 $4,672$ 种可能走法的概率分布。</p>
+<ul>
+<li>
+<p>每个 $8 \times 8$ 的位置标识了“拿起”棋子的方格。</p>
+</li>
+<li>
+<p>前 $56$ 个平面编码了任何棋子的“后宫走法”（除了马之外，其余棋子的走法均是后走法的子集）：表示棋子可以移动的方格数 $[1…7]$，并且沿着八个相对的方向之一 ${N, NE, E, SE, S, SW, W, NW}$ 移动。</p>
+</li>
+<li>
+<p>接下来的 $8$ 个平面编码了该棋子的骑士走法。</p>
+</li>
+<li>
+<p>最后的 $9$ 个平面编码了兵走或吃子的可能升变走法，在两个可能的对角线上分别升变为骑士、象或车。来自七路的其他兵走或吃子则升变为后。</p>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>将棋</strong>中的策略由一个 $9 \times 9 \times 139$ 的平面堆栈表示，同样编码了 $11,259$ 种可能走法的概率分布。</p>
+<ul>
+<li>前 $64$ 个平面编码了“后宫走法”，接下来的 $2$ 个平面编码了骑士（桂马）走法。</li>
+<li>额外的 $64 + 2$ 个平面分别编码了升变为后的走法和升变为骑士的走法。（我不太明白为什么要这么设计）</li>
+<li>最后的 $7$ 个平面编码了被俘棋子被放回棋盘上的位置。</li>
+</ul>
+</li>
+<li>
+<p><strong>围棋</strong>中的策略与 AlphaGo Zero 相同，使用一个平坦的分布表示 $19×19+1$ 个可能的走子和过棋走法。我们也尝试过使用国际象棋和将棋的平坦分布，最终结果几乎相同，尽管训练速度略慢。非法走法通过将它们的概率设置为零来屏蔽，然后对剩余的合法走法重新归一化概率。</p>
+</li>
+<li>
+<p>通过将非法移动的概率设置为 $0$，并在剩余的合法的移动集合上重新标准化概率，来掩盖非法移动。</p>
+</li>
+</ul>
+<p><img src="/images/loading.webp" data-original="S2.webp" alt="webp"></p>
+<h2 id="architecture" tabindex="-1" id="Architecture">Architecture</h2>
+<p>​	除了上述描述的位置和动作表示外，AlphaZero 使用与 AlphaGo Zero 相同的网络架构，在此简要回顾。</p>
+<ul>
+<li><strong>神经网络由一个“主体”和两个“头”组成，分别是策略头和价值头</strong>。
+<ul>
+<li><strong>主体部分</strong>由一个经过修正的批量归一化卷积层组成，后接 $19$ 个残差块。每个残差块由两个修正的批量归一化卷积层组成，并有跳跃连接。每个卷积层应用 $256$ 个 $3\times3$ 大小的卷积滤波器，步幅为 $1$。</li>
+<li><strong>策略头</strong>在此基础上应用一个额外的修正批量归一化卷积层，接着是一个最终的卷积层，棋盘游戏（国际象棋）使用 $73$ 个滤波器，将棋使用 $139$ 个滤波器，围棋使用一个大小为 362 的线性层，表示上述策略的 logits。</li>
+<li><strong>价值头</strong>在此基础上应用一个额外的修正批量归一化卷积层，使用一个 $1\times 1$ 大小的滤波器，步幅为 $1$，接着是一个修正线性层，大小为 $256$，并通过一个 $\tanh$ 激活的线性层输出一个大小为 $1$ 的结果。
+<ul>
+<li><strong>1</strong> 表示当前局面非常有利于当前玩家（即局面接近胜利）。</li>
+<li><strong>-1</strong> 表示当前局面非常不利于当前玩家（即局面接近失败）。</li>
+<li><strong>0</strong> 表示当前局面是平局。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h1 id="%E4%BB%A3%E7%A0%81" tabindex="-1">代码</h1>
 <h2 id="%E9%85%8D%E7%BD%AE%E7%8E%AF%E5%A2%83" tabindex="-1" id="配置环境">配置环境</h2>
 <p>​	从 <a target="_blank" rel="noopener" href="https://github.com/cestpasphoto/alpha-zero-general">cestpasphoto/alpha-zero-general: A very fast implementation of AlphaZero, applied to games like Splendor, Santorini, The Little Prince, … Browser version available</a> 获取源码，搭建环境：</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs shell">conda create -n AlphaZero python=3.9<br>conda activate AlphaZero<br>pip3 install onnxruntime onnx numba tqdm colorama coloredlogs<br>pip3 install torch torchvision --extra-index-url https://download.pytorch.org/whl/cpu<br></code></pre></td></tr></table></figure>
@@ -424,7 +742,7 @@
 <div class="markdown-alert markdown-alert-caution"><p class="markdown-alert-title"><svg class="octicon octicon-stop mr-2" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="M4.47.22A.749.749 0 0 1 5 0h6c.199 0 .389.079.53.22l4.25 4.25c.141.14.22.331.22.53v6a.749.749 0 0 1-.22.53l-4.25 4.25A.749.749 0 0 1 11 16H5a.749.749 0 0 1-.53-.22L.22 11.53A.749.749 0 0 1 0 11V5c0-.199.079-.389.22-.53Zm.84 1.28L1.5 5.31v5.38l3.81 3.81h5.38l3.81-3.81V5.31L10.69 1.5ZM8 4a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 8 4Zm0 8a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Caution</p><p></p>
 <p>​	编辑代码，由于版本问题，得把代码中的某个 <code>np.bool8</code> 改成 <code>np.bool_</code>。</p>
 </div>
-<h2 id="%E8%AE%AD%E7%BB%83" tabindex="-1" id="训练">训练</h2>
+<h2 id="%E8%AE%AD%E7%BB%83-splendor" tabindex="-1" id="训练-Splendor">训练 Splendor</h2>
 <p>​	训练一个《璀璨宝石》的 AI：</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">python main.py splendor -m 800 -f 0.1 -l 0.0003 -D 0.3 -C ../results/mytest -V 74<br></code></pre></td></tr></table></figure>
 <p>​	一开始会显示训练所设置的参数：</p>
@@ -610,8 +928,210 @@
 </tr>
 </tbody>
 </table>
-<p><img src="/images/loading.webp" data-original="01.webp" alt="webp"></p>
+<p><img src="/images/loading.webp" data-original="T1.webp" alt="webp"></p>
 <p>​	之后就慢慢等吧……CPU 几乎也没啥占用率（所以还可以流畅地干别的事，不知道是好是坏😅）。</p>
+<h2 id="%E6%B8%B8%E6%88%8F-splendor" tabindex="-1" id="游戏-Splendor">游戏 Splendor</h2>
+<p>​	由于版本问题（应该吧），需要修改 <code>Arena.py</code> 里 85 行开始的一部分：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">if</span> verbose:<br>    <span class="hljs-comment"># data = board.tobytes() + curPlayer.to_bytes(1) + it.to_bytes(2)</span><br>    data = board.tobytes() + curPlayer.to_bytes(<span class="hljs-number">1</span>, byteorder=<span class="hljs-string">&#x27;big&#x27;</span>) + it.to_bytes(<span class="hljs-number">2</span>, byteorder=<span class="hljs-string">&#x27;big&#x27;</span>)<br>    <span class="hljs-comment"># compressed_board = base64.b64encode(zlib.compress(data, level=9, wbits=-15))</span><br>    compressobj = zlib.compressobj(level=<span class="hljs-number">9</span>, method=zlib.DEFLATED, wbits=-<span class="hljs-number">15</span>)<br>    compressed_board = base64.b64encode(compressobj.compress(data) + compressobj.flush())<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">f&#x27;state = &quot;<span class="hljs-subst">&#123;<span class="hljs-built_in">str</span>(compressed_board, <span class="hljs-string">&quot;UTF-8&quot;</span>)&#125;</span>&quot;&#x27;</span>)<br></code></pre></td></tr></table></figure>
+<p>​	输入如下命令开始游戏！</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">python /pit.py splendor splendor/pretrained_2players.pt splendor/pretrained_2players.pt -n 1 --display<br></code></pre></td></tr></table></figure>
+<p>​	或</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">python ./pit.py splendor splendor/pretrained_2players.pt human -n 1<br></code></pre></td></tr></table></figure>
+<p>​	就可以与模型 <code>splendor/pretrained_2players.pt</code> 开始游戏！</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">splendor/pretrained_2players.pt vs human<br></code></pre></td></tr></table></figure>
+<p><img src="/images/loading.webp" data-original="G1.webp" alt="webp"></p>
+<p>​	渲染了一个棋盘，此局 AI（Player 0）先行。</p>
+<p><img src="/images/loading.webp" data-original="G2.webp" alt="webp"></p>
+<p>​	AI 选择拿一个黄金预留一张卡。现在到我们的回合，输入 <code>+</code> 展示所有可能的步骤。</p>
+<p><img src="/images/loading.webp" data-original="G3.webp" alt="webp"></p>
+<p>​	这里我们选择了命令 <code>12</code>。</p>
+<p>​	后面慢慢玩吧。</p>
+<p><img src="/images/loading.webp" data-original="G4.webp" alt="webp"></p>
+<p>​	最后输给 AI 了😵。</p>
+<h2 id="%E5%88%86%E6%9E%90%E4%BB%A3%E7%A0%81" tabindex="-1" id="分析代码">分析代码</h2>
+<pre class="mermaid">---
+title: Alpha Zero General (Splendor)
+---
+classDiagram
+    class Coach {
+    	%% 游戏对象
+        + game
+        %% 神经网络对象
+    	+ nnet
+    	%% 竞争对象网络
+    	+ pnet
+    	%% 训练参数
+    	+ args
+    	%% 蒙特卡洛搜索
+    	+ mcts
+    	%% 训练示例的历史记录
+    	+ trainExamplesHistory
+    	%% 指示是否跳过第一次自我对弈
+    	+ skipFirstSelfPlay
+    	%% 训练失败计数
+    	+ consecutive_failures
+    	%% 并行推理使用的线程数
+    	+ nb_threads
+    	%% 进行一次自我对弈
+    	+ executeEpisode()
+    	%% 管理线程
+    	+ executeEpisodes_batch()
+    	%% 管理自我对弈过程
+    	+ executeEpisodes()
+    	%% 迭代过程
+    	+ learn()
+    	%% 生成检查点文件的名称
+    	+ getCheckpointFile()
+    	%% 将当前的训练示例历史记录保存到文件中
+    	+ saveTrainExamples()
+    	%% 加载先前保存的训练示例
+    	+ loadTrainExamples()
+    }
+    
+    class Arena {
+    	+ player1
+    	+ player2
+    	%% 游戏对象
+    	+ game
+    	%% 是否以可视方式打印棋盘状态
+    	+ display
+    	%% 执行一次完整的游戏对局
+    	+ playGame()
+    	%% 执行多次游戏对局（训练中使用）
+    	+ playGames()
+    }
+    
+    class Game {
+    	%% 获取游戏的初始棋盘状态
+    	+ getInitBoard()
+    	%% 获取棋盘尺寸
+    	+ getBoardSize()
+    	%% 获取所有动作数量
+    	+ getActionSize()
+    	%% 获取下一步的状态
+    	+ getNextState()
+    	%% 获取合法动作
+    	+ getValidMoves()
+    	%% 检查游戏是否结束，返回游戏结果
+    	+ getGameEnded()
+    	%% 返回指定玩家得分
+    	+ getScore()
+    	%% 返回轮数
+    	+ getRound()
+    	%% 返回棋盘的规范形式，确保它与当前玩家无关
+    	+ getCanonicalForm()
+    	%% 返回棋盘及对应策略向量的对称形式列表
+    	+ getSymmetries()
+    	%% 返回棋盘的字符串表示
+    	+ stringRepresentation()
+    	%% 返回当前游戏支持的玩家数量
+    	+ getNumberOfPlayers()
+    	%% 将动作编码转换为人类可读的字符串
+    	+ moveToString()
+    	%% 打印棋盘的可视化表示
+    	+ printBoard()
+    }
+    
+    class NeuralNet {
+    	%% 训练模型
+    	+ train()
+    	%% 预测模型
+    	+ predict()
+    	%% 保存检查点
+    	+ save_checkpoint()
+    	%% 读取检查点
+    	+ load_checkpoint()
+    }
+    
+    class MCTS {
+    	+ game
+    	+ nnet
+    	+ args
+    	+ dirichlet_noise
+    	%% 节点数据
+    	+ nodes_data
+    	%% 从一个给定的状态（canonicalBoard）开始进行模拟，计算出每个可能动作的概率分布。
+    	+ getActionProb()
+    	%% 蒙特卡洛搜索
+    	+ search()
+    	%% 添加 Dirichlet 噪声
+    	+ applyDirNoise()
+    }
+    
+    class SplendorGame {
+    	%% 玩家数量
+    	+ num_players
+    	%% 棋盘
+    	+ board
+    }
+    
+    class Board {
+		+ num_players
+		%% 当前进行的玩家索引
+		+ current_player_index
+		+ num_gems_in_play
+		+ num_nobles
+		+ max_moves
+		+ score_win
+		+ state
+		+ get_score()
+		+ init_game()
+		+ get_state()
+		+ valid_moves()
+		+ make_move()
+		+ copy_state()
+		+ check_end_game()
+		+ swap_players()
+		+ get_symmetries()
+		+ get_round()
+		+ _get_deck_card()
+		+ _fill_new_card()
+		+ _buy_card()
+		+ _valid_buy()
+		+ _buy()
+		+ _valid_reserve()
+		+ _reserve()
+		+ _valid_buy_reserve()
+		+ _buy_reserve()
+		+ _valid_get_gems()
+		+ _valid_get_gems_identical()
+		+ _get_gems()
+		+ _valid_give_gems()
+		+ _valid_give_gems_identical()
+		+ _give_gems()
+		+ _give_nobles_if_earned()
+		+ _nb_of_reserved_cards()
+		+ _nb_of_cards()
+	}
+    
+    class SplendorNNet {
+    	+ nb_vect
+    	+ vect_dim
+    	+ action_size
+    	+ num_players
+    	+ args
+    	+ version
+    	+ first_layer
+    	+ trunk
+    	+ output_layers_PI
+    	+ output_layers_V
+    	+ __init__()
+    	+ forward()
+    }
+    
+    Game --> Arena
+    Game --> Coach
+    Game --> MCTS
+    NeuralNet --> MCTS
+    SplendorGame ..|> Game
+    SplendorNNet ..|> NeuralNet
+    MCTS ..> Arena
+    MCTS --> Coach
+    Arena ..> Coach
+    NeuralNet --> Coach
+    Board --> SplendorGame
+    Board ..> SplendorNNet
+    SplendorGame ..> SplendorNNet</pre>
 
             </article>
             
@@ -671,6 +1191,10 @@
     
         <div class="post-paging">     
             <div class="post-paging-last">
+                
+                    <a href="/posts/Web-%E6%98%BE%E7%A4%BA%E6%96%87%E6%9C%AC%E6%96%87%E4%BB%B6%E5%B9%B6%E4%BB%A3%E7%A0%81%E9%AB%98%E4%BA%AE/">
+                        上一篇：Web-显示文本文件并代码高亮
+                    </a>
                 
             </div>
             <div class="post-paging-next">
@@ -739,7 +1263,7 @@
                 </a>
                 <a href="/archives" class="aside-top-about-site-item">
                     <span class="title">归档</span>
-                    <span class="count">388</span>
+                    <span class="count">389</span>
                 </a>
             </div>
             <div class="aside-top-about-contact">
@@ -820,11 +1344,20 @@
 <script src="/js/plugins/highlight_tools.js"></script>
 
 	<script>
-		var copyIcon = "/images/icon/copy.png";
-		var closeCodeBlockIcon = "/images/icon/close_code_block.png";
-		var highlightShrink = "";
-		var HighlightHeightLimit = "";
+		const  COPY_ICON = "/images/icon/copy.png";
+		const CLOSE_CODE_BLOCK_ICON = "/images/icon/close_code_block.png";
+		const HIGHLIGHT_SHRINK = "";
+		const HIGHLIGHT_HEIGHT_LIMIT = "";
 	</script>
+
+	
+		<script src='/js/mermaid.min.js'></script>
+		<script>mermaid.initialize({startOnLoad:false});</script>
+		
+<link rel="stylesheet" href="/css/plugins/mermaid.css">
+
+		
+<script src="/js/plugins/mermaid.js"></script>
 
 	
 	

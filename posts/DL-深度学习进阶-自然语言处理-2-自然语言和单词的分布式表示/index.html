@@ -492,7 +492,7 @@
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">create_co_matrix</span>(<span class="hljs-params">corpus, vocab_size, window_size=<span class="hljs-number">1</span></span>):<br>    <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">    直接从语料库生成共现矩阵</span><br><span class="hljs-string">    corpus: 单词 ID 列表</span><br><span class="hljs-string">    vocab_size: 词汇个数</span><br><span class="hljs-string">    window_size: 窗口大小</span><br><span class="hljs-string">    &quot;&quot;&quot;</span><br>    corpus_size = <span class="hljs-built_in">len</span>(corpus)<br>    co_matrix = np.zeros((vocab_size, vocab_size), dtype=np.int32)<br>    <span class="hljs-keyword">for</span> idx, word_id <span class="hljs-keyword">in</span> <span class="hljs-built_in">enumerate</span>(corpus):<br>        <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">1</span>, window_size + <span class="hljs-number">1</span>):<br>            left_idx = idx - i<br>            right_idx = idx + i<br><br>            <span class="hljs-keyword">if</span> left_idx &gt;= <span class="hljs-number">0</span>:<br>                left_word_id = corpus[left_idx]<br>                co_matrix[word_id, left_word_id] += <span class="hljs-number">1</span><br><br>            <span class="hljs-keyword">if</span> right_idx &lt; corpus_size:<br>                right_word_id = corpus[right_idx]<br>                co_matrix[word_id, right_word_id] += <span class="hljs-number">1</span><br>    <span class="hljs-keyword">return</span> co_matrix<br></code></pre></td></tr></table></figure>
 <h3 id="2.3.5-%E5%90%91%E9%87%8F%E9%97%B4%E7%9A%84%E7%9B%B8%E4%BC%BC%E5%BA%A6" tabindex="-1" id="2-3-5-向量间的相似度">2.3.5 向量间的相似度</h3>
 <p><strong>余弦相似度（cosine similarity）</strong>。设有 $x=(x_1,x_2,x_3,…,x_n)$ 和 $y=(y_1,y_2,y_3,…,y_n)$ 两个向量，它们之间的余弦相似度定义如下：</p>
-<p>$$\mathrm{similarity}(x,y)=\frac{x\cdot y}{||x||\ ||y||}\frac{x_1y_1+…+x_ny_n}{\sqrt{x<sup>2_1+…+x</sup>2_n}\sqrt{y<sup>2_1+…+y</sup>2_n}}$$</p>
+<p>$$\mathrm{similarity}(x,y)=\frac{x\cdot y}{||x||\ ||y||}\frac{x_1y_1+…+x_ny_n}{\sqrt{x^2_1+…+x^2_n}\sqrt{y^2_1+…+y^2_n}}$$</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">cos_similarity</span>(<span class="hljs-params">x, y</span>):<br>    nx = x / np.sqrt(np.<span class="hljs-built_in">sum</span>(x ** <span class="hljs-number">2</span>))  <span class="hljs-comment"># x 的正规化</span><br>    ny = y / np.sqrt(np.<span class="hljs-built_in">sum</span>(y ** <span class="hljs-number">2</span>))  <span class="hljs-comment"># y 的正规化</span><br>    <span class="hljs-keyword">return</span> np.dot(nx, ny)<br></code></pre></td></tr></table></figure>
 <p>这里当零向量（元素全部为 0 的向量）被赋值给参数时，会出现“除数为 0”（zero division）的错误。</p>
 <p>通过参数指定一个微小值 eps（eps 是 epsilon 的缩写），并默认 eps=1e-8（= 0.000 000 01）以防止“除数为 0”的错误。</p>
@@ -888,7 +888,7 @@ calculating SVD ...
                 </a>
                 <a href="/archives" class="aside-top-about-site-item">
                     <span class="title">归档</span>
-                    <span class="count">388</span>
+                    <span class="count">389</span>
                 </a>
             </div>
             <div class="aside-top-about-contact">
@@ -4638,6 +4638,15 @@ calculating SVD ...
                             
                         
                     
+                        
+                        
+                            
+                                
+                            
+                                
+                            
+                        
+                    
                 </ol>
                 <div class="aside-top-series-title">
                     <h1>
@@ -4704,10 +4713,10 @@ calculating SVD ...
 <script src="/js/plugins/highlight_tools.js"></script>
 
 	<script>
-		var copyIcon = "/images/icon/copy.png";
-		var closeCodeBlockIcon = "/images/icon/close_code_block.png";
-		var highlightShrink = "";
-		var HighlightHeightLimit = "";
+		const  COPY_ICON = "/images/icon/copy.png";
+		const CLOSE_CODE_BLOCK_ICON = "/images/icon/close_code_block.png";
+		const HIGHLIGHT_SHRINK = "";
+		const HIGHLIGHT_HEIGHT_LIMIT = "";
 	</script>
 
 	

@@ -2,7 +2,7 @@ function initMermaid() {
     $('.mermaid').each(function () {
         // 获取当前 .mermaid 的 innerText
         const innerText = $(this).text();
-        const backgroundImage = `url(${copyIcon})`;
+        const backgroundImage = `url(${ COPY_ICON})`;
 
         // 创建 mermaid-tools div 和 button
         const mermaidTools = $('<div>', { class: 'mermaid-tools' })

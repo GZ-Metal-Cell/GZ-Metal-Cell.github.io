@@ -502,7 +502,7 @@
 <p><img src="/images/loading.webp" data-original="F2.png" alt="png"></p>
 <p>​    为了学习领域不变特征，我们以对抗性的方式优化参数。通过最小化上述域分类损失来优化域分类器的参数，并且通过最大化该损失来优化基础网络的参数。更详细地说，在 EAST 的主干和域分类器之间添加了梯度反向层（GRL），并且当通过 GRL 层时，梯度的符号被反转。</p>
 <p>​    特征金字塔网络（FPN）和骨干网在训练阶段都最小化了 EAST 的原始损耗 $L_{task}$。$L_{task}$ 具体表示 EAST 中的分数图损失和几何图形损失。$L_t$ 任务表示在目标域中使用伪标签进行训练，$L_s$ 任务表示在源域中进行训练。因此，不同参数空间的不同训练目标：</p>
-<p>$$\begin{cases}L_f=min(L_{task}<sup>t(\theta_f|x</sup>t)+L_{task}<sup>s(\theta_f|x</sup>s)-\lambda L_d(\theta|(x<sup>s,x</sup>t)))&amp;\theta_f\in F,\L_d=min(L_d(\theta_d|(x<sup>s,x</sup>t)))&amp;\theta_d\in C,\L_h=min(L_{task}<sup>t(\theta_h|x</sup>t)+L_{task}<sup>s(\theta_h|x</sup>s))&amp;\theta_h\in D,\end{cases}$$</p>
+<p>$$\begin{cases}L_f=min(L_{task}^t(\theta_f|x^t)+L_{task}^s(\theta_f|x^s)-\lambda L_d(\theta|(x^s,x^t)))&amp;\theta_f\in F,\L_d=min(L_d(\theta_d|(x^s,x^t)))&amp;\theta_d\in C,\L_h=min(L_{task}^t(\theta_h|x^t)+L_{task}^s(\theta_h|x^s))&amp;\theta_h\in D,\end{cases}$$</p>
 <p>​    其中 $F$，$C$，$D$ 是主干、域分类器和 FPN 的参数空间。总体训练目标如下：</p>
 <p>$$L=L_f+F_h+\lambda L_d$$</p>
 <p>​    其中 $\lambda$ 是权衡参数，我们在所有实验中将其设置为 0.2。通过优化损失，网络可以学习更多的文本域不变特征，更好地从合成数据转换为真实数据。</p>
@@ -515,10 +515,10 @@
 <p>​    虽然网络是通过反向传播学习背景损失（即负面例子）来优化的，但在伪标签中出现的 $\mathrm{FP}$ 误导了网络。我们假设 $\mathrm{FP}$ 主要是通过硬负挖掘来选择的，例如模糊的文本和与背景相似的不寻常字体。为了减少 $\mathrm{FP}$ 的不利影响，我们忽略了一些有可能成为置信度得分的前景的背景例子。</p>
 <p>​    EAST 的负面例子是像素图，一个像素更有可能被视为负面像素，而相应的置信度得分更高。</p>
 <p>​    因此，我们选择置信度得分最低的负样本像素（例如，$Neg/3$）的一部分作为最终的负示例，在图中表示为 $\widehat{Neg}/3$（红线）。相应的数学表达式为 $\widehat{Neg}=\eta Neg$，其中 $\eta$ 在所有实验中都设置为 $1/3$。对于那些具有高置信度分数的像素，网络不会优化该部分损失。最后，修改后的损失函数定义为：</p>
-<p>$$\begin{aligned}L_{sw}&amp;=-\sum_{i\in Pos}\beta Y_i<sup>*log\widehat{Y}-\sum_{i\in\widehat{Ne}g}(1-\beta)(1-Y_i</sup>*)(1-\widehat{Y})\end{aligned}$$</p>
+<p>$$\begin{aligned}L_{sw}&amp;=-\sum_{i\in Pos}\beta Y_i^<em>log\widehat{Y}-\sum_{i\in\widehat{Ne}g}(1-\beta)(1-Y_i^</em>)(1-\widehat{Y})\end{aligned}$$</p>
 <h4 id="3.3.2-reducing-false-positives." tabindex="-1" id="3-3-2-Reducing-False-Positives">3.3.2 Reducing False Positives.</h4>
 <p>​    与假阴性相对应的是，假阳性也会对网络造成严重干扰。自然场景中的一些图案和设计极易被识别为文本，从而导致伪标签不准确。取支持区域可靠分数（SRRS），我们提出了一种更合理的笔划宽度分数（SWS），该分数利用笔划宽度变换（SWT）来评估文本实例的预测框。</p>
-<p>$$SRRS(r<sup>*)=\frac1{N_s}\sum_{i=1}</sup>{N_s}IoU(r_i,r^<em>)\cdot P(c^</em>|r_i)$$</p>
+<p>$$SRRS(r^<em>)=\frac1{N_s}\sum_{i=1}^{N_s}IoU(r_i,r^</em>)\cdot P(c^*|r_i)$$</p>
 <p><img src="/images/loading.webp" data-original="F3.png" alt="png"></p>
 <center>Up：提出了文本自我训练的框架。我们利用 SWS 对伪标签中的阳性样本进行过滤，以最大限度地减少假阳性，并选择三分之一置信度较低的阴性样本作为最终阴性样本，以最大程度地减少假阴性。<br/>Down：我们给出了伪标签的样本空间表示。（a）：薄弱的训练可以有效地过滤掉假阴性。<br/>（b）：假阳性通过笔划宽度和 SWS 的标准偏差（σ）过滤掉。</center>
 <h2 id="4-experiments" tabindex="-1" id="4-Experiments">4 Experiments</h2>
@@ -682,7 +682,7 @@
                 </a>
                 <a href="/archives" class="aside-top-about-site-item">
                     <span class="title">归档</span>
-                    <span class="count">388</span>
+                    <span class="count">389</span>
                 </a>
             </div>
             <div class="aside-top-about-contact">
@@ -763,10 +763,10 @@
 <script src="/js/plugins/highlight_tools.js"></script>
 
 	<script>
-		var copyIcon = "/images/icon/copy.png";
-		var closeCodeBlockIcon = "/images/icon/close_code_block.png";
-		var highlightShrink = "";
-		var HighlightHeightLimit = "";
+		const  COPY_ICON = "/images/icon/copy.png";
+		const CLOSE_CODE_BLOCK_ICON = "/images/icon/close_code_block.png";
+		const HIGHLIGHT_SHRINK = "";
+		const HIGHLIGHT_HEIGHT_LIMIT = "";
 	</script>
 
 	

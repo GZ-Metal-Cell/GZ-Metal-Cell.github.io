@@ -4,32 +4,29 @@ function handleHexoBlogDecryptEvent() {
         init();
     });
 }
-function init() {
-    const functionsToInitialize = [
-        'initGallery',
-        'initToc',
-        'initPhotoFigcaption',
-        'initFancybox',
-        'initTextIndent',
-        'initHighlightTools',
-        'initTabs',
-        'initTagHide',
-        'initMathjax',
-        'initKatex',
-        'initWordCount',
-        'initRef',
-        'initMermaid',
-        'initAlertTitle'
-    ];
 
-    functionsToInitialize.forEach(funcName => {
+const FUNCTIONS_TO_INITIALIZE = [
+    'initGallery',
+    'initToc',
+    'initPhotoFigcaption',
+    'initFancybox',
+    'initTextIndent',
+    'initHighlightTools',
+    'initTabs',
+    'initTagHide',
+    'initMathjax',
+    'initKatex',
+    'initWordCount',
+    'initRef',
+    'initMermaid',
+    'initAlertTitle'
+];
+
+function init() {
+    FUNCTIONS_TO_INITIALIZE.forEach(funcName => {
         const func = window[funcName];  // Attempt to access the function globally
         if (typeof func === 'function') {
-            try {
-                func();
-            } catch (error) {
-                console.error(`Error initializing function: ${funcName}`, error);
-            }
+            func();
         }
     });
 }

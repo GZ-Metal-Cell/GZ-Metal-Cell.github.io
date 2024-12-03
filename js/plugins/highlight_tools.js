@@ -9,35 +9,35 @@ function initHighlightTools() {
 
     $(codeBlocks).each(function () {
         var $this = $(this);
-        setHighlightHeightLimit($this, HighlightHeightLimit);
+        setHighlightHeightLimit($this, HIGHLIGHT_HEIGHT_LIMIT);
         if ($this.hasClass('plaintext')) {
             return;
         }
-        var $container = createContainer($this);
+        var $highLightTools = createContainer($this);
         var $codeBlock = $this.find('.code');
-        createCopyButton($container, $codeBlock, copyIcon);
-        createCodeLangText($container, $codeBlock);
-        createCloseCodeBlockButton($container, $this, closeCodeBlockIcon, highlightShrink);
+        createCopyButton($highLightTools, $codeBlock,  COPY_ICON);
+        createCodeLangText($highLightTools, $codeBlock);
+        createCloseCodeBlockButton($highLightTools, $this, CLOSE_CODE_BLOCK_ICON, HIGHLIGHT_SHRINK);
     });
 }
 
 function createContainer($codeBlock) {
     // 创建包裹代码块和按钮的容器元素
-    var $container = $('<div class="highlight-tools"></div>');
+    var $highLightTools = $('<div class="highlight-tools"></div>');
     // 将容器元素插入到代码块的第一个子元素之前
-    $codeBlock.children().first().before($container);
-    return $container;
+    $codeBlock.children().first().before($highLightTools);
+    return $highLightTools;
 }
 
-function createCopyButton($container, $codeBlock, icon) {
+function createCopyButton($highLightTools, $codeBlock, icon) {
     // 创建复制按钮并设置样式
     var $button = $('<button class="copy-button" type="button" title="复制代码"></button>').css('backgroundImage', 'url("' + icon + '")');
-    $container.append($button);
+    $highLightTools.append($button);
 
     $button.click(function () {
         // 创建已复制提示文字
         var $span = $('<span class="copy-notice">已复制</span>');
-        $container.append($span);
+        $highLightTools.append($span);
         // 使用 innerText 获取文本内容，以保留格式
         var innerText = $codeBlock.get(0).innerText; // 使用 .get(0) 来获取原生 DOM 元素
         // 执行复制操作
@@ -58,20 +58,19 @@ function createCopyButton($container, $codeBlock, icon) {
     });
 }
 
-
-function createCodeLangText($container, $codeBlock) {
+function createCodeLangText($highLightTools, $codeBlock) {
     // 获取代码语言并创建对应的提示文字
     var lang = $codeBlock.find('.hljs').attr('class').replace('hljs ', '').toUpperCase();
     var $span = $('<span class="code-lang">' + lang + '</span>');
 
     // 将提示文字添加到容器内
-    $container.append($span);
+    $highLightTools.append($span);
 }
 
-function createCloseCodeBlockButton($container, $codeBlock, icon, highlightShrink) {
+function createCloseCodeBlockButton($highLightTools, $codeBlock, icon, highlightShrink) {
     // 创建关闭代码块按钮并设置样式
     var $button = $('<button class="close-code-block-button" type="button" title="close-code-block-button"></button>').css('backgroundImage', 'url("' + icon + '")');
-    $container.append($button);
+    $highLightTools.append($button);
 
     if (highlightShrink == 'true') {
         var $hljs = $codeBlock.find('.hljs');

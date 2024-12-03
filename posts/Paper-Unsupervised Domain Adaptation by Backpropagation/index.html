@@ -432,7 +432,7 @@
 </ul>
 <p>​	在学习阶段，我们的目标是最小化训练集注释部分（即源部分）上的标签预测损失，因此特征提取器和标签预测器的参数都经过优化，以最小化源域样本的经验损失。**这确保了特征 $\mathbf{f}$ 的判别性以及特征提取器和标签预测器组合在源域上的整体良好预测性能。**同时，**我们希望使特征 $\mathbf{f}$ 具有域不变性。**也就是说，我们希望使分布 $\mathcal{S}(\mathbf{f}) = {G_f(\mathbf{x}; \theta_f)|\mathbf{x}\sim S(x)}$ 和 $\mathcal{T}(\mathbf{f}) = {G_f(\mathbf{x}; \theta_f) | \mathbf{x}\sim T(\mathbf{x})}$ 相似。<strong>在协变量转移假设下，这将使目标域上的标签预测准确度与源域上的相同</strong>。然而，测量分布 $\mathcal{S}(\mathbf{f})$ 和 $\mathcal{T}(\mathbf{f})$ 的差异并非易事，因为 $\mathbf{f}$ 是高维的，并且分布本身随着学习的进展而不断变化。<strong>估计差异的一种方法是查看域分类器 $G_d$ 的损失，前提是域分类器的参数 $\theta_d$ 已经过训练，可以以最佳方式区分这两个特征分布。这一观察导致了我们的想法。<strong>在训练时，为了获得领域不变的特征，我们寻求</strong>使领域分类器损失最大化的特征映射参数 $\theta_f$（通过使两个特征分布尽可能相似），同时寻求使领域分类器损失最小化的领域分类器参数 $\theta_d$。此外，我们寻求最小化标签预测器的损失。</strong></p>
 <p>​	更正式地说，我们考虑的是功能性：</p>
-<p>$$\begin{aligned}E(\theta_{f},\theta_{y},\theta_{d})&amp;=\sum_{i=1…N}L_y\left(G_y(G_f(\mathbf{x}<em>i;\theta_f);\theta_y),y_i\right)-\&amp;\lambda\sum</em>{i=1…N}L_d\left(G_d(G_f(\mathbf{x}<em>i;\theta_f);\theta_d),y_i\right)=\&amp;=\sum</em>{i=1…N}L_y<sup>i(\theta_f,\theta_y)-\lambda\sum_{i=1…N}L_d</sup>i(\theta_f,\theta_d)\end{aligned}$$</p>
+<p>$$\begin{aligned}E(\theta_{f},\theta_{y},\theta_{d})&amp;=\sum_{i=1…N}L_y\left(G_y(G_f(\mathbf{x}<em>i;\theta_f);\theta_y),y_i\right)-\&amp;\lambda\sum</em>{i=1…N}L_d\left(G_d(G_f(\mathbf{x}<em>i;\theta_f);\theta_d),y_i\right)=\&amp;=\sum</em>{i=1…N}L_y^i(\theta_f,\theta_y)-\lambda\sum_{i=1…N}L_d^i(\theta_f,\theta_d)\end{aligned}$$</p>
 <p>​	这里，$L_y(·，·)$ 是<strong>标签预测的损失</strong>（例如多项式），$L_d(·，·)$ <strong>是领域分类（例如 Logistic）的损失</strong>，而 $L^i_y$ 和 $L^i_d$ 表示在第 $i$ 个训练实例中评估的对应损失函数。基于我们的想法，我们正在寻找提供泛函的<strong>鞍点</strong>的参数 $\hat\theta_f$，$\hat\theta_y$, $\hat\theta_d$：</p>
 <p>$$(\hat{\theta}_f,\hat{\theta}<em>y)=\arg\min</em>{\theta_f,\theta_y}E(\theta_f,\theta_y,\hat{\theta}_d)$$</p>
 <p>$$\hat{\theta}<em>{d}=\arg\max</em>{ {\theta_{d} } }E(\hat{\theta}<em>{f},\hat{\theta}</em>{y},\theta_{d})$$</p>
@@ -484,7 +484,7 @@
 <h3 id="4.1.-results" tabindex="-1" id="4-1-Results">4.1. Results</h3>
 <p>​	我们现在讨论实验设置和结果。在每种情况下，我们都在源数据集上进行训练，并在不同的目标域数据集上进行测试，域之间有相当大的变化。结果摘要载于下表。</p>
 <p><img src="/images/loading.webp" data-original="F2.webp" alt="webp"></p>
-<p>​	<strong>MNIST → MNIST-M</strong>。我们的第一个实验处理 MNIST 数据集。为了获得目标域 (MNIST-M)，我们将原始集合中的数字与从 BSDS500 的彩色照片中随机提取的块混合。对于两个图像 $I<sup>1$、$I</sup>2$，此操作正式定义为 $I^{out}<em>{ijk} = |I^1</em>{ijk} − I^2_{ijk}|$，其中 $i$、$j$ 是像素的坐标，$k$ 是通道索引。换句话说，输出样本是通过从照片中取出一个块并将其像素反转到与数字像素相对应的位置来生成的。对于人类来说，与原始数据集相比，分类任务只会变得稍微困难一点（数字仍然清晰可辨），而对于在 MNIST 上训练的 CNN 来说，这个域非常独特，因为背景和笔画不再是恒定的。因此，仅使用来源的模型表现不佳。我们的方法成功对齐了特征分布，从而获得了成功的适应结果（考虑到适应是无监督的）。同时，子空间对齐（SA）相对于仅源模型的改进相当有限，从而凸显了适应任务的难度。</p>
+<p>​	<strong>MNIST → MNIST-M</strong>。我们的第一个实验处理 MNIST 数据集。为了获得目标域 (MNIST-M)，我们将原始集合中的数字与从 BSDS500 的彩色照片中随机提取的块混合。对于两个图像 $I^1$、$I^2$，此操作正式定义为 $I^{out}<em>{ijk} = |I^1</em>{ijk} − I^2_{ijk}|$，其中 $i$、$j$ 是像素的坐标，$k$ 是通道索引。换句话说，输出样本是通过从照片中取出一个块并将其像素反转到与数字像素相对应的位置来生成的。对于人类来说，与原始数据集相比，分类任务只会变得稍微困难一点（数字仍然清晰可辨），而对于在 MNIST 上训练的 CNN 来说，这个域非常独特，因为背景和笔画不再是恒定的。因此，仅使用来源的模型表现不佳。我们的方法成功对齐了特征分布，从而获得了成功的适应结果（考虑到适应是无监督的）。同时，子空间对齐（SA）相对于仅源模型的改进相当有限，从而凸显了适应任务的难度。</p>
 <p>​	<strong>Synthetic numbers→SVHN</strong>。为了解决在合成数据上进行训练并在真实数据上进行测试的常见情况，我们使用街景门牌号数据集 SVHN（Netzer 等人，2011）作为目标域，使用合成数字作为源。后者（SYN NUMBERS）由我们自己从 Windows 字体生成的 500,000 张图像组成，通过改变文本（包括不同的一位、两位和三位数字）、定位、方向、背景和描边颜色以及模糊量。变化程度是手动选择的以模拟 SVHN，但这两个数据集仍然截然不同，最大的区别是 SVHN 图像背景中的结构化杂波。所提出的基于反向传播的技术效果很好，可以弥补仅使用源数据进行训练和使用具有已知目标标签的目标域数据进行训练之间三分之二的差距。相比之下，SA 不会导致分类准确率有任何显著的提高，从而强调适应任务比 MNIST 实验更具挑战性。</p>
 <p>​	<strong>MNIST ↔ SVHN</strong>。在这个实验中，我们进一步增加了分布之间的差距，并在外观上存在显著差异的 MNIST 和 SVHN 上进行测试。即使没有自适应，在 SVHN 上进行训练也是具有挑战性的——在前 150 个时期内，分类错误率仍然很高。因此，为了避免陷入不良的局部最小值，我们在这里不使用学习率退火。显然，两个方向（MNIST → SVHN 和 SVHN → MNIST）的难度并不相同。由于 SVHN 更加多样化，因此在 SVHN 上训练的模型预计会更加通用，并且在 MNIST 数据集上表现合理。事实确实如此，并且特征分布的外观也支持这一点。当我们将它们输入到仅对 MNIST 进行训练的 CNN 时，我们观察到域之间的分离相当强烈，而对于 SVHN 训练的网络，特征更加混杂。这种差异可能解释了为什么我们的方法在 SVHN → MNIST 场景中通过自适应成功提高了性能，但在相反方向上却没有成功（SA 在这种情况下也无法执行自适应）。从 MNIST 到 SVHN 的无监督自适应为我们的方法提供了一个失败的例子（我们不知道有任何无监督 DA 方法能够执行此类自适应）。</p>
 <p>​	<strong>Synthetic Signs → GTSRB</strong>。总体而言，此设置与 SYN NUMBERS → SVHN 实验类似，只是由于类别数量明显增多（43 个而不是 10 个），特征分布更加复杂。</p>
@@ -627,7 +627,7 @@
                 </a>
                 <a href="/archives" class="aside-top-about-site-item">
                     <span class="title">归档</span>
-                    <span class="count">388</span>
+                    <span class="count">389</span>
                 </a>
             </div>
             <div class="aside-top-about-contact">
@@ -4367,6 +4367,15 @@
                             
                         
                     
+                        
+                        
+                            
+                                
+                            
+                                
+                            
+                        
+                    
                 </ol>
                 <div class="aside-top-series-title">
                     <h1>
@@ -4433,10 +4442,10 @@
 <script src="/js/plugins/highlight_tools.js"></script>
 
 	<script>
-		var copyIcon = "/images/icon/copy.png";
-		var closeCodeBlockIcon = "/images/icon/close_code_block.png";
-		var highlightShrink = "";
-		var HighlightHeightLimit = "";
+		const  COPY_ICON = "/images/icon/copy.png";
+		const CLOSE_CODE_BLOCK_ICON = "/images/icon/close_code_block.png";
+		const HIGHLIGHT_SHRINK = "";
+		const HIGHLIGHT_HEIGHT_LIMIT = "";
 	</script>
 
 	
