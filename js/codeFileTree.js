@@ -1,7 +1,8 @@
 class CodeFileTreeNode {
-    constructor(id, isFolder, linkOrFolderName, children, lang, fileName, icon) {
+    constructor(id, isFolder, linkOrFolderName, children, lang, fileName, icon, opened = true) {
         this.id = id;
         this.isFolder = isFolder;
+        this.opened = opened;
         if (isFolder) {
             this.folderName = linkOrFolderName;
             this.children = children;
@@ -26,7 +27,7 @@ class CodeFileTreeNode {
                 text: this.folderName,
                 children: [],
                 state: {
-                    opened: true
+                    opened: this.opened
                 },
                 icon: this.icon,
                 data: {
@@ -39,7 +40,7 @@ class CodeFileTreeNode {
                 text: this.fileName,
                 children: [],
                 state: {
-                    opened: true
+                    opened: this.opened
                 },
                 icon: this.icon,
                 data: {

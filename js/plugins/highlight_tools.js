@@ -10,6 +10,9 @@ function initHighlightTools() {
     $(codeBlocks).each(function () {
         var $this = $(this);
         setHighlightHeightLimit($this, HIGHLIGHT_HEIGHT_LIMIT);
+        $this.attr('class', $this.find('.hljs').attr('class'));
+        $this.removeClass('hljs');
+        $this.addClass('highlight');
         if ($this.hasClass('plaintext')) {
             return;
         }

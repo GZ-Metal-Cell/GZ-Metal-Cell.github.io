@@ -156,6 +156,11 @@ class CodeFile {
             'sty': 'LaTeX',
             'styl': 'Stylus',
             'vue': 'Vue',
+            'hlsl': 'HLSL',
+            'glsl': 'GLSL',
+            'ini': 'INI',
+            'conf': 'INI',
+            'cfg': 'INI',
         };
 
         // 获取后缀并转换为小写，避免大小写不一致
