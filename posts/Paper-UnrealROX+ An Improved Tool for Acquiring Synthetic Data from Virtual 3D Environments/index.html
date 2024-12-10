@@ -463,9 +463,11 @@
 <p style="text-align: center;">UnrealROX+ 图像数据。从左到右，自上而下：RGB，RGB，着色图，法线图，深度图和实例分割图。着色贴图不是直接从 UE4 生成的，它是稍后从 RGB 和 RGB 计算的。</p>
 <p>​	反射率是另一种图像数据，它对几个问题很有趣，例如内在图像分解或逆渲染。它代表了表面的固有颜色，它们自然反射的颜色，没有任何闪电的影响或计算（阴影、镜面反射等）。在计算机图形学研究领域，通常使用反照率一词，从技术上讲，反照率表示被表面反射的光的百分比，但也可以与反射率一起用于指代这种仅具有照明模型漫反射分量的图像。我们将模糊地使用反射率或反照率。在 UE4 中，可以通过在 CaptureComponent2D 结构中选择的渲染模式基色直接获得此数据。正如我们在生成分割掩模时已经验证的那样，通过以基色捕获的图像获得的像素颜色信息在按所述检索时是完全准确的。</p>
 <p>​	另一方面，<strong>着色图</strong>为我们提供了每个像素的闪电信息，主要是从反射率提供的基色开始变暗或变亮的程度。图像分解定义如下：</p>
-<p>$$I=R\odot S$$</p>
-<p>​	$I$ 是合成图像，$R$ 是反射层，$S$ 是遮光层。因此，$I$ 被定义为反射率和阴影之间的元素相乘（$\odot$）。在这种情况下，我们不直接从发动机中获取这些数据。相反，我们从 RGB 和反照率图像计算它。从前面定义的方程出发，我们可以推断：</p>
-<p>$$S=I\otimes(R+\epsilon)$$</p>
+<p><span class="katex-display"><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>I</mi><mo>=</mo><mi>R</mi><mo>⊙</mo><mi>S</mi></mrow><annotation encoding="application/x-tex">I=R\odot S
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.76666em;vertical-align:-0.08333em;"></span><span class="base displaystyle textstyle uncramped"><span class="mord mathit" style="margin-right:0.07847em;">I</span><span class="mrel">=</span><span class="mord mathit" style="margin-right:0.00773em;">R</span><span class="mbin">⊙</span><span class="mord mathit" style="margin-right:0.05764em;">S</span></span></span></span></span></p>
+<p>​	<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>I</mi></mrow><annotation encoding="application/x-tex">I</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.68333em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.07847em;">I</span></span></span></span> 是合成图像，<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>R</mi></mrow><annotation encoding="application/x-tex">R</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.68333em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.00773em;">R</span></span></span></span> 是反射层，<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>S</mi></mrow><annotation encoding="application/x-tex">S</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.68333em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.05764em;">S</span></span></span></span> 是遮光层。因此，<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>I</mi></mrow><annotation encoding="application/x-tex">I</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.68333em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.07847em;">I</span></span></span></span> 被定义为反射率和阴影之间的元素相乘（<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mo>⊙</mo></mrow><annotation encoding="application/x-tex">\odot</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.58333em;"></span><span class="strut bottom" style="height:0.66666em;vertical-align:-0.08333em;"></span><span class="base textstyle uncramped"><span class="mord">⊙</span></span></span></span>）。在这种情况下，我们不直接从发动机中获取这些数据。相反，我们从 RGB 和反照率图像计算它。从前面定义的方程出发，我们可以推断：</p>
+<p><span class="katex-display"><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>S</mi><mo>=</mo><mi>I</mi><mo>⊗</mo><mo>(</mo><mi>R</mi><mo>+</mo><mi>ϵ</mi><mo>)</mo></mrow><annotation encoding="application/x-tex">S=I\otimes(R+\epsilon)
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.75em;"></span><span class="strut bottom" style="height:1em;vertical-align:-0.25em;"></span><span class="base displaystyle textstyle uncramped"><span class="mord mathit" style="margin-right:0.05764em;">S</span><span class="mrel">=</span><span class="mord mathit" style="margin-right:0.07847em;">I</span><span class="mbin">⊗</span><span class="mopen">(</span><span class="mord mathit" style="margin-right:0.00773em;">R</span><span class="mbin">+</span><span class="mord mathit">ϵ</span><span class="mclose">)</span></span></span></span></span></p>
 <h3 id="d.-skeletal-meshes" tabindex="-1" id="D-Skeletal-Meshes">D. Skeletal Meshes</h3>
 <p>​	开发原始 UnrealROX 的关键部分之一是存储受控棋子的每个关节（骨骼）6D 变换，其本质上是骨架（即 UE4 中的骨骼 MeshActor）。我们需要一帧一帧地保存所有这些信息，以便以后能够检索骨骼的确切姿势，以便离线获取数据。这个目标是通过创建我们自己的类（ROXBasePawn）来实现的，它继承了基本的 Pawn 类，并向其中添加了保存和稍后恢复关节转换所需的所有逻辑。然而，这种方法有一个巨大的缺点：必须使用我们的 ROXBasePawn 类，以便能够使用具有骨架网格的离线数据采集工作流。这可能意味着将代码和资产从已经存在的类迁移到我们的类。为了更好地与 UE4 编程标准和提供插件的事实保持一致，我们开发了一种替代方案，包括将此 joint-retrieving 逻辑封装为组件，以便它可以添加到任何现有的 Actor 中。</p>
 <h3 id="e.-python-communication-for-reinforcement-learning" tabindex="-1" id="E-Python-communication-for-Reinforcement-Learning">E. Python communication for Reinforcement Learning</h3>
@@ -647,11 +649,11 @@
                 </a>
                 <a href="/tags" class="aside-top-about-site-item">
                     <span class="title">标签</span>
-                    <span class="count">110</span>
+                    <span class="count">111</span>
                 </a>
                 <a href="/archives" class="aside-top-about-site-item">
                     <span class="title">归档</span>
-                    <span class="count">394</span>
+                    <span class="count">396</span>
                 </a>
             </div>
             <div class="aside-top-about-contact">
@@ -765,18 +767,7 @@
 	
 		
 			
-<script src="/js/plugins/katex.js"></script>
-
-			<script>
-				const katex_css = '/js/plugins/katex/katex.min.css';
-				const katex_js = '/js/plugins/katex/katex.min.js';
-				const katex_auto_render = '/js/plugins/katex/auto-render.min.js';
-			</script>
-			<link rel="stylesheet" href="/js/plugins/katex/katex.min.css" integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
-			<script defer src="/js/plugins/katex/katex.min.js" integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
-			<script defer src="/js/plugins/katex/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
-			
-				<link href="/css/plugins/copy-tex.css" rel="stylesheet">
+				<link rel="stylesheet" href="/css/plugins/katex/katex.min.css">
 				<script src="/js/plugins/copy-tex.js"></script>
 			
 		

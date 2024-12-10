@@ -474,7 +474,7 @@ Bottom right [ 42   0 255]
 <h2 id="tutorial-31---image-filtering-in-python---unsharp-mask" tabindex="-1" id="Tutorial-31-Image-filtering-in-python-Unsharp-mask">Tutorial 31 - Image filtering in python - Unsharp mask</h2>
 <p><a target="_blank" rel="noopener" href="https://blog.csdn.net/lz0499/article/details/80963696">Unsharp Mask(USM)锐化算法的的原理及其实现。_大熊背的博客-CSDN 博客_usm 锐化算法</a></p>
 <p><img src="/images/loading.webp" data-original="31_1.png" alt="png"></p>
-<p>$Unsharpened image = original + amount \times (original - blurred)$</p>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>U</mi><mi>n</mi><mi>s</mi><mi>h</mi><mi>a</mi><mi>r</mi><mi>p</mi><mi>e</mi><mi>n</mi><mi>e</mi><mi>d</mi><mi>i</mi><mi>m</mi><mi>a</mi><mi>g</mi><mi>e</mi><mo>=</mo><mi>o</mi><mi>r</mi><mi>i</mi><mi>g</mi><mi>i</mi><mi>n</mi><mi>a</mi><mi>l</mi><mo>+</mo><mi>a</mi><mi>m</mi><mi>o</mi><mi>u</mi><mi>n</mi><mi>t</mi><mo>×</mo><mo>(</mo><mi>o</mi><mi>r</mi><mi>i</mi><mi>g</mi><mi>i</mi><mi>n</mi><mi>a</mi><mi>l</mi><mo>−</mo><mi>b</mi><mi>l</mi><mi>u</mi><mi>r</mi><mi>r</mi><mi>e</mi><mi>d</mi><mo>)</mo></mrow><annotation encoding="application/x-tex">Unsharpened image = original + amount \times (original - blurred)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.75em;"></span><span class="strut bottom" style="height:1em;vertical-align:-0.25em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.10903em;">U</span><span class="mord mathit">n</span><span class="mord mathit">s</span><span class="mord mathit">h</span><span class="mord mathit">a</span><span class="mord mathit" style="margin-right:0.02778em;">r</span><span class="mord mathit">p</span><span class="mord mathit">e</span><span class="mord mathit">n</span><span class="mord mathit">e</span><span class="mord mathit">d</span><span class="mord mathit">i</span><span class="mord mathit">m</span><span class="mord mathit">a</span><span class="mord mathit" style="margin-right:0.03588em;">g</span><span class="mord mathit">e</span><span class="mrel">=</span><span class="mord mathit">o</span><span class="mord mathit" style="margin-right:0.02778em;">r</span><span class="mord mathit">i</span><span class="mord mathit" style="margin-right:0.03588em;">g</span><span class="mord mathit">i</span><span class="mord mathit">n</span><span class="mord mathit">a</span><span class="mord mathit" style="margin-right:0.01968em;">l</span><span class="mbin">+</span><span class="mord mathit">a</span><span class="mord mathit">m</span><span class="mord mathit">o</span><span class="mord mathit">u</span><span class="mord mathit">n</span><span class="mord mathit">t</span><span class="mbin">×</span><span class="mopen">(</span><span class="mord mathit">o</span><span class="mord mathit" style="margin-right:0.02778em;">r</span><span class="mord mathit">i</span><span class="mord mathit" style="margin-right:0.03588em;">g</span><span class="mord mathit">i</span><span class="mord mathit">n</span><span class="mord mathit">a</span><span class="mord mathit" style="margin-right:0.01968em;">l</span><span class="mbin">−</span><span class="mord mathit">b</span><span class="mord mathit" style="margin-right:0.01968em;">l</span><span class="mord mathit">u</span><span class="mord mathit" style="margin-right:0.02778em;">r</span><span class="mord mathit" style="margin-right:0.02778em;">r</span><span class="mord mathit">e</span><span class="mord mathit">d</span><span class="mclose">)</span></span></span></span></p>
 <h3 id="%E5%8E%9F%E7%90%86" tabindex="-1" id="原理">原理</h3>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> skimage <span class="hljs-keyword">import</span> io, img_as_float<br><span class="hljs-keyword">from</span> skimage.filters <span class="hljs-keyword">import</span> unsharp_mask<br><span class="hljs-keyword">from</span> skimage.filters <span class="hljs-keyword">import</span> gaussian<br><br>img = img_as_float(io.imread(<span class="hljs-string">&#x27;images/sandstone_blur_2sigma.tif&#x27;</span>, as_gray=<span class="hljs-literal">True</span>))<br>gaussian_img = gaussian(img, sigma=<span class="hljs-number">2</span>, mode=<span class="hljs-string">&#x27;constant&#x27;</span>, cval=<span class="hljs-number">0.0</span>)<br>img2 = (img - gaussian_img) * <span class="hljs-number">2.</span><br>img3 = img + img2<br><br><span class="hljs-keyword">from</span> matplotlib <span class="hljs-keyword">import</span> pyplot <span class="hljs-keyword">as</span> plt<br><br>fig = plt.figure(figsize=(<span class="hljs-number">10</span>, <span class="hljs-number">10</span>))<br><br>ax1 = fig.add_subplot(<span class="hljs-number">131</span>)<br>ax1.imshow(img, cmap=<span class="hljs-string">&#x27;gray&#x27;</span>)<br>ax1.title.set_text(<span class="hljs-string">&#x27;1st&#x27;</span>)<br><br>ax2 = fig.add_subplot(<span class="hljs-number">132</span>)<br>ax2.imshow(img2, cmap=<span class="hljs-string">&#x27;gray&#x27;</span>)<br>ax2.title.set_text(<span class="hljs-string">&#x27;img2&#x27;</span>)<br><br>ax3 = fig.add_subplot(<span class="hljs-number">133</span>)<br>ax3.imshow(img3, cmap=<span class="hljs-string">&#x27;gray&#x27;</span>)<br>ax3.title.set_text(<span class="hljs-string">&#x27;img3&#x27;</span>)<br><br>plt.show()<br></code></pre></td></tr></table></figure>
 <p><img src="/images/loading.webp" data-original="31_2.png" alt="png"></p>
@@ -634,7 +634,7 @@ Note: you may need to restart the kernel to use updated packages.
 <ul>
 <li><strong>Sobel</strong>
 <ul>
-<li>Very similar to Roberts excerpt with a $3\times3$ operator. 与 Roberts 非常相似，只是使用了$3\times3$操作符</li>
+<li>Very similar to Roberts excerpt with a <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mn>3</mn><mo>×</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">3\times3</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.64444em;"></span><span class="strut bottom" style="height:0.72777em;vertical-align:-0.08333em;"></span><span class="base textstyle uncramped"><span class="mord mathrm">3</span><span class="mbin">×</span><span class="mord mathrm">3</span></span></span></span> operator. 与 Roberts 非常相似，只是使用了<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mn>3</mn><mo>×</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">3\times3</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.64444em;"></span><span class="strut bottom" style="height:0.72777em;vertical-align:-0.08333em;"></span><span class="base textstyle uncramped"><span class="mord mathrm">3</span><span class="mbin">×</span><span class="mord mathrm">3</span></span></span></span>操作符</li>
 </ul>
 </li>
 </ul>
@@ -649,7 +649,7 @@ Note: you may need to restart the kernel to use updated packages.
 <li><strong>Farid</strong>
 <ul>
 <li>Farid and Simoncelli propose to use a pair of kernels, one for interpolation and another for differentiation (similar to Sobel). Farid 和 Simoncelli 建议使用一对核，一个用于插值，另一个用于微分(类似于 Sobel)。</li>
-<li>Fixed size kernels: $5\times5$ (interpolation) and $7\times7$ (differentiation) 固定大小的内核:$5\times5$(插值)和$7\times7$(分化)</li>
+<li>Fixed size kernels: <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mn>5</mn><mo>×</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">5\times5</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.64444em;"></span><span class="strut bottom" style="height:0.72777em;vertical-align:-0.08333em;"></span><span class="base textstyle uncramped"><span class="mord mathrm">5</span><span class="mbin">×</span><span class="mord mathrm">5</span></span></span></span> (interpolation) and <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mn>7</mn><mo>×</mo><mn>7</mn></mrow><annotation encoding="application/x-tex">7\times7</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.64444em;"></span><span class="strut bottom" style="height:0.72777em;vertical-align:-0.08333em;"></span><span class="base textstyle uncramped"><span class="mord mathrm">7</span><span class="mbin">×</span><span class="mord mathrm">7</span></span></span></span> (differentiation) 固定大小的内核:<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mn>5</mn><mo>×</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">5\times5</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.64444em;"></span><span class="strut bottom" style="height:0.72777em;vertical-align:-0.08333em;"></span><span class="base textstyle uncramped"><span class="mord mathrm">5</span><span class="mbin">×</span><span class="mord mathrm">5</span></span></span></span>(插值)和<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mn>7</mn><mo>×</mo><mn>7</mn></mrow><annotation encoding="application/x-tex">7\times7</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.64444em;"></span><span class="strut bottom" style="height:0.72777em;vertical-align:-0.08333em;"></span><span class="base textstyle uncramped"><span class="mord mathrm">7</span><span class="mbin">×</span><span class="mord mathrm">7</span></span></span></span>(分化)</li>
 </ul>
 </li>
 <li><strong>Prewitt</strong>
@@ -704,14 +704,14 @@ Note: you may need to restart the kernel to use updated packages.
 <ul>
 <li>
 <p>Continuous 连续傅里叶变换</p>
-<p>$x=\int_{-\infty}^{\infty} X(t)\cdot e^{-j_{2\pi}ft}dt$</p>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>x</mi><mo>=</mo><msubsup><mo>∫</mo><mrow><mo>−</mo><mi mathvariant="normal">∞</mi></mrow><mrow><mi mathvariant="normal">∞</mi></mrow></msubsup><mi>X</mi><mo>(</mo><mi>t</mi><mo>)</mo><mo>⋅</mo><msup><mi>e</mi><mrow><mo>−</mo><msub><mi>j</mi><mrow><mn>2</mn><mi>π</mi></mrow></msub><mi>f</mi><mi>t</mi></mrow></msup><mi>d</mi><mi>t</mi></mrow><annotation encoding="application/x-tex">x=\int_{-\infty}^{\infty} X(t)\cdot e^{-j_{2\pi}ft}dt</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.849108em;"></span><span class="strut bottom" style="height:1.2635589999999999em;vertical-align:-0.414451em;"></span><span class="base textstyle uncramped"><span class="mord mathit">x</span><span class="mrel">=</span><span class="mop"><span class="op-symbol small-op mop" style="margin-right:0.19445em;top:-0.0005599999999999772em;">∫</span><span class="vlist"><span style="top:0.35612em;margin-left:-0.19445em;margin-right:0.05em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord scriptstyle cramped"><span class="mord">−</span><span class="mord mathrm">∞</span></span></span></span><span style="top:-0.41900000000000004em;margin-right:0.05em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle uncramped"><span class="mord scriptstyle uncramped"><span class="mord mathrm">∞</span></span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mord mathit" style="margin-right:0.07847em;">X</span><span class="mopen">(</span><span class="mord mathit">t</span><span class="mclose">)</span><span class="mbin">⋅</span><span class="mord"><span class="mord mathit">e</span><span class="vlist"><span style="top:-0.363em;margin-right:0.05em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle uncramped"><span class="mord scriptstyle uncramped"><span class="mord">−</span><span class="mord"><span class="mord mathit" style="margin-right:0.05724em;">j</span><span class="vlist"><span style="top:0.15em;margin-right:0.07142857142857144em;margin-left:-0.05724em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-scriptstyle scriptscriptstyle cramped"><span class="mord scriptscriptstyle cramped"><span class="mord mathrm">2</span><span class="mord mathit" style="margin-right:0.03588em;">π</span></span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mord mathit" style="margin-right:0.10764em;">f</span><span class="mord mathit">t</span></span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mord mathit">d</span><span class="mord mathit">t</span></span></span></span></p>
 </li>
 <li>
 <p>Discrete 离散傅里叶变换</p>
 <p>$x = \frac { 1 } { N } \Sigma ^ { N - 1 } _ { n = 0 } x ( { \color { Red } n } ) \cdot e ^ { - \frac { { \color {Blue}j _ {2 \pi } }kn } { N } } $</p>
 <ul>
-<li>${\color{Red}n}$: Input signal (pixel value)</li>
-<li>${\color{Blue}j_{2\pi}}$: Complex number</li>
+<li><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mrow><mstyle mathcolor="Red"><mi>n</mi></mstyle></mrow></mrow><annotation encoding="application/x-tex">{\color{Red}n}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.43056em;"></span><span class="strut bottom" style="height:0.43056em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord textstyle uncramped"><span class="mord mathit" style="color:Red;">n</span></span></span></span></span>: Input signal (pixel value)</li>
+<li><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mrow><msub><mstyle mathcolor="Blue"><mi>j</mi></mstyle><mrow><mn>2</mn><mi>π</mi></mrow></msub></mrow></mrow><annotation encoding="application/x-tex">{\color{Blue}j_{2\pi}}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.65952em;"></span><span class="strut bottom" style="height:0.85396em;vertical-align:-0.19444em;"></span><span class="base textstyle uncramped"><span class="mord textstyle uncramped"><span class=""><span class="mord mathit" style="margin-right:0.05724em;color:Blue;">j</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord scriptstyle cramped"><span class="mord mathrm">2</span><span class="mord mathit" style="margin-right:0.03588em;">π</span></span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span></span>: Complex number</li>
 </ul>
 </li>
 </ul>
@@ -1018,11 +1018,11 @@ Note: you may need to restart the kernel to use updated packages.
                 </a>
                 <a href="/tags" class="aside-top-about-site-item">
                     <span class="title">标签</span>
-                    <span class="count">110</span>
+                    <span class="count">111</span>
                 </a>
                 <a href="/archives" class="aside-top-about-site-item">
                     <span class="title">归档</span>
-                    <span class="count">394</span>
+                    <span class="count">396</span>
                 </a>
             </div>
             <div class="aside-top-about-contact">
@@ -4944,6 +4944,26 @@ Note: you may need to restart the kernel to use updated packages.
                             
                                 
                             
+                        
+                    
+                        
+                        
+                            
+                                
+                            
+                                
+                            
+                                
+                            
+                        
+                    
+                        
+                        
+                            
+                                
+                            
+                                
+                            
                                 
                             
                         
@@ -5047,18 +5067,7 @@ Note: you may need to restart the kernel to use updated packages.
 	
 		
 			
-<script src="/js/plugins/katex.js"></script>
-
-			<script>
-				const katex_css = '/js/plugins/katex/katex.min.css';
-				const katex_js = '/js/plugins/katex/katex.min.js';
-				const katex_auto_render = '/js/plugins/katex/auto-render.min.js';
-			</script>
-			<link rel="stylesheet" href="/js/plugins/katex/katex.min.css" integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
-			<script defer src="/js/plugins/katex/katex.min.js" integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
-			<script defer src="/js/plugins/katex/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
-			
-				<link href="/css/plugins/copy-tex.css" rel="stylesheet">
+				<link rel="stylesheet" href="/css/plugins/katex/katex.min.css">
 				<script src="/js/plugins/copy-tex.js"></script>
 			
 		
