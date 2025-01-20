@@ -754,7 +754,7 @@
 <div class="grid-container">
     <img src="/images/loading.webp" data-original="2.16.webp" alt="webp"><img src="/images/loading.webp" data-original="2.17.webp" alt="webp"><img src="/images/loading.webp" data-original="2.18.webp" alt="webp"><img src="/images/loading.webp" data-original="2.19.webp" alt="webp"><img src="/images/loading.webp" data-original="2.20.webp" alt="webp"><img src="/images/loading.webp" data-original="2.21.webp" alt="webp"><img src="/images/loading.webp" data-original="2.22.webp" alt="webp"><img src="/images/loading.webp" data-original="2.23.webp" alt="webp"><img src="/images/loading.webp" data-original="2.24.webp" alt="webp"><img src="/images/loading.webp" data-original="2.25.webp" alt="webp"><img src="/images/loading.webp" data-original="2.26.webp" alt="webp"><img src="/images/loading.webp" data-original="2.27.webp" alt="webp"><img src="/images/loading.webp" data-original="2.28.webp" alt="webp"><img src="/images/loading.webp" data-original="2.29.webp" alt="webp"><img src="/images/loading.webp" data-original="2.30.webp" alt="webp">
 </div>
-## 3
+<h2 id="3" tabindex="-1" id="3">3</h2>
 <h3 id="%E3%80%90c1%E3%80%91%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E7%9A%84%E6%96%87%E6%9C%AC%E8%AF%86%E5%88%AB%E6%A8%A1%E5%9E%8B" tabindex="-1" id="【C1】训练自己的文本识别模型">【C1】训练自己的文本识别模型</h3>
 <p>​	读取训练用的配置文件：</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> mmengine <span class="hljs-keyword">import</span> Config<br><br>cfg = Config.fromfile(<span class="hljs-string">&#x27;./configs/textdet/dbnet/dbnet_resnet18_fpnc_1200e_totaltext.py&#x27;</span>)<br></code></pre></td></tr></table></figure>
@@ -841,6 +841,19 @@
 <ul>
 <li>配置自动缩放学习率的选项，以便根据基础批次大小动态调整学习率。</li>
 </ul></div></div></div>
+<h1 id="%E8%BD%AC%E6%8D%A2%E4%B8%BA-onnx" tabindex="-1">转换为 onnx</h1>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/open-mmlab/mmdeploy/blob/main/docs/zh_cn/04-supported-codebases/mmocr.md">mmdeploy/docs/zh_cn/04-supported-codebases/mmocr.md at main · open-mmlab/mmdeploy</a></li>
+</ul>
+<p>​	从 <a target="_blank" rel="noopener" href="https://github.com/open-mmlab/mmdeploy/tree/main">open-mmlab/mmdeploy: OpenMMLab Model Deployment Framework</a> 下载 MMDeploy 的源代码。</p>
+<p>​	继续安装库：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs shell">pip install mmdeploy<br>pip install onnx==1.16.1 -i https://pypi.tuna.tsinghua.edu.cn/simple<br>pip install onnxruntime -i https://pypi.tuna.tsinghua.edu.cn/simple    <br></code></pre></td></tr></table></figure>
+<p>​	执行转换命令：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">python tools/deploy.py configs/mmocr/text-detection/text-detection_onnxruntime_dynamic.py D:/XXX/MMOCR/configs/textdet/dbnet/dbnet_resnet18_fpnc_1200e_totaltext.py D:/XXX/MMOCR/models/dbnet_resnet18_fpnc_1200e_totaltext-3ed3233c.pth demo/resources/text_det.jpg --work-dir mmdeploy_models/mmocr/dbnet/ort --device cpu --show --dump-info<br></code></pre></td></tr></table></figure>
+<p>​	得到对应的 onnx 模型 <code>mmdeploy_models/mmocr/dbnet/ort/end2end.onnx</code>。</p>
+<p><img src="/images/loading.webp" data-original="3.1.webp" alt="webp"></p>
+<p>​	下面的代码用于使用这个 onnx 模型：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> onnxruntime <span class="hljs-keyword">as</span> ort<br><span class="hljs-keyword">import</span> cv2<br><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">import</span> matplotlib.pyplot <span class="hljs-keyword">as</span> plt<br><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><br><span class="hljs-comment"># 加载 ONNX 模型</span><br>onnx_model_path = <span class="hljs-string">&quot;mmdeploy_models/mmocr/dbnet/ort/end2end.onnx&quot;</span><br>session = ort.InferenceSession(onnx_model_path, providers=[<span class="hljs-string">&#x27;CPUExecutionProvider&#x27;</span>])<br><br><span class="hljs-comment"># 加载并预处理输入图像</span><br>image_path = <span class="hljs-string">&quot;demo/resources/promefire.jpg&quot;</span><br>image = cv2.imread(image_path)<br><br><span class="hljs-comment"># 图像预处理函数</span><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">preprocess</span>(<span class="hljs-params">image, input_shape</span>):<br>    <span class="hljs-comment"># 为动态输入形状指定默认值</span><br>    height = <span class="hljs-number">640</span>  <span class="hljs-comment"># 模型的默认高度</span><br>    width = <span class="hljs-number">640</span>   <span class="hljs-comment"># 模型的默认宽度</span><br><br>    <span class="hljs-comment"># 调整大小并归一化</span><br>    resized = cv2.resize(image, (width, height))<br>    normalized = resized / <span class="hljs-number">255.0</span><br>    input_tensor = np.transpose(normalized, (<span class="hljs-number">2</span>, <span class="hljs-number">0</span>, <span class="hljs-number">1</span>))  <span class="hljs-comment"># HWC -&gt; CHW</span><br>    input_tensor = np.expand_dims(input_tensor, axis=<span class="hljs-number">0</span>).astype(np.float32)  <span class="hljs-comment"># 增加 Batch 维度</span><br>    <span class="hljs-keyword">return</span> input_tensor<br><br><span class="hljs-comment"># 获取模型输入形状</span><br>input_name = session.get_inputs()[<span class="hljs-number">0</span>].name<br>input_shape = session.get_inputs()[<span class="hljs-number">0</span>].shape<br><br><span class="hljs-comment"># 打印输入形状用于调试</span><br><span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Input shape from model:&quot;</span>, input_shape)<br><br><span class="hljs-comment"># 预处理图像</span><br>input_tensor = preprocess(image, input_shape)<br><br><span class="hljs-comment"># 推理</span><br>outputs = session.run(<span class="hljs-literal">None</span>, &#123;input_name: input_tensor&#125;)<br><br><span class="hljs-comment"># 处理输出</span><br>output_name = session.get_outputs()[<span class="hljs-number">0</span>].name<br>output_data = outputs[<span class="hljs-number">0</span>]<br><br><span class="hljs-comment"># 打印模型输出</span><br><span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;模型输出：&quot;</span>, output_data)<br><br><span class="hljs-comment"># 假设 output_data 是你的模型输出</span><br>output_data = outputs[<span class="hljs-number">0</span>][<span class="hljs-number">0</span>]  <span class="hljs-comment"># 去除 batch 维度，得到二维数组</span><br><br><span class="hljs-comment"># 绘制热力图</span><br>plt.imshow(output_data, cmap=<span class="hljs-string">&#x27;hot&#x27;</span>, interpolation=<span class="hljs-string">&#x27;nearest&#x27;</span>)<br>plt.colorbar()  <span class="hljs-comment"># 添加颜色条</span><br>plt.title(<span class="hljs-string">&quot;Text Detection Heatmap&quot;</span>)<br>plt.show()<br><br><span class="hljs-comment"># 阈值化</span><br>threshold = <span class="hljs-number">0.5</span><br>binary_map = (output_data &gt; threshold).astype(np.uint8) * <span class="hljs-number">255</span>  <span class="hljs-comment"># 转为二值图像 (0 或 255)</span><br><br><span class="hljs-comment"># 保存和显示二值图像</span><br>cv2.imwrite(<span class="hljs-string">&quot;binary_output.png&quot;</span>, binary_map)<br>cv2.imshow(<span class="hljs-string">&quot;Binary Map&quot;</span>, binary_map)<br>cv2.waitKey(<span class="hljs-number">0</span>)<br>cv2.destroyAllWindows()<br><br><span class="hljs-comment"># 加载原始图像</span><br>original_image = cv2.imread(image_path)<br>original_image = cv2.resize(original_image, (output_data.shape[<span class="hljs-number">1</span>], output_data.shape[<span class="hljs-number">0</span>]))<br><br><span class="hljs-comment"># 叠加热力图</span><br>heatmap = cv2.applyColorMap((output_data * <span class="hljs-number">255</span>).astype(np.uint8), cv2.COLORMAP_JET)<br>overlay = cv2.addWeighted(original_image, <span class="hljs-number">0.6</span>, heatmap, <span class="hljs-number">0.4</span>, <span class="hljs-number">0</span>)  <span class="hljs-comment"># 叠加效果</span><br><br><span class="hljs-comment"># 显示叠加图像</span><br>cv2.imshow(<span class="hljs-string">&quot;Overlay&quot;</span>, overlay)<br>cv2.waitKey(<span class="hljs-number">0</span>)<br>cv2.destroyAllWindows()<br></code></pre></td></tr></table></figure>
 
             </article>
             
@@ -972,7 +985,7 @@
                 </a>
                 <a href="/archives" class="aside-top-about-site-item">
                     <span class="title">归档</span>
-                    <span class="count">405</span>
+                    <span class="count">407</span>
                 </a>
             </div>
             <div class="aside-top-about-contact">
@@ -4853,6 +4866,24 @@
                             
                         
                     
+                        
+                        
+                            
+                                
+                            
+                                
+                            
+                        
+                    
+                        
+                        
+                            
+                                
+                            
+                                
+                            
+                        
+                    
                 </ol>
                 <div class="aside-top-series-title">
                     <h1>
@@ -4901,7 +4932,7 @@
 		<footer>
 	<div class="content">
 		
-			<span>©2022-2024&nbsp;By&nbsp;<a href="/about">Zi-Zi</a>.</span>
+			<span>©2022-2025&nbsp;By&nbsp;<a href="/about">Zi-Zi</a>.</span>
 		
 		<span><a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a> theme by <a target="_blank" rel="noopener" href="https://github.com/GZ-Metal-Cell/hexo-theme-quieter">Quieter</a>.</span>
 		
