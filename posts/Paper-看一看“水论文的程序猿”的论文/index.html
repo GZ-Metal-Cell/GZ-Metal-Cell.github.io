@@ -412,10 +412,10 @@
 <h3 id="1-introduction" tabindex="-1" id="1-Introduction">1 Introduction</h3>
 <p>​	视频字幕的任务旨在理解视频中的场景，并用合理的句子对其进行描述。它可以广泛应用于视频检索、视频推荐、残疾人支持和场景理解。随着深度学习的快速发展，基于编码器-解码器的神经字幕方法在视频字幕中越来越突出。特别是随着 Transformer 的出现，基于 Transformer 架构的模型成功地推进了现状。<strong>然而，上述模型只改进了编码器或解码器</strong>，例如，通过将视频中的对象和对象之间的关系集成到编码器中，通过将音频、图像和视频的运动特征融合到编码器中，以及通过采用双向解码器。因此，同时改进 Transformer 的编码器和解码器的动机是自然的，例如，解码器通过双向解码器生成更高精度的字幕，同时将视频的更多模态特征融合到编码器中。</p>
 <p>​	如图 1 的 MEV 所示，Zhang 等人使用最先进的 2-D CNN 和 3D CNN 在大型数据集上预训练来提取视觉时空特征。他们还获得了基于对象检测器 Mask R-CNN 和知识图模型 TransE 提取的对象之间的关系。现有的单向解码器从左到右逐个标记地生成目标语言序列，**并且它们不能充分利用目标侧未来上下文，其可以在从右到左的解码方向上产生。**因此，Wang 等人提出了一种双向解码器来解决上述问题。如图 1 的 BDD 所示，双向解码器由前向解码器（FD）和后向解码器（BD）组成，因为前向解码器接受由后向解码器生成的反向字幕，所以前向解码器可以考虑先前生成的输出和来自后向解码器的地面实况字幕的后续字。</p>
-<p><img src="/images/loading.webp" data-original="F1.webp" alt="webp"></p>
+<p><img src="F1.webp" alt="webp"></p>
 <p style="text-align: center;"><b>Fig.1</b> 该图说明了基于 Transformer 架构的多模式视频编码器（MEV）和双向解码器（BDD）之间的直接连接，其中 PE 是位置编码。Oscillation 是知识图模块和对象检测模块之间的组合，其中 Mask R-CNN 和 TransE 分别表示对象检测器和知识图模型</p>
 <p>​	然而，<strong>双向解码器存在信息泄漏的问题</strong>。泄漏是在训练阶段，前向解码器间接利用反向地面真值字幕，这是后向解码器的输入。相反，正向解码器在测试阶段采用反向解码器生成的反向字幕。因此，如果反向解码器生成更高质量的反向字幕，则相当于正向解码器在测试阶段使用更接近反向地面真实字幕的字幕，即只要反向解码器的性能越出色，泄漏对双向解码器的负面影响就越小。如图 1 的 ODRA 所示，我们从对象检测器 Mask R-CNN 中获取对象（“car”、“people”）。由于对象是由一系列孤立的实体组成的，并且上下文之间没有逆序概念，因此我们反转它们是不太明智的。从知识图模型 TransE 获得的关系也是如此。<strong>因此，如果我们将对象和关系集成到反向解码器中，生成反向字幕的质量可能会降低，并进一步扩大泄漏。如图 1 所示。当我们直接连接一个双向解码器和一个融合对象和关系的编码器时，实验表明它确实放大了泄漏。</strong></p>
-<p><img src="/images/loading.webp" data-original="F2.webp" alt="webp"></p>
+<p><img src="F2.webp" alt="webp"></p>
 <p style="text-align: center;">该图详细说明了我们提出的基于 Transformer 架构的 BTKG，其由时空编码器（STE）、对象和关系编码器（ORE）、后向解码器（BD）和前向解码器（FD）组成。在训练时，给定一段视频，通过 STE 得到视频的细粒度时空特征。然后，我们将 $E_{STE}$ 输入 BD 以获取反向预测字幕 $Y_{BD}$ 和 $Y_{BD}$ 的上下文 $\overleftarrow{D}$。同时，为了获取视频编码 $E_{ORE}$，视频的粗粒度时空特征、通过对象检测器 Mask R-CNN 获得的对象以及基于知识图模型 TansE 提取的对象之间的关系由 ORE 联合编码。最后，将 EORE 与  $\overleftarrow{D}$ 一起集成到 FD 中，以获得前向预测字幕 $Y_{FD}$</p>
 <p>​	**因此，我们提出了一个双向 Transformer 与知识图（BTKG），以减轻泄漏。**在图 2 中，我们分别为双向解码器的前向解码器和后向解码器中的每一个分配一个编码器，这与仅具有一个编码器和解码器的常规模型不同。由于集成对象和关系的编码器可能降低反向字幕的生成质量，如图 2 的 STE 所示，我们为连接到反向解码器的编码器去除对象和关系。此外，我们通过利用视频具有多个不同字幕的特性来生成伪反向字幕以减少泄漏。</p>
 <p>​	**此外，不同于传统的编码器的 Transformer 的顺序文本，我们的编码器的输入是帧，对象，和关系的视频。**因此，如图 2 所示，我们根据视频的各种模态采用不同的编码器。由于视频中的帧比文本中的单词具有更紧密的相关性，因此我们首先通过 STE 中的扩展和多头注意力层捕获比帧更小的视频片段之间的相关性。其次，每个关系都是独立的，因此不需要使用注意层来捕获它们之间的相关性。最后，由于对象和关系都不是按上下文排序的，因此都没有使用位置编码。</p>
@@ -494,7 +494,7 @@
 <p>​	为了评估我们提出 的 BTKG 的有效性，表 2 显示，当我们直接连接 KGVideo 和 BiTransformer 时，KGVideo + BiTransformer 的性能最差，表明它们相互伤害而不是共同提高整体性能，例如，KGVideo 放大了 BiTransformer 的信息泄漏，导致连接后的结果更差。然而，据观察，我们的 BTKG 超过 KGVideo 和 BiTransformer 在大多数指标，这表明我们的模型成功地利用了视频中的对象和关系，并通过双向解码器生成更准确的字幕。</p>
 <h4 id="5.2-case-study" tabindex="-1" id="5-2-Case-study">5.2 Case study</h4>
 <p>​	由 BTKG 提供。因此，在图 3 中，我们列出了 BiTransformer、KGVideo、BTKG 和人工注释（地面实况）生成的字幕的几个可视化示例，以分析和验证性能比较中所做的总结。<strong>（可视化分析）</strong></p>
-<p><img src="/images/loading.webp" data-original="F3.webp" alt="webp"></p>
+<p><img src="F3.webp" alt="webp"></p>
 <p style="text-align: center;">由 BiTransformer，KGVideo，我们提出的 BTKG 和人类注释（Ground Truth）生成的字幕的可视化示例，其中前三个和后三个分别来自 MSR-VTT 和 MSVD</p>
 <p>​	在图 3 的 No.1 和 No.2 视频中，KGVideo 和 BTKG 都获取视频中的谓词中的对象（例如，“彼此”、“另一个人”、“一道菜”）。然而，BiTransformer 只在主题中获得了对象“人”，甚至在第一个视频中使用了错误的词“电影”。另外，由于融合了知识图模型，该模型能够更准确地描述对象之间的关系。例如，在第 3 号和第 4 号视频中，KGVideo 和 BTKG 使用了“solving”和“mixing”这两个关系词，甚至在第 3 号视频中，BTKG 也使用了“正在展示如何求解”通过公式来求解视频中的魔方，而 BiTransformer 仅使用“playing”和“cooking”两个抽象动词来概括对象之间的关系。最后，我们的 BTKG 采用了一个编码器，结合了细粒度的时空特征，对象，以及对象之间的关系，在视频中，同时使用双向解码器。生成的句子更符合人类的语言习惯，在描述视频时加入场景词（“在厨房里”，“在碗里”，“到她的脸上”）来修饰句子。即使在 No.6 中，只有我们的 BTKG 识别“跳过汽车”的行为，而其他两个模型使用抽象和不准确的动词“跑步”和“步行”。</p>
 <p>​	由于我们的模型生成的场景词更多，BTKG 生成的字幕更符合人类的语言习惯。即使在 1 号中，一个修饰语“穿着黑色衬衫”也是合理的，但它没有出现在地面真理中。这进一步解释了为什么在性能比较中，我们的 BTKG 具有较高的 CIDEr-D 和较小的 BLEU 增加。</p>
@@ -631,7 +631,7 @@
                 </a>
                 <a href="/archives" class="aside-top-about-site-item">
                     <span class="title">归档</span>
-                    <span class="count">422</span>
+                    <span class="count">420</span>
                 </a>
             </div>
             <div class="aside-top-about-contact">
@@ -794,20 +794,7 @@
 		console.log('\n %c Hexo-Quieter 主题 %c https://github.com/GZ-Metal-Cell/hexo-theme-quieter \n', 'color: #fadfa3; background: #030307; padding:5px 0;', 'background: #fadfa3; padding:5px 0;')
 	</script>
 </footer>
-	
-        <style>
-            [bg-lazy] {
-                background-image: none !important;
-                background-color: #eee !important;
-            }
-        </style>
-        <script>
-            window.imageLazyLoadSetting = {
-                isSPA: true,
-                preloadRatio: 5,
-                processImages: null,
-            };
-        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var a=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,d=o();function o(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(t){(a||t)&&(d=o());for(var e,i=0;i<d.length;i++)0<=(e=(e=d[i]).getBoundingClientRect()).bottom&&0<=e.left&&e.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,a,n,o=d[i];e=function(){d=d.filter(function(t){return o!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(o)},(t=o).dataset.loaded||(t.hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(a=new Image,n=t.getAttribute("data-original"),a.onload=function(){t.src=n,t.removeAttribute("data-original"),t.setAttribute("data-loaded",!0),e&&e()},a.onerror=function(){t.removeAttribute("data-original"),t.setAttribute("data-loaded",!1),t.src=n},t.src!==n&&(a.src=n)))}()}function e(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",e),r.addEventListener("resize",e),r.addEventListener("orientationchange",e)}(this);</script></body>
+	</body>
 
 	<!-- Hexo-Quieter 主题  https://github.com/GZ-Metal-Cell/hexo-theme-quieter -->
 </html>

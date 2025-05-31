@@ -414,16 +414,16 @@
 <p>​    在 <code>Assets</code> 文件夹下，<code>Create</code>-<code>Perception</code>-<code>C# Randomizer and RandomizerTag </code>，这将新建一个 <code>.cs</code> 文件，将其命名为 <code>MyLightRandomizerTag.cs</code>。打开它，修改其中的代码：</p>
 <figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><code class="hljs C#"><span class="hljs-keyword">using</span> System;<br><span class="hljs-keyword">using</span> UnityEngine;<br><span class="hljs-keyword">using</span> UnityEngine.Perception.Randomization.Parameters;<br><span class="hljs-keyword">using</span> UnityEngine.Perception.Randomization.Randomizers;<br><span class="hljs-keyword">using</span> UnityEngine.Perception.Randomization.Samplers;<br><br><span class="hljs-comment">// Can only attach to GameObjects which also have a Light component attached</span><br><span class="hljs-comment">// 连接且仅能连接到含有 Light 组件的 GameObject</span><br>[<span class="hljs-meta">RequireComponent(typeof(Light))</span>]<br><span class="hljs-comment">// This tag is used to &quot;target&quot; which objects in the scene will be randomized</span><br><span class="hljs-comment">// MyLightRandomizerTag 是一个标记类，用于指定哪些物体可以被随机化器控制</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">MyLightRandomizerTag</span> : <span class="hljs-title">RandomizerTag</span> &#123; &#125;<br><br>[<span class="hljs-meta">Serializable</span>]<br><span class="hljs-comment">// MyLightRandomizer 是一个随机化器类，用于在运行时间随机化物体属性。</span><br><span class="hljs-comment">// 它使用 [AddRandomizerMenu(&quot;MyLightRandomizer&quot;)] 标签在 Perception 插件菜单中注册自己。</span><br>[<span class="hljs-meta">AddRandomizerMenu(<span class="hljs-string">&quot;MyLightRandomizer&quot;</span>)</span>]<br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">MyLightRandomizer</span> : <span class="hljs-title">Randomizer</span><br>&#123;<br>    <span class="hljs-comment">// A parameter whose value uniformly ranges from 2 to 10 when sampled</span><br>    <span class="hljs-comment">// 采样时其值统一在 2 到 10 之间的参数</span><br>    <span class="hljs-comment">// 变量 lightIntensity 声明了一个名为 lightIntensity 的 FloatParameter 对象，</span><br>    <span class="hljs-comment">// 它将在随机化过程中表示光强度值，并且可以设置默认值。</span><br>    <span class="hljs-comment">// 其中，这个值的分布由 UniformSampler（均匀采样器）控制，范围是 0~1。</span><br>    <span class="hljs-keyword">public</span> FloatParameter lightIntensity = <span class="hljs-keyword">new</span>() &#123; <span class="hljs-keyword">value</span> = <span class="hljs-keyword">new</span> UniformSampler(<span class="hljs-number">0</span>, <span class="hljs-number">1</span>) &#125;;<br><br>    <span class="hljs-comment">// Run this every randomization iteration</span><br>    <span class="hljs-comment">// 每次随机化迭代都运行此操作</span><br>    <span class="hljs-function"><span class="hljs-keyword">protected</span> <span class="hljs-keyword">override</span> <span class="hljs-keyword">void</span> <span class="hljs-title">OnIterationStart</span>()</span><br>    &#123;<br>        <span class="hljs-comment">// Get all MyLightRandomizerTag&#x27;s in the scene</span><br>        <span class="hljs-comment">// 获取场景中所有的 MyLightRandomizerTag</span><br>        <span class="hljs-keyword">var</span> tags = tagManager.Query&lt;MyLightRandomizerTag&gt;();<br>        <span class="hljs-keyword">foreach</span> (<span class="hljs-keyword">var</span> tag <span class="hljs-keyword">in</span> tags)<br>        &#123;<br>            <span class="hljs-comment">// Get the light attached to the object</span><br>            <span class="hljs-comment">// 获得其 Light 组件</span><br>            <span class="hljs-keyword">var</span> tagLight = tag.GetComponent&lt;Light&gt;();<br>            <span class="hljs-comment">// 获取其附加的 Light 组件并将其强度值设置为从 lightIntensity 随机采样的值</span><br>            tagLight.intensity = lightIntensity.Sample();<br>        &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>​    给 <code>SimulationScenario</code> 添加新的 Randomizers：<code>MyLightRandomizer</code>，将其 Range 设为 <code>(0.5, 3)</code>。</p>
-<p><img src="/images/loading.webp" data-original="01.png" alt="png"></p>
+<p><img src="01.png" alt="png"></p>
 <p>​    在 <code>Directional Light</code> 里添加组件 <code>My Light Randomizer Tag</code></p>
-<p><img src="/images/loading.webp" data-original="02.png" alt="png"></p>
+<p><img src="02.png" alt="png"></p>
 <blockquote>
 <p>为了让我们的定向光成为场景中唯一的光源，这样我们就可以清楚地看到我们工作的效果，还有一件事要做。默认情况下，HDRP 使用环境照明。要禁用它：</p>
 </blockquote>
 <p>​    在之前绑定 <code>Motion Blur</code> 组件的对象中，确保 <code>Intenstiy=0</code>。新建组件 <code>Visual environment</code>，将 <code>Sky type</code> 打勾，设为 <code>None</code>。</p>
-<p><img src="/images/loading.webp" data-original="03.png" alt="png"></p>
+<p><img src="03.png" alt="png"></p>
 <p>​    开跑！</p>
-<p><img src="/images/loading.webp" data-original="04.png" alt="png"></p>
+<p><img src="04.png" alt="png"></p>
 <blockquote>
 <p>现在，让我们通过随机化光的颜色来增加更多的变化。</p>
 </blockquote>
@@ -431,14 +431,14 @@
 <figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs C#"><span class="hljs-keyword">public</span> ColorRgbParameter color;<br></code></pre></td></tr></table></figure>
 <p>​    在遍历 <code>tags</code> 里添加：</p>
 <figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs C#">tagLight.color = color.Sample();<br></code></pre></td></tr></table></figure>
-<p><img src="/images/loading.webp" data-original="05.png" alt="png"></p>
+<p><img src="05.png" alt="png"></p>
 <blockquote>
 <p>如果您现在检查 <code>MyLightRandomizer</code> 的 UI 片段，您会注意到添加了一个名为 <code>Color</code> 的新参数。此参数包括“红色”、“绿色”、“蓝色”和“阿尔法”的四个独立随机化值<strong>请注意，所有这些值的有效范围是 0-1（而不是 0-255）</strong>。您可以看到，红色、绿色和蓝色的采样范围当前设置为 0-1，这意味着“参数”覆盖了整个颜色范围。具有（0,0,0）RGB 分量的颜色基本上不发光。所以，让我们将最小值提高一点，以避免出现这种情况。</p>
 </blockquote>
 <p>​    将灯光颜色的最小值设在 0.4：</p>
-<p><img src="/images/loading.webp" data-original="06.png" alt="png"></p>
+<p><img src="06.png" alt="png"></p>
 <p>​    开跑！观察颜色变化：</p>
-<p><img src="/images/loading.webp" data-original="07.png" alt="png"></p>
+<p><img src="07.png" alt="png"></p>
 <h2 id="bundle-data-and-logic-inside-randomizertags" tabindex="-1" id="Bundle-Data-and-Logic-Inside-RandomizerTags">Bundle Data and Logic Inside RandomizerTags</h2>
 <blockquote>
 <p>您有时可能需要将某些与随机化相关的数据或逻辑绑定到对象中，这些数据或逻辑是对象本身固有的。例如，Scene 中可能有多个灯光，但希望每个灯光都有<strong>自己独特的强度范围</strong>。为每个灯光添加一个新的“参数”到灯光随机化器中只是为了实现这一点，这将是非常乏味的。此外，这会使您的光随机化器过度地针对一个用例进行定制，从而限制随机化器的可重用性。</p>
@@ -447,7 +447,7 @@
 <p>在某些情况下，您可能需要在对象中包含某些逻辑，以便使随机化器代码更易于重用和维护。例如，您可能想要构建一把办公椅预设，以便在各种模拟中使用。这把椅子可能支持对其各个部分（靠背角度、座椅角度、座椅高度等）的一系列自定义。与其直接将“旋转参数”从随机化器映射到椅子内靠背角度对象的旋转，不如让椅子以 0 到 1 之间的简单浮动形式显示可能的角度范围。使用这种方法，随机化器只需要对浮点参数进行采样并将其指定给椅子。反过来，椅子上会附上一个脚本，知道如何将这个单一的浮子映射到某个合理的后角。你甚至可以将这个浮点映射到椅子的一个更复杂的状态。您的随机化器仍然只需要一个浮点参数。</p>
 </blockquote>
 <p>​    选择对象 <code>Directional Light</code>，<code>Ctrl+D</code> 复制出一个新的对象 <code>Directional Light (1)</code>，将 <code>Directional Light</code> 的 <code>Y rotation</code> 设为 <code>60</code>；将 <code>Directional Light (1)</code> 的 <code>Y rotation</code> 设为 <code>-60</code>。</p>
-<p><img src="/images/loading.webp" data-original="08.png" alt="png"></p>
+<p><img src="08.png" alt="png"></p>
 <blockquote>
 <p>这使得两个灯光从相反的角度照亮场景。请注意，<code>Directional Lights</code> 在 Unity 中的 position 不会影响它们照亮场景的方式，只会影响它们的 rotation。</p>
 </blockquote>
@@ -459,11 +459,11 @@
 <blockquote>
 <p>该组件已添加到我们的两个灯光中。我们现在需要设置所需的最小和最大强度，这可以通过_<strong>Inspector</strong>_视图来完成。</p>
 </blockquote>
-<p><img src="/images/loading.webp" data-original="09.png" alt="png"></p>
+<p><img src="09.png" alt="png"></p>
 <p>​    打开 <code>MyLightRandomizerTag.cs</code> 修改 <code>Randomizer</code> 类中的 <code>for</code> 循环：</p>
 <figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs C#"><span class="hljs-keyword">var</span> tags = tagManager.Query&lt;MyLightRandomizerTag&gt;();<br><span class="hljs-keyword">foreach</span> (<span class="hljs-keyword">var</span> tag <span class="hljs-keyword">in</span> tags)<br>&#123;<br>    <span class="hljs-comment">// Get the light attached to the object</span><br>    <span class="hljs-comment">// 获得其 Light 组件</span><br>    <span class="hljs-keyword">var</span> tagLight = tag.GetComponent&lt;Light&gt;();<br>    tagLight.color = color.Sample();<br>    <span class="hljs-comment">// Call the SetIntensity function we defined in the tag instead!</span><br>    tag.SetIntensity(lightIntensity.Sample());<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>​    开跑！</p>
-<p><img src="/images/loading.webp" data-original="10.png" alt="png"></p>
+<p><img src="10.png" alt="png"></p>
 <blockquote>
 <p>我们已经学会了如何：</p>
 <ol>
@@ -607,7 +607,7 @@
                 </a>
                 <a href="/archives" class="aside-top-about-site-item">
                     <span class="title">归档</span>
-                    <span class="count">422</span>
+                    <span class="count">420</span>
                 </a>
             </div>
             <div class="aside-top-about-contact">
@@ -4637,24 +4637,6 @@
                             
                         
                     
-                        
-                        
-                            
-                                
-                            
-                                
-                            
-                        
-                    
-                        
-                        
-                            
-                                
-                            
-                                
-                            
-                        
-                    
                 </ol>
                 <div class="aside-top-series-title">
                     <h1>
@@ -4796,20 +4778,7 @@
 		console.log('\n %c Hexo-Quieter 主题 %c https://github.com/GZ-Metal-Cell/hexo-theme-quieter \n', 'color: #fadfa3; background: #030307; padding:5px 0;', 'background: #fadfa3; padding:5px 0;')
 	</script>
 </footer>
-	
-        <style>
-            [bg-lazy] {
-                background-image: none !important;
-                background-color: #eee !important;
-            }
-        </style>
-        <script>
-            window.imageLazyLoadSetting = {
-                isSPA: true,
-                preloadRatio: 5,
-                processImages: null,
-            };
-        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var a=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,d=o();function o(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(t){(a||t)&&(d=o());for(var e,i=0;i<d.length;i++)0<=(e=(e=d[i]).getBoundingClientRect()).bottom&&0<=e.left&&e.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,a,n,o=d[i];e=function(){d=d.filter(function(t){return o!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(o)},(t=o).dataset.loaded||(t.hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(a=new Image,n=t.getAttribute("data-original"),a.onload=function(){t.src=n,t.removeAttribute("data-original"),t.setAttribute("data-loaded",!0),e&&e()},a.onerror=function(){t.removeAttribute("data-original"),t.setAttribute("data-loaded",!1),t.src=n},t.src!==n&&(a.src=n)))}()}function e(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",e),r.addEventListener("resize",e),r.addEventListener("orientationchange",e)}(this);</script></body>
+	</body>
 
 	<!-- Hexo-Quieter 主题  https://github.com/GZ-Metal-Cell/hexo-theme-quieter -->
 </html>

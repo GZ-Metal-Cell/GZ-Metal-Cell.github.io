@@ -420,30 +420,30 @@
 </ul>
 <p>​    然后估计爬的太多了，爬久了就爬不动了 orz 忙活了几乎一天才爬到了一半内容 orz</p>
 <p>​    然后就发现 dblp 这个网站本身就可以批量下载目录 orz 除了超过 1000 的和期刊数太多的期刊用爬虫可能更快些。</p>
-<p><img src="/images/loading.webp" data-original="01.png" alt="png"></p>
+<p><img src="01.png" alt="png"></p>
 <h2 id="%E5%AF%BC%E5%87%BA-excel" tabindex="-1" id="导出-Excel">导出 Excel</h2>
-<p><img src="/images/loading.webp" data-original="02.png" alt="png"></p>
+<p><img src="02.png" alt="png"></p>
 <p>​    将得到的 bibtex 文件一个一个地导入进 Zotero，然后一个一个地导出成 csv 文件。</p>
 <p>​    接下来就是合并表格了，手动操作了几次后觉得太麻烦，整了个 python 代码帮我自动整理。</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> os<br><span class="hljs-keyword">import</span> pandas <span class="hljs-keyword">as</span> pd<br><br>path = <span class="hljs-string">r&#x27;D:\Study\1st-year-master\论文目录\Conf\A\NeurlPS&#x27;</span><br>save_file = path.split(<span class="hljs-string">&#x27;\\&#x27;</span>)[-<span class="hljs-number">1</span>]<br><br>data = pd.DataFrame(columns=[<span class="hljs-string">&#x27;Publication Year&#x27;</span>, <span class="hljs-string">&#x27;Author&#x27;</span>, <span class="hljs-string">&#x27;Title&#x27;</span>])<br><br><span class="hljs-keyword">for</span> index, file <span class="hljs-keyword">in</span> <span class="hljs-built_in">enumerate</span>(os.listdir(path)):<br>    <span class="hljs-keyword">if</span>(<span class="hljs-string">&#x27;.csv&#x27;</span> <span class="hljs-keyword">in</span> file):<br>        df = pd.read_csv(os.path.join(path,file))<br>        data = data.append(df[[<span class="hljs-string">&#x27;Publication Year&#x27;</span>, <span class="hljs-string">&#x27;Author&#x27;</span>, <span class="hljs-string">&#x27;Title&#x27;</span>]])<br><br>data.head<br>write = pd.ExcelWriter(os.path.join(path,save_file) + <span class="hljs-string">&#x27;.xlsx&#x27;</span>)   <span class="hljs-comment"># 新建 xlsx 文件。</span><br>data.to_excel(write, sheet_name=<span class="hljs-string">&#x27;Sheet&#x27;</span>, index=<span class="hljs-literal">False</span>)  <span class="hljs-comment"># 写入文件的 Sheet1</span><br>write.save()  <span class="hljs-comment"># 这里一定要保存</span><br></code></pre></td></tr></table></figure>
 <p>​    这样每个期刊/会议近三年的目录就被整成一个 Excel 表格了😎！</p>
-<p><img src="/images/loading.webp" data-original="03.png" alt="png"></p>
+<p><img src="03.png" alt="png"></p>
 <h2 id="%E7%BB%9F%E8%AE%A1%E8%AF%8D%E9%A2%91" tabindex="-1" id="统计词频">统计词频</h2>
 <p>​    想用 python 把这些目录的词频统计出来，这样就分析当作研究趋势了😈！于是又一阵操作猛如虎：</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> os<br><span class="hljs-keyword">import</span> pandas <span class="hljs-keyword">as</span> pd<br><span class="hljs-keyword">import</span> re<br><br>path = <span class="hljs-string">r&#x27;D:\Study\1st-year-master\论文目录\xlsx&#x27;</span><br>save_path = <span class="hljs-string">r&#x27;D:\Study\1st-year-master\论文目录\freq&#x27;</span><br><br><span class="hljs-keyword">for</span> index, file <span class="hljs-keyword">in</span> <span class="hljs-built_in">enumerate</span>(os.listdir(path)):<br>    <span class="hljs-keyword">if</span> <span class="hljs-string">&#x27;.xlsx&#x27;</span> <span class="hljs-keyword">in</span> file:<br>        df = pd.read_excel(os.path.join(path,file))<br>        series = df[<span class="hljs-string">&#x27;Title&#x27;</span>].<span class="hljs-built_in">str</span>.split(<span class="hljs-string">&#x27; &#x27;</span>).explode().value_counts()<br>        data = pd.DataFrame(&#123;<span class="hljs-string">&#x27;Word&#x27;</span>: series.index, <span class="hljs-string">&#x27;Frequent&#x27;</span>: series.values&#125;)<br>        write = pd.ExcelWriter(os.path.join(save_path, file) + <span class="hljs-string">&#x27;_frequent.xlsx&#x27;</span>)   <span class="hljs-comment"># 新建 xlsx 文件。</span><br>        data.to_excel(write, sheet_name=<span class="hljs-string">&#x27;Sheet&#x27;</span> + <span class="hljs-built_in">str</span>(index), index=<span class="hljs-literal">False</span>)  <span class="hljs-comment"># 写入文件的 Sheet1</span><br>        write.save()  <span class="hljs-comment"># 这里一定要保存</span><br></code></pre></td></tr></table></figure>
 <p>​    结果统计出来的全是 “a”、“of”、“from” 之类的，一点参考意义也没有😅……</p>
 <p>​    杰杰还搞了一个词频可视化，果然也都是一些没啥用的单词……不过突然感慨他的技术真的好全面……几乎什么都会一点。</p>
-<p><img src="/images/loading.webp" data-original="04.jpg" alt="png"></p>
+<p><img src="04.jpg" alt="png"></p>
 <h2 id="%E7%BF%BB%E8%AF%91" tabindex="-1" id="翻译">翻译</h2>
 <p>​    统计词频的计划失败后，想想还是手动检索论文吧。英文看的实在太难受，想了想有没有什么可以翻译 Excel 表格的方法……一开始想的很复杂，想先转成 markdown 文件然后传到博客上用浏览器帮忙翻译，在 Excel 表格调用有道的 API 直接翻译结果发现请求次数一上来就不让翻译了 balababala……最后伟哥说谷歌翻译可以直接上转 Excel 表格返回中文文档 orz</p>
 <ul>
 <li><a target="_blank" rel="noopener" href="https://translate.google.com.hk/?hl=zh-CN&amp;sourceid=cnhp&amp;sl=auto&amp;tl=zh-CN&amp;op=docs">Google 翻译</a></li>
 </ul>
-<p><img src="/images/loading.webp" data-original="05.png" alt="png"></p>
+<p><img src="05.png" alt="png"></p>
 <p>​    最后就得到了中文的论文标题目录！不知道为什么有些英文没有进行翻译。想着文件不多就手动把中英文标题整成一个表格了。</p>
 <h2 id="%E6%80%BB%E7%BB%93" tabindex="-1" id="总结">总结</h2>
 <p>​    最后大概看了一个晚上 + 一个上午吧……几万篇论文眼睛都快看花了💨，由于是主观判断研究趋势，感觉总结得也不是特别准，然后筛了点自己跟自己研究方向有点关系的论文。</p>
-<p><img src="/images/loading.webp" data-original="06.png" alt="png"></p>
+<p><img src="06.png" alt="png"></p>
 <h2 id="%E6%9C%80%E7%BB%88%E7%BB%93%E6%9E%9C" tabindex="-1" id="最终结果">最终结果</h2>
 <h3 id="jounrnals" tabindex="-1" id="Jounrnals">Jounrnals</h3>
 <h4 id="a" tabindex="-1" id="A">A</h4>
@@ -968,7 +968,7 @@
                 </a>
                 <a href="/archives" class="aside-top-about-site-item">
                     <span class="title">归档</span>
-                    <span class="count">422</span>
+                    <span class="count">420</span>
                 </a>
             </div>
             <div class="aside-top-about-contact">
@@ -1124,20 +1124,7 @@
 		console.log('\n %c Hexo-Quieter 主题 %c https://github.com/GZ-Metal-Cell/hexo-theme-quieter \n', 'color: #fadfa3; background: #030307; padding:5px 0;', 'background: #fadfa3; padding:5px 0;')
 	</script>
 </footer>
-	
-        <style>
-            [bg-lazy] {
-                background-image: none !important;
-                background-color: #eee !important;
-            }
-        </style>
-        <script>
-            window.imageLazyLoadSetting = {
-                isSPA: true,
-                preloadRatio: 5,
-                processImages: null,
-            };
-        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var a=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,d=o();function o(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(t){(a||t)&&(d=o());for(var e,i=0;i<d.length;i++)0<=(e=(e=d[i]).getBoundingClientRect()).bottom&&0<=e.left&&e.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,a,n,o=d[i];e=function(){d=d.filter(function(t){return o!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(o)},(t=o).dataset.loaded||(t.hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(a=new Image,n=t.getAttribute("data-original"),a.onload=function(){t.src=n,t.removeAttribute("data-original"),t.setAttribute("data-loaded",!0),e&&e()},a.onerror=function(){t.removeAttribute("data-original"),t.setAttribute("data-loaded",!1),t.src=n},t.src!==n&&(a.src=n)))}()}function e(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",e),r.addEventListener("resize",e),r.addEventListener("orientationchange",e)}(this);</script></body>
+	</body>
 
 	<!-- Hexo-Quieter 主题  https://github.com/GZ-Metal-Cell/hexo-theme-quieter -->
 </html>

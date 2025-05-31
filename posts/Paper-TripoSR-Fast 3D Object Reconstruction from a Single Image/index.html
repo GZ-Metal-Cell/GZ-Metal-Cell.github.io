@@ -535,19 +535,19 @@
 <p>​	由于墙内下载 huggingface 的模型容易失败，改为采用离线加载模型的形式。修改 <code>run.py</code> 里的内容：</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs shell">parser.add_argument(<br>    &quot;--pretrained-model-name-or-path&quot;,<br>    default= &quot;models/&quot;,  # &quot;stabilityai/TripoSR&quot;,<br>    type=str,<br>    help=&quot;Path to the pretrained model. Could be either a huggingface model id is or a local path. Default: &#x27;stabilityai/TripoSR&#x27;&quot;,<br>)<br></code></pre></td></tr></table></figure>
 <p>​	从 <a target="_blank" rel="noopener" href="https://huggingface.co/stabilityai/TripoSR/tree/main">stabilityai/TripoSR at main (huggingface.co)</a> 下载 <code>config.yaml</code> 和 <code>model.ckpt</code> 到 <code>models/</code> 下：</p>
-<p><img src="/images/loading.webp" data-original="01.png" alt="放置模型"></p>
+<p><img src="01.png" alt="放置模型"></p>
 <p>​	准备一张模型图片，就决定是你了！淘宝吉祥物！</p>
-<p><img src="/images/loading.webp" data-original="Ali.jpg" alt="阿里吉祥物"></p>
+<p><img src="Ali.jpg" alt="阿里吉祥物"></p>
 <p>​	开跑！</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">python run.py examples/XXX.png --output-dir output/<br></code></pre></td></tr></table></figure>
 <p>​	emmm 还是下了一个叫 <code>'https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2net.onnx'</code> 的东西，还好没被墙。</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs shell">2024-03-18 11:02:00,713 - INFO - Initializing model ...<br>Downloading config.json: 100%|█████████████████████████████████████████████████████████| 454/454 [00:00&lt;00:00, 149kB/s]<br>C:\Users\19048\.conda\envs\TripoSR\lib\site-packages\huggingface_hub\file_download.py:137: UserWarning: `huggingface_hub` cache-system uses symlinks by default to efficiently store duplicated files but your machine does not support them in C:\Users\19048\.cache\huggingface\hub. Caching files will still work but in a degraded version that might require more space on your disk. This warning can be disabled by setting the `HF_HUB_DISABLE_SYMLINKS_WARNING` environment variable. For more details, see https://huggingface.co/docs/huggingface_hub/how-to-cache#limitations.<br>To support symlinks on Windows, you either need to activate Developer Mode or to run Python as an administrator. In order to see activate developer mode, see this article: https://docs.microsoft.com/en-us/windows/apps/get-started/enable-your-device-for-development<br>  warnings.warn(message)<br>2024-03-18 11:02:07,536 - INFO - Initializing model finished in 6819.83ms.<br>2024-03-18 11:02:07,539 - INFO - Processing images ...<br>Downloading data from &#x27;https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2net.onnx&#x27; to file &#x27;C:\Users\19048\.u2net\u2net.onnx&#x27;.<br><span class="hljs-meta prompt_">100%</span><span class="language-bash">|########################################| 176M/176M [00:00&lt;00:00, 117GB/s]</span><br>2024-03-18 11:02:30,617 - INFO - Processing images finished in 23078.31ms.<br>2024-03-18 11:02:30,617 - INFO - Running image 1/1 ...<br>2024-03-18 11:02:30,618 - INFO - Running model ...<br>2024-03-18 11:02:35,306 - INFO - Running model finished in 4686.22ms.<br>2024-03-18 11:02:35,306 - INFO - Exporting mesh ...<br>torchmcubes was not compiled with CUDA support, use CPU version instead.<br>2024-03-18 11:02:37,869 - INFO - Exporting mesh finished in 2563.17ms.<br></code></pre></td></tr></table></figure>
 <p>​	这个程序会自动帮你抠图：</p>
-<p><img src="/images/loading.webp" data-original="input.png" alt="自动扣图"></p>
+<p><img src="input.png" alt="自动扣图"></p>
 <p>​	不过抠得不是很好，导致生成的模型多了点背景信息。我们手动抠图再试一次：</p>
-<p><img src="/images/loading.webp" data-original="Ali.png" alt="手动抠图"></p>
+<p><img src="Ali.png" alt="手动抠图"></p>
 <p>​	用 Blender 打开这个模型，修复一下旋转。生成的模型显示不出纹理信息，按 <a target="_blank" rel="noopener" href="https://huggingface.co/stabilityai/TripoSR/discussions/1">stabilityai/TripoSR · It doesn’t save texture to the .obj? (huggingface.co)</a> 所说，应该在 Blender 里设置一下材质（将 <code>Color Attribute</code> 节点连接到 <code>Base Color</code> 里，但好像有些模型还是不行……）：</p>
-<p><img src="/images/loading.webp" data-original="02.png" alt="设置材质"></p>
+<p><img src="02.png" alt="设置材质"></p>
 <p>​	顺便送这个模型一个 <code>Decimate</code> 减少一下面数再导出，真是太棒了！</p>
 <link href="./styles/main.css" rel="stylesheet" type="text/css">
 <div class="scene-container" id="scene-container"></div>
@@ -686,7 +686,7 @@
                 </a>
                 <a href="/archives" class="aside-top-about-site-item">
                     <span class="title">归档</span>
-                    <span class="count">422</span>
+                    <span class="count">420</span>
                 </a>
             </div>
             <div class="aside-top-about-contact">
@@ -849,20 +849,7 @@
 		console.log('\n %c Hexo-Quieter 主题 %c https://github.com/GZ-Metal-Cell/hexo-theme-quieter \n', 'color: #fadfa3; background: #030307; padding:5px 0;', 'background: #fadfa3; padding:5px 0;')
 	</script>
 </footer>
-	
-        <style>
-            [bg-lazy] {
-                background-image: none !important;
-                background-color: #eee !important;
-            }
-        </style>
-        <script>
-            window.imageLazyLoadSetting = {
-                isSPA: true,
-                preloadRatio: 5,
-                processImages: null,
-            };
-        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var a=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,d=o();function o(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(t){(a||t)&&(d=o());for(var e,i=0;i<d.length;i++)0<=(e=(e=d[i]).getBoundingClientRect()).bottom&&0<=e.left&&e.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,a,n,o=d[i];e=function(){d=d.filter(function(t){return o!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(o)},(t=o).dataset.loaded||(t.hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(a=new Image,n=t.getAttribute("data-original"),a.onload=function(){t.src=n,t.removeAttribute("data-original"),t.setAttribute("data-loaded",!0),e&&e()},a.onerror=function(){t.removeAttribute("data-original"),t.setAttribute("data-loaded",!1),t.src=n},t.src!==n&&(a.src=n)))}()}function e(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",e),r.addEventListener("resize",e),r.addEventListener("orientationchange",e)}(this);</script></body>
+	</body>
 
 	<!-- Hexo-Quieter 主题  https://github.com/GZ-Metal-Cell/hexo-theme-quieter -->
 </html>
