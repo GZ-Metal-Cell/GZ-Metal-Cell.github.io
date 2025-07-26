@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang=zh-CN data-theme="light">
+	
+<script src="/js/plugins/toggleTheme.js"></script>
+
+	<script>
+		setTheme();
+	</script>
+	<head>
+		
+<title>Paper-Segment Anything in Medical Images | Zi-Zi's Journey</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="shortcut icon" type="image/x-icon" href="/images/icon/favicon.ico">
+<link href="/css/plugins/print.css" media="print" rel="stylesheet" />
+
+<link rel="stylesheet" href="/css/index.css">
+
+
+
+<meta name="keywords" content="Python,论文,Pytorch,代码复现,图像分割,">
+<meta name="description" content="论文阅读。">
+
+
+
+<script src="/js/plugins/jquery.min.js"></script>
+
+
+<script src="/js/plugins/hljs.min.js"></script>
+
+
+<script src="/js/plugins/init.js"></script>
+
+
+<script src="/js/plugins/hide.js"></script>
+
+
+<script src="/js/plugins/tabs.js"></script>
+
+
+
+    
+
+
+
+    
+<script src="/js/plugins/alert-title.js"></script>
+
+    
+<link rel="stylesheet" href="/css/plugins/github-alerts/github-base.css">
+
+    
+<link rel="stylesheet" href="/css/plugins/github-alerts/github-colors-dark-class.css">
+
+    
+<link rel="stylesheet" href="/css/plugins/github-alerts/github-colors-light.css">
+
+
+
+
+
+
+    
+
+	<meta name="generator" content="Hexo 6.1.0"></head>
+
+	<body>
+		<header class="sticky-header">
+	<nav>
+		<div class="nav-left">
+			<a href="/" class="logo">
+				<img no-lazy src="/images/headers_icon/logo.webp" alt="Quieter">
+			</a>
+			<ul class="breadcrumb" id="breadcrumb"></ul>
+		</div>
+		<div class="nav-right">
+			<ul>
+				
+					<li>
+						<a href="/">
+						  主页
+						</a>
+					</li>
+				
+					<li>
+						<a href="/categories">
+						  类别
+						</a>
+					</li>
+				
+					<li>
+						<a href="/tags">
+						  标签
+						</a>
+					</li>
+				
+					<li>
+						<a href="/archives">
+						  归档
+						</a>
+					</li>
+				
+					<li>
+						<a href="/galleries">
+						  相册
+						</a>
+					</li>
+				
+					<li>
+						<a href="/links">
+						  链接
+						</a>
+					</li>
+				
+					<li>
+						<a href="/about">
+						  关于
+						</a>
+					</li>
+								  
+			</ul>
+		</div>
+		<div class="nav-right-close">
+			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+				<path fill="none" d="M0 0h24v24H0z" />
+				<path d="M3 4h18v2H3V4zm0 7h18v2H3v-2zm0 7h18v2H3v-2z" fill="rgba(68,68,68,1)" />
+			</svg>
+		</div>
+
+		<div class="sidebar">
+    <div class="topo">
+        <p>Zi-Zi's Journey</p>
+    </div>
+    <ul>
+        
+        <li>
+            <a href="/">
+                主页
+            </a>
+        </li>
+        
+        <li>
+            <a href="/categories">
+                类别
+            </a>
+        </li>
+        
+        <li>
+            <a href="/tags">
+                标签
+            </a>
+        </li>
+        
+        <li>
+            <a href="/archives">
+                归档
+            </a>
+        </li>
+        
+        <li>
+            <a href="/galleries">
+                相册
+            </a>
+        </li>
+        
+        <li>
+            <a href="/links">
+                链接
+            </a>
+        </li>
+        
+        <li>
+            <a href="/about">
+                关于
+            </a>
+        </li>
+        
+    </ul>
+    <div class="sidebar-footer">
+        
+        <a target="_blank" rel="noopener" href="https://weibo.com/u/5020307235">
+            <img no-lazy src="/images/bottom_icon/Weibo.webp" alt="Quieter">
+        </a>
+        
+        <a target="_blank" rel="noopener" href="https://tieba.baidu.com/home/main?id=tb.1.ff6d2775.vFH7wrdW2ZjPCmyBHJcjnA">
+            <img no-lazy src="/images/bottom_icon/Tieba.webp" alt="Quieter">
+        </a>
+        
+        <a target="_blank" rel="noopener" href="https://space.bilibili.com/11547880">
+            <img no-lazy src="/images/bottom_icon/Bilibili.webp" alt="Quieter">
+        </a>
+        
+        <a target="_blank" rel="noopener" href="https://github.com/GZ-Metal-Cell">
+            <img no-lazy src="/images/bottom_icon/github.webp" alt="Quieter">
+        </a>
+        
+    </div>
+</div>
+<div class='shelter'>
+    <script>
+        $(function() {
+            $('.nav-right-close > svg').click(function() {
+                $('.sidebar').animate({
+                    right: "0"
+                }, 500);
+                $('.shelter').fadeIn("slow");
+            
+                var element = $('.topo');
+                element.addClass('custom-style');
+            
+                var links = null;
+                if ("") {
+                    links = "".split(',');
+                } else {
+                    links = "/images/random_top_img/01.webp,/images/random_top_img/02.webp,/images/random_top_img/03.webp,/images/random_top_img/04.webp,/images/random_top_img/05.webp,/images/random_top_img/06.webp,/images/random_top_img/07.webp,/images/random_top_img/08.webp,/images/random_top_img/09.webp,/images/random_top_img/10.webp,/images/random_top_img/11.webp,/images/random_top_img/12.webp,/images/random_top_img/13.webp,/images/random_top_img/14.webp,/images/random_top_img/15.webp,/images/random_top_img/16.webp,/images/random_top_img/17.webp,/images/random_top_img/18.webp,/images/random_top_img/19.webp,/images/random_top_img/20.webp,/images/random_top_img/21.webp,/images/random_top_img/22.webp,/images/random_top_img/23.webp,/images/random_top_img/24.webp,/images/random_top_img/25.webp,/images/random_top_img/26.webp,/images/random_top_img/27.webp,/images/random_top_img/28.webp,/images/random_top_img/29.webp,/images/random_top_img/30.webp,/images/random_top_img/31.webp,/images/random_top_img/32.webp,/images/random_top_img/33.webp,/images/random_top_img/34.webp,/images/random_top_img/35.webp,/images/random_top_img/36.webp,/images/random_top_img/37.webp,/images/random_top_img/38.webp,/images/random_top_img/39.webp,/images/random_top_img/40.webp,/images/random_top_img/41.webp,/images/random_top_img/42.webp,/images/random_top_img/43.webp,/images/random_top_img/44.webp,/images/random_top_img/45.webp,/images/random_top_img/46.webp,/images/random_top_img/47.webp,/images/random_top_img/48.webp,/images/random_top_img/49.webp,/images/random_top_img/50.webp,/images/random_top_img/51.webp,/images/random_top_img/52.webp,/images/random_top_img/53.webp,/images/random_top_img/54.webp,/images/random_top_img/55.webp,/images/random_top_img/56.webp,/images/random_top_img/57.webp".split(',');
+                }
+            
+                var randomLink = links[Math.floor(Math.random() * links.length)];
+                element.css('background-image', "url('" + randomLink + "')");
+            });
+          
+            $('.shelter').click(function(e) {
+                $('.sidebar').animate({
+                    right: "-100%"
+                }, 500);
+                $('.shelter').fadeOut("slow");
+            });
+        });      
+    </script>
+</div>
+	</nav>
+
+	
+		<div class="header-background"></div>
+	
+
+	<script>
+		const name = 'post';
+		const ul = document.querySelectorAll('.nav-right ul')[0];
+		const lis = ul.querySelectorAll('li');
+
+		if (name == 'home') {
+			lis[0].classList.add('select');
+		} else {
+			for (let i = 0; i < lis.length; i++) {
+				const li = lis[i];
+				const a = li.querySelector('a');
+				if (name === a.href.split('/')[3]) {
+					li.classList.add('select');
+				}
+			}
+		}
+	</script>
+	
+	<script>
+		var element = document.querySelector('.header-background');
+		if(element) {
+			element.classList.add('custom-style');
+			var links = null;
+			if("")
+			{
+				links = "".split(',');
+			} else
+			{
+				links = "/images/random_top_img/01.webp,/images/random_top_img/02.webp,/images/random_top_img/03.webp,/images/random_top_img/04.webp,/images/random_top_img/05.webp,/images/random_top_img/06.webp,/images/random_top_img/07.webp,/images/random_top_img/08.webp,/images/random_top_img/09.webp,/images/random_top_img/10.webp,/images/random_top_img/11.webp,/images/random_top_img/12.webp,/images/random_top_img/13.webp,/images/random_top_img/14.webp,/images/random_top_img/15.webp,/images/random_top_img/16.webp,/images/random_top_img/17.webp,/images/random_top_img/18.webp,/images/random_top_img/19.webp,/images/random_top_img/20.webp,/images/random_top_img/21.webp,/images/random_top_img/22.webp,/images/random_top_img/23.webp,/images/random_top_img/24.webp,/images/random_top_img/25.webp,/images/random_top_img/26.webp,/images/random_top_img/27.webp,/images/random_top_img/28.webp,/images/random_top_img/29.webp,/images/random_top_img/30.webp,/images/random_top_img/31.webp,/images/random_top_img/32.webp,/images/random_top_img/33.webp,/images/random_top_img/34.webp,/images/random_top_img/35.webp,/images/random_top_img/36.webp,/images/random_top_img/37.webp,/images/random_top_img/38.webp,/images/random_top_img/39.webp,/images/random_top_img/40.webp,/images/random_top_img/41.webp,/images/random_top_img/42.webp,/images/random_top_img/43.webp,/images/random_top_img/44.webp,/images/random_top_img/45.webp,/images/random_top_img/46.webp,/images/random_top_img/47.webp,/images/random_top_img/48.webp,/images/random_top_img/49.webp,/images/random_top_img/50.webp,/images/random_top_img/51.webp,/images/random_top_img/52.webp,/images/random_top_img/53.webp,/images/random_top_img/54.webp,/images/random_top_img/55.webp,/images/random_top_img/56.webp,/images/random_top_img/57.webp".split(',');
+			}
+			var randomLink = links[Math.floor(Math.random() * links.length)];
+			element.style.backgroundImage = "url('" + randomLink + "')";
+		}
+	</script>
+
+	
+<script src="/js/plugins/breadcrumb.js"></script>
+
+	<script>
+		var menus_title = [];
+		
+			menus_title.push({home: '主页'});
+		
+			menus_title.push({categories: '类别'});
+		
+			menus_title.push({tags: '标签'});
+		
+			menus_title.push({archives: '归档'});
+		
+			menus_title.push({galleries: '相册'});
+		
+			menus_title.push({links: '链接'});
+		
+			menus_title.push({about: '关于'});
+		
+		
+			
+				postsBreadcrumb(
+					document.getElementById('breadcrumb'),
+					"类别",
+					"/categories",
+					"学习",
+					"/categories/学习",
+					1
+				);
+			
+		
+	</script>
+</header>
+
+<div class="main-wrapper">
+    <main class="post">
+        <header class="main-header">
+	
+		
+			
+				
+<link rel="stylesheet" href="/css/plugins/fancybox.css">
+
+				
+<script src="/js/plugins/fancybox.umd.js"></script>
+
+				
+<script src="/js/plugins/fancybox.js"></script>
+
+			
+			<div class="post-header-background-content">
+				<ul class="post-header-tag">
+					
+						
+							<li><a href="/tags/Python"><span>Python</span></a></li>
+						
+							<li><a href="/tags/论文"><span>论文</span></a></li>
+						
+							<li><a href="/tags/Pytorch"><span>Pytorch</span></a></li>
+						
+							<li><a href="/tags/代码复现"><span>代码复现</span></a></li>
+						
+							<li><a href="/tags/图像分割"><span>图像分割</span></a></li>
+						
+					
+				</ul>
+				
+				<h1>Paper-Segment Anything in Medical Images</h1>
+		
+				
+					<div class="post-header-desc">
+						<svg t="1714702231661" class="icon" viewBox="0 0 1024 1024" version="1.1"
+						xmlns="http://www.w3.org/2000/svg" p-id="1154" xmlns:xlink="http://www.w3.org/1999/xlink"
+						width="20" height="20">
+						<path
+							d="M778.24 117.76A46.08 46.08 0 0 1 824.32 163.84v430.08c0 8.4992-4.13696 16.01536-10.50624 20.6848l-0.24576 0.2048L587.5712 846.09024a35.84 35.84 0 0 1-61.48096-25.06752v-220.9792a46.08 46.08 0 0 1 46.08-46.08l200.94976-0.02048V168.96h-522.24v686.08H389.12c13.25056 0 24.1664 10.07616 25.47712 22.97856l0.12288 2.62144c0 14.1312-11.4688 25.6-25.6 25.6h-143.36A46.08 46.08 0 0 1 199.68 860.16V163.84A46.08 46.08 0 0 1 245.76 117.76h532.48z m-26.78784 487.38304h-174.16192v178.176l174.16192-178.176z m-45.19936-169.94304a25.6 25.6 0 0 1 0 51.2H307.2a25.6 25.6 0 0 1 0-51.2h399.0528z m0-122.88a25.6 25.6 0 0 1 0 51.2H307.2a25.6 25.6 0 0 1 0-51.2h399.0528z"
+							fill="#ffffff" p-id="1155"></path>
+						</svg>
+						<p>论文阅读。</p>
+					</div>
+				
+		
+				<div class="post-header-info">
+					<svg t="1604839279282" class="icon" viewBox="0 0 1024 1024" version="1.1"
+					xmlns="http://www.w3.org/2000/svg" p-id="2901" width="20" height="20">
+						<path
+							d="M513 956.3c-247.7 0-448-200.3-448-448S265.3 66.2 513 66.2s448 200.3 448 448-200.3 442.1-448 442.1z m0-830.9c-212.2 0-388.8 170.7-388.8 388.8C124.2 726.3 294.9 903 513 903c212.2 0 388.8-170.7 388.8-388.8S725.2 125.4 513 125.4z m0 430.2c-94.2 0-170.7-76.5-170.7-170.7S418.8 207.8 513 207.8s170.7 76.5 170.7 170.7S607.2 555.6 513 555.6z m0-289.1c-64.6 0-112 52.8-112 112s47.4 117.9 112 117.9 112-52.8 112-112-47.4-117.9-112-117.9z m0 689.8c-135.7 0-259-58.7-341.9-158.9l-11.8-17.8 11.8-17.8c76.5-117.9 206.2-188.5 347.8-188.5 135.7 0 265 64.6 341.9 182.6l11.8 17.8-11.8 17.8C778 897.1 648.7 956.3 513 956.3zM230.3 773.2C300.9 849.7 406.9 897 513 897c112 0 218.1-47.4 288.6-129.8-70.5-88.2-170.7-135.6-282.7-135.6s-218.1 53.3-288.6 141.6z"
+							p-id="2902" fill="#ffffff"></path>
+					</svg>
+					<div class="post-header-info-author">
+						<a href="/about">Zi-Zi</a>
+					</div>
+					
+						<div class="post-header-info-categories">
+							
+								<a href="/categories/学习">学习</a>
+							
+						</div>
+					
+					<time>2023/04/26 21:11:00</time>
+				</div>
+		
+				
+					<div class="post-header-stat">
+						<svg version="1.0" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+						viewBox="0 0 200 200" enable-background="new 0 0 200 200" xml:space="preserve" width="20" height="20">
+							<path fill="#FFFFFF" d="M187.2,165.6c0,2.6-2.1,4.7-4.7,4.7H17.5c-2.6,0-4.7-2.1-4.7-4.7s2.1-4.7,4.7-4.7h165.1
+								C185.2,160.9,187.2,163,187.2,165.6z"/>
+							<path fill="#FFFFFF" d="M17.5,29.7c2.6,0,4.7,2.1,4.7,4.7v131.2c0,2.6-2.1,4.7-4.7,4.7s-4.7-2.1-4.7-4.7V34.4
+								C12.8,31.8,14.9,29.7,17.5,29.7z M77.9,91.5c1.8,1.8,1.8,4.8,0,6.6l-39.8,39.8c-1.9,1.8-4.9,1.7-6.6-0.2c-1.7-1.8-1.7-4.6,0-6.4
+								l39.8-39.8C73.1,89.6,76,89.6,77.9,91.5z M169.9,70.2c1.6,2.1,1.1,5-0.9,6.5c0,0,0,0,0,0l-64.2,48.2c-2.1,1.5-5,1.1-6.6-0.9
+								c-1.6-2.1-1.1-5,0.9-6.5c0,0,0,0,0,0l64.2-48.2C165.4,67.7,168.3,68.1,169.9,70.2L169.9,70.2z"/>
+							<path fill="#FFFFFF" d="M104.6,124.5c-1.8,1.8-4.8,1.8-6.6,0L71.6,98.1c-1.8-1.8-1.8-4.8,0-6.6c1.8-1.8,4.8-1.8,6.6,0l26.3,26.3
+								C106.4,119.6,106.4,122.6,104.6,124.5C104.6,124.4,104.6,124.4,104.6,124.5z"/>
+						</svg>
+		
+						
+							
+<script src="/js/plugins/wordCount.js"></script>
+
+							<p class="post-count">文字数：---</p>
+						
+		
+						
+							<p id="busuanzi_container_page_pv" style='display:none;'>阅读数：<span id="busuanzi_value_page_pv"></span></p>
+						
+					</div>
+				
+			</div>
+		
+	
+</header>
+        <div class="post-content article-container">
+            <article class="post-content-info">
+                <h1 id="%E8%B5%84%E6%BA%90" tabindex="-1">资源</h1>
+<ul>
+<li>
+<p>原文：[<a target="_blank" rel="noopener" href="https://arxiv.org/abs/2304.12306v1">2304.12306v1] Segment Anything in Medical Images (arxiv.org)</a></p>
+</li>
+<li>
+<p>代码：<a target="_blank" rel="noopener" href="https://github.com/bowang-lab/medsam">bowang-lab/MedSAM: This the official repository for MedSAM: Segment Anything in Medical Images. (github.com)</a></p>
+</li>
+</ul>
+<h1 id="%E7%AC%94%E8%AE%B0" tabindex="-1">笔记</h1>
+<ul>
+<li>
+<p>SAM 真是太牛逼啦！但是它在医学图像上的性能十分有限。</p>
+</li>
+<li>
+<p>介绍了 <strong>MedSAM</strong>：</p>
+<ul>
+<li>
+<p>设计了一个大规模的医学图像数据集，包含 11 种模式，20 多万个蒙版。<strong>提供了关于在定制的新数据集上微调 SAM 的分步教程</strong>。</p>
+</li>
+<li>
+<p>开发了一种简单的微调方法（simple fine-tuning method），将 SAM 用于普通医学图像分割。在 21 个 3D 分割任务和 9 个 2D 任务中，比默认 SAM 要好使。</p>
+</li>
+</ul>
+</li>
+</ul>
+<hr>
+<p>​    第一个也是最著名的**基础分割模型（segmentation foundation model）**是 SAM，它在超过 1B 个蒙版上进行训练，可以根据提示（例如，边界框、点、文本）或以全自动的方式生成准确的对象蒙版。但是自然图像和医学图像之前存在显著差异，这些模型在医学图像分割中的适用性仍然有限，在一些典型的医学图像分割任务（对象边缘信息较弱）中不好使。</p>
+<hr>
+<p>​    SAM 利用了基于 transformer 的架构：</p>
+<ul>
+<li>
+<p>使用 transformer-based 的**图像编码器（image encoder）**提取图像特征</p>
+<ul>
+<li>pretrained with masked auto-encoder modeling，可以处理高分辨率图像（即 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mn>1</mn><mn>0</mn><mn>2</mn><mn>4</mn><mo>×</mo><mn>1</mn><mn>0</mn><mn>2</mn><mn>4</mn></mrow><annotation encoding="application/x-tex">1024\times 1024</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.64444em;"></span><span class="strut bottom" style="height:0.72777em;vertical-align:-0.08333em;"></span><span class="base textstyle uncramped"><span class="mord mathrm">1</span><span class="mord mathrm">0</span><span class="mord mathrm">2</span><span class="mord mathrm">4</span><span class="mbin">×</span><span class="mord mathrm">1</span><span class="mord mathrm">0</span><span class="mord mathrm">2</span><span class="mord mathrm">4</span></span></span></span>），获得的图像嵌入是 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mn>1</mn><mn>6</mn><mo>×</mo><mrow><mi mathvariant="normal">d</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">w</mi><mi mathvariant="normal">n</mi><mi mathvariant="normal">s</mi><mi mathvariant="normal">c</mi><mi mathvariant="normal">a</mi><mi mathvariant="normal">l</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">d</mi></mrow><mo>(</mo><mn>6</mn><mn>4</mn><mo>×</mo><mn>6</mn><mn>4</mn><mo>)</mo></mrow><annotation encoding="application/x-tex">16\times \mathrm{downscaled}(64\times 64)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.75em;"></span><span class="strut bottom" style="height:1em;vertical-align:-0.25em;"></span><span class="base textstyle uncramped"><span class="mord mathrm">1</span><span class="mord mathrm">6</span><span class="mbin">×</span><span class="mord textstyle uncramped"><span class="mord mathrm">d</span><span class="mord mathrm">o</span><span class="mord mathrm" style="margin-right:0.01389em;">w</span><span class="mord mathrm">n</span><span class="mord mathrm">s</span><span class="mord mathrm">c</span><span class="mord mathrm">a</span><span class="mord mathrm">l</span><span class="mord mathrm">e</span><span class="mord mathrm">d</span></span><span class="mopen">(</span><span class="mord mathrm">6</span><span class="mord mathrm">4</span><span class="mbin">×</span><span class="mord mathrm">6</span><span class="mord mathrm">4</span><span class="mclose">)</span></span></span></span></li>
+</ul>
+</li>
+<li>
+<p>使用**提示编码器（prompt encoder）**结合用户交互</p>
+<ul>
+<li>支持四种不同的提示
+<ul>
+<li>点：通过傅里叶位置编码和两个可学习的标记进行编码，分别用于指定前景和背景</li>
+<li>边界框：通过其左上角的点和右下角的点进行编码</li>
+<li>文本：由 CLIP 中经过预训练的文本编码器进行编码</li>
+<li>掩码：与输入图像具有相同的分辨率，输入图像由卷积特征图编码</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>使用**掩码解码器（mask encoder）**来基于图像嵌入、提示嵌入和输出令牌生成分割结果和置信度得分。</p>
+<ul>
+<li>采用了轻量级设计，由两个转换器层组成，具有动态蒙版预测头和两个交集（Intersection-over-Union，IOU）分数回归头。</li>
+</ul>
+</li>
+</ul>
+<p>​    蒙版预测头可以生成 3 个 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mn>4</mn><mo>×</mo><mrow><mi mathvariant="normal">d</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">w</mi><mi mathvariant="normal">n</mi><mi mathvariant="normal">s</mi><mi mathvariant="normal">c</mi><mi mathvariant="normal">a</mi><mi mathvariant="normal">l</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">d</mi><mtext> </mtext><mi mathvariant="normal">m</mi><mi mathvariant="normal">a</mi><mi mathvariant="normal">s</mi><mi mathvariant="normal">k</mi><mi mathvariant="normal">s</mi></mrow></mrow><annotation encoding="application/x-tex">4\times \mathrm{downscaled\ masks}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.69444em;"></span><span class="strut bottom" style="height:0.77777em;vertical-align:-0.08333em;"></span><span class="base textstyle uncramped"><span class="mord mathrm">4</span><span class="mbin">×</span><span class="mord textstyle uncramped"><span class="mord mathrm">d</span><span class="mord mathrm">o</span><span class="mord mathrm" style="margin-right:0.01389em;">w</span><span class="mord mathrm">n</span><span class="mord mathrm">s</span><span class="mord mathrm">c</span><span class="mord mathrm">a</span><span class="mord mathrm">l</span><span class="mord mathrm">e</span><span class="mord mathrm">d</span><span class="mord mspace"> </span><span class="mord mathrm">m</span><span class="mord mathrm">a</span><span class="mord mathrm">s</span><span class="mord mathrm">k</span><span class="mord mathrm">s</span></span></span></span></span>，分别对应于整个对象、部分对象和子对象。</p>
+<p><img src="2.png" alt="png"></p>
+<hr>
+<p>SAM 支持 3 中主要的分割模式：</p>
+<ul>
+<li>以全自动方式分割所有内容（segment everything in a fully automatic way）
+<ul>
+<li>没有语义标签，一些分割的东西无意义</li>
+</ul>
+</li>
+<li>边界框模式（bounding box mode）
+<ul>
+<li>只给出左上角和右下角的点，就可以为右肾提供良好的分割结果</li>
+</ul>
+</li>
+<li>点模式（point mode）
+<ul>
+<li>先给一个前景点，再给一个背景点</li>
+</ul>
+</li>
+</ul>
+<p>我们认为，在医学图像分割任务中使用 SAM 时，基于边界框的分割模式比基于分割一切和点的分割模式具有更广泛的实用价值。</p>
+<hr>
+<p>​    为了使 SAM 适用于医学图像分割，有必要选择适当的用户提示和网络组件进行微调。</p>
+<p>​    基于以上分析，<strong>边界框提示</strong>是指定分割目标的正确选择。SAM 的网络架构包含三个主要组件：<strong>图像编码器</strong>、<strong>提示编码器</strong>和<strong>掩码解码器</strong>。人们可以选择微调它们的任何组合。</p>
+<ul>
+<li>
+<p><strong>图像编码器</strong>基于 vision transformer，该转换器在 SAM 中具有最大的计算开销。为了降低计算成本，将<strong>图像编码器</strong> <em>冻结</em></p>
+</li>
+<li>
+<p><strong>提示编码器</strong>对边界框的位置信息进行编码，并且可以从 SAM 中预先训练的边界框编码器中重复使用，<em>冻结</em></p>
+</li>
+<li>
+<p><strong>只</strong> <em>微调</em> <strong>掩码解码器</strong></p>
+</li>
+</ul>
+<p><img src="3.png" alt="png"></p>
+<p>​    由于图像编码器可以在提示模型之前应用，因此我们可以<strong>预先计算所有训练图像的图像嵌入</strong>，以避免每次提示的图像嵌入的重复计算，这可以显著提高训练效率。掩码解码器只需要生成一个掩码，而不需要生成三个掩码，因为在大多数情况下，边界框提示可以清楚地指定预期的分割目标。</p>
+<hr>
+<p>​    每个数据集被随机分为80个和20个，用于训练和测试。排除了像素小于 100 的分割目标。由于 SAM 是为 2D 图像分割而设计的，我们将3D图像（即CT、MR、PET）沿平面外维度划分为2D切片。然后，我们使用预先训练的 ViT-Base 模型作为图像编码器，并通过将归一化的图像馈送到图像编码器来离线计算所有图像嵌入（图像编码器将图像大小转换为 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mn>3</mn><mo>×</mo><mn>1</mn><mn>0</mn><mn>2</mn><mn>4</mn><mo>×</mo><mn>1</mn><mn>0</mn><mn>2</mn><mn>4</mn></mrow><annotation encoding="application/x-tex">3\times 1024\times 1024</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.64444em;"></span><span class="strut bottom" style="height:0.72777em;vertical-align:-0.08333em;"></span><span class="base textstyle uncramped"><span class="mord mathrm">3</span><span class="mbin">×</span><span class="mord mathrm">1</span><span class="mord mathrm">0</span><span class="mord mathrm">2</span><span class="mord mathrm">4</span><span class="mbin">×</span><span class="mord mathrm">1</span><span class="mord mathrm">0</span><span class="mord mathrm">2</span><span class="mord mathrm">4</span></span></span></span>）。在训练期间，边界框提示是从具有0-20个像素的随机扰动的地面实况掩码生成的。损失函数是Dice损失和交叉熵损失之间的未加权和，已被证明在各种分割任务中是稳健的。Adam 优化器对网络进行了优化，初始学习率为1e-5。</p>
+<hr>
+<p>​    使用<strong>骰子相似系数（DSC）<strong>和</strong>归一化表面距离（NSD，公差 1mm）<strong>来评估基本事实和分割结果之间的区域重叠率和边界一致性，这是两种常用的</strong>分割指标</strong>。</p>
+<hr>
+<p>​    我们的代码和经过训练的模型是公开的，<strong>我们提供了关于在定制的新数据集上微调SAM的分步教程</strong>。我们期待着与社区合作，共同推进这一令人兴奋的研究领域。</p>
+<h1 id="%E4%BB%A3%E7%A0%81" tabindex="-1">代码</h1>
+<h2 id="%E9%85%8D%E7%BD%AE" tabindex="-1" id="配置">配置</h2>
+<p>新建一个 conda 环境：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">conda create -n medsam python=3.10 -y<br></code></pre></td></tr></table></figure>
+<p>激活之：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">conda activate medsam<br></code></pre></td></tr></table></figure>
+<p>离线安装 pytorch：</p>
+<p>从 <a target="_blank" rel="noopener" href="https://download.pytorch.org/whl/torch_stable.html">download.pytorch.org/whl/torch_stable.html</a> 下载对应版本的 <code>pytorch</code> 和 <code>torchvision</code>：</p>
+<ul>
+<li><code>torch-2.0.0+cu117-cp310-cp310-win_amd64.whl</code></li>
+<li><code>torchvision-0.15.1+cu117-cp310-cp310-win_amd64.whl</code></li>
+</ul>
+<p><img src="C1.png" alt="png"></p>
+<p>安装之：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">pip install torch-2.0.0+cu117-cp310-cp310-win_amd64.whl -i https://pypi.tuna.tsinghua.edu.cn/simple<br></code></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">pip install torchvision-0.15.1+cu117-cp310-cp310-win_amd64.whl -i https://pypi.tuna.tsinghua.edu.cn/simple<br></code></pre></td></tr></table></figure>
+<p>下载仓库：<a target="_blank" rel="noopener" href="https://github.com/bowang-lab/medsam">bowang-lab/MedSAM：MedSAM：Segment Anything in Medical Images的官方存储库。 (github.com)</a></p>
+<p>在仓库文件夹下:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">pip install -e . -i https://pypi.tuna.tsinghua.edu.cn/simple<br></code></pre></td></tr></table></figure>
+<h2 id="%E5%9C%A8%E8%87%AA%E5%AE%9A%E4%B9%89%E6%95%B0%E6%8D%AE%E9%9B%86%E4%B8%8A%E5%BE%AE%E8%B0%83-sam" tabindex="-1" id="在自定义数据集上微调-SAM">在自定义数据集上微调 SAM</h2>
+<ol>
+<li>打开 <code>pre_CT.py </code>，查看里面 <code>parser</code> 都定义了什么玩意儿：</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># set up the parser</span><br>parser = argparse.ArgumentParser(description=<span class="hljs-string">&#x27;preprocess CT images&#x27;</span>)<br>parser.add_argument(<span class="hljs-string">&#x27;-i&#x27;</span>, <span class="hljs-string">&#x27;--nii_path&#x27;</span>, <span class="hljs-built_in">type</span>=<span class="hljs-built_in">str</span>, default=<span class="hljs-string">&#x27;data/FLARE22Train/images&#x27;</span>, <span class="hljs-built_in">help</span>=<span class="hljs-string">&#x27;path to the nii images&#x27;</span>)<br>parser.add_argument(<span class="hljs-string">&#x27;-gt&#x27;</span>, <span class="hljs-string">&#x27;--gt_path&#x27;</span>, <span class="hljs-built_in">type</span>=<span class="hljs-built_in">str</span>, default=<span class="hljs-string">&#x27;data/FLARE22Train/labels&#x27;</span>, <span class="hljs-built_in">help</span>=<span class="hljs-string">&#x27;path to the ground truth&#x27;</span>,)<br>parser.add_argument(<span class="hljs-string">&#x27;-o&#x27;</span>, <span class="hljs-string">&#x27;--npz_path&#x27;</span>, <span class="hljs-built_in">type</span>=<span class="hljs-built_in">str</span>, default=<span class="hljs-string">&#x27;data/Npz_files&#x27;</span>, <span class="hljs-built_in">help</span>=<span class="hljs-string">&#x27;path to save the npz files&#x27;</span>)<br><br>parser.add_argument(<span class="hljs-string">&#x27;--image_size&#x27;</span>, <span class="hljs-built_in">type</span>=<span class="hljs-built_in">int</span>, default=<span class="hljs-number">256</span>, <span class="hljs-built_in">help</span>=<span class="hljs-string">&#x27;image size&#x27;</span>)<br>parser.add_argument(<span class="hljs-string">&#x27;--modality&#x27;</span>, <span class="hljs-built_in">type</span>=<span class="hljs-built_in">str</span>, default=<span class="hljs-string">&#x27;CT&#x27;</span>, <span class="hljs-built_in">help</span>=<span class="hljs-string">&#x27;modality&#x27;</span>)<br>parser.add_argument(<span class="hljs-string">&#x27;--anatomy&#x27;</span>, <span class="hljs-built_in">type</span>=<span class="hljs-built_in">str</span>, default=<span class="hljs-string">&#x27;Abd-Gallbladder&#x27;</span>, <span class="hljs-built_in">help</span>=<span class="hljs-string">&#x27;anatomy&#x27;</span>)<br>parser.add_argument(<span class="hljs-string">&#x27;--img_name_suffix&#x27;</span>, <span class="hljs-built_in">type</span>=<span class="hljs-built_in">str</span>, default=<span class="hljs-string">&#x27;_0000.nii.gz&#x27;</span>, <span class="hljs-built_in">help</span>=<span class="hljs-string">&#x27;image name suffix&#x27;</span>)<br>parser.add_argument(<span class="hljs-string">&#x27;--label_id&#x27;</span>, <span class="hljs-built_in">type</span>=<span class="hljs-built_in">int</span>, default=<span class="hljs-number">9</span>, <span class="hljs-built_in">help</span>=<span class="hljs-string">&#x27;label id&#x27;</span>)<br>parser.add_argument(<span class="hljs-string">&#x27;--prefix&#x27;</span>, <span class="hljs-built_in">type</span>=<span class="hljs-built_in">str</span>, default=<span class="hljs-string">&#x27;CT_Abd-Gallbladder_&#x27;</span>, <span class="hljs-built_in">help</span>=<span class="hljs-string">&#x27;prefix&#x27;</span>)<br>parser.add_argument(<span class="hljs-string">&#x27;--model_type&#x27;</span>, <span class="hljs-built_in">type</span>=<span class="hljs-built_in">str</span>, default=<span class="hljs-string">&#x27;vit_b&#x27;</span>, <span class="hljs-built_in">help</span>=<span class="hljs-string">&#x27;model type&#x27;</span>)<br>parser.add_argument(<span class="hljs-string">&#x27;--checkpoint&#x27;</span>, <span class="hljs-built_in">type</span>=<span class="hljs-built_in">str</span>, default=<span class="hljs-string">&#x27;work_dir/SAM/sam_vit_b_01ec64.pth&#x27;</span>, <span class="hljs-built_in">help</span>=<span class="hljs-string">&#x27;checkpoint&#x27;</span>)<br>parser.add_argument(<span class="hljs-string">&#x27;--device&#x27;</span>, <span class="hljs-built_in">type</span>=<span class="hljs-built_in">str</span>, default=<span class="hljs-string">&#x27;cuda:0&#x27;</span>, <span class="hljs-built_in">help</span>=<span class="hljs-string">&#x27;device&#x27;</span>)<br><span class="hljs-comment"># seed</span><br>parser.add_argument(<span class="hljs-string">&#x27;--seed&#x27;</span>, <span class="hljs-built_in">type</span>=<span class="hljs-built_in">int</span>, default=<span class="hljs-number">2023</span>, <span class="hljs-built_in">help</span>=<span class="hljs-string">&#x27;random seed&#x27;</span>)<br>args = parser.parse_args()<br></code></pre></td></tr></table></figure>
+<table>
+<thead>
+<tr>
+<th>参数名</th>
+<th>简称</th>
+<th>类型</th>
+<th>默认值</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>–nii_path</td>
+<td>-i</td>
+<td>str</td>
+<td>‘data/FLARE22Train/images’</td>
+<td>path to the <strong>nii images</strong></td>
+</tr>
+<tr>
+<td>–gt_path</td>
+<td>-gt</td>
+<td>str</td>
+<td>‘data/FLARE22Train/labels’</td>
+<td>path to the <strong>ground truth</strong></td>
+</tr>
+<tr>
+<td>–npz_path</td>
+<td>-o</td>
+<td>str</td>
+<td>‘data/Npz_files’</td>
+<td>path to save the <strong>npz files</strong></td>
+</tr>
+<tr>
+<td>–image_size</td>
+<td></td>
+<td>int</td>
+<td>256</td>
+<td>image size</td>
+</tr>
+<tr>
+<td>–modality</td>
+<td></td>
+<td>str</td>
+<td>‘CT’</td>
+<td>modality 形态</td>
+</tr>
+<tr>
+<td>–anatomy</td>
+<td></td>
+<td>str</td>
+<td>‘Abd-Gallbladder’</td>
+<td>anatomy 解剖</td>
+</tr>
+<tr>
+<td>–img_name_suffix</td>
+<td></td>
+<td>str</td>
+<td>‘_0000.nii.gz’</td>
+<td>image name suffix 图像名称后缀</td>
+</tr>
+<tr>
+<td>–label_id</td>
+<td></td>
+<td>int</td>
+<td>9</td>
+<td>label id</td>
+</tr>
+<tr>
+<td>–prefix</td>
+<td></td>
+<td>str</td>
+<td>‘CT_Abd-Gallbladder_’</td>
+<td>prefix 前缀</td>
+</tr>
+<tr>
+<td>–model_type</td>
+<td></td>
+<td>str</td>
+<td>‘vit_b’</td>
+<td>model type 模型类别</td>
+</tr>
+<tr>
+<td>–checkpoint</td>
+<td></td>
+<td>str</td>
+<td>‘work_dir/SAM/sam_vit_b_01ec64.pth’</td>
+<td>checkpoint</td>
+</tr>
+<tr>
+<td>–device</td>
+<td></td>
+<td>str</td>
+<td>‘cuda:0’</td>
+<td>device</td>
+</tr>
+<tr>
+<td>–seed</td>
+<td></td>
+<td>int</td>
+<td>2023</td>
+<td>random seed 随机数种子</td>
+</tr>
+</tbody>
+</table>
+<ol start="2">
+<li>下载 <a target="_blank" rel="noopener" href="https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth">sam_vit_b_01ec64.pth</a> 并将其放置在 <code>work_dir/SAM/</code> 中：</li>
+</ol>
+<p><img src="C2.png" alt="png"></p>
+<h3 id="3d" tabindex="-1" id="3D">3D</h3>
+<ol start="3">
+<li>下载 <a target="_blank" rel="noopener" href="https://zenodo.org/record/7860267">FLARE22Train.zip</a> 并将其解压，放置在 <code>data/</code> 中：</li>
+</ol>
+<p><img src="C3.png" alt="png"></p>
+<blockquote>
+<p>该数据集包含 50 个腹部 CT 扫描，每个扫描包含一个包含 13 个器官的注释面罩。器官标签的名称可在 <a target="_blank" rel="noopener" href="https://flare22.grand-challenge.org/">MICCAI FLARE2022</a> 上找到。 在本教程中，我们将微调 SAM 以进行胆囊 (gallbladder) 分割。</p>
+</blockquote>
+<blockquote>
+<p>nii.gz 是一种常见的医学影像数据格式。它是基于 NIfTI（Neuroimaging Informatics Technology Initiative）格式的一种压缩文件，通常用于存储头颅和身体的 MRI 和 CT 数据。该格式包含图像的三维体积数据，以及与图像相关的元数据信息，如图像分辨率、采集参数等。nii.gz 文件可以通过各种软件进行读取、编辑和处理，如 FSL、SPM、ANTs 等。</p>
+</blockquote>
+<ol start="4">
+<li>
+<p>开跑 <code>pre_CT.py</code> 这只是个预处理！</p>
+<ul>
+<li>
+<p>拆分数据集：80% 用于训练，20% 用于测试</p>
+</li>
+<li>
+<p>图像归一化</p>
+</li>
+<li>
+<p>预计算图像嵌入</p>
+</li>
+<li>
+<p>将归一化图像 <code>imgs.npy</code>、真实情况掩码 <code>gts.npy</code> 和图像 <code>img_embeddings.npy</code> 嵌入另存为文件 <code>npz</code></p>
+</li>
+</ul>
+</li>
+</ol>
+<blockquote>
+<p><strong>npy</strong> 文件是 numpy 保存单个数组的一种二进制文件格式，它可以包含一个 numpy 数组，这个数组的维度和类型等信息都可以被存储在这个文件中。npy 文件通过使用 numpy 库中的 load() 和 save() 函数进行读写。</p>
+<p>相比于 txt、csv 这样的文本型数据文件，npy 文件具有更好的性能和可靠性。因为文本型数据需要进行字符串转化和解析等操作，在面对大量数据时会出现读写速度较慢的情况，并且数据解析容易受到不同系统和软件的影响而出现错误。而 npy 文件采用二进制存储，可以直接将内存中的二进制数组写入文件，不需要转化和解析字符串，性能更高，同时因为没有转化字符类型，也不存在因不同系统和软件的影响而出现的数据解析错误。</p>
+</blockquote>
+<blockquote>
+<p><strong>npz</strong> 是 numpy 保存数组的一种格式，它是一种压缩文件格式，可以将多个 numpy 数组打包存放在一个文件中，其压缩率较高。使用 np.savez_compressed() 函数可以生成 .npz 文件，使用 np.load() 函数可以读取 .npz 文件中的数组。相比其他文件格式（如 .txt、.csv 等），.npz 文件可以更方便地用于存储和加载大型数组数据集，因为它可以使用 numpy 库提供的高效的加载和存储方法。此外，.npz 文件还可以轻松地传递和共享数组数据集，并且不像其他文件格式那样需要手动编写 IO 操作代码来读取和写入数据。</p>
+</blockquote>
+<p><img src="C4.png" alt="png"></p>
+<ol start="5">
+<li>然后就可以跑 <code>finetune_and_inference_tutorial_3D_dataset.ipynb</code>！</li>
+</ol>
+<h3 id="2d" tabindex="-1" id="2D">2D</h3>
+<ol start="3">
+<li>从 <a target="_blank" rel="noopener" href="https://drive.google.com/file/d/18GhVEODbTi17jSeBXdeLQ7vHPdtlTYXK/view">MedSAMDemo_2D.zip - Google Drive</a> 下载 2D 数据集，放置在 <code>data/</code> 中：</li>
+</ol>
+<p><img src="C5.png" alt="png"></p>
+<p><img src="C6.png" alt="png"></p>
+<p><img src="C7.png" alt="png"></p>
+<ol start="4">
+<li>开跑 <code>pre_grey_rgb2D.py</code> 这只是个预处理！好在这部分用时不是很长，就拿笔记本直接跑了。</li>
+</ol>
+<p><img src="C8.png" alt="png"></p>
+<ol start="5">
+<li>获得 <code>data\demo2D_vit_b\demo2d.npz</code>！然后就可以跑 <code>finetune_and_inference_tutorial_2D_dataset.ipynb</code>！</li>
+</ol>
+<p><img src="C9.png" alt="png"></p>
+<p>又遇俩坑，填填填：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs python">pip install chardet<br>pip install --force-reinstall charset-normalizer==<span class="hljs-number">3.1</span><span class="hljs-number">.0</span><br></code></pre></td></tr></table></figure>
+<p>可以跑了！</p>
+<p><img src="C10.png" alt="png"></p>
+<h2 id="%E7%9C%8B%E4%BB%A3%E7%A0%81" tabindex="-1" id="看代码">看代码</h2>
+<h3 id="pre_grey_rgb2d.py" tabindex="-1" id="pre-grey-rgb2D-py">pre_grey_rgb2D.py</h3>
+<p>这个代码主要是对数据集进行预处理。</p>
+<h4 id="set-up-the-parser" tabindex="-1" id="set-up-the-parser">set up the parser</h4>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>type</th>
+<th>default</th>
+<th>help</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>-i, --img_path</td>
+<td>str</td>
+<td>data/MedSAMDemo_2D/train/images</td>
+<td>path to the <strong>images</strong></td>
+</tr>
+<tr>
+<td>-gt, --gt_path</td>
+<td>str</td>
+<td>data/MedSAMDemo_2D/train/labels</td>
+<td>path to the <strong>ground truth (gt)</strong></td>
+</tr>
+<tr>
+<td>-o, --npz_path</td>
+<td>str</td>
+<td>data/demo2D</td>
+<td>path to save the <strong>npz</strong> files</td>
+</tr>
+<tr>
+<td>–data_name</td>
+<td>str</td>
+<td>demo2d</td>
+<td><strong>dataset name</strong>; used to name the final npz file, e.g., <code>demo2d.npz</code></td>
+</tr>
+<tr>
+<td>–image_size</td>
+<td>int</td>
+<td>256</td>
+<td>image <strong>size</strong></td>
+</tr>
+<tr>
+<td>–img_name_suffix</td>
+<td>str</td>
+<td>.png</td>
+<td>image name <strong>suffix</strong></td>
+</tr>
+<tr>
+<td>–label_id</td>
+<td>int</td>
+<td>255</td>
+<td>label <strong>id</strong></td>
+</tr>
+<tr>
+<td>–model_type</td>
+<td>str</td>
+<td>vit_b</td>
+<td>model type</td>
+</tr>
+<tr>
+<td>–checkpoint</td>
+<td>str</td>
+<td>work_dir/SAM/sam_vit_b_01ec64.pth</td>
+<td>checkpoint</td>
+</tr>
+<tr>
+<td>–device</td>
+<td>str</td>
+<td>cuda:0</td>
+<td>device</td>
+</tr>
+<tr>
+<td>–seed</td>
+<td>int</td>
+<td>2023</td>
+<td>random seed</td>
+</tr>
+</tbody>
+</table>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># 获取 args.gt_path 目录下所有文件名，并按字典序排序，将结果赋值给 names</span><br>names = <span class="hljs-built_in">sorted</span>(os.listdir(args.gt_path))<br><span class="hljs-comment"># 将 args.npz_path 和 args.model_type 拼接成一个新路径名 save_path</span><br>save_path = args.npz_path + <span class="hljs-string">&#x27;_&#x27;</span> + args.model_type<br><span class="hljs-comment"># 创建新的目录save_path。如果该目录已经存在，则不做任何操作。如果不存在，则新建该目录及其所有上级目录</span><br>os.makedirs(save_path, exist_ok=<span class="hljs-literal">True</span>)<br><span class="hljs-comment"># 打印输出 names 列表的长度即图片数量</span><br><span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;image number:&#x27;</span>, <span class="hljs-built_in">len</span>(names))<br></code></pre></td></tr></table></figure>
+<h4 id="set-up-the-model" tabindex="-1" id="set-up-the-model">set up the model</h4>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># 初始化模型，设置好 args.model_type、args.checkpoint、args.device</span><br>sam_model = sam_model_registry[args.model_type](checkpoint=args.checkpoint).to(args.device)<br></code></pre></td></tr></table></figure>
+<h4 id="convert-2d-grey-or-rgb-images-to-npz-file" tabindex="-1" id="convert-2d-grey-or-rgb-images-to-npz-file">convert 2d grey or rgb images to npz file</h4>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br></pre></td><td class="code"><pre><code class="hljs python">imgs = []  <span class="hljs-comment"># 图片（images）</span><br>gts =  []  <span class="hljs-comment"># 标签（labels）</span><br>img_embeddings = []  <span class="hljs-comment"># 图片嵌入信息</span><br><br><span class="hljs-comment"># 遍历 ground truth 文件夹, names 默认为 args.gt_path（&#x27;data/MedSAMDemo_2D/train/labels&#x27;）下排序好的文件列表</span><br><span class="hljs-keyword">for</span> gt_name <span class="hljs-keyword">in</span> tqdm(names):<br>    image_name = gt_name.split(<span class="hljs-string">&#x27;.&#x27;</span>)[<span class="hljs-number">0</span>] + args.img_name_suffix  <span class="hljs-comment"># 获得文件名称 + 后缀名</span><br>    gt_data = io.imread(join(args.gt_path, gt_name))  <span class="hljs-comment"># 获得 ground truth 数据</span><br>    <span class="hljs-keyword">if</span> <span class="hljs-built_in">len</span>(gt_data.shape)==<span class="hljs-number">3</span>:  <span class="hljs-comment"># 如果 gt_data 是三维的，则只取第一个通道（灰度图）</span><br>        gt_data = gt_data[:,:,<span class="hljs-number">0</span>]<br>    <span class="hljs-keyword">assert</span> <span class="hljs-built_in">len</span>(gt_data.shape)==<span class="hljs-number">2</span>, <span class="hljs-string">&#x27;ground truth should be 2D&#x27;</span>  <span class="hljs-comment"># 确保分割标签是二维的（高和宽）</span><br>    <span class="hljs-comment"># 这行代码的作用是将分割标签（即 gt_data）缩放到指定大小（args.image_size），并将其值转换为二进制形式（0 和 1）。</span><br>    <span class="hljs-comment"># 具体来说，它会将分割标签中所有等于 args.label_id 的像素点设置为 1，其余像素点设置为 0，然后将结果缩放到指定大小。</span><br>    <span class="hljs-comment"># 这里使用了 scikit-image 库的 transform.resize 函数，</span><br>    <span class="hljs-comment"># 并指定了 order=0 表示使用最近邻插值法，</span><br>    <span class="hljs-comment"># preserve_range=True 表示保持输入图像的范围不变（即值仍在 0 到 1 之间），</span><br>    <span class="hljs-comment"># mode=&#x27;constant&#x27; 表示在缩放后填充常数值的方式为使用边界值填充。</span><br>    <span class="hljs-comment"># 最终得到的结果是一个二值图像，即只包含 0 和 1 两种像素值的图像。</span><br>    gt_data = transform.resize(gt_data==args.label_id, (args.image_size, args.image_size), order=<span class="hljs-number">0</span>, preserve_range=<span class="hljs-literal">True</span>, mode=<span class="hljs-string">&#x27;constant&#x27;</span>)<br>    <span class="hljs-comment"># 将gt_data值转换为 8 位无符号整数</span><br>    gt_data = np.uint8(gt_data)<br><br>    <span class="hljs-comment"># exclude tiny objects 如果分割标签中包含的像素点数大于 100，则执行以下操作(对源图像进行预处理，加入最终的数据集中)</span><br>    <span class="hljs-keyword">if</span> np.<span class="hljs-built_in">sum</span>(gt_data)&gt;<span class="hljs-number">100</span>:  <br>        <span class="hljs-comment"># 最大值是 1，就两种像素点。确保分割标签是二值图</span><br>        <span class="hljs-keyword">assert</span> np.<span class="hljs-built_in">max</span>(gt_data)==<span class="hljs-number">1</span> <span class="hljs-keyword">and</span> np.unique(gt_data).shape[<span class="hljs-number">0</span>]==<span class="hljs-number">2</span>, <span class="hljs-string">&#x27;ground truth should be binary&#x27;</span><br>        <span class="hljs-comment"># 获得图像数据</span><br>        image_data = io.imread(join(args.img_path, image_name))<br>        <span class="hljs-comment"># 如果图像包含透明度通道，则只取前三个通道，即 RGB 通道</span><br>        <span class="hljs-keyword">if</span> image_data.shape[-<span class="hljs-number">1</span>]&gt;<span class="hljs-number">3</span> <span class="hljs-keyword">and</span> <span class="hljs-built_in">len</span>(image_data.shape)==<span class="hljs-number">3</span>:<br>            image_data = image_data[:,:,:<span class="hljs-number">3</span>]<br>        <span class="hljs-comment"># 如果图像只有一个通道，则将其复制三次，即得到一个 RGB 图像</span><br>        <span class="hljs-keyword">if</span> <span class="hljs-built_in">len</span>(image_data.shape)==<span class="hljs-number">2</span>:<br>            image_data = np.repeat(image_data[:,:,<span class="hljs-literal">None</span>], <span class="hljs-number">3</span>, axis=-<span class="hljs-number">1</span>)<br>        <span class="hljs-comment"># nii preprocess start</span><br>        <span class="hljs-comment"># 计算图像的亮度范围，即确定合适的像素值下限和上限</span><br>        <span class="hljs-comment"># 使用 np.percentile 函数分别计算了图像中像素值从小到大排列后第 0.5% 和第 99.5% 的值，</span><br>        <span class="hljs-comment"># 将其作为下限和上限，用于后续的像素值标准化处理</span><br>        lower_bound, upper_bound = np.percentile(image_data, <span class="hljs-number">0.5</span>), np.percentile(image_data, <span class="hljs-number">99.5</span>)<br>        <span class="hljs-comment"># 将图像中的像素值限制在 lower_bound 和 upper_bound 之间</span><br>        image_data_pre = np.clip(image_data, lower_bound, upper_bound)<br>        <span class="hljs-comment"># 将调整后的图像进行标准化，方法是先将图像中所有像素值减去最小值，然后除以像素值范围（即最大值减去最小值），最后乘以255，使像素值缩放到0-255的范围。</span><br>        <span class="hljs-comment"># 这样做的目的是为了使得图像不受亮度范围的影响，并且方便后续模型的处理，因为很多模型输入都需要归一化的图像数据</span><br>        image_data_pre = (image_data_pre - np.<span class="hljs-built_in">min</span>(image_data_pre))/(np.<span class="hljs-built_in">max</span>(image_data_pre)-np.<span class="hljs-built_in">min</span>(image_data_pre))*<span class="hljs-number">255.0</span><br>        <span class="hljs-comment"># 将背景像素（黑色）设置为 0</span><br>        image_data_pre[image_data==<span class="hljs-number">0</span>] = <span class="hljs-number">0</span><br>        <span class="hljs-comment"># 调整图像大小，并使用三次样条插值方法进行重采样，使得图像更加平滑，并保持图像的范围不变</span><br>        image_data_pre = transform.resize(image_data_pre, (args.image_size, args.image_size), order=<span class="hljs-number">3</span>, preserve_range=<span class="hljs-literal">True</span>, mode=<span class="hljs-string">&#x27;constant&#x27;</span>, anti_aliasing=<span class="hljs-literal">True</span>)<br>        <span class="hljs-comment"># 将图像像素值转换为 8 位无符号整数</span><br>        image_data_pre = np.uint8(image_data_pre)<br>        <br>        <span class="hljs-comment"># 将处理后的图像添加到 imgs 列表中</span><br>        imgs.append(image_data_pre)<br>        <span class="hljs-comment"># 确保分割标签中包含的像素点数大于100（这里为啥又问一遍？闻到了屎山的味道）</span><br>        <span class="hljs-keyword">assert</span> np.<span class="hljs-built_in">sum</span>(gt_data)&gt;<span class="hljs-number">100</span>, <span class="hljs-string">&#x27;ground truth should have more than 100 pixels&#x27;</span><br>        <span class="hljs-comment"># 将处理后的分割标签添加到gts列表中</span><br>        gts.append(gt_data)<br>        <span class="hljs-comment"># resize image to 3*1024*1024</span><br>        <span class="hljs-comment"># 创建一个 ResizeLongestSide 对象</span><br>        <span class="hljs-comment"># ResizeLongestSide 的类，用于将图像和坐标进行长边缩放。</span><br>        <span class="hljs-comment"># 具体来说，该类实现了 apply_image 和 apply_coords 两个方法，分别用于处理图像和坐标</span><br>        sam_transform = ResizeLongestSide(sam_model.image_encoder.img_size)<br>        <span class="hljs-comment"># 将该 ResizeLongestSide 对象应用于 image_data_pre 图像，重新调整大小并返回新的图像 resize_img</span><br>        resize_img = sam_transform.apply_image(image_data_pre)<br>        <span class="hljs-comment"># 将 numpy 数组 resize_img 转换为 PyTorch 张量，同时将其移动到 GPU</span><br>        resize_img_tensor = torch.as_tensor(resize_img.transpose(<span class="hljs-number">2</span>, <span class="hljs-number">0</span>, <span class="hljs-number">1</span>)).to(args.device)<br>        <span class="hljs-comment"># 对图像进行预处理，例如减去均值、除以标准差等</span><br>        input_image = sam_model.preprocess(resize_img_tensor[<span class="hljs-literal">None</span>,:,:,:]) <span class="hljs-comment"># (1, 3, 1024, 1024)</span><br>        <span class="hljs-keyword">assert</span> input_image.shape == (<span class="hljs-number">1</span>, <span class="hljs-number">3</span>, sam_model.image_encoder.img_size, sam_model.image_encoder.img_size), <span class="hljs-string">&#x27;input image should be resized to 1024*1024&#x27;</span><br>        <span class="hljs-comment"># pre-compute the image embedding</span><br>        <span class="hljs-comment"># 对输入图像进行特征提取，得到图片的 embedding</span><br>        <span class="hljs-keyword">with</span> torch.no_grad():<br>            embedding = sam_model.image_encoder(input_image)<br>            img_embeddings.append(embedding.cpu().numpy()[<span class="hljs-number">0</span>])<br></code></pre></td></tr></table></figure>
+<h4 id="save-all-2d-images-as-one-npz-file%3A-ori_imgs%2C-ori_gts%2C-img_embeddings" tabindex="-1" id="save-all-2D-images-as-one-npz-file-ori-imgs-ori-gts-img-embeddings">save all 2D images as one npz file: ori_imgs, ori_gts, img_embeddings</h4>
+<p><strong>stack the list to array</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># 将所有2D图像以及它们的相关信息（如 ground truth 和 image embedding）保存成一个 npz 文件</span><br><span class="hljs-keyword">if</span> <span class="hljs-built_in">len</span>(imgs)&gt;<span class="hljs-number">1</span>:<br>    imgs = np.stack(imgs, axis=<span class="hljs-number">0</span>) <span class="hljs-comment"># (n, 256, 256, 3) 表示 n 张 256x256 的 RGB 图像</span><br>    gts = np.stack(gts, axis=<span class="hljs-number">0</span>) <span class="hljs-comment"># (n, 256, 256) 表示 n 张 256x256 的灰度图像</span><br>    img_embeddings = np.stack(img_embeddings, axis=<span class="hljs-number">0</span>) <span class="hljs-comment"># (n, 1, 256, 64, 64) 将每张图像转换为了1个256x64x64的图像embedding</span><br>    <span class="hljs-comment"># 使用np.savez_compressed函数将这三个numpy数组保存成一个npz文件，其中imgs、gts和img_embeddings分别对应三个关键字参数</span><br>    np.savez_compressed(join(save_path, args.data_name + <span class="hljs-string">&#x27;.npz&#x27;</span>), imgs=imgs, gts=gts, img_embeddings=img_embeddings)<br>    <span class="hljs-comment"># save an example image for sanity check 随机选择一个图像进行可视化检查</span><br>    idx = np.random.randint(imgs.shape[<span class="hljs-number">0</span>])  <span class="hljs-comment"># 随机生成一个索引 idx</span><br>    <span class="hljs-comment"># 从 imgs、gts 和 img_embeddings 中提取出该索引对应的图像</span><br>    <span class="hljs-comment"># img_idx、ground truth gt_idx 和 image embedding img_emb_idx</span><br>    img_idx = imgs[idx,:,:,:]<br>    gt_idx = gts[idx,:,:]<br>    <span class="hljs-comment"># 代码使用scikit-image库的find_boundaries函数找到gt_idx中每个目标的边缘位置，并将img_idx中边缘位置的像素设为红色</span><br>    bd = segmentation.find_boundaries(gt_idx, mode=<span class="hljs-string">&#x27;inner&#x27;</span>)<br>    <span class="hljs-comment"># 将边缘设为红色</span><br>    img_idx[bd, :] = [<span class="hljs-number">255</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>]<br>    <span class="hljs-comment"># 使用io.imsave函数将处理后的img_idx保存成png文件，以便进一步进行可视化检查</span><br>    io.imsave(save_path + <span class="hljs-string">&#x27;.png&#x27;</span>, img_idx, check_contrast=<span class="hljs-literal">False</span>)<br></code></pre></td></tr></table></figure>
+<h3 id="finetune_and_inference_tutorial_2d_dataset.ipynb" tabindex="-1" id="finetune-and-inference-tutorial-2D-dataset-ipynb">finetune_and_inference_tutorial_2D_dataset.ipynb</h3>
+<p>在获得预处理好的数据集后，就可以运行 <code>finetune_and_inference_tutorial_2D_dataset.ipynb</code> 对 SAM 模型进行 fine-tune。</p>
+<h4 id="class-npzdataset(dataset)" tabindex="-1" id="class-NpzDataset-Dataset">class NpzDataset(Dataset)</h4>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">NpzDataset</span>(<span class="hljs-title class_ inherited__">Dataset</span>): <br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, data_root</span>):<br>        <span class="hljs-comment"># 读取指定目录下的所有 .npz 文件</span><br>        <span class="hljs-variable language_">self</span>.data_root = data_root<br>        <span class="hljs-variable language_">self</span>.npz_files = <span class="hljs-built_in">sorted</span>(os.listdir(<span class="hljs-variable language_">self</span>.data_root)) <br>        <span class="hljs-variable language_">self</span>.npz_data = [np.load(join(data_root, f)) <span class="hljs-keyword">for</span> f <span class="hljs-keyword">in</span> <span class="hljs-variable language_">self</span>.npz_files]<br>        <span class="hljs-comment"># this implementation is ugly but it works (and is also fast for feeding data to GPU) if your server has enough RAM as an alternative, you can also use a list of npy files and load them one by one</span><br>        <span class="hljs-comment"># 这个实现是丑陋的，但它可以工作（并且向 GPU 提供数据的速度也很快）如果你的服务器有足够的 RAM 作为替代方案，你也可以使用 npy 文件列表并一个一个地加载它们</span><br>        <span class="hljs-comment"># 使用了 np.vstack() 函数对这些数组进行垂直方向上的堆叠操作</span><br>        <span class="hljs-comment"># 将它们的 gts 和 img_embeddings 字段整合成两个 numpy 数组: ori_gts 和 img_embeddings</span><br>        <span class="hljs-variable language_">self</span>.ori_gts = np.vstack([d[<span class="hljs-string">&#x27;gts&#x27;</span>] <span class="hljs-keyword">for</span> d <span class="hljs-keyword">in</span> <span class="hljs-variable language_">self</span>.npz_data])<br>        <span class="hljs-variable language_">self</span>.img_embeddings = np.vstack([d[<span class="hljs-string">&#x27;img_embeddings&#x27;</span>] <span class="hljs-keyword">for</span> d <span class="hljs-keyword">in</span> <span class="hljs-variable language_">self</span>.npz_data])<br>        <span class="hljs-comment"># 包含了一条有用的调试信息输出语句，输出实际读取数据文件中的 img_embeddings 和 ori_gts 的形状</span><br>        <span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;<span class="hljs-subst">&#123;self.img_embeddings.shape=&#125;</span>, <span class="hljs-subst">&#123;self.ori_gts.shape=&#125;</span>&quot;</span>)<br>    <br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__len__</span>(<span class="hljs-params">self</span>):<br>        <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">        这段代码定义了 __len__ 方法，该方法返回数据集的大小（即所有样本的个数），在该代码中返回的是 ori_gts 数组的第一维大小。</span><br><span class="hljs-string">        由于在 NpzDataset 类初始化时，已经将所有 npz 文件中的 gts 字段整合成一个 numpy 数组 ori_gts，因此该方法返回的是所有读取文件中的目标个数（即数据集中的样本数）</span><br><span class="hljs-string">        &quot;&quot;&quot;</span><br>        <span class="hljs-keyword">return</span> <span class="hljs-variable language_">self</span>.ori_gts.shape[<span class="hljs-number">0</span>]<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__getitem__</span>(<span class="hljs-params">self, index</span>):<br>        <span class="hljs-comment"># 词嵌入向量</span><br>        img_embed = <span class="hljs-variable language_">self</span>.img_embeddings[index]<br>        <span class="hljs-comment"># Ground Truth</span><br>        gt2D = <span class="hljs-variable language_">self</span>.ori_gts[index]<br>        <span class="hljs-comment"># 边界框</span><br>        y_indices, x_indices = np.where(gt2D &gt; <span class="hljs-number">0</span>)<br>        x_min, x_max = np.<span class="hljs-built_in">min</span>(x_indices), np.<span class="hljs-built_in">max</span>(x_indices)<br>        y_min, y_max = np.<span class="hljs-built_in">min</span>(y_indices), np.<span class="hljs-built_in">max</span>(y_indices)<br>        <span class="hljs-comment"># add perturbation to bounding box coordinates</span><br>        <span class="hljs-comment"># 向边界框坐标添加扰动，以实现数据增强</span><br>        H, W = gt2D.shape<br>        x_min = <span class="hljs-built_in">max</span>(<span class="hljs-number">0</span>, x_min - np.random.randint(<span class="hljs-number">0</span>, <span class="hljs-number">20</span>))<br>        x_max = <span class="hljs-built_in">min</span>(W, x_max + np.random.randint(<span class="hljs-number">0</span>, <span class="hljs-number">20</span>))<br>        y_min = <span class="hljs-built_in">max</span>(<span class="hljs-number">0</span>, y_min - np.random.randint(<span class="hljs-number">0</span>, <span class="hljs-number">20</span>))<br>        y_max = <span class="hljs-built_in">min</span>(H, y_max + np.random.randint(<span class="hljs-number">0</span>, <span class="hljs-number">20</span>))<br>        bboxes = np.array([x_min, y_min, x_max, y_max])<br>        <span class="hljs-comment"># convert img embedding, mask, bounding box to torch tensor</span><br>        <span class="hljs-comment"># 返回一个三元组：（一个图像的嵌入向量 img_embed, 对应标注的二维 Ground Truth 图 gt2D, 对应的包含目标的边界框的四个坐标 bboxes）</span><br>        <span class="hljs-keyword">return</span> torch.tensor(img_embed).<span class="hljs-built_in">float</span>(), torch.tensor(gt2D[<span class="hljs-literal">None</span>, :,:]).long(), torch.tensor(bboxes).<span class="hljs-built_in">float</span>()<br></code></pre></td></tr></table></figure>
+<h4 id="test-dataset-class-and-dataloader" tabindex="-1" id="test-dataset-class-and-dataloader">test dataset class and dataloader</h4>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs python">npz_tr_path = <span class="hljs-string">&#x27;data/demo2D_vit_b&#x27;</span><br><span class="hljs-comment"># 使用路径 npz_tr_path 创建了一个新的 NpzDataset 实例 demo_dataset</span><br>demo_dataset = NpzDataset(npz_tr_path)<br><span class="hljs-comment"># 训练开始前，代码使用 for 循环从 demo_dataloader 中依次读取一个小批量（batch）的数据，用于测试数据集和数据加载器的正确性。批大小为 8，这意味着每次迭代中将读取 8 个数据样本</span><br>demo_dataloader = DataLoader(demo_dataset, batch_size=<span class="hljs-number">8</span>, shuffle=<span class="hljs-literal">True</span>)<br><span class="hljs-keyword">for</span> img_embed, gt2D, bboxes <span class="hljs-keyword">in</span> demo_dataloader:<br>    <span class="hljs-comment"># img_embed: (B, 256, 64, 64), gt2D: (B, 1, 256, 256), bboxes: (B, 4)</span><br>    <span class="hljs-comment"># 使用 print() 函数打印了从 demo_dataloader 中读取的第一个小批量 img_embed、gt2D 和 bboxes 的形状，以确认它们是否与预期一致</span><br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;<span class="hljs-subst">&#123;img_embed.shape=&#125;</span>, <span class="hljs-subst">&#123;gt2D.shape=&#125;</span>, <span class="hljs-subst">&#123;bboxes.shape=&#125;</span>&quot;</span>)<br>    <span class="hljs-comment"># 这里程序使用 break 结束了遍历，只输出了第一个小批量的结果</span><br>    <span class="hljs-keyword">break</span><br></code></pre></td></tr></table></figure>
+<h4 id="set-up-model-for-fine-tuning" tabindex="-1" id="set-up-model-for-fine-tuning">set up model for fine-tuning</h4>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># train data path</span><br>npz_tr_path = <span class="hljs-string">&#x27;data/demo2D_vit_b&#x27;</span>  <span class="hljs-comment"># 训练数据</span><br>work_dir = <span class="hljs-string">&#x27;./work_dir&#x27;</span>  <span class="hljs-comment"># 工作目录路径</span><br>task_name = <span class="hljs-string">&#x27;demo2D&#x27;</span>  <span class="hljs-comment"># 任务名称</span><br><span class="hljs-comment"># prepare SAM model</span><br>model_type = <span class="hljs-string">&#x27;vit_b&#x27;</span>  <span class="hljs-comment"># 模型类型</span><br>checkpoint = <span class="hljs-string">&#x27;work_dir/SAM/sam_vit_b_01ec64.pth&#x27;</span>  <span class="hljs-comment"># 预训练模型</span><br>device = <span class="hljs-string">&#x27;cuda:0&#x27;</span>  <span class="hljs-comment"># 设备</span><br>model_save_path = join(work_dir, task_name)  <span class="hljs-comment"># 模型保存地址</span><br>os.makedirs(model_save_path, exist_ok=<span class="hljs-literal">True</span>)<br>sam_model = sam_model_registry[model_type](checkpoint=checkpoint).to(device)  <span class="hljs-comment"># 加载模型</span><br>sam_model.train()  <span class="hljs-comment"># 设为训练模式</span><br><span class="hljs-comment"># Set up the optimizer, hyperparameter tuning will improve performance here</span><br>optimizer = torch.optim.Adam(sam_model.mask_decoder.parameters(), lr=<span class="hljs-number">1e-5</span>, weight_decay=<span class="hljs-number">0</span>)  <span class="hljs-comment"># 优化器</span><br><span class="hljs-comment"># 代码定义了一个分割损失函数，其中采用 DiceLoss 和 CrossEntropyLoss 的结合体。</span><br><span class="hljs-comment"># DiceLoss 是一个测量预测分割与真实分割偏差的指标，CrossEntropyLoss 则是针对多分类问题的损失函数，用于评估预测结果的匹配程度</span><br>seg_loss = monai.losses.DiceCELoss(sigmoid=<span class="hljs-literal">True</span>, squared_pred=<span class="hljs-literal">True</span>, reduction=<span class="hljs-string">&#x27;mean&#x27;</span>)  <span class="hljs-comment"># 损失函数</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">self.img_embeddings.shape=(456, 256, 64, 64), self.ori_gts.shape=(456, 256, 256)<br>img_embed.shape=torch.Size([8, 256, 64, 64]), gt2D.shape=torch.Size([8, 1, 256, 256]), bboxes.shape=torch.Size([8, 4])<br></code></pre></td></tr></table></figure>
+<h4 id="training" tabindex="-1" id="training">training</h4>
+<p>原作者用的是 NVIDIA RTX A5500，配有 24 GB 显存，而我的 RTX 4060 只有 8GB 显存，emmm 只能把 batch_size 调小。我调成了 8。训练过程中显存使用量一直维持在 2GB，感觉可以再调大些？</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br></pre></td><td class="code"><pre><code class="hljs python">num_epochs = <span class="hljs-number">100</span>  <span class="hljs-comment"># 迭代次数</span><br>losses = []  <span class="hljs-comment"># 空列表，用于存放每个 epoch 的损失值</span><br>best_loss = <span class="hljs-number">1e10</span>  <span class="hljs-comment"># 最优损失值</span><br>train_dataset = NpzDataset(npz_tr_path)  <span class="hljs-comment"># 读入训练数据</span><br><span class="hljs-comment"># 定义数据加载器以便读取和组合数据，同时将样本分成大小为 64 的批次，并打乱顺序</span><br>train_dataloader = DataLoader(train_dataset, batch_size=<span class="hljs-number">64</span>, shuffle=<span class="hljs-literal">True</span>)<br><span class="hljs-keyword">for</span> epoch <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(num_epochs):<br>    epoch_loss = <span class="hljs-number">0</span><br>    <span class="hljs-comment"># train</span><br>    <span class="hljs-comment"># step 表示当前处理到了第几个批次</span><br>    <span class="hljs-comment"># image_embedding 是嵌入图像的特征向量</span><br>    <span class="hljs-comment"># gt2D 是训练数据的真实遮罩层标签</span><br>    <span class="hljs-comment"># boxes 是真实的 2D 边界框</span><br>    <span class="hljs-keyword">for</span> step, (image_embedding, gt2D, boxes) <span class="hljs-keyword">in</span> <span class="hljs-built_in">enumerate</span>(tqdm(train_dataloader)):<br>        <span class="hljs-comment"># do not compute gradients for image encoder and prompt encoder</span><br>        <span class="hljs-comment"># 冻结 图像编码器 和 提示编码器</span><br>        <span class="hljs-keyword">with</span> torch.no_grad():<br>            <span class="hljs-comment"># convert box to 1024x1024 grid</span><br>            <span class="hljs-comment"># 将边界框坐标从原始坐标系转换为 1024x1024 网格坐标系</span><br>            box_np = boxes.numpy()<br>            <span class="hljs-comment"># 改变大小</span><br>            sam_trans = ResizeLongestSide(sam_model.image_encoder.img_size)<br>            <span class="hljs-comment"># 改变提示框大小</span><br>            box = sam_trans.apply_boxes(box_np, (gt2D.shape[-<span class="hljs-number">2</span>], gt2D.shape[-<span class="hljs-number">1</span>]))<br>            <span class="hljs-comment"># 转换成 pytorch 张量</span><br>            box_torch = torch.as_tensor(box, dtype=torch.<span class="hljs-built_in">float</span>, device=device)<br>            <span class="hljs-keyword">if</span> <span class="hljs-built_in">len</span>(box_torch.shape) == <span class="hljs-number">2</span>:<br>                <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">                这段代码实现的是获取提示嵌入的过程。</span><br><span class="hljs-string">                首先通过 if 语句来判断 box_torch 张量的形状是否为 (B, 4)，</span><br><span class="hljs-string">                其中 B 表示批次大小，4 表示边界框的坐标信息（左上角点和右下角点）。</span><br><span class="hljs-string">				如果 box_torch 张量的形状是 (B, 4)，则执行 if 语句中的代码进行扩维处理，</span><br><span class="hljs-string">				将其转换为形状为 (B, 1, 4) 的张量。</span><br><span class="hljs-string">				这么做是为了在后面的计算中保证输入张量的形状一致，从而避免出现维度不匹配的错误</span><br><span class="hljs-string">                &quot;&quot;&quot;</span><br>                box_torch = box_torch[:, <span class="hljs-literal">None</span>, :] <span class="hljs-comment"># (B, 1, 4)</span><br>            <span class="hljs-comment"># get prompt embeddings 获取提示嵌入</span><br>            sparse_embeddings, dense_embeddings = sam_model.prompt_encoder(<br>                points=<span class="hljs-literal">None</span>,  <span class="hljs-comment"># 没有用到点的信息</span><br>                boxes=box_torch,  <span class="hljs-comment"># 使用边界框来提取特征</span><br>                masks=<span class="hljs-literal">None</span>,  <span class="hljs-comment"># 没有使用遮罩层来进行像素级的聚合</span><br>            )<br>        <span class="hljs-comment"># predicted masks 前向传播</span><br>        mask_predictions, _ = sam_model.mask_decoder(<br>            image_embeddings=image_embedding.to(device), <span class="hljs-comment"># (B, 256, 64, 64)</span><br>            image_pe=sam_model.prompt_encoder.get_dense_pe(), <span class="hljs-comment"># (1, 256, 64, 64)</span><br>            sparse_prompt_embeddings=sparse_embeddings, <span class="hljs-comment"># (B, 2, 256)</span><br>            dense_prompt_embeddings=dense_embeddings, <span class="hljs-comment"># (B, 256, 64, 64)</span><br>            multimask_output=<span class="hljs-literal">False</span>,<br>          )<br>        <br>		<span class="hljs-comment"># 计算损失函数的值</span><br>        loss = seg_loss(mask_predictions, gt2D.to(device))<br>        <span class="hljs-comment"># 反向传播</span><br>        optimizer.zero_grad()<br>        loss.backward()<br>        optimizer.step()<br>        <span class="hljs-comment"># 记录损失值</span><br>        epoch_loss += loss.item()<br>    <br>    epoch_loss /= step<br>    losses.append(epoch_loss)<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">f&#x27;EPOCH: <span class="hljs-subst">&#123;epoch&#125;</span>, Loss: <span class="hljs-subst">&#123;epoch_loss&#125;</span>&#x27;</span>)<br>    <span class="hljs-comment"># save the latest model checkpoint</span><br>    torch.save(sam_model.state_dict(), join(model_save_path, <span class="hljs-string">&#x27;sam_model_latest.pth&#x27;</span>))  <span class="hljs-comment"># 最近一次 checkpoint</span><br>    <span class="hljs-comment"># save the best model</span><br>    <span class="hljs-keyword">if</span> epoch_loss &lt; best_loss:<br>        best_loss = epoch_loss<br>        torch.save(sam_model.state_dict(), join(model_save_path, <span class="hljs-string">&#x27;sam_model_best.pth&#x27;</span>))  <span class="hljs-comment"># 最优 checkpoint</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">self.img_embeddings.shape=(456, 256, 64, 64), self.ori_gts.shape=(456, 256, 256)<br>100%|██████████| 57/57 [00:09&lt;00:00,  5.95it/s]<br>EPOCH: 0, Loss: 0.2000392587589366<br>……<br>100%|██████████| 57/57 [00:05&lt;00:00, 11.29it/s]<br>EPOCH: 99, Loss: 0.03958414628037384<br></code></pre></td></tr></table></figure>
+<h4 id="plot-loss" tabindex="-1" id="plot-loss">plot loss</h4>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs python">plt.plot(losses)<br>plt.title(<span class="hljs-string">&#x27;Dice + Cross Entropy Loss&#x27;</span>)<br>plt.xlabel(<span class="hljs-string">&#x27;Epoch&#x27;</span>)<br>plt.ylabel(<span class="hljs-string">&#x27;Loss&#x27;</span>)<br>plt.show() <span class="hljs-comment"># comment this line if you are running on a server</span><br>plt.savefig(join(model_save_path, <span class="hljs-string">&#x27;train_loss.png&#x27;</span>))<br>plt.close()<br></code></pre></td></tr></table></figure>
+<p>如果我把 pycharm 的主题设成深色的，matplotlib 输出的图片居然也会是深色的……</p>
+<p><img src="C11.png" alt="png"></p>
+<h4 id="load-the-original-sam-model" tabindex="-1" id="load-the-original-SAM-model">load the original SAM model</h4>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> skimage <span class="hljs-keyword">import</span> io<br><span class="hljs-comment"># 加载 原始 SAM 模型 到 GPU 上</span><br>ori_sam_model = sam_model_registry[model_type](checkpoint=checkpoint).to(device)<br><span class="hljs-comment"># 加载 predictor</span><br>ori_sam_predictor = SamPredictor(ori_sam_model)<br><br><span class="hljs-comment"># 读入数据集</span><br>ts_img_path = <span class="hljs-string">&#x27;data/MedSAMDemo_2D/test/images&#x27;</span><br>ts_gt_path = <span class="hljs-string">&#x27;data/MedSAMDemo_2D/test/labels&#x27;</span><br>test_names = <span class="hljs-built_in">sorted</span>(os.listdir(ts_img_path))<br><br><span class="hljs-comment"># random select a test case</span><br><span class="hljs-comment"># 随机读取一张图像</span><br>img_idx = np.random.randint(<span class="hljs-built_in">len</span>(test_names))  <span class="hljs-comment"># 获取索引</span><br>image_data = io.imread(join(ts_img_path, test_names[img_idx]))  <span class="hljs-comment"># 读取</span><br><span class="hljs-keyword">if</span> image_data.shape[-<span class="hljs-number">1</span>]&gt;<span class="hljs-number">3</span> <span class="hljs-keyword">and</span> <span class="hljs-built_in">len</span>(image_data.shape)==<span class="hljs-number">3</span>:  <span class="hljs-comment"># 确保图像只有 3 个通道</span><br>    image_data = image_data[:,:,:<span class="hljs-number">3</span>]<br><span class="hljs-keyword">if</span> <span class="hljs-built_in">len</span>(image_data.shape)==<span class="hljs-number">2</span>:  <span class="hljs-comment"># 如果是单通道的灰度图像，转成 3 通道</span><br>    image_data = np.repeat(image_data[:,:,<span class="hljs-literal">None</span>], <span class="hljs-number">3</span>, axis=-<span class="hljs-number">1</span>)<br><span class="hljs-comment"># read ground truth (gt should have the same name as the image) and simulate a bounding box</span><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">get_bbox_from_mask</span>(<span class="hljs-params">mask</span>):<br>    <span class="hljs-string">&#x27;&#x27;&#x27;</span><br><span class="hljs-string">    Returns a bounding box from a mask</span><br><span class="hljs-string">    从 ground truth 中提取出边界框坐标信息，用于对图像进行裁剪</span><br><span class="hljs-string">    &#x27;&#x27;&#x27;</span><br>    y_indices, x_indices = np.where(mask &gt; <span class="hljs-number">0</span>)<br>    x_min, x_max = np.<span class="hljs-built_in">min</span>(x_indices), np.<span class="hljs-built_in">max</span>(x_indices)<br>    y_min, y_max = np.<span class="hljs-built_in">min</span>(y_indices), np.<span class="hljs-built_in">max</span>(y_indices)<br>    <span class="hljs-comment"># add perturbation to bounding box coordinates</span><br>    H, W = mask.shape<br>    x_min = <span class="hljs-built_in">max</span>(<span class="hljs-number">0</span>, x_min - np.random.randint(<span class="hljs-number">0</span>, <span class="hljs-number">20</span>))<br>    x_max = <span class="hljs-built_in">min</span>(W, x_max + np.random.randint(<span class="hljs-number">0</span>, <span class="hljs-number">20</span>))<br>    y_min = <span class="hljs-built_in">max</span>(<span class="hljs-number">0</span>, y_min - np.random.randint(<span class="hljs-number">0</span>, <span class="hljs-number">20</span>))<br>    y_max = <span class="hljs-built_in">min</span>(H, y_max + np.random.randint(<span class="hljs-number">0</span>, <span class="hljs-number">20</span>))<br><br>    <span class="hljs-keyword">return</span> np.array([x_min, y_min, x_max, y_max])<br><br><span class="hljs-comment"># 获得 ground truth</span><br>gt_data = io.imread(join(ts_gt_path, test_names[img_idx]))<br>bbox_raw = get_bbox_from_mask(gt_data)<br><br><span class="hljs-comment"># preprocess: cut-off and max-min normalization 图像预处理</span><br>lower_bound, upper_bound = np.percentile(image_data, <span class="hljs-number">0.5</span>), np.percentile(image_data, <span class="hljs-number">99.5</span>)<br>image_data_pre = np.clip(image_data, lower_bound, upper_bound)<br><span class="hljs-comment"># 亮度范围裁剪</span><br>image_data_pre = (image_data_pre - np.<span class="hljs-built_in">min</span>(image_data_pre))/(np.<span class="hljs-built_in">max</span>(image_data_pre)-np.<span class="hljs-built_in">min</span>(image_data_pre))*<span class="hljs-number">255.0</span><br>image_data_pre[image_data==<span class="hljs-number">0</span>] = <span class="hljs-number">0</span><br>image_data_pre = np.uint8(image_data_pre)<br>H, W, _ = image_data_pre.shape<br><br><span class="hljs-comment"># predict the segmentation mask using the original SAM model</span><br><span class="hljs-comment"># 开跑！</span><br>ori_sam_predictor.set_image(image_data_pre)<br>ori_sam_seg, _, _ = ori_sam_predictor.predict(point_coords=<span class="hljs-literal">None</span>, box=bbox_raw, multimask_output=<span class="hljs-literal">False</span>)<br></code></pre></td></tr></table></figure>
+<h4 id="predict-the-segmentation-mask-using-the-fine-tuned-model" tabindex="-1" id="predict-the-segmentation-mask-using-the-fine-tuned-model">predict the segmentation mask using the fine-tuned model</h4>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># resize image to 3*1024*1024</span><br><span class="hljs-comment"># 使用 ResizeLongestSide() 函数对原始图像进行大小调整，将其 resize 为 3x1024x1024 的张量</span><br>sam_transform = ResizeLongestSide(sam_model.image_encoder.img_size)<br>resize_img = sam_transform.apply_image(image_data_pre)<br><span class="hljs-comment"># 将调整后的图像张量转换为 PyTorch tensor</span><br>resize_img_tensor = torch.as_tensor(resize_img.transpose(<span class="hljs-number">2</span>, <span class="hljs-number">0</span>, <span class="hljs-number">1</span>)).to(device)<br>input_image = sam_model.preprocess(resize_img_tensor[<span class="hljs-literal">None</span>,:,:,:]) <span class="hljs-comment"># (1, 3, 1024, 1024)</span><br><span class="hljs-keyword">assert</span> input_image.shape == (<span class="hljs-number">1</span>, <span class="hljs-number">3</span>, sam_model.image_encoder.img_size, sam_model.image_encoder.img_size), <span class="hljs-string">&#x27;input image should be resized to 1024*1024&#x27;</span><br><br><span class="hljs-keyword">with</span> torch.no_grad():<br>    <span class="hljs-comment"># pre-compute the image embedding 使用模型的 image_encoder 对象计算图像嵌入向量</span><br>    ts_img_embedding = sam_model.image_encoder(input_image)<br>    <span class="hljs-comment"># convert box to 1024x1024 grid 将 box 坐标信息调整到 1024x1024 的网络 grid 上</span><br>    bbox = sam_trans.apply_boxes(bbox_raw, (H, W))<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">f&#x27;<span class="hljs-subst">&#123;bbox_raw=&#125;</span> -&gt; <span class="hljs-subst">&#123;bbox=&#125;</span>&#x27;</span>)<br>    box_torch = torch.as_tensor(bbox, dtype=torch.<span class="hljs-built_in">float</span>, device=device)<br>    <span class="hljs-keyword">if</span> <span class="hljs-built_in">len</span>(box_torch.shape) == <span class="hljs-number">2</span>:<br>        box_torch = box_torch[:, <span class="hljs-literal">None</span>, :] <span class="hljs-comment"># (B, 4) -&gt; (B, 1, 4)</span><br>    <br>    <span class="hljs-comment"># 使用 prompt_encoder 对象计算稠密和稀疏的嵌入向量（dense and sparse embedding）</span><br>    sparse_embeddings, dense_embeddings = sam_model.prompt_encoder(<br>        points=<span class="hljs-literal">None</span>,<br>        boxes=box_torch,<br>        masks=<span class="hljs-literal">None</span>,<br>    )<br>    medsam_seg_prob, _ = sam_model.mask_decoder(  <span class="hljs-comment"># 各种图像嵌入向量</span><br>        image_embeddings=ts_img_embedding.to(device), <span class="hljs-comment"># (B, 256, 64, 64)</span><br>        image_pe=sam_model.prompt_encoder.get_dense_pe(), <span class="hljs-comment"># (1, 256, 64, 64)</span><br>        sparse_prompt_embeddings=sparse_embeddings, <span class="hljs-comment"># (B, 2, 256)</span><br>        dense_prompt_embeddings=dense_embeddings, <span class="hljs-comment"># (B, 256, 64, 64)</span><br>        multimask_output=<span class="hljs-literal">False</span>,<br>        )<br>    medsam_seg_prob = torch.sigmoid(medsam_seg_prob)  <span class="hljs-comment"># 压缩到[0, 1]</span><br>    <span class="hljs-comment"># convert soft mask to hard mask</span><br>    medsam_seg_prob = medsam_seg_prob.cpu().numpy().squeeze()<br>    medsam_seg = (medsam_seg_prob &gt; <span class="hljs-number">0.5</span>).astype(np.uint8)<br>    <span class="hljs-built_in">print</span>(medsam_seg.shape)<br></code></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">bbox_raw=array([164, 159, 189, 187], dtype=int64) -&gt; bbox=array([[656, 636, 756, 748]], dtype=int64)<br>(256, 256)<br></code></pre></td></tr></table></figure>
+<h4 id="%E8%AE%A1%E7%AE%97%E5%87%86%E7%A1%AE%E7%8E%87" tabindex="-1" id="计算准确率">计算准确率</h4>
+<p>表明我们这个操作确实牛逼！</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs python">ori_sam_dsc = compute_dice_coefficient(gt_data&gt;<span class="hljs-number">0</span>, ori_sam_seg&gt;<span class="hljs-number">0</span>)<br>medsam_dsc = compute_dice_coefficient(gt_data&gt;<span class="hljs-number">0</span>, medsam_seg&gt;<span class="hljs-number">0</span>)<br><span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Original SAM DSC: &#123;:.4f&#125;&#x27;</span>.<span class="hljs-built_in">format</span>(ori_sam_dsc), <span class="hljs-string">&#x27;MedSAM DSC: &#123;:.4f&#125;&#x27;</span>.<span class="hljs-built_in">format</span>(medsam_dsc))<br></code></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">Original SAM DSC: 0.7397 MedSAM DSC: 0.9145<br></code></pre></td></tr></table></figure>
+<h4 id="visualization-functions" tabindex="-1" id="visualization-functions">visualization functions</h4>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># visualization functions</span><br><span class="hljs-comment"># source: https://github.com/facebookresearch/segment-anything/blob/main/notebooks/predictor_example.ipynb</span><br><span class="hljs-comment"># change color to avoid red and green</span><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">show_mask</span>(<span class="hljs-params">mask, ax, random_color=<span class="hljs-literal">False</span></span>):<br>    <span class="hljs-keyword">if</span> random_color:<br>        color = np.concatenate([np.random.random(<span class="hljs-number">3</span>), np.array([<span class="hljs-number">0.6</span>])], axis=<span class="hljs-number">0</span>)<br>    <span class="hljs-keyword">else</span>:<br>        color = np.array([<span class="hljs-number">251</span>/<span class="hljs-number">255</span>, <span class="hljs-number">252</span>/<span class="hljs-number">255</span>, <span class="hljs-number">30</span>/<span class="hljs-number">255</span>, <span class="hljs-number">0.6</span>])<br>    h, w = mask.shape[-<span class="hljs-number">2</span>:]<br>    mask_image = mask.reshape(h, w, <span class="hljs-number">1</span>) * color.reshape(<span class="hljs-number">1</span>, <span class="hljs-number">1</span>, -<span class="hljs-number">1</span>)<br>    ax.imshow(mask_image)<br>    <br><span class="hljs-keyword">def</span> <span class="hljs-title function_">show_box</span>(<span class="hljs-params">box, ax</span>):<br>    x0, y0 = box[<span class="hljs-number">0</span>], box[<span class="hljs-number">1</span>]<br>    w, h = box[<span class="hljs-number">2</span>] - box[<span class="hljs-number">0</span>], box[<span class="hljs-number">3</span>] - box[<span class="hljs-number">1</span>]<br>    ax.add_patch(plt.Rectangle((x0, y0), w, h, edgecolor=<span class="hljs-string">&#x27;blue&#x27;</span>, facecolor=(<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>), lw=<span class="hljs-number">2</span>))    <br><br>_, axs = plt.subplots(<span class="hljs-number">1</span>, <span class="hljs-number">3</span>, figsize=(<span class="hljs-number">25</span>, <span class="hljs-number">25</span>))<br>axs[<span class="hljs-number">0</span>].imshow(image_data)<br>show_mask(gt_data&gt;<span class="hljs-number">0</span>, axs[<span class="hljs-number">0</span>])<br><span class="hljs-comment"># show_box(box_np[img_id], axs[0])</span><br><span class="hljs-comment"># axs[0].set_title(&#x27;Mask with Tuned Model&#x27;, fontsize=20)</span><br>axs[<span class="hljs-number">0</span>].axis(<span class="hljs-string">&#x27;off&#x27;</span>)<br><br>axs[<span class="hljs-number">1</span>].imshow(image_data)<br>show_mask(ori_sam_seg, axs[<span class="hljs-number">1</span>])<br>show_box(bbox_raw, axs[<span class="hljs-number">1</span>])<br><span class="hljs-comment"># add text to image to show dice score</span><br>axs[<span class="hljs-number">1</span>].text(<span class="hljs-number">0.5</span>, <span class="hljs-number">0.5</span>, <span class="hljs-string">&#x27;SAM DSC: &#123;:.4f&#125;&#x27;</span>.<span class="hljs-built_in">format</span>(ori_sam_dsc), fontsize=<span class="hljs-number">30</span>, horizontalalignment=<span class="hljs-string">&#x27;left&#x27;</span>, verticalalignment=<span class="hljs-string">&#x27;top&#x27;</span>, color=<span class="hljs-string">&#x27;yellow&#x27;</span>)<br><span class="hljs-comment"># axs[1].set_title(&#x27;Mask with Untuned Model&#x27;, fontsize=20)</span><br>axs[<span class="hljs-number">1</span>].axis(<span class="hljs-string">&#x27;off&#x27;</span>)<br><br>axs[<span class="hljs-number">2</span>].imshow(image_data)<br>show_mask(medsam_seg, axs[<span class="hljs-number">2</span>])<br>show_box(bbox_raw, axs[<span class="hljs-number">2</span>])<br><span class="hljs-comment"># add text to image to show dice score</span><br>axs[<span class="hljs-number">2</span>].text(<span class="hljs-number">0.5</span>, <span class="hljs-number">0.5</span>, <span class="hljs-string">&#x27;MedSAM DSC: &#123;:.4f&#125;&#x27;</span>.<span class="hljs-built_in">format</span>(medsam_dsc), fontsize=<span class="hljs-number">30</span>, horizontalalignment=<span class="hljs-string">&#x27;left&#x27;</span>, verticalalignment=<span class="hljs-string">&#x27;top&#x27;</span>, color=<span class="hljs-string">&#x27;yellow&#x27;</span>)<br><span class="hljs-comment"># axs[2].set_title(&#x27;Ground Truth&#x27;, fontsize=20)</span><br>axs[<span class="hljs-number">2</span>].axis(<span class="hljs-string">&#x27;off&#x27;</span>)<br>plt.show()  <br>plt.subplots_adjust(wspace=<span class="hljs-number">0.01</span>, hspace=<span class="hljs-number">0</span>)<br><span class="hljs-comment"># save plot</span><br><span class="hljs-comment"># plt.savefig(join(model_save_path, test_npzs[npz_idx].split(&#x27;.npz&#x27;)[0] + str(img_id).zfill(3) + &#x27;.png&#x27;), bbox_inches=&#x27;tight&#x27;, dpi=300)</span><br>plt.close()<br></code></pre></td></tr></table></figure>
+<p><img src="C12.png" alt="png"></p>
+
+            </article>
+            
+	<div class="rightside">
+	
+		<div class="rightside-button" id="js-aside">
+			<span>
+				<img no-lazy src="/images/icon/aside.png" class="rightside-button-icon" alt="Icon">
+			</span>
+		</div>
+		<script>
+			$("#js-aside").click(function () {
+				onShowAsideButton();
+			});
+		</script>
+	
+	<div class="rightside-button" id="js-toggle_theme">
+		<span>
+			<img no-lazy src="/images/icon/toggle_theme.png" class="rightside-button-icon" alt="Icon">
+		</span>
+	</div>
+
+	
+<script src="/js/plugins/goto_position.js"></script>
+
+	
+	<div class="rightside-button" id="js-go_top">
+		<span>
+			<img no-lazy src="/images/icon/go_top.png" class="rightside-button-icon" alt="Icon">
+		</span>
+	</div>
+	<div class="rightside-button" id="js-go_bottom">
+		<span>
+			<img no-lazy src="/images/icon/go_bottom.png" class="rightside-button-icon" alt="Icon">
+		</span>
+	</div>
+
+	<script>
+		setToggleThemeButtonListener();
+	</script>
+	<script>
+		$('#js-go_top')
+		.gotoPosition( {
+			speed: 300,
+			target: 'top',
+		} );
+		$('#js-go_bottom')
+		.gotoPosition( {
+			speed: 300,
+			target: 'bottom',
+		} );
+	</script>
+</div>
+
+
+<div class="post-bottom">
+    
+        <div class="post-paging">     
+            <div class="post-paging-last">
+                
+                    <a href="/posts/Paper-Resolution-robust%20Large%20Mask%20Inpainting%20with%20Fourier%20Convolutions/">
+                        上一篇：Paper-Resolution-robust Large Mask Inpainting with Fourier Convolutions
+                    </a>
+                
+            </div>
+            <div class="post-paging-next">
+                
+                    <a href="/posts/Software-Stable%20Diffusion/">
+                        下一篇：Software-Stable Diffusion
+                    </a>
+                
+            </div>
+        </div>
+    
+    
+    
+        
+            <div class="giscus comments"></div>
+            <script>
+                var scriptElement = document.createElement('script');
+                scriptElement.src = 'https://giscus.app/client.js';
+                scriptElement.setAttribute('data-repo', 'GZ-Metal-Cell/GZ-Metal-Cell.github.io');
+                scriptElement.setAttribute('data-repo-id', 'R_kgDOIHLEOQ');
+                scriptElement.setAttribute('data-category', 'Announcements');
+                scriptElement.setAttribute('data-category-id', 'DIC_kwDOIHLEOc4CcVwP');
+                scriptElement.setAttribute('data-mapping', 'title');
+                scriptElement.setAttribute('data-strict', '1');
+                scriptElement.setAttribute('data-reactions-enabled', '');
+                scriptElement.setAttribute('data-emit-metadata', '0');
+                scriptElement.setAttribute('data-input-position', 'bottom');
+                scriptElement.setAttribute('data-theme', localStorage.getItem('theme') === 'light' ? 'light' : 'dark_high_contrast');
+                scriptElement.setAttribute('data-lang', 'zh-CN');
+                
+                scriptElement.setAttribute('crossorigin', 'anonymous');
+                scriptElement.async = true;
+                document.head.appendChild(scriptElement);
+            </script>
+        
+    
+</div>
+        </div>
+    </main>
+    
+        <aside class="main-aside">
+    
+<script src="/js/widgets/aside.js"></script>
+
+    <script>
+        showAside();
+    </script>
+
+    <div class="aside-top">
+        <div class="aside-top-about aside-card">
+            <a href="/about" class="aside-top-about-portrait">
+                <img no-lazy src="/about/portrait.png" alt="Q">
+            </a>
+            <div class="aside-top-about-info">
+                <span class="author"> Zi-Zi</span>
+                <span class="description">不以物喜，不以己悲。</span>
+            </div>              
+            <div class="aside-top-about-site">
+                <a href="/categories" class="aside-top-about-site-item">
+                    <span class="title">类别</span>
+                    <span class="count">5</span>
+                </a>
+                <a href="/tags" class="aside-top-about-site-item">
+                    <span class="title">标签</span>
+                    <span class="count">119</span>
+                </a>
+                <a href="/archives" class="aside-top-about-site-item">
+                    <span class="title">归档</span>
+                    <span class="count">428</span>
+                </a>
+            </div>
+            <div class="aside-top-about-contact">
+                
+                    
+                        <a target="_blank" rel="noopener" href="https://weibo.com/u/5020307235">
+                            <img no-lazy src="/images/bottom_icon/Weibo.webp" alt="Quieter">
+                        </a>
+                    
+                        <a target="_blank" rel="noopener" href="https://tieba.baidu.com/home/main?id=tb.1.ff6d2775.vFH7wrdW2ZjPCmyBHJcjnA">
+                            <img no-lazy src="/images/bottom_icon/Tieba.webp" alt="Quieter">
+                        </a>
+                    
+                        <a target="_blank" rel="noopener" href="https://space.bilibili.com/11547880">
+                            <img no-lazy src="/images/bottom_icon/Bilibili.webp" alt="Quieter">
+                        </a>
+                    
+                        <a target="_blank" rel="noopener" href="https://github.com/GZ-Metal-Cell">
+                            <img no-lazy src="/images/bottom_icon/github.webp" alt="Quieter">
+                        </a>
+                    
+                
+            </div>
+        </div> 
+
+        
+    </div>
+
+    <div class="aside-bottom">
+        
+            <script>
+                
+                    const tocCollapsed = true;
+                
+                
+                    const tocDepth = 6;
+                
+                var headerString = '';
+                for (let i = 1; i <= tocDepth; i++) {
+                    if (i === 1) {
+                        headerString += 'h1';
+                    } else {
+                        headerString += ', h' + i;
+                    }
+                }
+                hbeToc();
+            </script>
+            <div class="aside-bottom-toc aside-card">
+                <div class="aside-bottom-toc-title">
+                    <h1>目录</h1>
+                    <span class="toc-percentage"></span>
+                </div>
+                <ol class="aside-bottom-toc-content"></ol>
+            </div>
+        
+    </div>
+</aside>
+    
+</div>
+		<footer>
+	<div class="content">
+		
+			<span>©2022-2025&nbsp;By&nbsp;<a href="/about">Zi-Zi</a>.</span>
+		
+		<span><a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a> theme by <a target="_blank" rel="noopener" href="https://github.com/GZ-Metal-Cell/hexo-theme-quieter">Quieter</a>.</span>
+		
+			<span style="display: flex;">
+				<img no-lazy alt="icp" src="/images/icp_icon.png" style="width: 16px; height: 16px;">
+				<a href="https://icp.gov.moe/?keyword=20241647" target="_blank">萌 ICP 备 20241647 号</a>
+			</span>
+		
+	</div>
+
+	
+<script src="/js/plugins/ref.js"></script>
+
+	
+<script src="/js/plugins/highlight_tools.js"></script>
+
+	<script>
+		const  COPY_ICON = "/images/icon/copy.png";
+		const CLOSE_CODE_BLOCK_ICON = "/images/icon/close_code_block.png";
+		const HIGHLIGHT_SHRINK = "";
+		const HIGHLIGHT_HEIGHT_LIMIT = "";
+	</script>
+
+	
+	
+	<!-- Analytics -->
+
+    
+        <!-- Busuanzi Analytics -->
+        <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    
+    
+        <!-- Baidu Analytics -->
+        <script defer>
+            var _hmt = _hmt || [];
+            (function () {
+                var hm = document.createElement("script");
+                hm.src = "https://hm.baidu.com/hm.js?e57cf62289f84322ebff116e8b3d343e";
+                var s = document.getElementsByTagName("script")[0];
+                s.parentNode.insertBefore(hm, s);
+            })();
+        </script>
+    
+
+
+	
+
+	
+		
+			
+				<link rel="stylesheet" href="/css/plugins/katex/katex.min.css">
+				<script src="/js/plugins/copy-tex.js"></script>
+			
+		
+	
+
+    
+		
+<link rel="stylesheet" href="/css/plugins/textIndent.css">
+
+		
+<script src="/js/plugins/textIndent.js"></script>
+
+	
+
+	
+	
+	
+		<script>
+			if (typeof init === 'function') {
+				init();
+			}
+		</script>
+	
+
+	
+		
+	
+
+	
+
+	<!--
+		
+<script src="/js/plugins/jquery.pjax.min.js"></script>
+
+		<script>
+			$(document).pjax('a[target!=_blank]', 'main', {
+				fragment: 'main',
+				timeout: 8000
+			});
+
+			$(document).on('pjax:complete', function() {
+			});
+		</script> 
+	-->
+	<script>
+		console.log('\n %c Hexo-Quieter 主题 %c https://github.com/GZ-Metal-Cell/hexo-theme-quieter \n', 'color: #fadfa3; background: #030307; padding:5px 0;', 'background: #fadfa3; padding:5px 0;')
+	</script>
+</footer>
+	</body>
+
+	<!-- Hexo-Quieter 主题  https://github.com/GZ-Metal-Cell/hexo-theme-quieter -->
+</html>
+
