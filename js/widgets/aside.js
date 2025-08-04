@@ -132,9 +132,6 @@ function onShowAsideButton() {
     $('.main-wrapper').toggleClass('close-aside');
 
     var value = localStorage.getItem('aside-status');
-    if (value === 'false' && typeof headerString !== 'undefined') {
-        initToc();
-    }
     localStorage.setItem('aside-status', (value === 'true' ? 'false' : 'true'));  // localStorage 访问不需要改变
 }
 
