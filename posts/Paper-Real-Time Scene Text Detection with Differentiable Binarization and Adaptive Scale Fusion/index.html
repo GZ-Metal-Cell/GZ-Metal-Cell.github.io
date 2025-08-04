@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang=zh-CN data-theme="light">
+	
+<script src="/js/plugins/toggleTheme.js"></script>
+
+	<script>
+		setTheme();
+	</script>
+	<head>
+		
+<title>Paper-Real-Time Scene Text Detection with Differentiable Binarization and Adaptive Scale Fusion | Zi-Zi's Journey</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="shortcut icon" type="image/x-icon" href="/images/icon/favicon.ico">
+<link href="/css/plugins/print.css" media="print" rel="stylesheet" />
+
+<link rel="stylesheet" href="/css/index.css">
+
+
+
+<meta name="keywords" content="Python,论文,实验相关,MindSpore,文本检测,代码复现,">
+<meta name="description" content="论文阅读。">
+
+
+
+<script src="/js/plugins/jquery.min.js"></script>
+
+
+<script src="/js/plugins/hljs.min.js"></script>
+
+
+<script src="/js/plugins/init.js"></script>
+
+
+<script src="/js/plugins/hide.js"></script>
+
+
+<script src="/js/plugins/tabs.js"></script>
+
+
+
+    
+
+
+
+    
+<script src="/js/plugins/alert-title.js"></script>
+
+    
+<link rel="stylesheet" href="/css/plugins/github-alerts/github-base.css">
+
+    
+<link rel="stylesheet" href="/css/plugins/github-alerts/github-colors-dark-class.css">
+
+    
+<link rel="stylesheet" href="/css/plugins/github-alerts/github-colors-light.css">
+
+
+
+
+
+
+    
+
+	<meta name="generator" content="Hexo 6.1.0"></head>
+
+	<body>
+		<header class="sticky-header">
+	<nav>
+		<div class="nav-left">
+			<a href="/" class="logo">
+				<img no-lazy src="/images/headers_icon/logo.webp" alt="Quieter">
+			</a>
+			<ul class="breadcrumb" id="breadcrumb"></ul>
+		</div>
+		<div class="nav-right">
+			<ul>
+				
+					<li>
+						<a href="/">
+						  主页
+						</a>
+					</li>
+				
+					<li>
+						<a href="/categories">
+						  类别
+						</a>
+					</li>
+				
+					<li>
+						<a href="/tags">
+						  标签
+						</a>
+					</li>
+				
+					<li>
+						<a href="/archives">
+						  归档
+						</a>
+					</li>
+				
+					<li>
+						<a href="/galleries">
+						  相册
+						</a>
+					</li>
+				
+					<li>
+						<a href="/links">
+						  链接
+						</a>
+					</li>
+				
+					<li>
+						<a href="/about">
+						  关于
+						</a>
+					</li>
+								  
+			</ul>
+		</div>
+		<div class="nav-right-close">
+			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+				<path fill="none" d="M0 0h24v24H0z" />
+				<path d="M3 4h18v2H3V4zm0 7h18v2H3v-2zm0 7h18v2H3v-2z" fill="rgba(68,68,68,1)" />
+			</svg>
+		</div>
+
+		<div class="sidebar">
+    <div class="topo">
+        <p>Zi-Zi's Journey</p>
+    </div>
+    <ul>
+        
+        <li>
+            <a href="/">
+                主页
+            </a>
+        </li>
+        
+        <li>
+            <a href="/categories">
+                类别
+            </a>
+        </li>
+        
+        <li>
+            <a href="/tags">
+                标签
+            </a>
+        </li>
+        
+        <li>
+            <a href="/archives">
+                归档
+            </a>
+        </li>
+        
+        <li>
+            <a href="/galleries">
+                相册
+            </a>
+        </li>
+        
+        <li>
+            <a href="/links">
+                链接
+            </a>
+        </li>
+        
+        <li>
+            <a href="/about">
+                关于
+            </a>
+        </li>
+        
+    </ul>
+    <div class="sidebar-footer">
+        
+        <a target="_blank" rel="noopener" href="https://weibo.com/u/5020307235">
+            <img no-lazy src="/images/bottom_icon/Weibo.webp" alt="Quieter">
+        </a>
+        
+        <a target="_blank" rel="noopener" href="https://tieba.baidu.com/home/main?id=tb.1.ff6d2775.vFH7wrdW2ZjPCmyBHJcjnA">
+            <img no-lazy src="/images/bottom_icon/Tieba.webp" alt="Quieter">
+        </a>
+        
+        <a target="_blank" rel="noopener" href="https://space.bilibili.com/11547880">
+            <img no-lazy src="/images/bottom_icon/Bilibili.webp" alt="Quieter">
+        </a>
+        
+        <a target="_blank" rel="noopener" href="https://github.com/GZ-Metal-Cell">
+            <img no-lazy src="/images/bottom_icon/github.webp" alt="Quieter">
+        </a>
+        
+    </div>
+</div>
+<div class='shelter'>
+    <script>
+        $(function() {
+            $('.nav-right-close > svg').click(function() {
+                $('.sidebar').animate({
+                    right: "0"
+                }, 500);
+                $('.shelter').fadeIn("slow");
+            
+                var element = $('.topo');
+                element.addClass('custom-style');
+            
+                var links = null;
+                if ("") {
+                    links = "".split(',');
+                } else {
+                    links = "/images/random_top_img/01.webp,/images/random_top_img/02.webp,/images/random_top_img/03.webp,/images/random_top_img/04.webp,/images/random_top_img/05.webp,/images/random_top_img/06.webp,/images/random_top_img/07.webp,/images/random_top_img/08.webp,/images/random_top_img/09.webp,/images/random_top_img/10.webp,/images/random_top_img/11.webp,/images/random_top_img/12.webp,/images/random_top_img/13.webp,/images/random_top_img/14.webp,/images/random_top_img/15.webp,/images/random_top_img/16.webp,/images/random_top_img/17.webp,/images/random_top_img/18.webp,/images/random_top_img/19.webp,/images/random_top_img/20.webp,/images/random_top_img/21.webp,/images/random_top_img/22.webp,/images/random_top_img/23.webp,/images/random_top_img/24.webp,/images/random_top_img/25.webp,/images/random_top_img/26.webp,/images/random_top_img/27.webp,/images/random_top_img/28.webp,/images/random_top_img/29.webp,/images/random_top_img/30.webp,/images/random_top_img/31.webp,/images/random_top_img/32.webp,/images/random_top_img/33.webp,/images/random_top_img/34.webp,/images/random_top_img/35.webp,/images/random_top_img/36.webp,/images/random_top_img/37.webp,/images/random_top_img/38.webp,/images/random_top_img/39.webp,/images/random_top_img/40.webp,/images/random_top_img/41.webp,/images/random_top_img/42.webp,/images/random_top_img/43.webp,/images/random_top_img/44.webp,/images/random_top_img/45.webp,/images/random_top_img/46.webp,/images/random_top_img/47.webp,/images/random_top_img/48.webp,/images/random_top_img/49.webp,/images/random_top_img/50.webp,/images/random_top_img/51.webp,/images/random_top_img/52.webp,/images/random_top_img/53.webp,/images/random_top_img/54.webp,/images/random_top_img/55.webp,/images/random_top_img/56.webp,/images/random_top_img/57.webp".split(',');
+                }
+            
+                var randomLink = links[Math.floor(Math.random() * links.length)];
+                element.css('background-image', "url('" + randomLink + "')");
+            });
+          
+            $('.shelter').click(function(e) {
+                $('.sidebar').animate({
+                    right: "-100%"
+                }, 500);
+                $('.shelter').fadeOut("slow");
+            });
+        });      
+    </script>
+</div>
+	</nav>
+
+	
+		<div class="header-background"></div>
+	
+
+	<script>
+		const name = 'post';
+		const ul = document.querySelectorAll('.nav-right ul')[0];
+		const lis = ul.querySelectorAll('li');
+
+		if (name == 'home') {
+			lis[0].classList.add('select');
+		} else {
+			for (let i = 0; i < lis.length; i++) {
+				const li = lis[i];
+				const a = li.querySelector('a');
+				if (name === a.href.split('/')[3]) {
+					li.classList.add('select');
+				}
+			}
+		}
+	</script>
+	
+	<script>
+		var element = document.querySelector('.header-background');
+		if(element) {
+			element.classList.add('custom-style');
+			var links = null;
+			if("")
+			{
+				links = "".split(',');
+			} else
+			{
+				links = "/images/random_top_img/01.webp,/images/random_top_img/02.webp,/images/random_top_img/03.webp,/images/random_top_img/04.webp,/images/random_top_img/05.webp,/images/random_top_img/06.webp,/images/random_top_img/07.webp,/images/random_top_img/08.webp,/images/random_top_img/09.webp,/images/random_top_img/10.webp,/images/random_top_img/11.webp,/images/random_top_img/12.webp,/images/random_top_img/13.webp,/images/random_top_img/14.webp,/images/random_top_img/15.webp,/images/random_top_img/16.webp,/images/random_top_img/17.webp,/images/random_top_img/18.webp,/images/random_top_img/19.webp,/images/random_top_img/20.webp,/images/random_top_img/21.webp,/images/random_top_img/22.webp,/images/random_top_img/23.webp,/images/random_top_img/24.webp,/images/random_top_img/25.webp,/images/random_top_img/26.webp,/images/random_top_img/27.webp,/images/random_top_img/28.webp,/images/random_top_img/29.webp,/images/random_top_img/30.webp,/images/random_top_img/31.webp,/images/random_top_img/32.webp,/images/random_top_img/33.webp,/images/random_top_img/34.webp,/images/random_top_img/35.webp,/images/random_top_img/36.webp,/images/random_top_img/37.webp,/images/random_top_img/38.webp,/images/random_top_img/39.webp,/images/random_top_img/40.webp,/images/random_top_img/41.webp,/images/random_top_img/42.webp,/images/random_top_img/43.webp,/images/random_top_img/44.webp,/images/random_top_img/45.webp,/images/random_top_img/46.webp,/images/random_top_img/47.webp,/images/random_top_img/48.webp,/images/random_top_img/49.webp,/images/random_top_img/50.webp,/images/random_top_img/51.webp,/images/random_top_img/52.webp,/images/random_top_img/53.webp,/images/random_top_img/54.webp,/images/random_top_img/55.webp,/images/random_top_img/56.webp,/images/random_top_img/57.webp".split(',');
+			}
+			var randomLink = links[Math.floor(Math.random() * links.length)];
+			element.style.backgroundImage = "url('" + randomLink + "')";
+		}
+	</script>
+
+	
+<script src="/js/plugins/breadcrumb.js"></script>
+
+	<script>
+		var menus_title = [];
+		
+			menus_title.push({home: '主页'});
+		
+			menus_title.push({categories: '类别'});
+		
+			menus_title.push({tags: '标签'});
+		
+			menus_title.push({archives: '归档'});
+		
+			menus_title.push({galleries: '相册'});
+		
+			menus_title.push({links: '链接'});
+		
+			menus_title.push({about: '关于'});
+		
+		
+			
+				postsBreadcrumb(
+					document.getElementById('breadcrumb'),
+					"类别",
+					"/categories",
+					"学习",
+					"/categories/学习",
+					1
+				);
+			
+		
+	</script>
+</header>
+
+<div class="main-wrapper">
+    <main class="post">
+        <header class="main-header">
+	
+		
+			
+				
+<link rel="stylesheet" href="/css/plugins/fancybox.css">
+
+				
+<script src="/js/plugins/fancybox.umd.js"></script>
+
+				
+<script src="/js/plugins/fancybox.js"></script>
+
+			
+			<div class="post-header-background-content">
+				<ul class="post-header-tag">
+					
+						
+							<li><a href="/tags/Python"><span>Python</span></a></li>
+						
+							<li><a href="/tags/论文"><span>论文</span></a></li>
+						
+							<li><a href="/tags/实验相关"><span>实验相关</span></a></li>
+						
+							<li><a href="/tags/MindSpore"><span>MindSpore</span></a></li>
+						
+							<li><a href="/tags/文本检测"><span>文本检测</span></a></li>
+						
+							<li><a href="/tags/代码复现"><span>代码复现</span></a></li>
+						
+					
+				</ul>
+				
+				<h1>Real-Time Scene Text Detection with Differentiable Binarization and <font color="#136ec2">A</font>daptive <font color="#136ec2">S</font>cale <font color="#136ec2">F</font>usion</h1>
+		
+				
+					<div class="post-header-desc">
+						<svg t="1714702231661" class="icon" viewBox="0 0 1024 1024" version="1.1"
+						xmlns="http://www.w3.org/2000/svg" p-id="1154" xmlns:xlink="http://www.w3.org/1999/xlink"
+						width="20" height="20">
+						<path
+							d="M778.24 117.76A46.08 46.08 0 0 1 824.32 163.84v430.08c0 8.4992-4.13696 16.01536-10.50624 20.6848l-0.24576 0.2048L587.5712 846.09024a35.84 35.84 0 0 1-61.48096-25.06752v-220.9792a46.08 46.08 0 0 1 46.08-46.08l200.94976-0.02048V168.96h-522.24v686.08H389.12c13.25056 0 24.1664 10.07616 25.47712 22.97856l0.12288 2.62144c0 14.1312-11.4688 25.6-25.6 25.6h-143.36A46.08 46.08 0 0 1 199.68 860.16V163.84A46.08 46.08 0 0 1 245.76 117.76h532.48z m-26.78784 487.38304h-174.16192v178.176l174.16192-178.176z m-45.19936-169.94304a25.6 25.6 0 0 1 0 51.2H307.2a25.6 25.6 0 0 1 0-51.2h399.0528z m0-122.88a25.6 25.6 0 0 1 0 51.2H307.2a25.6 25.6 0 0 1 0-51.2h399.0528z"
+							fill="#ffffff" p-id="1155"></path>
+						</svg>
+						<p>论文阅读。</p>
+					</div>
+				
+		
+				<div class="post-header-info">
+					<svg t="1604839279282" class="icon" viewBox="0 0 1024 1024" version="1.1"
+					xmlns="http://www.w3.org/2000/svg" p-id="2901" width="20" height="20">
+						<path
+							d="M513 956.3c-247.7 0-448-200.3-448-448S265.3 66.2 513 66.2s448 200.3 448 448-200.3 442.1-448 442.1z m0-830.9c-212.2 0-388.8 170.7-388.8 388.8C124.2 726.3 294.9 903 513 903c212.2 0 388.8-170.7 388.8-388.8S725.2 125.4 513 125.4z m0 430.2c-94.2 0-170.7-76.5-170.7-170.7S418.8 207.8 513 207.8s170.7 76.5 170.7 170.7S607.2 555.6 513 555.6z m0-289.1c-64.6 0-112 52.8-112 112s47.4 117.9 112 117.9 112-52.8 112-112-47.4-117.9-112-117.9z m0 689.8c-135.7 0-259-58.7-341.9-158.9l-11.8-17.8 11.8-17.8c76.5-117.9 206.2-188.5 347.8-188.5 135.7 0 265 64.6 341.9 182.6l11.8 17.8-11.8 17.8C778 897.1 648.7 956.3 513 956.3zM230.3 773.2C300.9 849.7 406.9 897 513 897c112 0 218.1-47.4 288.6-129.8-70.5-88.2-170.7-135.6-282.7-135.6s-218.1 53.3-288.6 141.6z"
+							p-id="2902" fill="#ffffff"></path>
+					</svg>
+					<div class="post-header-info-author">
+						<a href="/about">Zi-Zi</a>
+					</div>
+					
+						<div class="post-header-info-categories">
+							
+								<a href="/categories/学习">学习</a>
+							
+						</div>
+					
+					<time>2023/07/15 15:23:00</time>
+				</div>
+		
+				
+					<div class="post-header-stat">
+						<svg version="1.0" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+						viewBox="0 0 200 200" enable-background="new 0 0 200 200" xml:space="preserve" width="20" height="20">
+							<path fill="#FFFFFF" d="M187.2,165.6c0,2.6-2.1,4.7-4.7,4.7H17.5c-2.6,0-4.7-2.1-4.7-4.7s2.1-4.7,4.7-4.7h165.1
+								C185.2,160.9,187.2,163,187.2,165.6z"/>
+							<path fill="#FFFFFF" d="M17.5,29.7c2.6,0,4.7,2.1,4.7,4.7v131.2c0,2.6-2.1,4.7-4.7,4.7s-4.7-2.1-4.7-4.7V34.4
+								C12.8,31.8,14.9,29.7,17.5,29.7z M77.9,91.5c1.8,1.8,1.8,4.8,0,6.6l-39.8,39.8c-1.9,1.8-4.9,1.7-6.6-0.2c-1.7-1.8-1.7-4.6,0-6.4
+								l39.8-39.8C73.1,89.6,76,89.6,77.9,91.5z M169.9,70.2c1.6,2.1,1.1,5-0.9,6.5c0,0,0,0,0,0l-64.2,48.2c-2.1,1.5-5,1.1-6.6-0.9
+								c-1.6-2.1-1.1-5,0.9-6.5c0,0,0,0,0,0l64.2-48.2C165.4,67.7,168.3,68.1,169.9,70.2L169.9,70.2z"/>
+							<path fill="#FFFFFF" d="M104.6,124.5c-1.8,1.8-4.8,1.8-6.6,0L71.6,98.1c-1.8-1.8-1.8-4.8,0-6.6c1.8-1.8,4.8-1.8,6.6,0l26.3,26.3
+								C106.4,119.6,106.4,122.6,104.6,124.5C104.6,124.4,104.6,124.4,104.6,124.5z"/>
+						</svg>
+		
+						
+							
+<script src="/js/plugins/wordCount.js"></script>
+
+							<p class="post-count">文字数：---</p>
+						
+		
+						
+							<p id="busuanzi_container_page_pv" style='display:none;'>阅读数：<span id="busuanzi_value_page_pv"></span></p>
+						
+					</div>
+				
+			</div>
+		
+	
+</header>
+        <div class="post-content article-container">
+            <article class="post-content-info">
+                <h1 id="%E8%B5%84%E6%BA%90" tabindex="-1">资源</h1>
+<ul>
+<li>
+<p>PapersWithCode：<a target="_blank" rel="noopener" href="https://paperswithcode.com/paper/real-time-scene-text-detection-with-1">Real-Time Scene Text Detection with Differentiable Binarization and Adaptive Scale Fusion | Papers With Code</a></p>
+</li>
+<li>
+<p>Arxiv：<a target="_blank" rel="noopener" href="https://arxiv.org/abs/2202.10304">[2202.10304] Real-Time Scene Text Detection with Differentiable Binarization and Adaptive Scale Fusion (arxiv.org)</a></p>
+</li>
+</ul>
+<h1 id="%E6%AD%A3%E6%96%87" tabindex="-1">正文</h1>
+<h2 id="abstract" tabindex="-1" id="Abstract">Abstract</h2>
+<p>​    在之前 DB 的基础上，提出了一种有效的 <strong>自适应尺度融合（ASF）</strong> 模块，通过自适应融合不同尺度的特征来提高尺度鲁棒性。</p>
+<p>​    通过将所提出的 DB 和 ASF 与分割网络相结合，我们提出的场景文本检测器在五个标准基准上，在检测精度和速度方面始终取得了最先进的结果。</p>
+<h2 id="1-introduction" tabindex="-1" id="1-Introduction">1 Introduction</h2>
+<p>​    作为场景文本检测的主流，基于<strong>分割</strong>的场景文本检测器由于其像素级表示和局部预测，通常在处理不规则形状和极端纵横比的文本实例方面具有优势。然而，它们中的大多数依赖于复杂的后处理算法将像素分组到文本区域中，导致在推理周期中花费了相当大的时间。</p>
+<p>​    例如，<strong>PSENet</strong> 应用渐进尺度扩展算法来集成多尺度结果，Tian 等人通过计算像素之间的特征距离，采用像素嵌入来对像素进行分组。此外，他们主要通过应用 <strong>FPN 特征金字塔</strong> 或 <strong>U-Net 结构</strong> 来融合不同尺度的特征图来提高分割网络的尺度鲁棒性，没有明确地针对不同尺度的文本实例自适应地融合多尺度特征。</p>
+<hr>
+<p>​    然后像之前那篇论文一样介绍了<strong>可微二值化</strong>。</p>
+<hr>
+<p>​    本文是其会议版本 <strong>DBNet</strong> 的扩展。它从两个方面扩展了会议版本。</p>
+<ul>
+<li>提出了一个 ASF 模块，以进一步增强分割模型的规模鲁棒性，而不会明显损失效率。所提出的 ASF 带来的改进与场景文本基准的尺度分布呈正相关。</li>
+<li>对所提出的数据库模块进行了更全面的理论分析。</li>
+</ul>
+<p>​    通过将所提出的 DB 模块和 ASF 模块集成到分割网络中，创建了一个准确、稳健、高效的场景文本检测器，称为 DBNet++：</p>
+<ul>
+<li>
+<p>与所提出的 DB 模块联合优化后，我们的分割网络可以产生高度鲁棒的分割结果，显著提高文本检测结果</p>
+</li>
+<li>
+<p>由于可以在不牺牲准确性的情况下在推理周期中去除 DB，因此推理没有额外的内存/时间成本</p>
+</li>
+<li>
+<p>所提出的 ASF 模块可以有效地提高分割模型的尺度鲁棒性</p>
+</li>
+<li>
+<p>DBNet++ 在五个场景文本检测基准上实现了一贯的最先进的准确性，包括水平、多方向和弯曲文本</p>
+</li>
+</ul>
+<h2 id="2-related-work" tabindex="-1" id="2-RELATED-WORK">2 RELATED WORK</h2>
+<h3 id="2.1-text-detection" tabindex="-1" id="2-1-Text-Detection">2.1 Text Detection</h3>
+<p>​    介绍前人工作，认为 Text Detection 分为三大类：</p>
+<ul>
+<li>Regression-based</li>
+<li>Part-based</li>
+<li>Segmentation-based</li>
+</ul>
+<p>​    基于分割的方法通常结合像素级预测和后处理算法来获得边界框。</p>
+<p>​    还有追求 FPS 的模型。</p>
+<h3 id="2.2-attention-mechanisms-for-image-classification" tabindex="-1" id="2-2-Attention-Mechanisms-for-Image-Classification">2.2 Attention Mechanisms for Image Classification</h3>
+<p>​    以前的一些图像分类方法使用通道注意力和空间注意力来提高图像分类的准确性。</p>
+<p>​    这些方法主要通过不同类型的注意力来提炼独立特征。我们提出的自适应尺度融合侧重于融合不同尺度的特征。</p>
+<h3 id="2.3-%E7%94%A8%E4%BA%8E%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E7%9A%84%E5%A4%9A%E5%B0%BA%E5%BA%A6%E7%89%B9%E5%BE%81%E8%9E%8D%E5%90%88%E5%92%8C%E4%B8%8A%E4%B8%8B%E6%96%87%E5%A2%9E%E5%BC%BA" tabindex="-1" id="2-3-用于语义分割的多尺度特征融合和上下文增强">2.3 用于语义分割的多尺度特征融合和上下文增强</h3>
+<p>​    用于语义分割的多尺度特征融合与上下文增强。</p>
+<h2 id="3-methodology" tabindex="-1" id="3-METHODOLOGY">3 METHODOLOGY</h2>
+<p><img src="P3.png" alt="png"></p>
+<ul>
+<li>将输入图像输入到特征金字塔主干中</li>
+<li>金字塔特征被上采样到相同的尺度，并被传递到自适应尺度融合（ASF）模块以产生上下文特征 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>F</mi></mrow><annotation encoding="application/x-tex">F</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.68333em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.13889em;">F</span></span></span></span></li>
+<li>特征 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>F</mi></mrow><annotation encoding="application/x-tex">F</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.68333em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.13889em;">F</span></span></span></span> 被用于预测概率图（<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>P</mi></mrow><annotation encoding="application/x-tex">P</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.68333em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.13889em;">P</span></span></span></span>）和阈值图（<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>T</mi></mrow><annotation encoding="application/x-tex">T</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.68333em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.13889em;">T</span></span></span></span>）</li>
+<li>通过 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>P</mi></mrow><annotation encoding="application/x-tex">P</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.68333em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.13889em;">P</span></span></span></span> 和 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>F</mi></mrow><annotation encoding="application/x-tex">F</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.68333em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.13889em;">F</span></span></span></span> 计算近似二值映射（<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mover accent="true"><mi>B</mi><mo>^</mo></mover></mrow><annotation encoding="application/x-tex">\hat B</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.9467699999999999em;"></span><span class="strut bottom" style="height:0.9467699999999999em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord accent"><span class="vlist"><span style="top:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="mord mathit" style="margin-right:0.05017em;">B</span></span><span style="top:-0.25233em;margin-left:0.16668em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="accent-body"><span>^</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span>）。</li>
+</ul>
+<hr>
+<ul>
+<li>在训练期间，监督应用于概率映射、阈值映射和近似二值图，其中概率映射和近似二进制映射共享相同的监督。</li>
+<li>在推理期间，可以通过框形成过程从近似二值图或概率图中容易地获得边界框。</li>
+</ul>
+<h3 id="3.1-adaptive-scale-fusion" tabindex="-1" id="3-1-Adaptive-Scale-Fusion">3.1 Adaptive Scale Fusion</h3>
+<p><img src="P4.png" alt="png"></p>
+<p>​    不同尺度的特征具有不同的感知和感受场，因此它们侧重于描述不同尺度的文本实例。例如，浅或大尺寸特征可以感知小文本实例的细节，但不能捕获大文本实例的全局视图，而深或小尺寸特征相反。</p>
+<p>​    为了充分利用不同尺度的特征，在语义分割方法中通常采用 FPN 或 U-Net 结构。与大多数通过简单级联或相加来融合不同尺度特征的语义分割方法不同，我们提出的自适应尺度融合是为了动态融合不同尺度的特征。</p>
+<p><span class="katex-display"><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>S</mi><mo>=</mo><mi>C</mi><mi>o</mi><mi>n</mi><mi>v</mi><mo>(</mo><mi>c</mi><mi>o</mi><mi>n</mi><mi>c</mi><mi>a</mi><mi>t</mi><mo>(</mo><mo>[</mo><msub><mi>X</mi><mn>0</mn></msub><mo separator="true">,</mo><msub><mi>X</mi><mn>1</mn></msub><mo separator="true">,</mo><mi mathvariant="normal">.</mi><mi mathvariant="normal">.</mi><mi mathvariant="normal">.</mi><mo separator="true">,</mo><msub><mi>X</mi><mrow><mi>N</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>]</mo><mo>)</mo><mo>)</mo></mrow><annotation encoding="application/x-tex">S=Conv(concat([X_0,X_1,...,X_{N-1}]))
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.75em;"></span><span class="strut bottom" style="height:1em;vertical-align:-0.25em;"></span><span class="base displaystyle textstyle uncramped"><span class="mord mathit" style="margin-right:0.05764em;">S</span><span class="mrel">=</span><span class="mord mathit" style="margin-right:0.07153em;">C</span><span class="mord mathit">o</span><span class="mord mathit">n</span><span class="mord mathit" style="margin-right:0.03588em;">v</span><span class="mopen">(</span><span class="mord mathit">c</span><span class="mord mathit">o</span><span class="mord mathit">n</span><span class="mord mathit">c</span><span class="mord mathit">a</span><span class="mord mathit">t</span><span class="mopen">(</span><span class="mopen">[</span><span class="mord"><span class="mord mathit" style="margin-right:0.07847em;">X</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:-0.07847em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathrm">0</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mpunct">,</span><span class="mord"><span class="mord mathit" style="margin-right:0.07847em;">X</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:-0.07847em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathrm">1</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mpunct">,</span><span class="mord mathrm">.</span><span class="mord mathrm">.</span><span class="mord mathrm">.</span><span class="mpunct">,</span><span class="mord"><span class="mord mathit" style="margin-right:0.07847em;">X</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:-0.07847em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord scriptstyle cramped"><span class="mord mathit" style="margin-right:0.10903em;">N</span><span class="mbin">−</span><span class="mord mathrm">1</span></span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mclose">]</span><span class="mclose">)</span><span class="mclose">)</span></span></span></span></span></p>
+<p><span class="katex-display"><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>A</mi><mo>=</mo><mi>S</mi><mi>p</mi><mi>a</mi><mi>t</mi><mi>i</mi><mi>a</mi><mi>l</mi><mi mathvariant="normal">_</mi><mi>A</mi><mi>t</mi><mi>t</mi><mi>e</mi><mi>n</mi><mi>t</mi><mi>i</mi><mi>o</mi><mi>n</mi><mo>(</mo><mi>S</mi><mo>)</mo></mrow><annotation encoding="application/x-tex">A=Spatial\_Attention(S)
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.75em;"></span><span class="strut bottom" style="height:1.06em;vertical-align:-0.31em;"></span><span class="base displaystyle textstyle uncramped"><span class="mord mathit">A</span><span class="mrel">=</span><span class="mord mathit" style="margin-right:0.05764em;">S</span><span class="mord mathit">p</span><span class="mord mathit">a</span><span class="mord mathit">t</span><span class="mord mathit">i</span><span class="mord mathit">a</span><span class="mord mathit" style="margin-right:0.01968em;">l</span><span class="mord mathrm" style="margin-right:0.02778em;">_</span><span class="mord mathit">A</span><span class="mord mathit">t</span><span class="mord mathit">t</span><span class="mord mathit">e</span><span class="mord mathit">n</span><span class="mord mathit">t</span><span class="mord mathit">i</span><span class="mord mathit">o</span><span class="mord mathit">n</span><span class="mopen">(</span><span class="mord mathit" style="margin-right:0.05764em;">S</span><span class="mclose">)</span></span></span></span></span></p>
+<p><span class="katex-display"><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>F</mi><mo>=</mo><mi>c</mi><mi>o</mi><mi>n</mi><mi>c</mi><mi>a</mi><mi>t</mi><mo>(</mo><mo>[</mo><msub><mi>E</mi><mn>0</mn></msub><msub><mi>X</mi><mn>0</mn></msub><mo separator="true">,</mo><mi>E</mi><mn>1</mn><msub><mi>X</mi><mn>1</mn></msub><mo separator="true">,</mo><mi mathvariant="normal">.</mi><mi mathvariant="normal">.</mi><mi mathvariant="normal">.</mi><mo separator="true">,</mo><msub><mi>E</mi><mrow><mi>N</mi><mo>−</mo><mn>1</mn></mrow></msub><msub><mi>X</mi><mrow><mi>N</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>]</mo><mo>)</mo></mrow><annotation encoding="application/x-tex">F=concat([E_0X_0,E1X_1,...,E_{N-1}X_{N-1}])
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.75em;"></span><span class="strut bottom" style="height:1em;vertical-align:-0.25em;"></span><span class="base displaystyle textstyle uncramped"><span class="mord mathit" style="margin-right:0.13889em;">F</span><span class="mrel">=</span><span class="mord mathit">c</span><span class="mord mathit">o</span><span class="mord mathit">n</span><span class="mord mathit">c</span><span class="mord mathit">a</span><span class="mord mathit">t</span><span class="mopen">(</span><span class="mopen">[</span><span class="mord"><span class="mord mathit" style="margin-right:0.05764em;">E</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:-0.05764em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathrm">0</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mord"><span class="mord mathit" style="margin-right:0.07847em;">X</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:-0.07847em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathrm">0</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mpunct">,</span><span class="mord mathit" style="margin-right:0.05764em;">E</span><span class="mord mathrm">1</span><span class="mord"><span class="mord mathit" style="margin-right:0.07847em;">X</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:-0.07847em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathrm">1</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mpunct">,</span><span class="mord mathrm">.</span><span class="mord mathrm">.</span><span class="mord mathrm">.</span><span class="mpunct">,</span><span class="mord"><span class="mord mathit" style="margin-right:0.05764em;">E</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:-0.05764em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord scriptstyle cramped"><span class="mord mathit" style="margin-right:0.10903em;">N</span><span class="mbin">−</span><span class="mord mathrm">1</span></span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mord"><span class="mord mathit" style="margin-right:0.07847em;">X</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:-0.07847em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord scriptstyle cramped"><span class="mord mathit" style="margin-right:0.10903em;">N</span><span class="mbin">−</span><span class="mord mathrm">1</span></span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mclose">]</span><span class="mclose">)</span></span></span></span></span></p>
+<h3 id="3.2-binarization" tabindex="-1" id="3-2-Binarization">3.2 Binarization</h3>
+<p>介绍了它的 DB：</p>
+<p><img src="P5.png" alt="png"></p>
+<h3 id="3.3-analysis-of-differentiable-binarization" tabindex="-1" id="3-3-Analysis-of-Differentiable-Binarization">3.3 Analysis of Differentiable Binarization</h3>
+<p>​    用数学方式解释为什么 DB 好使。</p>
+<h3 id="3.4-adaptive-threshold" tabindex="-1" id="3-4-Adaptive-Threshold">3.4 Adaptive Threshold</h3>
+<p>​    自适应阈值。</p>
+<h3 id="3.5-deformable-convolution" tabindex="-1" id="3-5-Deformable-Convolution">3.5 Deformable Convolution</h3>
+<p>​    可变形卷积。</p>
+<h3 id="3.6-label-generation" tabindex="-1" id="3-6-Label-Generation">3.6 Label Generation</h3>
+<p>​    概率图的标签生成受到 PSENet 的启发。给定一个文本图像，其文本区域的每个多边形由一组线段描述：</p>
+<p><span class="katex-display"><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>G</mi><mo>=</mo><mo>{</mo><msub><mi>S</mi><mi>k</mi></msub><msubsup><mo>}</mo><mrow><mi>k</mi><mo>=</mo><mn>1</mn></mrow><mi>n</mi></msubsup></mrow><annotation encoding="application/x-tex">G=\{S_k\}^n_{k=1}
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.75em;"></span><span class="strut bottom" style="height:1em;vertical-align:-0.25em;"></span><span class="base displaystyle textstyle uncramped"><span class="mord mathit">G</span><span class="mrel">=</span><span class="mopen">{</span><span class="mord"><span class="mord mathit" style="margin-right:0.05764em;">S</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:-0.05764em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit" style="margin-right:0.03148em;">k</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mclose"><span class="mclose">}</span><span class="vlist"><span style="top:0.247em;margin-left:0em;margin-right:0.05em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord scriptstyle cramped"><span class="mord mathit" style="margin-right:0.03148em;">k</span><span class="mrel">=</span><span class="mord mathrm">1</span></span></span></span><span style="top:-0.4129999999999999em;margin-right:0.05em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle uncramped"><span class="mord mathit">n</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span></span></p>
+<p>​    <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>n</mi></mrow><annotation encoding="application/x-tex">n</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.43056em;"></span><span class="strut bottom" style="height:0.43056em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit">n</span></span></span></span> 是顶点的数量，在不同的数据集中可能不同，例如，ICDAR 2015 数据集为 4 个，CTW1500 数据集为 16 个。</p>
+<p>​    然后，通过使用瓦蒂剪裁算法将多边形 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>G</mi></mrow><annotation encoding="application/x-tex">G</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.68333em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit">G</span></span></span></span> 缩小为 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>G</mi><mi>s</mi></msub></mrow><annotation encoding="application/x-tex">G_s</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="base textstyle uncramped"><span class="mord"><span class="mord mathit">G</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit">s</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span> 来生成正区域。收缩的偏移量 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>D</mi></mrow><annotation encoding="application/x-tex">D</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.68333em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.02778em;">D</span></span></span></span> 是根据原始多边形的周长 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>L</mi></mrow><annotation encoding="application/x-tex">L</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.68333em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit">L</span></span></span></span> 和面积 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>A</mi></mrow><annotation encoding="application/x-tex">A</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.68333em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit">A</span></span></span></span> 计算得出的：</p>
+<p><span class="katex-display"><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>D</mi><mo>=</mo><mfrac><mrow><mi>A</mi><mo>(</mo><mn>1</mn><mo>−</mo><msup><mi>r</mi><mn>2</mn></msup><mo>)</mo></mrow><mrow><mi>L</mi></mrow></mfrac></mrow><annotation encoding="application/x-tex">D=\frac{A(1-r^2)}{L}
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:1.491108em;"></span><span class="strut bottom" style="height:2.177108em;vertical-align:-0.686em;"></span><span class="base displaystyle textstyle uncramped"><span class="mord mathit" style="margin-right:0.02778em;">D</span><span class="mrel">=</span><span class="mord reset-textstyle displaystyle textstyle uncramped"><span class="sizing reset-size5 size5 reset-textstyle textstyle uncramped nulldelimiter"></span><span class="mfrac"><span class="vlist"><span style="top:0.686em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle textstyle cramped"><span class="mord textstyle cramped"><span class="mord mathit">L</span></span></span></span><span style="top:-0.22999999999999998em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle textstyle uncramped frac-line"></span></span><span style="top:-0.677em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle textstyle uncramped"><span class="mord textstyle uncramped"><span class="mord mathit">A</span><span class="mopen">(</span><span class="mord mathrm">1</span><span class="mbin">−</span><span class="mord"><span class="mord mathit" style="margin-right:0.02778em;">r</span><span class="vlist"><span style="top:-0.363em;margin-right:0.05em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle uncramped"><span class="mord mathrm">2</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mclose">)</span></span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="sizing reset-size5 size5 reset-textstyle textstyle uncramped nulldelimiter"></span></span></span></span></span></span></p>
+<p>​    其中 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>r</mi></mrow><annotation encoding="application/x-tex">r</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.43056em;"></span><span class="strut bottom" style="height:0.43056em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.02778em;">r</span></span></span></span> 是收缩率，根据经验设置为 0.4。</p>
+<p>​    通过类似的过程，我们可以为阈值映射生成标签。首先，以相同的偏移量 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>D</mi></mrow><annotation encoding="application/x-tex">D</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.68333em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit" style="margin-right:0.02778em;">D</span></span></span></span> 到 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>G</mi><mi>d</mi></msub></mrow><annotation encoding="application/x-tex">G_d</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="base textstyle uncramped"><span class="mord"><span class="mord mathit">G</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit">d</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span> 来展开文本多边形 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>G</mi></mrow><annotation encoding="application/x-tex">G</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.68333em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit">G</span></span></span></span>。我们将 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>G</mi><mi>s</mi></msub></mrow><annotation encoding="application/x-tex">G_s</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="base textstyle uncramped"><span class="mord"><span class="mord mathit">G</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit">s</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span> 和 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>G</mi><mi>d</mi></msub></mrow><annotation encoding="application/x-tex">G_d</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="base textstyle uncramped"><span class="mord"><span class="mord mathit">G</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit">d</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span> 之间的间隙视为文本区域的边界。阈值映射可以通过计算到 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>G</mi></mrow><annotation encoding="application/x-tex">G</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.68333em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit">G</span></span></span></span> 中最近分段的距离来生成。</p>
+<h3 id="3.7-optimization" tabindex="-1" id="3-7-Optimization">3.7 Optimization</h3>
+<p>​    损失函数 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>L</mi></mrow><annotation encoding="application/x-tex">L</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.68333em;vertical-align:0em;"></span><span class="base textstyle uncramped"><span class="mord mathit">L</span></span></span></span> 可以表示为概率映射 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mi>s</mi></msub></mrow><annotation encoding="application/x-tex">L_s</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="base textstyle uncramped"><span class="mord"><span class="mord mathit">L</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit">s</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span> 的损失、二进制映射 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mi>b</mi></msub></mrow><annotation encoding="application/x-tex">L_b</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="base textstyle uncramped"><span class="mord"><span class="mord mathit">L</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit">b</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span> 的损失和阈值映射 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msub><mi>L</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">L_t</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.68333em;"></span><span class="strut bottom" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="base textstyle uncramped"><span class="mord"><span class="mord mathit">L</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit">t</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span> 的损失的加权和：</p>
+<p><span class="katex-display"><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>L</mi><mo>=</mo><msub><mi>L</mi><mi>s</mi></msub><mo>+</mo><mi>α</mi><mo>×</mo><msub><mi>L</mi><mi>b</mi></msub><mo>+</mo><mi>β</mi><mo>×</mo><msub><mi>L</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">L=L_s+\alpha\times L_b +\beta \times L_t
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.69444em;"></span><span class="strut bottom" style="height:0.8888799999999999em;vertical-align:-0.19444em;"></span><span class="base displaystyle textstyle uncramped"><span class="mord mathit">L</span><span class="mrel">=</span><span class="mord"><span class="mord mathit">L</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit">s</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mbin">+</span><span class="mord mathit" style="margin-right:0.0037em;">α</span><span class="mbin">×</span><span class="mord"><span class="mord mathit">L</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit">b</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mbin">+</span><span class="mord mathit" style="margin-right:0.05278em;">β</span><span class="mbin">×</span><span class="mord"><span class="mord mathit">L</span><span class="vlist"><span style="top:0.15em;margin-right:0.05em;margin-left:0em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord mathit">t</span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span></span></p>
+<h2 id="4-experiments" tabindex="-1" id="4-EXPERIMENTS">4 EXPERIMENTS</h2>
+<h3 id="4.1-datasets" tabindex="-1" id="4-1-Datasets">4.1 Datasets</h3>
+<p>​    使用的数据集：</p>
+<ul>
+<li>SynthText</li>
+<li>MLT-2017</li>
+<li>MLT-2019</li>
+<li>ICDAR 2015</li>
+<li>MSRA-TD500</li>
+<li>CTW1500</li>
+<li>Total-Text</li>
+</ul>
+<h3 id="4.2-implementation-details" tabindex="-1" id="4-2-Implementation-Details">4.2 Implementation Details</h3>
+<p>​    对于所有模型：</p>
+<ul>
+<li>首先使用 SynthText 数据集对它们进行 100k 次迭代的<strong>预训练</strong>。</li>
+<li>在 1200 个 epochs 的相应真实世界数据集上<strong>微调模型</strong>。</li>
+<li>训练批次大小设置为 16。我们遵循“多”学习率策略，其中当前迭代的学习率等于初始学习率乘以 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mo>(</mo><mn>1</mn><mo>−</mo><mfrac><mrow><mi>i</mi><mi>t</mi><mi>e</mi><mi>r</mi></mrow><mrow><mi>m</mi><mi>a</mi><mi>x</mi><mi mathvariant="normal">_</mi><mi>i</mi><mi>t</mi><mi>e</mi><mi>r</mi></mrow></mfrac><msup><mo>)</mo><mrow><mi>p</mi><mi>o</mi><mi>w</mi><mi>e</mi><mi>r</mi></mrow></msup></mrow><annotation encoding="application/x-tex">(1-\frac{iter}{max\_iter})^{power}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.855664em;"></span><span class="strut bottom" style="height:1.4176639999999998em;vertical-align:-0.5619999999999999em;"></span><span class="base textstyle uncramped"><span class="mopen">(</span><span class="mord mathrm">1</span><span class="mbin">−</span><span class="mord reset-textstyle textstyle uncramped"><span class="sizing reset-size5 size5 reset-textstyle textstyle uncramped nulldelimiter"></span><span class="mfrac"><span class="vlist"><span style="top:0.345em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle cramped"><span class="mord scriptstyle cramped"><span class="mord mathit">m</span><span class="mord mathit">a</span><span class="mord mathit">x</span><span class="mord mathrm" style="margin-right:0.02778em;">_</span><span class="mord mathit">i</span><span class="mord mathit">t</span><span class="mord mathit">e</span><span class="mord mathit" style="margin-right:0.02778em;">r</span></span></span></span><span style="top:-0.22999999999999998em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle textstyle uncramped frac-line"></span></span><span style="top:-0.394em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle uncramped"><span class="mord scriptstyle uncramped"><span class="mord mathit">i</span><span class="mord mathit">t</span><span class="mord mathit">e</span><span class="mord mathit" style="margin-right:0.02778em;">r</span></span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="sizing reset-size5 size5 reset-textstyle textstyle uncramped nulldelimiter"></span></span><span class="mclose"><span class="mclose">)</span><span class="vlist"><span style="top:-0.363em;margin-right:0.05em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle uncramped"><span class="mord scriptstyle uncramped"><span class="mord mathit">p</span><span class="mord mathit">o</span><span class="mord mathit" style="margin-right:0.02691em;">w</span><span class="mord mathit">e</span><span class="mord mathit" style="margin-right:0.02778em;">r</span></span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span></span></span></span>，其中初始学习率设置为 0.007，<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>p</mi><mi>o</mi><mi>w</mi><mi>e</mi><mi>r</mi></mrow><annotation encoding="application/x-tex">power</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.43056em;"></span><span class="strut bottom" style="height:0.625em;vertical-align:-0.19444em;"></span><span class="base textstyle uncramped"><span class="mord mathit">p</span><span class="mord mathit">o</span><span class="mord mathit" style="margin-right:0.02691em;">w</span><span class="mord mathit">e</span><span class="mord mathit" style="margin-right:0.02778em;">r</span></span></span></span> 为 0.9。我们使用 0.0001 的权重衰减和 0.9 的动量。最大 iter 意味着最大迭代次数，这取决于 max epochs</li>
+</ul>
+<p>​    训练数据的数据扩充包括：</p>
+<ul>
+<li>角度范围为 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mo>(</mo><mo>−</mo><mn>1</mn><msup><mn>0</mn><mrow><mo>∘</mo></mrow></msup><mo separator="true">,</mo><mn>1</mn><msup><mn>0</mn><mrow><mo>∘</mo></mrow></msup><mo>)</mo></mrow><annotation encoding="application/x-tex">(-10^{\circ},10^{\circ})</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.75em;"></span><span class="strut bottom" style="height:1em;vertical-align:-0.25em;"></span><span class="base textstyle uncramped"><span class="mopen">(</span><span class="mord">−</span><span class="mord mathrm">1</span><span class="mord"><span class="mord mathrm">0</span><span class="vlist"><span style="top:-0.363em;margin-right:0.05em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle uncramped"><span class="mord scriptstyle uncramped"><span class="mord">∘</span></span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mpunct">,</span><span class="mord mathrm">1</span><span class="mord"><span class="mord mathrm">0</span><span class="vlist"><span style="top:-0.363em;margin-right:0.05em;"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span><span class="reset-textstyle scriptstyle uncramped"><span class="mord scriptstyle uncramped"><span class="mord">∘</span></span></span></span><span class="baseline-fix"><span class="fontsize-ensurer reset-size5 size5"><span style="font-size:0em;">​</span></span>​</span></span></span><span class="mclose">)</span></span></span></span> 的随机旋转</li>
+<li>随机裁剪</li>
+<li>随机翻转</li>
+<li>为了提高训练效率，所有处理后的图像都被重新调整为 640×640</li>
+</ul>
+<h3 id="4.3-ablation-study" tabindex="-1" id="4-3-Ablation-Study">4.3 Ablation Study</h3>
+<p>​    对 DConv、DB 和 ASF 分别做消融实验：</p>
+<p><img src="PT1.png" alt="png"></p>
+<h3 id="4.4-comparisons-with-previous-methods" tabindex="-1" id="4-4-Comparisons-with-Previous-Methods">4.4 Comparisons with Previous Methods</h3>
+<p>​    TotalText：</p>
+<p><img src="PT5.png" alt="png"></p>
+<p>​    CTW1500：</p>
+<p><img src="PT6.png" alt="png"></p>
+<h3 id="4.5-comparisons-with-the-conference-version" tabindex="-1" id="4-5-Comparisons-with-the-Conference-Version">4.5 Comparisons with the Conference Version</h3>
+<p>​    在标准场景文本基准测试中的定量结果表明，所提出的 DBNet++ 在准确性方面优于会议版本，速度下降很小。具体而言，在</p>
+<ul>
+<li>
+<p>Total Text 数据集</p>
+</li>
+<li>
+<p>CTW1500 数据集</p>
+</li>
+<li>
+<p>ICDAR 2015 数据集</p>
+</li>
+<li>
+<p>MSRA-TD500 数据集</p>
+</li>
+<li>
+<p>MLT-2019 数据集</p>
+</li>
+</ul>
+<p>的 <strong>F-measure</strong> 方面，分别提高了</p>
+<ul>
+<li>
+<p>0.5%（1.3%）</p>
+</li>
+<li>
+<p>2.9%（1.9%）</p>
+</li>
+<li>
+<p>0.8%（0.0%）</p>
+</li>
+<li>
+<p>3.6%（2.3%）</p>
+</li>
+<li>
+<p>1.3%（1.0%）</p>
+</li>
+</ul>
+<p>backbone 是 ResNet-18（ResNet-50）。</p>
+<h3 id="4.6-limitation" tabindex="-1" id="4-6-Limitation">4.6 Limitation</h3>
+<p>​    文字中的文字？直接寄。</p>
+<h3 id="5-conclusion" tabindex="-1" id="5-CONCLUSION">5 CONCLUSION</h3>
+<p>​    好使。</p>
+
+            </article>
+            
+	<div class="rightside">
+	
+		<div class="rightside-button" id="js-aside">
+			<span>
+				<img no-lazy src="/images/icon/aside.png" class="rightside-button-icon" alt="Icon">
+			</span>
+		</div>
+		<script>
+			$("#js-aside").click(function () {
+				onShowAsideButton();
+			});
+		</script>
+	
+	<div class="rightside-button" id="js-toggle_theme">
+		<span>
+			<img no-lazy src="/images/icon/toggle_theme.png" class="rightside-button-icon" alt="Icon">
+		</span>
+	</div>
+
+	
+<script src="/js/plugins/goto_position.js"></script>
+
+	
+	<div class="rightside-button" id="js-go_top">
+		<span>
+			<img no-lazy src="/images/icon/go_top.png" class="rightside-button-icon" alt="Icon">
+		</span>
+	</div>
+	<div class="rightside-button" id="js-go_bottom">
+		<span>
+			<img no-lazy src="/images/icon/go_bottom.png" class="rightside-button-icon" alt="Icon">
+		</span>
+	</div>
+
+	<script>
+		setToggleThemeButtonListener();
+	</script>
+	<script>
+		$('#js-go_top')
+		.gotoPosition( {
+			speed: 300,
+			target: 'top',
+		} );
+		$('#js-go_bottom')
+		.gotoPosition( {
+			speed: 300,
+			target: 'bottom',
+		} );
+	</script>
+</div>
+
+
+<div class="post-bottom">
+    
+        <div class="post-paging">     
+            <div class="post-paging-last">
+                
+                    <a href="/posts/Paper-%E7%9C%8B%E4%B8%80%E7%9C%8B%E5%B8%88%E5%85%84%E5%B8%88%E5%A7%90%E4%BB%AC%E5%86%99%E7%9A%84%E8%AE%BA%E6%96%87/">
+                        上一篇：Paper-看一看师兄师姐们写的论文
+                    </a>
+                
+            </div>
+            <div class="post-paging-next">
+                
+                    <a href="/posts/Paper-Shape%20Robust%20Text%20Detection%20With%20Progressive%20Scale%20Expansion%20Network/">
+                        下一篇：Paper-Shape Robust Text Detection With Progressive Scale Expansion Network
+                    </a>
+                
+            </div>
+        </div>
+    
+    
+    
+        
+            <div class="giscus comments"></div>
+            <script>
+                var scriptElement = document.createElement('script');
+                scriptElement.src = 'https://giscus.app/client.js';
+                scriptElement.setAttribute('data-repo', 'GZ-Metal-Cell/GZ-Metal-Cell.github.io');
+                scriptElement.setAttribute('data-repo-id', 'R_kgDOIHLEOQ');
+                scriptElement.setAttribute('data-category', 'Announcements');
+                scriptElement.setAttribute('data-category-id', 'DIC_kwDOIHLEOc4CcVwP');
+                scriptElement.setAttribute('data-mapping', 'title');
+                scriptElement.setAttribute('data-strict', '1');
+                scriptElement.setAttribute('data-reactions-enabled', '');
+                scriptElement.setAttribute('data-emit-metadata', '0');
+                scriptElement.setAttribute('data-input-position', 'bottom');
+                scriptElement.setAttribute('data-theme', localStorage.getItem('theme') === 'light' ? 'light' : 'dark_high_contrast');
+                scriptElement.setAttribute('data-lang', 'zh-CN');
+                
+                scriptElement.setAttribute('crossorigin', 'anonymous');
+                scriptElement.async = true;
+                document.head.appendChild(scriptElement);
+            </script>
+        
+    
+</div>
+        </div>
+    </main>
+    
+        <aside class="main-aside">
+    
+<script src="/js/widgets/aside.js"></script>
+
+    <script>
+        showAside();
+    </script>
+
+    <div class="aside-top">
+        <div class="aside-top-about aside-card">
+            <a href="/about" class="aside-top-about-portrait">
+                <img no-lazy src="/about/portrait.png" alt="Q">
+            </a>
+            <div class="aside-top-about-info">
+                <span class="author"> Zi-Zi</span>
+                <span class="description">不以物喜，不以己悲。</span>
+            </div>              
+            <div class="aside-top-about-site">
+                <a href="/categories" class="aside-top-about-site-item">
+                    <span class="title">类别</span>
+                    <span class="count">5</span>
+                </a>
+                <a href="/tags" class="aside-top-about-site-item">
+                    <span class="title">标签</span>
+                    <span class="count">119</span>
+                </a>
+                <a href="/archives" class="aside-top-about-site-item">
+                    <span class="title">归档</span>
+                    <span class="count">429</span>
+                </a>
+            </div>
+            <div class="aside-top-about-contact">
+                
+                    
+                        <a target="_blank" rel="noopener" href="https://weibo.com/u/5020307235">
+                            <img no-lazy src="/images/bottom_icon/Weibo.webp" alt="Quieter">
+                        </a>
+                    
+                        <a target="_blank" rel="noopener" href="https://tieba.baidu.com/home/main?id=tb.1.ff6d2775.vFH7wrdW2ZjPCmyBHJcjnA">
+                            <img no-lazy src="/images/bottom_icon/Tieba.webp" alt="Quieter">
+                        </a>
+                    
+                        <a target="_blank" rel="noopener" href="https://space.bilibili.com/11547880">
+                            <img no-lazy src="/images/bottom_icon/Bilibili.webp" alt="Quieter">
+                        </a>
+                    
+                        <a target="_blank" rel="noopener" href="https://github.com/GZ-Metal-Cell">
+                            <img no-lazy src="/images/bottom_icon/github.webp" alt="Quieter">
+                        </a>
+                    
+                
+            </div>
+        </div> 
+
+        
+    </div>
+
+    <div class="aside-bottom">
+        
+            <script>
+                
+                    const tocCollapsed = true;
+                
+                
+                    const tocDepth = 6;
+                
+                var headerString = '';
+                for (let i = 1; i <= tocDepth; i++) {
+                    if (i === 1) {
+                        headerString += 'h1';
+                    } else {
+                        headerString += ', h' + i;
+                    }
+                }
+                hbeToc();
+            </script>
+            <div class="aside-bottom-toc aside-card">
+                <div class="aside-bottom-toc-title">
+                    <h1>目录</h1>
+                    <span class="toc-percentage"></span>
+                </div>
+                <ol class="aside-bottom-toc-content"></ol>
+            </div>
+        
+    </div>
+</aside>
+    
+</div>
+		<footer>
+	<div class="content">
+		
+			<span>©2022-2025&nbsp;By&nbsp;<a href="/about">Zi-Zi</a>.</span>
+		
+		<span><a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a> theme by <a target="_blank" rel="noopener" href="https://github.com/GZ-Metal-Cell/hexo-theme-quieter">Quieter</a>.</span>
+		
+			<span style="display: flex;">
+				<img no-lazy alt="icp" src="/images/icp_icon.png" style="width: 16px; height: 16px;">
+				<a href="https://icp.gov.moe/?keyword=20241647" target="_blank">萌 ICP 备 20241647 号</a>
+			</span>
+		
+	</div>
+
+	
+<script src="/js/plugins/ref.js"></script>
+
+	
+<script src="/js/plugins/highlight_tools.js"></script>
+
+	<script>
+		const  COPY_ICON = "/images/icon/copy.png";
+		const CLOSE_CODE_BLOCK_ICON = "/images/icon/close_code_block.png";
+		const HIGHLIGHT_SHRINK = "";
+		const HIGHLIGHT_HEIGHT_LIMIT = "";
+	</script>
+
+	
+	
+	<!-- Analytics -->
+
+    
+        <!-- Busuanzi Analytics -->
+        <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    
+    
+        <!-- Baidu Analytics -->
+        <script defer>
+            var _hmt = _hmt || [];
+            (function () {
+                var hm = document.createElement("script");
+                hm.src = "https://hm.baidu.com/hm.js?e57cf62289f84322ebff116e8b3d343e";
+                var s = document.getElementsByTagName("script")[0];
+                s.parentNode.insertBefore(hm, s);
+            })();
+        </script>
+    
+
+
+	
+
+	
+		
+			
+				<link rel="stylesheet" href="/css/plugins/katex/katex.min.css">
+				<script src="/js/plugins/copy-tex.js"></script>
+			
+		
+	
+
+    
+		
+<link rel="stylesheet" href="/css/plugins/textIndent.css">
+
+		
+<script src="/js/plugins/textIndent.js"></script>
+
+	
+
+	
+	
+	
+		<script>
+			if (typeof init === 'function') {
+				init();
+			}
+		</script>
+	
+
+	
+		
+	
+
+	
+
+	<!--
+		
+<script src="/js/plugins/jquery.pjax.min.js"></script>
+
+		<script>
+			$(document).pjax('a[target!=_blank]', 'main', {
+				fragment: 'main',
+				timeout: 8000
+			});
+
+			$(document).on('pjax:complete', function() {
+			});
+		</script> 
+	-->
+	<script>
+		console.log('\n %c Hexo-Quieter 主题 %c https://github.com/GZ-Metal-Cell/hexo-theme-quieter \n', 'color: #fadfa3; background: #030307; padding:5px 0;', 'background: #fadfa3; padding:5px 0;')
+	</script>
+</footer>
+	</body>
+
+	<!-- Hexo-Quieter 主题  https://github.com/GZ-Metal-Cell/hexo-theme-quieter -->
+</html>
+
