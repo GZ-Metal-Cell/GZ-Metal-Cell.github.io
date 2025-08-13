@@ -559,7 +559,7 @@
 </ul>
 </li>
 </ul>
-<p><strong>classes_: ndarray of shape (n_classes,)</strong><br>
+<p><strong>classes_: ndarray of shape (n_classes,)</strong>
 The classes labels.</p>
 <p><strong>coef_: ndarray of shape (n_classes * (n_classes - 1) / 2, n_features)</strong></p>
 <ul>
@@ -628,18 +628,18 @@ The classes labels.</p>
 </ul>
 </li>
 </ul>
-<p><strong>support_vectors_: ndarray of shape (n_SV, n_features)</strong><br>
+<p><strong>support_vectors_: ndarray of shape (n_SV, n_features)</strong>
 Support vectors.</p>
-<p><strong>n_support_: ndarray of shape (n_classes,), dtype=int32</strong><br>
+<p><strong>n_support_: ndarray of shape (n_classes,), dtype=int32</strong>
 Number of support vectors for each class.</p>
-<p><strong>probA_: ndarray of shape (n_classes * (n_classes - 1) / 2)</strong><br>
+<p><strong>probA_: ndarray of shape (n_classes * (n_classes - 1) / 2)</strong>
 Parameter learned in Platt scaling when probability=True.</p>
 <ul>
 <li>当概率为 True 时，在 Platt 缩放中学习的参数。</li>
 </ul>
-<p><strong>probB_: ndarray of shape (n_classes * (n_classes - 1) / 2)</strong><br>
+<p><strong>probB_: ndarray of shape (n_classes * (n_classes - 1) / 2)</strong>
 Parameter learned in Platt scaling when probability=True.</p>
-<p><strong>shape_fit_: tuple of int of shape (n_dimensions_of_X,)</strong><br>
+<p><strong>shape_fit_: tuple of int of shape (n_dimensions_of_X,)</strong>
 Array dimensions of training vector X.</p>
 <h2 id="68b---svm-vs.-random-forest-for-image-segmentation" tabindex="-1" id="68b-SVM-vs-Random-Forest-for-image-segmentation">68b - SVM vs. Random Forest for image segmentation</h2>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">import</span> cv2<br><span class="hljs-keyword">import</span> pandas <span class="hljs-keyword">as</span> pd<br> <br>img = cv2.imread(<span class="hljs-string">&#x27;images/Train_images/Sandstone_Versa0000.tif&#x27;</span>)<br>img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  <br>img2 = img.reshape(-<span class="hljs-number">1</span>)<br>df = pd.DataFrame()<br>df[<span class="hljs-string">&#x27;Original Image&#x27;</span>] = img2<br><br><span class="hljs-comment"># Generate Gabor features</span><br>num = <span class="hljs-number">1</span><br>kernels = []<br><span class="hljs-keyword">for</span> theta <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">2</span>):<br>    theta = theta / <span class="hljs-number">4.</span> * np.pi<br>    <span class="hljs-keyword">for</span> sigma <span class="hljs-keyword">in</span> (<span class="hljs-number">1</span>, <span class="hljs-number">3</span>):<br>        <span class="hljs-keyword">for</span> lamda <span class="hljs-keyword">in</span> np.arange(<span class="hljs-number">0</span>, np.pi, np.pi / <span class="hljs-number">4</span>):<br>            <span class="hljs-keyword">for</span> gamma <span class="hljs-keyword">in</span> (<span class="hljs-number">0.05</span>, <span class="hljs-number">0.5</span>):  <br>                gabor_label = <span class="hljs-string">&#x27;Gabor&#x27;</span> + <span class="hljs-built_in">str</span>(num)<br>                ksize=<span class="hljs-number">9</span><br>                kernel = cv2.getGaborKernel((ksize, ksize), sigma, theta, lamda, gamma, <span class="hljs-number">0</span>, ktype=cv2.CV_32F)    <br>                kernels.append(kernel)<br>                fimg = cv2.filter2D(img2, cv2.CV_8UC3, kernel)<br>                filtered_img = fimg.reshape(-<span class="hljs-number">1</span>)<br>                df[gabor_label] = filtered_img<br>                num += <span class="hljs-number">1</span>           <br><span class="hljs-comment"># CANNY EDGE</span><br>edges = cv2.Canny(img, <span class="hljs-number">100</span>,<span class="hljs-number">200</span>)<br>edges1 = edges.reshape(-<span class="hljs-number">1</span>)<br>df[<span class="hljs-string">&#x27;Canny Edge&#x27;</span>] = edges1<br><br><span class="hljs-keyword">from</span> skimage.filters <span class="hljs-keyword">import</span> roberts, sobel, scharr, prewitt<br><br><span class="hljs-comment"># ROBERTS EDGE</span><br>edge_roberts = roberts(img)<br>edge_roberts1 = edge_roberts.reshape(-<span class="hljs-number">1</span>)<br>df[<span class="hljs-string">&#x27;Roberts&#x27;</span>] = edge_roberts1<br><br><span class="hljs-comment"># SOBEL</span><br>edge_sobel = sobel(img)<br>edge_sobel1 = edge_sobel.reshape(-<span class="hljs-number">1</span>)<br>df[<span class="hljs-string">&#x27;Sobel&#x27;</span>] = edge_sobel1<br><br><span class="hljs-comment"># SCHARR</span><br>edge_scharr = scharr(img)<br>edge_scharr1 = edge_scharr.reshape(-<span class="hljs-number">1</span>)<br>df[<span class="hljs-string">&#x27;Scharr&#x27;</span>] = edge_scharr1<br><br><span class="hljs-comment"># PREWITT</span><br>edge_prewitt = prewitt(img)<br>edge_prewitt1 = edge_prewitt.reshape(-<span class="hljs-number">1</span>)<br>df[<span class="hljs-string">&#x27;Prewitt&#x27;</span>] = edge_prewitt1<br><br><span class="hljs-comment"># GAUSSIAN with sigma=3</span><br><span class="hljs-keyword">from</span> scipy <span class="hljs-keyword">import</span> ndimage <span class="hljs-keyword">as</span> nd<br><br>gaussian_img = nd.gaussian_filter(img, sigma=<span class="hljs-number">3</span>)<br>gaussian_img1 = gaussian_img.reshape(-<span class="hljs-number">1</span>)<br>df[<span class="hljs-string">&#x27;Gaussian s3&#x27;</span>] = gaussian_img1<br><br><span class="hljs-comment"># GAUSSIAN with sigma=7</span><br>gaussian_img2 = nd.gaussian_filter(img, sigma=<span class="hljs-number">7</span>)<br>gaussian_img3 = gaussian_img2.reshape(-<span class="hljs-number">1</span>)<br>df[<span class="hljs-string">&#x27;Gaussian s7&#x27;</span>] = gaussian_img3<br><br><span class="hljs-comment"># MEDIAN with sigma=3</span><br>median_img = nd.median_filter(img, size=<span class="hljs-number">3</span>)<br>median_img1 = median_img.reshape(-<span class="hljs-number">1</span>)<br>df[<span class="hljs-string">&#x27;Median s3&#x27;</span>] = median_img1<br><br><span class="hljs-comment"># VARIANCE with size=3</span><br>variance_img = nd.generic_filter(img, np.var, size=<span class="hljs-number">3</span>)<br>variance_img1 = variance_img.reshape(-<span class="hljs-number">1</span>)<br>df[<span class="hljs-string">&#x27;Variance s3&#x27;</span>] = variance_img1<br><br><span class="hljs-comment">######################################                </span><br><br><span class="hljs-comment"># Now, add a column in the data frame for the Labels</span><br><span class="hljs-comment"># For this, we need to import the labeled image</span><br>labeled_img = cv2.imread(<span class="hljs-string">&#x27;images/Train_masks/Sandstone_Versa0000.tif&#x27;</span>)<br><span class="hljs-comment"># Remember that you can load an image with partial labels </span><br><span class="hljs-comment"># But, drop the rows with unlabeled data</span><br><br>labeled_img = cv2.cvtColor(labeled_img, cv2.COLOR_BGR2GRAY)<br>labeled_img1 = labeled_img.reshape(-<span class="hljs-number">1</span>)<br>df[<span class="hljs-string">&#x27;Labels&#x27;</span>] = labeled_img1<br><br><span class="hljs-comment">#########################################################</span><br><br><span class="hljs-comment"># Define the dependent variable that needs to be predicted (labels)</span><br>Y = df[<span class="hljs-string">&quot;Labels&quot;</span>].values<br><br><span class="hljs-comment"># Define the independent variables</span><br>X = df.drop(labels = [<span class="hljs-string">&quot;Labels&quot;</span>], axis=<span class="hljs-number">1</span>) <br><br><span class="hljs-comment"># Split data into train and test to verify accuracy after fitting the model. </span><br><span class="hljs-keyword">from</span> sklearn.model_selection <span class="hljs-keyword">import</span> train_test_split<br>X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=<span class="hljs-number">0.4</span>, random_state=<span class="hljs-number">20</span>)<br></code></pre></td></tr></table></figure>
@@ -783,11 +783,11 @@ Array dimensions of training vector X.</p>
                 </a>
                 <a href="/tags" class="aside-top-about-site-item">
                     <span class="title">标签</span>
-                    <span class="count">119</span>
+                    <span class="count">120</span>
                 </a>
                 <a href="/archives" class="aside-top-about-site-item">
                     <span class="title">归档</span>
-                    <span class="count">429</span>
+                    <span class="count">434</span>
                 </a>
             </div>
             <div class="aside-top-about-contact">
@@ -4976,6 +4976,51 @@ Array dimensions of training vector X.</p>
                     
                         
                         
+                            
+                                
+                            
+                        
+                    
+                        
+                        
+                            
+                                
+                            
+                                
+                            
+                        
+                    
+                        
+                        
+                            
+                                
+                            
+                                
+                            
+                        
+                    
+                        
+                        
+                            
+                                
+                            
+                                
+                            
+                        
+                    
+                        
+                        
+                            
+                                
+                            
+                                
+                            
+                        
+                    
+                        
+                        
+                            
+                                
                             
                                 
                             

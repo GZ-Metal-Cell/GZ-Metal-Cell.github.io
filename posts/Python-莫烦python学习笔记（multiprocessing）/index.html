@@ -409,22 +409,22 @@
 <h2 id="4-%E6%95%88%E7%8E%87%E5%AF%B9%E6%AF%94-multiprocessing%2C-multithreading" tabindex="-1" id="4-效率对比-multiprocessing-multithreading">4 效率对比 multiprocessing, multithreading</h2>
 <p>使用常规方法, 多核运算, 多线程运算:</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> multiprocessing <span class="hljs-keyword">as</span> mp<br><span class="hljs-keyword">import</span> threading <span class="hljs-keyword">as</span> td<br><span class="hljs-keyword">import</span> time<br><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">job</span>(<span class="hljs-params">q</span>):<br>    res = <span class="hljs-number">0</span><br>    <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">10_000_000</span>):<br>        res += i + i ** <span class="hljs-number">2</span> + i ** <span class="hljs-number">3</span><br>    q.put(res)<br><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">multicore</span>():  <span class="hljs-comment"># 多核运算(2)</span><br>    q = mp.Queue()<br>    p1 = mp.Process(target=job, args=(q,))<br>    p2 = mp.Process(target=job, args=(q,))<br>    p1.start()<br>    p2.start()<br>    p1.join()<br>    p2.join()<br>    res1 = q.get()<br>    res2 = q.get()<br>    <span class="hljs-keyword">return</span> res1 + res2<br><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">multithread</span>():  <span class="hljs-comment"># 多线程(2)</span><br>    q = mp.Queue()<br>    t1 = td.Thread(target=job, args=(q,))<br>    t2 = td.Thread(target=job, args=(q,))<br>    t1.start()<br>    t2.start()<br>    t1.join()<br>    t2.join()<br>    res1 = q.get()<br>    res2 = q.get()<br>    <span class="hljs-keyword">return</span> res1 + res2<br><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">normal</span>():  <span class="hljs-comment"># 常规方式</span><br>    res = <span class="hljs-number">0</span><br>    <span class="hljs-keyword">for</span> _ <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">2</span>):<br>        <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">10_000_000</span>):<br>            res += i + i ** <span class="hljs-number">2</span> + i ** <span class="hljs-number">3</span><br>    <span class="hljs-keyword">return</span> res<br><br><br><span class="hljs-keyword">if</span> __name__ == <span class="hljs-string">&#x27;__main__&#x27;</span>:<br>    st = time.time()<br><br>    <span class="hljs-built_in">print</span>(normal())<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;normal time: &#x27;</span>, time.time() - st)<br><br>    st = time.time()<br>    <span class="hljs-built_in">print</span>(multicore())<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;multicore time: &#x27;</span>, time.time() - st)<br><br>    st = time.time()<br>    <span class="hljs-built_in">print</span>(multithread())<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;multithread time: &#x27;</span>, time.time() - st)<br><br></code></pre></td></tr></table></figure>
-<p>4999999666666716666660000000<br>
-normal time:  12.397605657577515<br>
-4999999666666716666660000000<br>
-multicore time:  6.265762090682983<br>
-4999999666666716666660000000<br>
+<p>4999999666666716666660000000
+normal time:  12.397605657577515
+4999999666666716666660000000
+multicore time:  6.265762090682983
+4999999666666716666660000000
 multithread time:  18.33289623260498</p>
 <p>用时: 多线程 &gt; 常规 &gt; 多核</p>
 <h2 id="5-%E8%BF%9B%E7%A8%8B%E6%B1%A0-pool" tabindex="-1" id="5-进程池-pool">5 进程池 pool</h2>
-<p>把要运行的东西放到一个 pool 中, python 会帮你解决怎么分配<br>
+<p>把要运行的东西放到一个 pool 中, python 会帮你解决怎么分配
 在 pool 中, job 函数可以拥有返回值</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> multiprocessing <span class="hljs-keyword">as</span> mp<br><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">job</span>(<span class="hljs-params">x</span>):<br>    <span class="hljs-keyword">return</span> x * x<br><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">multicore</span>():<br>    pool = mp.Pool(processes=<span class="hljs-number">3</span>)  <span class="hljs-comment"># 至多用 3 个核, 默认用全部的核</span><br>    res = pool.<span class="hljs-built_in">map</span>(job, <span class="hljs-built_in">range</span>(<span class="hljs-number">10</span>))  <span class="hljs-comment"># 多核运算 0 - 9 的平方, map()可以放入很多参数, 自动分配给定义好的线程</span><br>    <span class="hljs-built_in">print</span>(res)<br><br>    res = pool.apply_async(job, (<span class="hljs-number">2</span>,))  <span class="hljs-comment"># 只能有一个参数, 返回值会存到 res 中</span><br>    <span class="hljs-built_in">print</span>(res.get())  <span class="hljs-comment"># 从 res 中拿出结果</span><br><br>    multi_res = [pool.apply_async(job, (i, )) <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">10</span>)]  <span class="hljs-comment"># 使用迭代器达到 map()的效果</span><br>    <span class="hljs-built_in">print</span>([res.get() <span class="hljs-keyword">for</span> res <span class="hljs-keyword">in</span> multi_res])<br><br><br><span class="hljs-keyword">if</span> __name__ == <span class="hljs-string">&#x27;__main__&#x27;</span>:<br>    multicore()<br><br></code></pre></td></tr></table></figure>
-<p>[0, 1, 4, 9, 16, 25, 36, 49, 64, 81]<br>
-4<br>
+<p>[0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
+4
 [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]</p>
 <h2 id="6-%E5%85%B1%E4%BA%AB%E5%86%85%E5%AD%98(cache)-shared-memory" tabindex="-1" id="6-共享内存-Cache-shared-memory">6 共享内存(Cache) shared memory</h2>
-<p>在多线程中, 可以使用 global(全局变量)共享内存, 但这在多进程中行不通<br>
+<p>在多线程中, 可以使用 global(全局变量)共享内存, 但这在多进程中行不通
 我们只能用共享内存让不同核的 CPU 进行数据间的交流</p>
 <p><a target="_blank" rel="noopener" href="https://docs.python.org/3.5/library/array.html#module-array">shared memory 支持的数据类型</a></p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> multiprocessing <span class="hljs-keyword">as</span> mp<br><br>value = mp.Value(<span class="hljs-string">&#x27;i&#x27;</span>, <span class="hljs-number">1</span>)  <span class="hljs-comment"># 先传入类型, 再传入值 </span><br>array = mp.Array(<span class="hljs-string">&#x27;i&#x27;</span>, [<span class="hljs-number">1</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>])  <span class="hljs-comment"># 这个数组只能是一维的, 否则会报错</span><br></code></pre></td></tr></table></figure>
@@ -562,11 +562,11 @@ multithread time:  18.33289623260498</p>
                 </a>
                 <a href="/tags" class="aside-top-about-site-item">
                     <span class="title">标签</span>
-                    <span class="count">119</span>
+                    <span class="count">120</span>
                 </a>
                 <a href="/archives" class="aside-top-about-site-item">
                     <span class="title">归档</span>
-                    <span class="count">429</span>
+                    <span class="count">434</span>
                 </a>
             </div>
             <div class="aside-top-about-contact">
@@ -4675,6 +4675,51 @@ multithread time:  18.33289623260498</p>
                     
                         
                         
+                            
+                                
+                            
+                        
+                    
+                        
+                        
+                            
+                                
+                            
+                                
+                            
+                        
+                    
+                        
+                        
+                            
+                                
+                            
+                                
+                            
+                        
+                    
+                        
+                        
+                            
+                                
+                            
+                                
+                            
+                        
+                    
+                        
+                        
+                            
+                                
+                            
+                                
+                            
+                        
+                    
+                        
+                        
+                            
+                                
                             
                                 
                             
