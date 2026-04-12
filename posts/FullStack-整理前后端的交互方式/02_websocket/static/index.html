@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>02 WebSocket</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 1rem; }
+    #log { background: #111; color: #0f0; padding: 1rem; min-height: 120px; border-radius: 8px; white-space: pre-wrap; }
+    input, button { padding: 0.4rem 0.6rem; margin-right: 0.5rem; }
+  </style>
+</head>
+<body>
+  <h1>2. WebSocket</h1>
+  <p>本服务默认 <code>ws://127.0.0.1:8002/ws</code>（与当前页同源则自动拼接）。</p>
+  <p>
+    <input id="msg" type="text" value="hello" />
+    <button type="button" id="send">发送</button>
+  </p>
+  <div id="log"></div>
+  <script>
+    const log = (s) => {
+      const el = document.getElementById("log");
+      el.textContent += s + "\n";
+    };
+    const proto = location.protocol === "https:" ? "wss:" : "ws:";
+    const ws = new WebSocket(proto + "//" + location.host + "/ws");
+    ws.onopen = () => log("[open]");
+    ws.onmessage = (e) => log("[message] " + e.data);
+    ws.onerror = () => log("[error]");
+    ws.onclose = () => log("[close]");
+    document.getElementById("send").onclick = () => {
+      const t = document.getElementById("msg").value;
+      if (ws.readyState === WebSocket.OPEN) ws.send(t);
+      else log("未连接，无法发送");
+    };
+  </script>
+</body>
+</html>

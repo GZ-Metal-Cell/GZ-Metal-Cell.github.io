@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>05 长轮询</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 1rem; }
+    pre { background: #111; color: #0f0; padding: 1rem; border-radius: 8px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>5. 长轮询（Long Polling）</h1>
+  <p>每次请求带 <code>since=&lt;上次 seq&gt;</code>，服务器在约 8 秒内出现新 seq 时立即返回，否则最长等待约 25 秒后返回。</p>
+  <pre id="out"></pre>
+  <script>
+    const out = document.getElementById("out");
+    let since = 0;
+    async function loop() {
+      out.textContent += "请求 poll?since=" + since + " ...\n";
+      const res = await fetch("/poll?since=" + since);
+      const j = await res.json();
+      since = j.seq;
+      out.textContent += JSON.stringify(j) + " @ " + new Date().toISOString() + "\n\n";
+      loop();
+    }
+    loop();
+  </script>
+</body>
+</html>
