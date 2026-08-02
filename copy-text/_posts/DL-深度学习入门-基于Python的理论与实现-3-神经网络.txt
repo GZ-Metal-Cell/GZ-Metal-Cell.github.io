@@ -1,0 +1,822 @@
+---
+title: DL-深度学习入门-基于Python的理论与实现-3-神经网络
+date: Mon Feb 20 2023 15:21:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - Python
+  - 《深度学习入门》
+categories: 学习
+description: 《深度学习入门》第 3 章学习笔记。
+---
+
+
+# 正文
+
+## 3.1 从感知机到神经网络
+
+### 3.1.1 神经网络的例子
+
+我们把最左边的一列称为**输入层**，最右边的一列称为**输出层**，中间的一列称为**中间层**。中间层有时也称为隐藏层。“隐藏”一词的意思是，隐藏层的神经元（和输入层、输出层不同）肉眼看不见。另外，本书中把输入层到输出层依次称为第 0 层、第 1 层、第 2 层（层号之所以从 0 开始，是为了方便后面基于 Python 进行实现）。
+
+第 0 层对应输入层，第 1 层对应中间层，第 2 层对应输出层。
+
+![png](3-1.png)
+
+> 上图中的网络一共由 3 层神经元构成，但实质上只有 2 层神经元有权重，因此将其称为“2 层网络”。请注意，有的书也会根据构成网络的层数，把上图的网络称为“3 层网络”。本书将根据实质上拥有权重的层数（输入层、隐藏层、输出层的总数减去 1 后的数量）来表示网络的名称。
+
+### 3.1.2 复习感知机
+
+将式子
+
+$$y=\left\{\begin{matrix}0\quad (b+w_1x_1+w_2x_2\le 0)\\1\quad(b+w_1x_1+w_2x_2>0)\end{matrix}\right.$$
+
+改写为更加简洁的式子，引入新函数 $h(x)$：$y=h(b+w_1x_1+w_2x_2)$，其中
+
+$$h(x)=\left\{\begin{matrix}0\quad(x\le 0)\\1\quad (x>0)\end{matrix}\right.$$
+
+输入信号的总和会被函数 $h(x)$ 转换，转换后的值就是输出 $y$。
+然后，上式所表示的函数 $h(x)$，在输入超过 0 时返回 1，否则返回 0。
+
+### 3.1.3 激活函数登场
+
+刚才登场的 $h(x)$ 函数会将输入信号的总和转换为输出信号，这种函数一般称为**激活函数（activation function）**。
+
+$$a=b+w_1x_1+w_2x_2\\y=h(a)$$
+
+![png](3-4.png)
+
+上图表示神经元的○中明确显示了激活函数的计算过程，即信号的加权总和为节点 $a$，然后节点 $a$ 被激活函数 $h()$ 转换成节点 $y$。本书中，“神经元”和“节点”两个术语的含义相同。这里，我们称 $a$ 和 $y$ 为“节点”，其实它和之前所说的“神经元”含义相同。
+
+## 3.2 激活函数
+
+在激活函数的众多候选函数中，感知机使用了**阶跃函数**。那么，如果感知机使用其他函数作为激活函数的话会怎么样呢？实际上，如果将激活函数从阶跃函数换成其他函数，就可以进入**神经网络**的世界了。
+
+### 3.2.1sigmoid 函数
+
+神经网络中经常使用的一个激活函数：**sigmoid 函数（sigmoid function）**
+
+$$h(x)=\frac{1}{1+\exp(-x)}$$
+
+### 3.2.2 阶跃函数的实现
+
+
+```python
+def step_function(x):
+    """
+    阶跃函数（允许参数取 Numpy 数组的形式）
+    """
+    y = x > 0
+    return y.astype(int)
+```
+
+对 NumPy 数组进行不等号运算后，数组的各个元素都会进行不等号运算，生成一个布尔型数组。这里，数组 x 中大于 0 的元素被转换为 True，小于等
+于 0 的元素被转换为 False，从而生成一个新的数组 y。数组 y 是一个布尔型数组，但是我们想要的阶跃函数是会输出 int 型的 0 或 1 的函数。因此，需要把数组 y 的元素类型从布尔型转换为 int 型。
+
+
+```python
+import numpy as np
+
+x = np.array([-1.0, 1.0, 2.0])
+y = x > 0
+y
+```
+
+
+
+
+    array([False,  True,  True])
+
+
+
+
+```python
+y = y.astype(int)
+y
+```
+
+
+
+
+    array([0, 1, 1])
+
+
+
+### 3.2.3 阶跃函数的图形
+
+
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+def strp_function(x):
+    return np.array(x > 0, dtype=int)
+
+x = np.arange(-5.0, 5.0, 0.1)
+y = step_function(x)
+plt.plot(x, y)
+plt.ylim(-0.1, 1.1)  # 指定 y 轴的范围
+plt.show()
+```
+
+
+![png](1.png)
+    
+
+
+### 3.2.4sigmoid 函数的实现
+
+
+```python
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+```
+
+
+```python
+x = np.array([-1.0, 1.0, 2.0])
+sigmoid(x)  # 根据 NumPy 的广播功能，如果在标量和 NumPy 数组之间进行运算，则标量会和 NumPy 数组的各个元素进行运算。
+```
+
+
+
+
+    array([0.26894142, 0.73105858, 0.88079708])
+
+
+
+
+```python
+x = np.arange(-5.0, 5.0, 0.1)
+y = sigmoid(x)
+plt.plot(x, y)
+plt.ylim(-0.1, 1.1)
+plt.show()
+```
+
+
+![png](2.png)
+    
+
+
+### 3.2.6 非线性函数
+
+- 神经网络的激活函数必须使用非线性函数。
+
+  - 使用线性函数的话，加深神经网络的层数就没有意义了。
+
+  - 为了发挥叠加层所带来的优势，激活函数必须使用非线性函数。
+
+### 3.2.7 ReLU 函数
+
+在神经网络发展的历史上，sigmoid 函数很早就开始被使用了，而最近则主要使用**ReLU（Rectified Linear Unit）**函数。
+
+$$h(x)=\left\{\begin{matrix}x\quad(x>0)\\0\quad(x\le0)\end{matrix}\right.$$
+
+
+```python
+def relu(x):
+    return np.maximum(0, x)
+```
+
+
+```python
+x = np.arange(-5.0, 5.0, 0.1)
+y = relu(x)
+plt.plot(x, y)
+plt.ylim(-0.1, 5)
+plt.show()
+```
+
+
+![png](3.png)
+    
+
+
+## 3.3 多维数组的运算
+
+### 3.3.3 神经网络的内积
+
+![png](3-14.png)
+
+上图中的简单神经网络为对象。这个神经网络省略了偏置和激活函数，只有权重。
+
+$$\mathbf{W} = \begin{pmatrix} 1  & 3 & 5\\ 2  & 4 & 6 \end{pmatrix}$$
+
+实现该神经网络时，要注意 $\mathbf{X}$、$\mathbf{W}$、$\mathbf{Y}$ 的形状，特别是 $\mathbf{X}$ 和 $\mathbf{W}$ 的对应
+维度的元素个数是否一致，这一点很重要。
+
+
+```python
+X = np.array([1, 2])
+W = np.array([[1, 3, 5], [2, 4, 6]])
+Y = np.dot(X, W)
+Y
+```
+
+
+
+
+    array([ 5, 11, 17])
+
+
+
+使用`np.dot`（多维数组的点积），可以一次性计算出 $\mathbf{Y}$ 的结果。
+这意味着，即便 $\mathbf{Y}$ 的元素个数为 100 或 1000，也可以通过一次运算就计算出结果！如果不使用 `np.dot`，就必须单独计算 $\mathbf{Y}$ 的每一个元素（或者说必须使用`for`语句），非常麻烦。因此，通过矩阵的乘积一次性完成计算的技巧，在实现的层面上可以说是非常重要的。
+
+## 3.4 3 层神经网络的实现
+
+### 3.4.1 符号确认
+
+![png](3-16.png)
+
+### 3.4.2 各层间信号传递的实现
+
+$$a^{(1)}_1=w^{(1)}_{11}x_1+w^{(1)}_{12}x_2+b^{(1)}_1$$
+
+如果使用矩阵的乘法运算，则可以将第 1 层的加权和表示成下面的式：
+
+$$\mathbf{A}^{(1)}=\mathbf{XW}^{(1)}+\mathbf{B}^{(1)}$$
+
+其中，$\mathbf{A}^{(1)}$、$\mathbf{X}$、$\mathbf{B}^{(1)}$、$\mathbf{W}^{(1)}$ 如下所示：
+
+$\mathbf A^{(1)}=\begin{pmatrix} a^{(1)}_1  & a^{(1)}_2 & a^{(1)}_3 \end{pmatrix}$，$\mathbf{X} = \begin{pmatrix} x_1 & x_2 \end{pmatrix}$, $\mathbf{B}^{(1)} = \begin{pmatrix} b^{(1)}_1 & b^{(1)}_2 & b^{(1)}_3 \end{pmatrix}$
+
+$\mathbf{W}^{(1)} = \begin{pmatrix} w^{(1)}_{11} & w^{(1)}_{21} & w^{(1)}_{31} \\ w^{(1)}_{12} & w^{(1)}_{22} & w^{(1)}_{32}\end{pmatrix}$
+
+输入层到第 1 层的信号传递：
+
+![png](3-18.png)
+
+
+```python
+import numpy as np
+
+X = np.array([1.0, 0.5])
+W1 = np.array([[0.1, 0.3, 0.5], [0.2, 0.4, 0.6]])
+B1 = np.array([[0.1, 0.2, 0.3]])
+
+print(W1.shape)
+print(X.shape)
+print(B1.shape)
+```
+
+    (2, 3)
+    (2,)
+    (1, 3)
+
+
+
+```python
+A1 = np.dot(X, W1) + B1
+A1
+```
+
+
+
+
+    array([[0.3, 0.7, 1.1]])
+
+
+
+
+```python
+Z1 = sigmoid(A1)
+Z1
+```
+
+
+
+
+    array([[0.57444252, 0.66818777, 0.75026011]])
+
+
+
+实现第 1 层到第 2 层的信号传递：
+
+![png](3-19.png)
+
+
+```python
+W2 = np.array([[0.1, 0.4], [0.2, 0.5], [0.3, 0.6]])
+B2 = np.array([0.1, 0.2])
+
+print(Z1.shape)
+print(W2.shape)
+print(B2.shape)
+```
+
+    (1, 3)
+    (3, 2)
+    (2,)
+
+
+
+```python
+A2 = np.dot(Z1, W2) + B2
+Z2 = sigmoid(A2)
+```
+
+实现第 2 层到输出层的信号传递：
+
+![png](3-20.png)
+
+
+```python
+def identity_function(x):
+    """
+    这里我们定义了 identity_function()函数（也称为“恒等函数”），并将
+    其作为输出层的激活函数。恒等函数会将输入按原样输出，因此，这个例子
+    中没有必要特意定义 identity_function()。这里这样实现只是为了和之前的
+    流程保持统一。
+    """
+    return x
+
+W3 = np.array([[0.1, 0.3], [0.2, 0.4]])
+B3 = np.array([0.1, 0.2])
+
+A3 = np.dot(Z2, W3) + B3
+Y = identity_function(A3)  # 或 Y = A3
+```
+
+输出层的激活函数用 $\sigma()$ 表示，不同于隐藏层的激活函数 $h()$。
+
+输出层所用的激活函数，要根据求解问题的性质决定。
+
+- 一般地，回归问题可以使用恒等函数，二元分类问题可以使用 sigmoid 函数
+
+- 多元分类问题可以使用 softmax 函数
+
+### 3.4.3 代码实现小结
+
+
+```python
+def init_network():
+    """
+    按照神经网络的实现惯例，只把权重记为大写字母 W1，其他的（偏置或中间结果等）都用小写字母表示。
+    """
+    network = {}
+    network['W1'] = np.array([[0.1, 0.3, 0.5], [0.2, 0.4, 0.6]])
+    network['b1'] = np.array([0.1, 0.2, 0.3])
+    network['W2'] = np.array([[0.1, 0.4], [0.2, 0.5], [0.3, 0.6]])
+    network['b2'] = np.array([0.1, 0.2])
+    network['W3'] = np.array([[0.1, 0.3], [0.2, 0.4]])
+    network['b3'] = np.array([0.1, 0.2])
+    
+    return network
+
+
+def forward(network, x):
+    """
+    表示的是从输入到输出方向的传递处理
+    """
+    W1, W2, W3 = network['W1'], network['W2'], network['W3']
+    b1, b2, b3 = network['b1'], network['b2'], network['b3']
+    a1 = np.dot(x, W1) + b1
+    z1 = sigmoid(a1)
+    a2 = np.dot(z1, W2) + b2
+    z2 = sigmoid(a2)
+    a3 = np.dot(z2, W3) + b3
+    y = identity_function(a3)
+    return y
+
+
+network = init_network()
+x = np.array([1.0, 0.5])
+y = forward(network, x)
+print(y)
+```
+
+    [0.31682708 0.69627909]
+
+
+## 3.5 输出层的设计
+
+### 3.5.1 恒等函数和 softmax 函数
+
+$$y_k=\frac{\exp(x_k)}{\sum^n_{i=1}\exp(a_i)}$$
+
+
+```python
+def softmax(a):
+    exp_a = np.exp(a)
+    sum_exp_a = np.sum(exp_a)
+    y = exp_a / sum_exp_a
+    
+    return y
+```
+
+### 3.5.2 实现 softmax 函数时的注意事项
+
+由于要进行指数函数的运算，可能会导致溢出。
+
+进行改进：
+
+$$
+\begin{eqnarray}
+y_k &= \frac{\exp(a_k)}{\sum^n_{i=1}\exp(a_i)} &= \frac{C\exp(a_k)}{C\sum^n_{i=1}\exp(a_i)} \\
+  &  &=\frac{\exp(a_k+\log C)}{\sum^n_{i=1}\exp(a_i+\log C)} \\
+  &  &=\frac{\exp(a_k+C')}{\sum^n_{i=1}\exp(a_i+C')}
+\end{eqnarray}
+$$
+
+其中 $C$ 任意的常数，记 $\log C=C'$，这里的 $C'$ 可以使用任何值，但是为了防止溢出，一般会使用输入信号中的最大值。
+
+
+```python
+a = np.array([1010, 1000, 990])
+np.exp(a) / np.sum(np.exp(a))
+```
+
+    C:\Users\gzjzx\AppData\Local\Temp\ipykernel_15664\832863605.py:2: RuntimeWarning: overflow encountered in exp
+      np.exp(a) / np.sum(np.exp(a))
+    C:\Users\gzjzx\AppData\Local\Temp\ipykernel_15664\832863605.py:2: RuntimeWarning: invalid value encountered in true_divide
+      np.exp(a) / np.sum(np.exp(a))
+
+
+
+
+
+    array([nan, nan, nan])
+
+
+
+
+```python
+c = np.max(a)
+a - c
+```
+
+
+
+
+    array([  0, -10, -20])
+
+
+
+
+```python
+np.exp(a-c) / np.sum(np.exp(a-c))
+```
+
+
+
+
+    array([9.99954600e-01, 4.53978686e-05, 2.06106005e-09])
+
+
+
+综上，我们可以像下面这样实现 softmax 函数。
+
+
+```python
+def softmax(a):
+    c = np.max(a)
+    exp_a = np.exp(a - c) # 溢出对策
+    sum_exp_a = np.sum(exp_a)
+    y = exp_a / sum_exp_a
+    return y
+```
+
+### 3.5.3softmax 函数的特征
+
+
+```python
+a = np.array([0.3, 2.9, 4.0])
+y = softmax(a)
+y
+```
+
+
+
+
+    array([0.01821127, 0.24519181, 0.73659691])
+
+
+
+
+```python
+np.sum(y)
+```
+
+
+
+
+    1.0
+
+
+
+- softmax 函数的输出是 0.0 到 1.0 之间的实数
+- softmax 函数的输出值的总和是 1
+
+### 3.5.4 输出层的神经元数量
+
+![png](3-23.png)
+
+输出层的神经元数量需要根据待解决的问题来决定。对于分类问题，输出层的神经元数量一般设定为类别的数量。
+
+## 3.6 手写数字识别
+
+假设学习已经全部结束，我们使用学习到的参数，先实现神经网络的“推理处理”。这个推理处理也称为神经网络的**前向传播（forward propagation）**。
+
+### 3.6.1 MNIST 数据集
+
+MNIST 的图像数据是 28 像素× 28 像素的灰度图像（1 通道），各个像素的取值在 0 到 255 之间。每个图像数据都相应地标有“7”“2”“1”等标签。
+
+> 本书提供了便利的 Python 脚本 mnist.py，该脚本支持从下载 MNIST 数据
+> 集到将这些数据转换成 NumPy 数组等处理（mnist.py 在 dataset 目录下）。使用
+> mnist.py 时，当前目录必须是 ch01、ch02、ch03、…、ch08 目录中的一个。使
+> 用 mnist.py 中的 load_mnist()函数，就可以按下述方式轻松读入 MNIST 数据。
+
+
+```python
+import sys, os
+sys.path.append(os.pardir) # 为了导入父目录中的文件而进行的设定
+from dataset.mnist import load_mnist
+
+# 第一次调用会花费几分钟……
+# load_mnist 函数以“( 训练图像, 训练标签)，( 测试图像，测试标签)”的形式返回读入的 MNIST 数据
+(x_train, t_train), (x_test, t_test) = load_mnist(flatten=True, normalize=False)
+```
+
+    Downloading train-images-idx3-ubyte.gz ... 
+    Done
+    Downloading train-labels-idx1-ubyte.gz ... 
+    Done
+    Downloading t10k-images-idx3-ubyte.gz ... 
+    Done
+    Downloading t10k-labels-idx1-ubyte.gz ... 
+    Done
+    Converting train-images-idx3-ubyte.gz to NumPy Array ...
+    Done
+    Converting train-labels-idx1-ubyte.gz to NumPy Array ...
+    Done
+    Converting t10k-images-idx3-ubyte.gz to NumPy Array ...
+    Done
+    Converting t10k-labels-idx1-ubyte.gz to NumPy Array ...
+    Done
+    Creating pickle file ...
+    Done!
+
+
+
+```python
+# 输出各个数据的形状
+print(x_train.shape) # (60000, 784)
+print(t_train.shape) # (60000,)
+print(x_test.shape) # (10000, 784)
+print(t_test.shape) # (10000,)
+```
+
+    (60000, 784)
+    (60000,)
+    (10000, 784)
+    (10000,)
+
+
+试着显示 MNIST 图像，同时也确认一下数据
+
+
+```python
+import sys, os
+sys.path.append(os.pardir)
+import numpy as np
+from dataset.mnist import load_mnist
+from PIL import Image
+import matplotlib.pyplot as plt
+
+
+def img_show(img):
+    pil_img = Image.fromarray(np.uint8(img))
+    pil_img.show()
+
+(x_train, t_train), (x_test, t_test) = load_mnist(flatten=True, normalize=False)
+img = x_train[0]
+label = t_train[0]
+print(label) # 5
+
+print(img.shape) # (784,)
+img = img.reshape(28, 28) # 把图像的形状变成原来的尺寸
+print(img.shape) # (28, 28)
+plt.imshow(img, cmap='gray')
+```
+
+    5
+    (784,)
+    (28, 28)
+
+
+
+
+
+    <matplotlib.image.AxesImage at 0x1f5a63afca0>
+
+
+
+
+![png](4.png)
+    
+
+
+### 3.6.2 神经网络的推理处理
+
+对这个 MNIST 数据集实现神经网络的推理处理。
+神经网络的输入层有 784 个神经元，输出层有 10 个神经元。
+
+- 输入层的 784 这个数字来源于图像大小的 28 × 28 = 784
+
+- 输出层的 10 这个数字来源于 10 类别分类（数字 0 到 9，共 10 类别）
+
+- 这个神经网络有 2 个隐藏层，第 1 个隐藏层有 50 个神经元，第 2 个隐藏层有 100 个神经元。这个 50 和 100 可以设置为任何值。
+
+
+```python
+def get_data():
+    """
+    获取数据
+    """
+    (x_train, t_train), (x_test, t_test) = \
+        load_mnist(normalize=True, flatten=True, one_hot_label=False)
+    return x_test, t_test
+```
+
+将 normalize 设置成`True`后，函数内部会进行转换，将图像的各个像素值除以 255，使得数据的值在 0.0～1.0 的范围内。像这样把数据限定到某个范围内的处理称为**正规化（normalization）**。此外，对神经网络的输入数据进行某种既定的转换称为**预处理（pre-processing）**。
+这里，作为对输入图像的一种预处理，我们进行了正规化。
+
+
+```python
+def init_network():
+    """
+    读入保存在 pickle 文件 sample_weight.pkl 中的学习到的权重参数
+    这个文件中以字典变量的形式保存了权重和偏置参数
+    """
+    with open("sample_weight.pkl", 'rb') as f:
+        network = pickle.load(f)
+    return network
+```
+
+
+```python
+def predict(network, x):
+    """
+    前向传播
+    """
+    W1, W2, W3 = network['W1'], network['W2'], network['W3']
+    b1, b2, b3 = network['b1'], network['b2'], network['b3']
+    a1 = np.dot(x, W1) + b1
+    z1 = sigmoid(a1)
+    a2 = np.dot(z1, W2) + b2
+    z2 = sigmoid(a2)
+    a3 = np.dot(z2, W3) + b3
+    y = softmax(a3)
+    
+    return y
+```
+
+
+```python
+import pickle
+
+x, t = get_data()
+network = init_network()
+
+accuracy_cnt = 0
+for i in range(len(x)):
+    """
+    用 for 语句逐一取出保存在 x 中的图像数据，用 predict()函数进行分类。
+    predict()函数以 NumPy 数组的形式输出各个标签对应的概率。
+    """
+    y = predict(network, x[i])
+    p = np.argmax(y) # 获取概率最高的元素的索引
+    if p == t[i]:
+        accuracy_cnt += 1
+        
+print("Accuracy: " + str(float(accuracy_cnt) / len(x)))
+```
+
+    Accuracy:0.9352
+
+
+### 3.6.3 批处理
+
+输出刚才的神经网络的各层的权重的形状。
+
+
+```python
+x, _ = get_data()
+network = init_network()
+W1, W2, W3 = network['W1'], network['W2'], network['W3']
+```
+
+
+```python
+x.shape
+```
+
+
+
+
+    (10000, 784)
+
+
+
+
+```python
+x[0].shape
+```
+
+
+
+
+    (784,)
+
+
+
+
+```python
+W1.shape
+```
+
+
+
+
+    (784, 50)
+
+
+
+
+```python
+W2.shape
+```
+
+
+
+
+    (50, 100)
+
+
+
+
+```python
+W3.shape
+```
+
+
+
+
+    (100, 10)
+
+
+
+从整体的处理流程来看，图 3-26 中，输入一个由 784 个元素（原本是一个 28 × 28 的二维数组）构成的一维数组后，输出一个有 10 个元素的一维数组。这是只输入一张图像数据时的处理流程。
+
+![png](3-26.png)
+
+现在我们来考虑打包输入多张图像的情形。比如，我们想用`predict()`
+函数一次性打包处理 100 张图像。为此，可以把 $\mathbf{x}$ 的形状改为 100 × 784，将
+100 张图像打包作为输入数据。
+
+![png](3-27.png)
+
+这种打包式的输入数据称为**批（batch）**。批有“捆”的意思，图像就如同纸币一样扎成一捆。
+
+
+```python
+x, t = get_data()
+network = init_network()
+
+batch_size = 100  # 批数量
+accuracy_cnt = 0
+
+for i in range(0, len(x), batch_size):
+    """
+    在 range()函数生成的列表的基础上，通过 x[i:i+batch_size]从输入数据中抽出批数据。
+    x[i:i+batch_n]会取出从第 i 个到第 i+batch_n 个之间的数据。
+    """
+    x_batch = x[i:i+batch_size]
+    y_batch = predict(network, x_batch)
+    """
+    参数 axis=1。这指定了在 100 × 10 的数组中，沿着第 1 维方向（以第 1 维为轴）
+    找到值最大的元素的索引（第 0 维对应第 1 个维度）。
+    """
+    p = np.argmax(y_batch, axis=1)  # 
+    accuracy_cnt += np.sum(p == t[i:i+batch_size])
+
+print("Accuracy:" + str(float(accuracy_cnt) / len(x)))
+```
+
+    Accuracy:0.9352
+
+
+## 3.7 小结
+
+- 神经网络中的激活函数使用平滑变化的 sigmoid 函数或 ReLU 函数。
+
+- 通过巧妙地使用 NumPy 多维数组，可以高效地实现神经网络。
+
+- 机器学习的问题大体上可以分为回归问题和分类问题。
+
+- 关于输出层的激活函数，回归问题中一般用恒等函数，分类问题中一般用 softmax 函数。
+
+- 分类问题中，输出层的神经元的数量设置为要分类的类别数。
+
+- 输入数据的集合称为批。通过以批为单位进行推理处理，能够实现高速的运算。

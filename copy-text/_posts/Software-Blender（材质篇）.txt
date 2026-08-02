@@ -1,0 +1,366 @@
+---
+title: Software-Blender（材质篇）
+date: Thu Oct 19 2023 16:05:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - Blender
+  - KurTips
+categories: 学习
+description: 学习自 B 站 UP 主 KurTips。
+---
+
+
+# 资源
+
+- [【Kurt】Blender 零基础入门教程 | Blender 中文区新手必刷教程(已完结)_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV14u41147YH)
+
+- [Blender 3.6 参考手册 — Blender Manual](https://docs.blender.org/manual/zh-hans/latest/index.html)
+
+# 课程
+
+## 3
+
+### 【材质篇】3.1 Blender 材质基础 原理化 BSDF
+
+- 学会如何添加和删除材质用两个节点做简单材质
+
+- 会添加有纹理的材质
+
+  会改变纹理投影的方式和角度
+
+- 学会使用蒙版做材质
+
+- 做出来有凹凸感和形变的材质
+
+- 学会做混合材质
+
+  Node Wrangler 插件
+
+- 学会简单的 UV 绘制
+
+​	Blender 使用的材质渲染器：BSDF
+
+​	BSDF = BRDF（反射）+ BTDF（透射）
+
+- [Bidirectional reflectance distribution function - Wikipedia](https://en.wikipedia.org/wiki/Bidirectional_reflectance_distribution_function)
+
+![png](3.1_1.png)
+
+**Principled BSDF **
+
+**属性**
+
+- **GGX** 是一种微表面反射光照模型模型，有比较好的染效果
+- **多重散射 GGX** 比这个 GGX 会在多计算一些微平面间的光线反弹和散射
+  - 但是这个会比 GGX 慢，一般肉眼也看不出来，所以基本上就默认 GGX 就行了
+- **随机游走 Random Walk** 这一种模拟次表面的渲染方式，不支持 EEVEE 染器
+
+**输入参数**
+
+- **基础色 Base Color** 模型的颜色，也可以接一个颜色贴图，一般不要纯黑或者纯白
+- **金属度 Metallic** 0 是非金属，1 是金属，一般我们要么选 0，要么选 1
+- **糙度 Roughness** 0 代表越平滑，1 代表越粗糙，确定漫反射和镜面反射时候物体表面的粗糙程度
+- **次表面 Subsurface** 决定你的模型是不是透光的，比如皮肤，窗帘等的通透程度，一般不会调太大，没有那么通透的东西
+- **次表面半径 Subsurface Radius** 决定半透光散射的距离，三个值分别代表 RGB 三个通道的散射半径
+- **次表面颜色 Subsurface Color** 次表面颜色决定透过去的颜色是什么样的，最终显示的是跟次表面半径相乘后显示的效果
+  - 所以如果你想完全显示次表面颜色，次表面半径就全部设定为 1
+- **次表面 IOR** 次表面散射的折射率，仅支持 cycles
+- **表面各向异性 Subsurface Anisotropy** 次表面射的方向，仅支持 cycles
+- **高光 Specular** 代表物体的菲尼尔效应反射率程度，数值越大，高光反射量越大，高光越亮，因为所有物体都是有一些菲尼尔反射的，所以高光这个值不要设为零，多少给一点。默认是 0.5
+- **高光染色 Specular Tint** 默认不设置的时候，物理默认的高光是白色的，
+  - 但是你把高光染色调到 1，就会被物体本身的颜色和谐，一般金属高光会染色，非金属高光不会染色
+- **各向异性过滤 Anisotropic** 调大的时候可以把一点的高光转换成沿切线方向的细长高光，仅支持 cycles
+- **各向异性旋转 Anisotropic Rotation** 比较常使用的是金属的部分，他可以控制你的金属的高光分布的方向，仅支持 cycles
+- **光泽 Sheen** 用于布料的部分，调到 1，有天鹅绒的效果，控制的是相皱反光的反射数量，数值越大越明显
+- **光泽染色 Sheen Tint** 会把材质颜色和白色光色混合
+- **清漆 Clearcoat** 这个类似于给你的材质加了一层包光。多一层白色高光，常用与制作车漆材质
+- **清漆粗糙度 Clearcoat Roughness** 就是你加这层清漆的粗糙度，
+
+![png](3.1_2.png)
+
+- **IOR 折射率** 透明材质常用的光折射率，可以网上搜索各种材质的 IOR
+- **透射 Transmission** 让你的模型透明，只有打开这个，OR 折射率和透射粗度才起作用，
+- **透射粗糙度 Transmission Roughness** 物体内部的粗糙度，可以做毛玻璃
+
+![png](3.1_3.png)
+
+- **自发光 Emission** 可以发光，霓虹灯
+- **Alpha** 默认是 1，当是 0 的时候，物体完全消失不见，
+- **法向 Normal** 通常这个会链接 PBR 的 normalmap 法线贴图
+- **清漆法线 Clearcoat Normal** 类似于汽车清漆的法线，可以接法线贴图
+- **切向 Tangent** 这个就是各向异性这种金属高光的方向。可以作为切向贴图接口
+
+​	给一个模型添加多个材质：Edit Mode 选择若干面，Assign
+
+![png](3.1_4.png)
+
+### 【材质篇】3.2 添加有纹理的材质 - 纹理坐标 映射 颜色渐变
+
+![png](3.2_1.png)
+
+​	一般有纹理的材质都需要这几个节点：
+
+- 纹理坐标 Texture Coordinate
+- 映射 Mapping
+- 图像纹理 Image Texture（或是其它）
+- 着色器 Principled BSDF
+- 材质输出 Material Output
+
+**纹理坐标**
+
+![png](3.2_2.png)
+
+**渐变纹理**
+
+![png](3.2_3.png)
+
+- ColorRamp
+
+- Separate XYZ
+
+**程序化纹理：噪波纹理**
+
+![png](3.2_4.png)
+
+- Noise Texture
+- ColorRamp
+  - 将颜色改为黑白的
+  - 黑白的颜色也可以连接到 Roughness 上，黑表示光滑，白表示粗糙
+
+**程序化纹理：波浪纹理**
+
+![png](3.2_5.png)
+
+- Wave Texture
+- ColorRamp
+
+### 【材质篇】3.3 用蒙版做纹理的叠加
+
+![png](3.3_1.png)
+
+​	加载 Node Wrangler 插件：
+
+​	先选中你要加的节点，再按 Ctrl + T 可以**自动添加映射和纹理坐标**。
+
+**蘑菇材质**
+
+![png](3.3_2.png)
+
+​	给**蘑菇杆**添加渐变的材质：
+
+- ColorRamp 颜色渐变
+- Separate XYZ 让渐变沿着 Z 轴
+- Texture Coordinate 输出使用生成 Generated
+
+**蘑菇头**
+
+​	使用的材质贴图（灰度图像）：
+
+![jpg](3.3_3.jpg)
+
+![jpg](3.3_4.jpg)
+
+![png](3.3_5.png)
+
+​	方法 1：使用 ColorRamp 给黑白的材质贴图上色。
+
+![png](3.3_6.png)
+
+​	方法 2：使用 Mix 给黑白的材质贴图上色。
+
+![png](3.3_6.png)
+
+​	Mix 对象的 Factor 属性控制 A 与 B 的权重，这个属性可以是一个浮点数，也可是一个灰度图（类似于 PS 的蒙版）。
+
+![png](3.3_7.png)
+
+​	A 是颜色，B 是纹理贴图的结果。
+
+![png](3.3_8.png)
+
+​	多个纹理贴图在 Mix 对象中的结果。
+
+![png](3.3_9.png)
+
+​	蘑菇点点就是个有自发光的简易材质。
+
+### 【材质篇】3.4 凹凸感和置换形变
+
+![png](3.4_1.png)
+
+​	Bump 组件可以使得材质具有凹凸感。
+
+- Noise Texture 提供噪点的纹理贴图
+- ColorRamp 将噪点的纹理贴图转成黑白的
+- Bump 实现凹凸感，Height 接受 ColorRamp 的 Color 为输入，Normal 输出给 Principal BSDF 的 Normal
+
+![png](3.4_2.png)
+
+​	这个凹凸感并不会对模型的形状造成影响，而是通过改变模型的法线方向来实现的。
+
+![png](3.4_3.png)
+
+​	从一些免费网站下可以下载材质贴图：
+
+- [ambientCG - CC0 Textures, HDRIs and Models](https://ambientcg.com/)
+- [Poly Haven](https://polyhaven.com/)
+
+​	下面将要使用如下贴图用于材质上：
+
+- Color 颜色贴图
+- Displacement 置换贴图
+- Normal 法线贴图
+- Roughness 粗糙度贴图
+
+![png](3.4_4.png)
+
+​	将
+
+- Color 颜色贴图
+- Normal 法线贴图
+- Roughness 粗糙度贴图、
+
+分别贴到 Principle BSDF 中。
+
+![png](3.4_5.png)
+
+​	使用 Displacement 贴图的方法 1：给物体表面细分后使用 Displacement 修改器，达到修改模型形状的效果。（这对 Eevee 和 Cycles 修改器都有效）
+
+​	物体的 Settings 里的 Displacement 必须设成 Displacement and Bump，才有效。
+
+![png](3.4_6.png)
+
+​	使用 Displacement 贴图的方法 2：Image Texture 节点（Displacement 贴图）连 Displacement 节点，然后直接连 Material Output 的 Displacement。（只对 Cycles 渲染器有效，而且硬件要求高）
+
+![png](3.4_7.png)
+
+​	加载 Node Wrangler 插件，空材质下选择 Principled BSDF，Ctrl + Shift + T，选择
+
+- Color 颜色贴图
+- Displacement 置换贴图
+- Normal 法线贴图
+- Roughness 粗糙度贴图
+
+​	四张贴图，插件会帮你自动创建好材质。
+
+### 【材质篇】3.5 混合材质节点和 Node Wrangler 的五大用法
+
+![png](3.5_1.png)
+
+​	Mix Shader，接受两个 BSDF，混合成一个。
+
+​	Fac 是权重，可以是一个浮点数，或是灰度图。
+
+![png](3.5_2.png)
+
+​	混合材质示例。
+
+​	Ctrl + J 给材质编辑器中多个节点加组。
+
+![png](3.5_3.png)
+
+​	Opacity 贴图，可以达到空心材质的效果。
+
+![png](3.5_4.png)
+
+---
+
+​	Node Wrangler 的五大用法：（[关于BLender的Node Wrangler插件有哪些快捷操作？ - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/355141070)）
+
+- Ctrl + T 自动添加纹理映射
+
+- Ctrl + Shift + T 自动从贴图生成材质
+- Ctrl + Shift + 单击节点，可以快速预览效果
+- 两个 BSDF 节点间，Ctrl + Shift + 右键拖拉，快速增加一个混合着色器
+- Alt + S 快速切换混合结点的上下顺序
+
+### 【材质篇】3.6 简单的UV纹理绘制
+
+![png](3.6_1.png)
+
+​	给对象一个材质，新建一个 UV 贴图，Texture Painting Mode 下就可以操作这张贴图。
+
+![png](3.6_2.png)
+
+​	油漆桶可以染色所有面，也可以生成渐变效果。
+
+![png](3.6_3.png)
+
+​	画笔有多种模式可以选择。
+
+**狐狸材质**
+
+![png](3.6_4.png)
+
+​	给狐狸头材质贴图，先把它转成 Mesh 对象（应用所有修改器）。
+
+​	Edit Mode 下，按 A 选择所有面，按 U 可以 Smart UV Project，智能 UV 展开，可以完成绝大多数情况。
+
+![png](3.6_5.png)
+
+​	如果智能 UV 展开得到的贴图太琐碎，可以手动展开 UV，Mark Seam 标记缝合线，然后 Unwrap。
+
+![png](3.6_6.png)
+
+​	狐狸头展开效果。
+
+![png](3.6_7.png)
+
+​	给狐狸头染色。
+
+![png](3.6_8.png)
+
+​	Edit Mode 下选择若干面（选中中间一个面，再 Ctrl + 加号，再调整），回到 Texture Painting Mode，打开蒙版，使得操作只在选中的面上进行。
+
+![png](3.6_9.png)
+
+​	给耳朵也来个渐变效果。
+
+![png](3.6_10.png)
+
+​	把尾巴拉直（选中样条线，Edit Mode 下 A + S + X + 0），转成网格，适当缩小 UV 贴图（防止UV 在边缘出现问题），用油漆桶整个渐变效果。
+
+![png](3.6_11.png)
+
+​	贴图最后要记得保存。
+
+![png](3.6_12.png)
+
+​	最终效果。
+
+### 【材质篇】3.7 本章练习-给模型上材质
+
+![png](3.7_1.png)
+
+​	树干和苔藓使用 UV 贴图和一个渐变效果。
+
+![png](3.7_2.png)
+
+​	苔藓如果效果不好，重新展开一次 UV。
+
+![png](3.7_3.png)
+
+​	另一个树干同理。
+
+![png](3.7_4.png)
+
+​	龟背竹使用渐变效果。
+
+![png](3.7_5.png)
+
+​	小树苗同上。
+
+![png](3.7_6.png)
+
+​	棕榈同上。
+
+![png](3.7_7.png)
+
+​	小石头用纯色即可。
+
+![png](3.7_8.png)
+
+​	花使用两个材质：花瓣和花蕊。
+
+![png](3.7_9.png)
+
+​	树使用贴图（不使用 UV，使用 Generate 作为纹理坐标）

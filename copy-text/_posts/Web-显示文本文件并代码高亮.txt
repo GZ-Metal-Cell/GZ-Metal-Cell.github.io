@@ -1,0 +1,205 @@
+---
+title: Web-显示文本文件并代码高亮
+date: Tue Dec 03 2024 07:37:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - 前端
+  - JavaScript
+categories: 学习
+description: Show your code!
+---
+
+
+# 前言
+
+​	写点代码让网页直接展示代码文件的内容！
+
+# 正文
+
+## 显示代码文件：codeFile.js
+
+​	这需要引入：
+
+```html
+<link rel="stylesheet" href="/css/codeFileTree.css"/>
+<script src="/js/highlightjs.js"></script>
+<script src="/js/highlightjs-line-numbers.min.js"></script>
+<script src="/js/codeFile.js"></script>
+```
+
+​	设计一个 `codeFile` 类表示文本文件的代码块，用于控制文本文件的相关逻辑：
+
+<script>new CodeFile("/js/codeFile.js").render();</script>
+
+​	具有如下功能：
+
+- 自动根据文件地址返回代码语言，渲染代码块
+
+  > [!TIP]
+  >
+  > ​	`fetch()` 是一个用于发送网络请求的 JavaScript 原生 API，基于 `Promise`，用于替代传统的 `XMLHttpRequest`。它可以发起各种 HTTP 请求（如 GET、POST 等），并处理响应数据。
+  >
+  > **基本用法：**
+  >
+  > ```javascript
+  > fetch(url, options)
+  >   .then(response => response.json())  // 解析响应数据
+  >   .then(data => console.log(data))  // 使用响应数据
+  >   .catch(error => console.error(error));  // 错误处理
+  > ```
+
+- 使用 `highlight.js` 进行代码高亮：
+
+  > [!TIP]
+  >
+  >  	 `highlight.js` 会将识别下列结构：
+  >
+  >   ```html
+  >   <pre class="hljs lang"><code></code></pre>
+  >   ```
+
+- 使用 `highlightjs-line-numbers.min.js` 给代码块添加行号。
+
+  > [!TIP]
+  >
+  > ​	这段代码将扫描网页中的所有高亮后的代码块并添加行号。
+  >
+  > ```javascript
+  > hljs.initLineNumbersOnLoad();
+  > ```
+
+- 所有代码块实例渲染完后，派发消息 `allCodeFilesRendered` 供其它代码使用。
+- 销毁代码块
+
+​	使用如下代码将文本文件内容渲染成代码块：
+
+```html
+<script>new CodeFile("XXX.c").render();</script>
+```
+
+## 代码文件工具栏：codeFileTools.js
+
+​	这需要引入：
+
+```html
+<link rel="stylesheet" href="/css/codeFileTree.css"/>
+<link rel="stylesheet" type="text/css" href="/css/codeFileTools.css">
+<script src="/js/highlightjs.js"></script>
+<script src="/js/highlightjs-line-numbers.min.js"></script>
+<script src="/js/codeFile.js"></script>
+<script src="/js/codeFileTools.js"></script>
+```
+
+
+
+```mermaid
+sequenceDiagram
+    codeFile.js->>codeFileTools.js: $(document).trigger('CodeFileRendered')
+```
+
+
+
+​	给创建的代码块添加一个工具栏，具有如下功能：
+
+- 收缩代码块
+- 显示文件名
+- 复制文件内容
+- 下载文件
+
+<script>new CodeFile("/js/codeFileTools.js").render();</script>
+
+​	其余的交给 CSS（为了适应主题随便写写）。
+
+<script>new CodeFile("/css/codeFileTools.css").render();</script>
+
+## 显示代码文件树状结构：codeFileTree.js
+
+​	在 `codeFile` 类的基础上，借助 `jstree`，实现树状文件结构的展示！设计 `CodeFileTreeNode `类和  `CodeFileTree` 类：
+
+```mermaid
+classDiagram
+	class CodeFile {
+		+ isInitialized
+		+ Instances
+		+ link
+		+ fileName
+		+ lang
+		+ text
+		+ $codeElement
+		+ $preElement
+		+ $root
+		+ needRender
+		+ rendered
+		+ getFileName()
+		+ getLang()
+		+ loadFile()
+		+ render()
+		+ destroy()
+		+ initLineNumbers()
+		+ getLanguageFromExtension()
+	}
+	
+    class codeFileTreeNode {
+    	+ isFolder
+    	+ folderName
+    	+ children
+    	+ fileName
+    	+ icon
+		+ convertToJsTreeData()
+    }
+    
+    class codeFileTree {
+    	+ id
+    	+ root
+    	+ defaultNode
+    	+ jsTreeData
+    	+ codeFile
+    	+ jsTree
+    	+ container
+		+ render()
+    }
+    
+    codeFileTreeNode --o codeFileTree
+    CodeFile ..> codeFileTree
+```
+
+​	这需要引入：
+
+```html
+<link href="/css/fontawesome/css/all.min.css" rel="stylesheet">
+<link rel="stylesheet" href="/css/jsTreeList.css"/>
+<link rel="stylesheet" href="/js/jsTree/dist/themes/default/style.min.css"/>
+<link rel="stylesheet" href="/css/codeFileTree.css"/>
+<script src="/js/jsTree/dist/jstree.min.js"></script>
+<script src="/js/highlightjs.js"></script>
+<script src="/js/highlightjs-line-numbers.min.js"></script>
+<script src="/js/codeFile.js"></script>
+<script src="/js/codeFileTree.js"></script>
+```
+
+​	再写个 CSS，大功告成！
+
+​	使用方法：
+
+```html
+<script>
+// new CodeFileTreeNode(ID, 是否为文件夹, 文件路径);
+const codeFileTreeCSS = new CodeFileTreeNode('node1', false, '/css/codeFileTree.css');
+const codeFileTreeJS = new CodeFileTreeNode('node2', false, '/js/codeFileTree.js');
+const jsNode = new CodeFileTreeNode('node3', true, 'js', [codeFileTreeJS]);
+const cssNode = new CodeFileTreeNode('node4', true, 'css', [codeFileTreeCSS]);
+const sourceNode = new CodeFileTreeNode('node5', true, 'source', [jsNode, cssNode]);
+// new CodeFileTree(ID, 根节点, 默认节点)
+new CodeFileTree('tree1', sourceNode, codeFileTreeJS).render();
+</script>
+```
+
+​	效果（点击文件图标展示文件内容）：
+
+<script>
+const codeFileTreeCSS = new CodeFileTreeNode('node1', false, '/css/codeFileTree.css');
+const codeFileTreeJS = new CodeFileTreeNode('node2', false, '/js/codeFileTree.js');
+const jsNode = new CodeFileTreeNode('node3', true, 'js', [codeFileTreeJS]);
+const cssNode = new CodeFileTreeNode('node4', true, 'css', [codeFileTreeCSS]);
+const sourceNode = new CodeFileTreeNode('node5', true, 'source', [jsNode, cssNode]);
+new CodeFileTree('tree1', sourceNode, codeFileTreeJS).render();
+</script>

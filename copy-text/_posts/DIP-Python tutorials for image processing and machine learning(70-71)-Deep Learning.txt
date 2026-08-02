@@ -1,0 +1,596 @@
+---
+title: DIP-Python tutorials for image processing and machine learning(70-71)-Deep Learning
+date: Sat Dec 17 2022 12:11:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - DigitalSreeni
+  - Python
+categories: 学习
+description: 学习自 Youtube 博主 DigitalSreeni。
+---
+
+
+# 正文
+
+## 70 - An overview of deep learning and neural networks
+
+![png](70_1.png)
+
+传统的机器学习：提取特征然后生成模型
+
+![png](70_2.png)
+
+CNN 深度卷积网络：输入-卷积层-池化层-全连接层
+
+![png](70_3.png)
+
+卷积层和池化层可以有很多层。
+
+![png](70_4.png)
+
+```python
+INPUT_SHAPE =(64,64,3) #change to (SIZE, SIZE, 3)
+inp = keras.layersInput(shape=INPUT SHAPE)
+conv1 = keras.layers.Conv2D(32, kernel_size=(3, 3), activation='relu', padding='same')(inp)
+pool1 = keras.layers.MaxPooling2D(pool size=(2, 2))(conv1)
+norm1 = keras.layers.BatchNormalization(axis=-1)(pool1)
+drop1 = keras.layers.Dropout(rate=0.2)(norm1)
+conv2 = keras.layers.Conv2D(32, kernel_size=(3, 3), activation='relu', padding='same')(drop1)
+pool2 = keras.layers.MaxPooling2D(poo size=(2, 2))(conv2)
+norm2 = keras.layers.BatchNormalization(axis = -1)(pool2)
+drop2 = keras.layers.Dropout(rate=0.2)(norm2)
+flat = keras.layers.Flatten()(drop2)
+hidden1 = keras.layers.Dense(512, activation='relu')(flat)
+norm3 = keras.layers.BatchNormalization(axis = -1)(hidden1)
+drop3 = keras.layers.Dropout(rate=0.2)(norm3)
+hidden2 = keras.layers.Dense(256, activation='relu')(drop3)
+norm4 = keras.layers.BatchNormalization(axis = -1)(hidden2)
+drop4 = keras.layers.Dropout(rate=0.2)(norm4)
+
+out = keras.layers.Dense(2, activation='sigmoid')(drop4)  # units=1gives error
+model = keras.Model(inputs=inp, outputs=out)model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+```
+
+**A few keywords to understand:**
+
+- Tensorflow
+- Keras
+- Conv2D
+  - 2D 卷积核：[Keras.Conv2D Class - GeeksforGeeks](https://www.geeksforgeeks.org/keras-conv2d-class/)
+- MaxPooling
+  - 最大池化：[卷积神经网络——池化层学习——最大池化_Alex_996 的博客-CSDN 博客_最大池化](https://blog.csdn.net/weixin_43336281/article/details/102149468)
+- BatchNormalization
+  - 批标准化：[什么是批标准化 (Batch Normalization) - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/24810318)
+- Dropout
+  - [CNN 入门讲解：什么是 dropout? - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/77609689)
+- Flatten
+  - Flatten 层用来将输入“压平”，即把多维的输入一维化，常用在从卷积层到全连接层的过渡。Flatten 不影响 batch 的大小。
+  - [深度学习中 Flatten 层的作用_Microstrong0305 的博客-CSDN 博客_flatten 层](https://blog.csdn.net/program_developer/article/details/80853425)
+- Dense
+  - 全连接层
+- Activation ='relu'
+  - 激活函数：relu
+- Optimizer ='adam'
+  - 优化方法：[Adam optimizer 浅析 - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/91736992)
+- Loss Function (categorical_crossentropy)
+  - 损失函数
+
+![png](70_5.png)
+
+**TensorFlow and Keras**
+
+- **TensorFlow**
+  - TensorFlow is the most famous library used in production for deep learning models.
+  - TensorFlow is not that easy to use.
+- **Keras**
+  - Keras is a high level API built on **TensorFlow** (also on Theano)
+  - Keras is more user-friendly than TensorFlow -allows you to quickly build and test networks with minimal effort.
+
+![png](70_6.png)
+
+- 卷积和池化
+
+![png](70_7.png)
+
+**BatchNormalization**
+
+- Normalization is important to keep the values in input and hidden layers within certain range.
+- Normalizing usually improves training speed.
+- Batch normalization allows each layer of a network to learn by itself a little bit more independently of other layers.
+- We can use higher learning rates because batch normalization makes sure that there's noactivation that's gone really high or really low.
+
+![png](70_8.png)
+
+**Dropout**（通常是将权重设为 0）
+
+- The term "dropout" refers to dropping out neurons at **random** in a neural network.
+- Dropout is needed to **prevent over-fitting**.
+
+![png](70_9.png)
+
+**Flattening**
+
+- The flattening step creates a long vector that is needed as input to the artificial neural network.
+
+![png](70_10.png)
+
+**Dense layer**
+
+- Input (features)
+- Hidden Layers (lots of layers ~ "deep learning")
+  - neuron (Weight, bias and activation function)
+- Output (prediction)
+
+![png](70_11.png)
+
+**Activation: Biological Neuron reference 参考生物的神经元**
+
+![png](70_12.png)
+
+![png](70_13.png)
+
+**Optimizer:Adam**
+
+- Optimizer → choice of optimizer algorithm → good results in minutes or hours or days.
+  - 优化器 → 优化器算法的选择 → 在几分钟或几小时或几天内取得好的结果。
+
+- Adam optimization is an extension to stochastic gradient descent.
+  - Adam 优化是对随机梯度下降的延伸。
+- Adam is most often used for CNN.
+
+![png](70_14.png)
+
+**Loss Functions - Categorical cross-entropy 交叉熵损失函数**
+
+- A loss function (or cost function) is a method of evaluating how well your algorithm models your dataset.
+- Good prediction → low value for loss (Bad → high loss value)
+- Cross-entropy loss function is commonly used for CNN.
+- Mean square error is an example of basic loss function for linear regression.
+
+![png](70_15.png)
+
+**Epoch and other terms**
+
+- When data is too big we need to break into smaller batches so the computer can handle.
+
+- One epoch is when an ENTIRE dataset is passed forward and backward through the neural network ONCE.
+  - 一个 epoch 是指一个完整的数据集通过神经网络向前和向后传递一次。
+- Batch Size is the number of training samples in 1 Forward/1 Backward pass.
+  - Batch Size 是指 1 个前向 / 1 个后向通道中的训练样本数。
+- Number of iterations = Number of passes
+  - 迭代次数 = 通过次数
+
+- **Example** : lf we have 100 training samples and Batch size is set to 25, it will take 4 iterations to complete 1 Epoch.
+  - 例子：如果我们有 100 个训练样本，批量大小设置为 25，则需要 4 次迭代来完成一个周期。
+
+**What is the right numbers of epochs?**
+
+No one knows, depends on the problem!
+
+## 71 - Malarial cell classification using CNN
+
+- [win10+MX350 显卡+CUDA10.2+PyTorch 安装过程记录 深度学习环境配置_Fun'的博客-CSDN 博客](https://blog.csdn.net/m0_37867091/article/details/105788637)
+
+- [解决 NVIDIA 官网打开速度过慢的 CUDA 下载界面打开过慢_沉睡的小灰的博客-CSDN 博客_英伟达网站好慢](https://blog.csdn.net/weixin_44065323/article/details/115715271)
+
+- **导入相关库**
+
+
+```python
+import numpy as np
+import cv2
+import os
+from PIL import Image
+import keras
+
+np.random.seed(1000)
+os.environ['KERAS_BACKEND'] = 'tensorflow'  # 将后端设为 tensorflow，如果你想，也可设成 theano
+```
+
+---
+
+- **尝试导入输入**(500 个未收感染的细胞，500 个被感染的细胞)
+
+
+```python
+image_directory = 'cell_images2/'
+SIZE = 64
+dataset = []
+label = []
+```
+
+- 导入被感染的细胞，设为标签`0`
+
+
+```python
+parasitized_images = os.listdir(image_directory + 'Parasitized/')
+for i, image_name in enumerate(parasitized_images):
+    if image_name.split('.')[1] == 'png':  # 如果是 PNG 格式，则读取它
+        image = cv2.imread(image_directory + 'Parasitized/' + image_name)  # 读取图片，以 np.array格式
+        image = Image.fromarray(image, 'RGB')  # 将 array 格式转换为 image 格式
+        image = image.resize((SIZE, SIZE))  # 变换大小
+        dataset.append(np.array(image))  # 录入数据集
+        label.append(0)  # 录入标签
+```
+
+- 导入未被感染的细胞，设为标签`1`
+
+
+```python
+uninfected_images = os.listdir(image_directory + 'Uninfected/')
+for i, image_name in enumerate(uninfected_images):
+    if image_name.split('.')[1] == 'png':
+        image = cv2.imread(image_directory + 'Uninfected/' + image_name)
+        image = Image.fromarray(image, 'RGB')
+        image = image.resize((SIZE, SIZE))
+        dataset.append(np.array(image))
+        label.append(1)
+```
+
+---
+
+- **设置 CNN**
+
+  - 2 conv and pool layers. with some normalization and drops in between.
+
+- 输入层
+
+
+```python
+INPUT_SHAPE = (SIZE, SIZE, 3)
+inp = keras.layers.Input(shape=INPUT_SHAPE)
+```
+
+- 卷积层 1 [Conv2D layer](https://keras.io/api/layers/convolution_layers/convolution2d/)
+
+
+```python
+conv1 = keras.layers.Conv2D(32, kernel_size=(3, 3),
+                            activation='relu', padding='same')(inp)
+```
+
+- 池化层 1 [MaxPooling2D layer](https://keras.io/api/layers/pooling_layers/max_pooling2d/)
+
+
+```python
+pool1 = keras.layers.MaxPooling2D(pool_size=(2, 2))(conv1)
+```
+
+- Normalization 1 
+
+  [BatchNormalization layer](https://keras.io/api/layers/normalization_layers/batch_normalization/)
+
+  [神经网络 BN 层 batch normalization 参数计算_bblingbbling 的博客-CSDN 博客_batchnormalization 参数](https://blog.csdn.net/bblingbbling/article/details/114168687)
+
+
+```python
+norm1 = keras.layers.BatchNormalization(axis=-1)(pool1)
+```
+
+- Dropout 1 [Dropout layer](https://keras.io/api/layers/regularization_layers/dropout/)
+
+
+```python
+drop1 = keras.layers.Dropout(rate=0.2)(norm1)
+```
+
+- 卷积层 2
+
+
+```python
+conv2 = keras.layers.Conv2D(32, kernel_size=(3, 3),
+                            activation='relu', padding='same')(drop1)
+```
+
+- 池化层 2
+
+
+```python
+pool2 = keras.layers.MaxPooling2D(pool_size=(2, 2))(conv2)
+```
+
+- Normalization 2
+
+
+```python
+norm2 = keras.layers.BatchNormalization(axis=-1)(pool2)
+```
+
+- Dropout 2
+
+
+```python
+drop2 = keras.layers.Dropout(rate=0.2)(norm2)
+```
+
+- Flatten 层 [Flatten layer](https://keras.io/api/layers/reshaping_layers/flatten/)
+  - Flatten the matrix to get it ready for dense.
+
+
+```python
+flat = keras.layers.Flatten()(drop2)
+```
+
+- 隐藏层 1 [Dense layer](https://keras.io/api/layers/core_layers/dense/)
+
+
+```python
+hidden1 = keras.layers.Dense(512, activation='relu')(flat)
+```
+
+- Normalization 3
+
+
+```python
+norm3 = keras.layers.BatchNormalization(axis=-1)(hidden1)
+```
+
+- Dropout 3
+
+
+```python
+drop3 = keras.layers.Dropout(rate=0.2)(norm3)
+```
+
+- 隐藏层 2
+
+
+```python
+hidden2 = keras.layers.Dense(256, activation='relu')(drop3)
+```
+
+- Normalization 4
+
+
+```python
+norm4 = keras.layers.BatchNormalization(axis=-1)(hidden2)
+```
+
+- Drop 4
+
+
+```python
+drop4 = keras.layers.Dropout(rate=0.2)(norm4)
+```
+
+- 输出层
+
+
+```python
+out = keras.layers.Dense(2, activation='sigmoid')(drop4)
+```
+
+- 生成模型 [The Model class](https://keras.io/api/models/model/#model-class)
+
+
+```python
+model = keras.Model(inputs=inp, outputs=out)
+model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+```
+
+- [模型可视化](https://keras.io/zh/visualization/)
+
+
+```python
+from tensorflow.keras import utils
+from keras.utils.vis_utils import model_to_dot
+
+utils.plot_model(model, 'model1.png',show_shapes=True,show_dtype=True,show_layer_names=True)
+```
+
+
+
+
+![png](71_1.png)
+    
+
+
+```python
+model.summary()
+```
+
+    Model: "model"
+    _________________________________________________________________
+     Layer (type)                Output Shape              Param #   
+    =================================================================
+     input_1 (InputLayer)        [(None, 64, 64, 3)]       0         
+                                                                     
+     conv2d (Conv2D)             (None, 64, 64, 32)        896       
+                                                                     
+     max_pooling2d (MaxPooling2D  (None, 32, 32, 32)       0         
+     )                                                               
+                                                                     
+     batch_normalization (BatchN  (None, 32, 32, 32)       128       
+     ormalization)                                                   
+                                                                     
+     dropout (Dropout)           (None, 32, 32, 32)        0         
+                                                                     
+     conv2d_1 (Conv2D)           (None, 32, 32, 32)        9248      
+                                                                     
+     max_pooling2d_1 (MaxPooling  (None, 16, 16, 32)       0         
+     2D)                                                             
+                                                                     
+     batch_normalization_1 (Batc  (None, 16, 16, 32)       128       
+     hNormalization)                                                 
+                                                                     
+     dropout_1 (Dropout)         (None, 16, 16, 32)        0         
+                                                                     
+     flatten (Flatten)           (None, 8192)              0         
+                                                                     
+     dense (Dense)               (None, 512)               4194816   
+                                                                     
+     batch_normalization_2 (Batc  (None, 512)              2048      
+     hNormalization)                                                 
+                                                                     
+     dropout_2 (Dropout)         (None, 512)               0         
+                                                                     
+     dense_1 (Dense)             (None, 256)               131328    
+                                                                     
+     batch_normalization_3 (Batc  (None, 256)              1024      
+     hNormalization)                                                 
+                                                                     
+     dropout_3 (Dropout)         (None, 256)               0         
+                                                                     
+     dense_2 (Dense)             (None, 2)                 514       
+                                                                     
+    =================================================================
+    Total params: 4,340,130
+    Trainable params: 4,338,466
+    Non-trainable params: 1,664
+    _________________________________________________________________
+
+---
+
+[卷积神经网络的参数计算_qian99的博客-CSDN博客_卷积神经网络参数](https://blog.csdn.net/qian99/article/details/79008053)
+
+| 网络层(输入)          | 输入                                    | 神经元个数 | size       | stride | 输出                         | 参数量                             |
+| --------------------- | --------------------------------------- | ---------- | ---------- | ------ | ---------------------------- | ---------------------------------- |
+| input                 | 64x64x3（长 x 宽 x 通道数） |            |            |        | 64x64x3          | 0                                |
+| conv2d                | 64x64x3                     | 32       | 3x3 | 1    | 64x64x32         | 32x3x3x3+32=896   |
+| max_pooling2d         | 64x64x32                    |            | 2x2 | None   | (64/2)x(64/2)x32 | 0                                |
+| batch_normalization   | 32x32x32                    |            |            |        | 32x32x32         | 128                              |
+| dropout               | 32x32x32                    |            |            |        | 32x32x32         | 0                                |
+| conv2d_1              | 32x32x32                    | 32       | 3x3 | 1    | 32x32x32         | 32x3x3x32+32=9248 |
+| max_pooling2d_1       | 32x32x32                    |            | 2x2 | 1    | (32/2)x(32/2)x32 | 0                                |
+| batch_normalization_1 | 16x16x32                    |            |            |        | 16x16x32         | 128                              |
+| dropout_1             | 16x16x32                    |            |            |        | 16x16x32         | 0                                |
+| flatten               | 16x16x32                    |            |            |        | 16x16x32=8192    | 0                                |
+| dense                 | 8192                                  | 512      |            |        | 512                        | 8192x512+512=4194816        |
+| batch_normalization_2 | 512                                   |            |            |        | 512                        | 2048                             |
+| dropout_2             | 512                                   |            |            |        | 512                        | 0                                |
+| dense_1               | 512                                   | 256      |            |        | 256                        | 512x256+256=131328          |
+| batch_normalization_3 | 256                                   |            |            |        | 256                        | 1024                             |
+| dropout_3             | 256                                   |            |            |        | 256                        | 0                                |
+| dense_2               | 256                                   | 2        |            |        | 2                          | 256x2+2=514                 |
+
+
+---
+
+- **设置测试集和训练集，开始训练**
+
+
+```python
+from sklearn.model_selection import train_test_split
+from keras.utils import to_categorical
+
+X_train, X_test, y_train, y_test = train_test_split(dataset, 
+                                                    to_categorical(np.array(label)),
+                                                    test_size = 0.20,
+                                                    random_state = 0)
+```
+
+
+```python
+history = model.fit(np.array(X_train), y_train, batch_size=64, verbose=1, epochs=25, validation_split=0.1, shuffle=False)
+```
+
+    Epoch 1/25
+    12/12 [==============================] - 9s 99ms/step - loss: 0.9405 - accuracy: 0.6444 - val_loss: 31.2568 - val_accuracy: 0.5625
+    Epoch 2/25
+    12/12 [==============================] - 0s 37ms/step - loss: 0.5048 - accuracy: 0.7472 - val_loss: 23.6857 - val_accuracy: 0.5625
+    Epoch 3/25
+    12/12 [==============================] - 0s 37ms/step - loss: 0.3281 - accuracy: 0.8417 - val_loss: 17.8224 - val_accuracy: 0.5625
+    Epoch 4/25
+    12/12 [==============================] - 0s 37ms/step - loss: 0.2036 - accuracy: 0.9250 - val_loss: 14.3039 - val_accuracy: 0.5625
+    Epoch 5/25
+    12/12 [==============================] - 0s 37ms/step - loss: 0.1568 - accuracy: 0.9431 - val_loss: 13.0039 - val_accuracy: 0.5625
+    Epoch 6/25
+    12/12 [==============================] - 0s 37ms/step - loss: 0.1074 - accuracy: 0.9694 - val_loss: 7.4553 - val_accuracy: 0.5625
+    Epoch 7/25
+    12/12 [==============================] - 0s 37ms/step - loss: 0.0858 - accuracy: 0.9778 - val_loss: 3.5444 - val_accuracy: 0.5500
+    Epoch 8/25
+    12/12 [==============================] - 0s 37ms/step - loss: 0.0608 - accuracy: 0.9819 - val_loss: 4.7493 - val_accuracy: 0.5500
+    Epoch 9/25
+    12/12 [==============================] - 0s 37ms/step - loss: 0.0632 - accuracy: 0.9764 - val_loss: 4.7916 - val_accuracy: 0.5625
+    Epoch 10/25
+    12/12 [==============================] - 0s 36ms/step - loss: 0.0432 - accuracy: 0.9889 - val_loss: 1.9020 - val_accuracy: 0.5875
+    Epoch 11/25
+    12/12 [==============================] - 0s 36ms/step - loss: 0.0489 - accuracy: 0.9847 - val_loss: 2.2950 - val_accuracy: 0.5750
+    Epoch 12/25
+    12/12 [==============================] - 0s 37ms/step - loss: 0.0458 - accuracy: 0.9861 - val_loss: 0.8035 - val_accuracy: 0.7625
+    Epoch 13/25
+    12/12 [==============================] - 0s 38ms/step - loss: 0.0264 - accuracy: 0.9958 - val_loss: 1.4798 - val_accuracy: 0.6500
+    Epoch 14/25
+    12/12 [==============================] - 0s 38ms/step - loss: 0.0244 - accuracy: 0.9931 - val_loss: 1.6248 - val_accuracy: 0.6625
+    Epoch 15/25
+    12/12 [==============================] - 0s 38ms/step - loss: 0.0160 - accuracy: 0.9958 - val_loss: 1.2913 - val_accuracy: 0.7125
+    Epoch 16/25
+    12/12 [==============================] - 0s 39ms/step - loss: 0.0169 - accuracy: 0.9958 - val_loss: 1.4256 - val_accuracy: 0.6875
+    Epoch 17/25
+    12/12 [==============================] - 0s 40ms/step - loss: 0.0114 - accuracy: 0.9986 - val_loss: 1.2699 - val_accuracy: 0.7000
+    Epoch 18/25
+    12/12 [==============================] - 0s 39ms/step - loss: 0.0158 - accuracy: 0.9972 - val_loss: 0.7563 - val_accuracy: 0.7875
+    Epoch 19/25
+    12/12 [==============================] - 0s 39ms/step - loss: 0.0133 - accuracy: 0.9972 - val_loss: 0.6219 - val_accuracy: 0.8500
+    Epoch 20/25
+    12/12 [==============================] - 0s 38ms/step - loss: 0.0194 - accuracy: 0.9958 - val_loss: 0.7935 - val_accuracy: 0.8500
+    Epoch 21/25
+    12/12 [==============================] - 0s 38ms/step - loss: 0.0174 - accuracy: 0.9972 - val_loss: 2.8081 - val_accuracy: 0.5625
+    Epoch 22/25
+    12/12 [==============================] - 0s 38ms/step - loss: 0.0188 - accuracy: 0.9931 - val_loss: 0.6510 - val_accuracy: 0.8000
+    Epoch 23/25
+    12/12 [==============================] - 0s 38ms/step - loss: 0.0340 - accuracy: 0.9903 - val_loss: 1.6654 - val_accuracy: 0.6250
+    Epoch 24/25
+    12/12 [==============================] - 0s 38ms/step - loss: 0.0248 - accuracy: 0.9931 - val_loss: 0.8992 - val_accuracy: 0.7625
+    Epoch 25/25
+    12/12 [==============================] - 0s 38ms/step - loss: 0.0201 - accuracy: 0.9917 - val_loss: 2.0561 - val_accuracy: 0.7250
+
+
+---
+
+- **查看结果**
+
+
+```python
+print("Test_Accuracy: {:.2f}%".format(model.evaluate(np.array(X_test), np.array(y_test))[1]*100))
+```
+
+    7/7 [==============================] - 0s 17ms/step - loss: 1.7793 - accuracy: 0.6950
+    Test_Accuracy: 69.50%
+
+
+
+```python
+import matplotlib.pyplot as plt
+
+f, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4))
+t = f.suptitle('CNN Performance', fontsize=12)
+f.subplots_adjust(top=0.85, wspace=0.3)
+
+# 绘制训练 & 验证的准确率值
+max_epoch = len(history.history['accuracy'])+1
+epoch_list = list(range(1,max_epoch))
+ax1.plot(epoch_list, history.history['accuracy'], label='Train Accuracy')
+ax1.plot(epoch_list, history.history['val_accuracy'], label='Validation Accuracy')
+ax1.set_xticks(np.arange(1, max_epoch, 5))
+ax1.set_ylabel('Accuracy Value')
+ax1.set_xlabel('Epoch')
+ax1.set_title('Accuracy')
+l1 = ax1.legend(loc="best")
+
+# 绘制训练 & 验证的损失值
+ax2.plot(epoch_list, history.history['loss'], label='Train Loss')
+ax2.plot(epoch_list, history.history['val_loss'], label='Validation Loss')
+ax2.set_xticks(np.arange(1, max_epoch, 5))
+ax2.set_ylabel('Loss Value')
+ax2.set_xlabel('Epoch')
+ax2.set_title('Loss')
+l2 = ax2.legend(loc="best")
+```
+
+
+![png](71_2.png)
+    
+
+
+可以推断出 epoch 次数过多，出现了过拟合现象。
+
+---
+
+- **保存模型**
+
+
+```python
+model.save('malaria_cnn.h5')
+```
+
+![png](71_3.png)

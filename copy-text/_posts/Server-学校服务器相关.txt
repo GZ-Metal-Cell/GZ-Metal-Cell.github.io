@@ -1,0 +1,394 @@
+---
+title: Server-学校服务器相关
+date: Mon Jun 26 2023 10:46:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - Linux
+  - 实验相关
+categories: 学习
+description: 学校服务器的踩坑记录。
+---
+
+
+# 正文
+
+## 准备
+
+![png](01.png)
+
+​	下载 MobaXterm：https://en.softonic.com/download/moba/windows/post-download
+
+## 登录
+
+​	MobaXterm 下 `Session`，打开 `Session settings`，`Remote host` 中输入 `10.188.65.154`，`Specify username` 中输入自己的用户名，`Port` 用 `22`，不变。
+
+​	`Remote environment` 默认选择的是 `Interactive shell`，如果选择 `Gnome desktop` 则会打开 Ubuntu 的可视化界面。
+
+![png](02.png)
+
+![png](03.png)
+
+​	进服务器：
+
+![png](04.png)
+
+## 常见命令
+
+### who
+
+​	查看现在谁在线：
+
+```sh
+who
+```
+
+```
+伟哥   pts/0        2023-06-24 09:53 (10.62.62.XXX)
+伟哥   pts/1        2023-06-24 09:59 (10.62.62.XXX)
+伟哥   pts/2        2023-06-25 08:26 (10.62.62.XXX)
+guanz pts/3        2023-06-25 19:43 (10.91.140.XXX)
+伟哥   pts/4        2023-06-23 08:17 (10.62.62.XXX)
+伟哥   pts/5        2023-06-23 15:48 (10.62.62.XXX)
+伟哥   pts/6        2023-06-23 15:36 (10.61.20.XXX)
+伟哥   pts/8        2023-06-23 15:56 (10.61.20.XXX)
+```
+
+### nvidia-smi
+
+​	查看显卡状态：
+
+```sh
+nvidia-smi
+```
+
+```
+Sun Jun 25 20:11:14 2023
++-----------------------------------------------------------------------------+
+| NVIDIA-SMI 510.85.02    Driver Version: 510.85.02    CUDA Version: 11.6     |
+|-------------------------------+----------------------+----------------------+
+| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+|                               |                      |               MIG M. |
+|===============================+======================+======================|
+|   0  NVIDIA GeForce ...  Off  | 00000000:65:00.0 Off |                  N/A |
+| 30%   58C    P2   104W / 320W |   9514MiB / 10240MiB |     19%      Default |
+|                               |                      |                  N/A |
++-------------------------------+----------------------+----------------------+
+
++-----------------------------------------------------------------------------+
+| Processes:                                                                  |
+|  GPU   GI   CI        PID   Type   Process name                  GPU Memory |
+|        ID   ID                                                   Usage      |
+|=============================================================================|
+|    0   N/A  N/A      1348      G   /usr/lib/xorg/Xorg                  9MiB |
+|    0   N/A  N/A      1614      G   /usr/bin/gnome-shell                6MiB |
+|    0   N/A  N/A   3562342      C   python                           5767MiB |
+|    0   N/A  N/A   3567780      C   python                           3727MiB |
++-----------------------------------------------------------------------------+
+```
+
+### ps
+
+​	可以看到 PID 3562342 在使用，查看使用用户：
+
+```sh
+ps -f -p 3562342
+```
+
+```
+UID          PID    PPID  C STIME TTY          TIME CMD
+伟哥     3562342 3542160 99 09:33 ?        10:42:43 python occupyGPU_5G.py
+```
+
+## 服务器联网
+
+### firefox
+
+​	登陆校园网，打开火狐浏览器：
+
+```sh
+firefox
+```
+
+​	地址栏输入 `202.206.1.231`，登录校园网，即可联网。
+
+![png](05.png)
+
+### ping
+
+​	检查服务器是否连上校园网：
+
+```sh
+ping www.baidu.com
+```
+
+```
+PING www.a.shifen.com (220.181.38.150) 56(84) bytes of data.
+64 比特，来自 220.181.38.150 (220.181.38.150): icmp_seq=1 ttl=51 时间=9.12 毫秒
+64 比特，来自 220.181.38.150 (220.181.38.150): icmp_seq=2 ttl=51 时间=9.05 毫秒
+64 比特，来自 220.181.38.150 (220.181.38.150): icmp_seq=3 ttl=51 时间=9.02 毫秒
+64 比特，来自 220.181.38.150 (220.181.38.150): icmp_seq=4 ttl=51 时间=9.03 毫秒
+```
+
+## 服务器上安装 anaconda
+
+​	从 [Index of /anaconda/archive/ | 清华大学开源软件镜像站 | Tsinghua Open Source Mirror](https://mirrors.tuna.tsinghua.edu.cn/anaconda/archive/) 里下载想要的 conda 版本：[Anaconda3-2023.03-Linux-x86_64.sh](https://mirrors.tuna.tsinghua.edu.cn/anaconda/archive/Anaconda3-2023.03-Linux-x86_64.sh)，拷贝到服务器目录：
+
+![png](06.png)
+
+​	卸载旧的 Anaconda：
+
+```sh
+rm -rf ~/anaconda3
+```
+
+​	删除其它文件：
+
+```sh
+rm -rf ~/.condarc ~/.conda
+```
+
+​	安装之：
+
+```sh
+chmod u+x Anaconda3-2023.03-Linux-x86_64.sh
+```
+
+```sh
+bash ./Anaconda3-2023.03-Linux-x86_64.sh
+```
+
+​	修正 `.bashrc` 中有关 conda 的部分：
+
+```sh
+export PATH=$PATH:/usr/bin/:$PATH
+# >>> conda initialize >>>
+# !! Contents within this block are managed by 'conda init' !!
+__conda_setup="$('/home/guanz/anaconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/home/guanz/anaconda3/etc/profile.d/conda.sh" ]; then
+      . "/home/guanz/anaconda3/etc/profile.d/conda.sh"  # commented out by conda initialize
+    else
+      export PATH="/home/zhij/anaconda3/bin:$PATH"  # commented out by conda initialize
+    fi
+fi
+unset __conda_setup
+```
+
+​	从根目录下 `.condarc` 下设置镜像（写博客的这天清华镜像好像寄了，换阿里）：
+
+```sh
+ssl_verify: False
+channels:
+  - https://mirrors.aliyun.com/anaconda/pkgs/free/
+  - https://mirrors.aliyun.com/anaconda/pkgs/main/
+show_channel_urls: True
+```
+
+## 在服务器安装 conda 环境
+
+### conda create
+
+​	设置好镜像后，此时才可以创建虚拟环境，不然容易寄。
+
+```sh
+conda create -n blender python=3.9
+```
+
+### conda info --envs
+
+​	查看环境信息：
+
+```sh
+conda info --envs
+```
+
+```
+# conda environments:
+#
+base                  *  /home/guanz/anaconda3
+SRNet                    /home/guanz/anaconda3/envs/SRNet
+blender                  /home/guanz/anaconda3/envs/blender
+```
+
+### conda remove
+
+​	移除某个环境：
+
+```sh
+conda remove -n XXX --all
+```
+
+### pip install
+
+```sh
+pip install pillow -i https://pypi.tuna.tsinghua.edu.cn/simple
+```
+
+​	如果清华镜像寄了，就试试阿里镜像：
+
+```sh
+pip install pillow -i https://mirrors.aliyun.com/pypi/simple/
+```
+
+## 将本地环境迁移到服务器上
+
+​	如果在学校服务器上安装环境过于麻烦，可以考虑在 win11 下的 ubuntu 子系统下先装好对应的环境，然后将这个环境迁移至服务器上，我们以一个 pytorch 的环境为例。
+
+---
+
+​	先在本机上整一个带 pytorch 1.13.1，cuda 11.6 的镜像（学校的服务器 cuda 是 11.6 的）
+
+​	从 [download.pytorch.org/whl/torch_stable.html](https://download.pytorch.org/whl/torch_stable.html) 下载 `torch-1.13.1+cu116-cp39-cp39-linux_x86_64.whl` 和 `torchvision-0.14.1+cu116-cp39-cp39-linux_x86_64.whl`。
+
+```sh
+conda create -n pytorch python=3.9
+conda activate pytorch
+pip install torch-1.13.1+cu116-cp39-cp39-linux_x86_64.whl -i https://mirrors.aliyun.com/pypi/simple/
+pip install torchvision-0.14.1+cu116-cp39-cp39-linux_x86_64.whl -i https://mirrors.aliyun.com/pypi/simple/
+```
+
+### conda pack
+
+​	将虚拟环境 `pytorch` 打包成 `pytorch.tar.gz` 并保存到当前目录中。
+
+```sh
+conda pack -n pytorch -o pytorch.tar.gz
+```
+
+将生成的 `pytorch.tar.gz` 拷贝到服务器。
+
+​	在服务器根目录下：
+
+```sh
+cd ./anaconda3/envs
+mkdir -p pytorch
+```
+
+​	将 `pytorch.tar.gz` 里的内容解压到 `./anaconda3/envs/pytorch/` 中：
+
+```sh
+tar -xzf ../../pytorch.tar.gz -C pytorch
+```
+
+​	查看是否迁移完成：
+
+```sh
+conda env list
+```
+
+```
+base                  *  /home/guanz/anaconda3
+pytorch                  /home/guanz/anaconda3/envs/pytorch
+```
+
+​	查看环境是否可以使用：
+
+```sh
+python
+Python 3.9.16 (main, May 15 2023, 23:46:34)
+[GCC 11.2.0] :: Anaconda, Inc. on linux
+Type "help", "copyright", "credits" or "license" for more information.
+>>> import torch
+>>> import torchvision
+>>> torch.cuda.is_available()
+```
+
+```
+True
+```
+
+## PyCharm 连接服务器
+
+​	新建一个项目`testGpu`，里面有一个 .py 文件 `testGpu.py`：
+
+```python
+import torch
+
+flag = torch.cuda.is_available()
+print(flag)
+ngpu = 1
+# Decide which device we want to run on
+device = torch.device("cuda:0" if (torch.cuda.is_available() and ngpu > 0) else "cpu")
+print(device)
+print(torch.cuda.get_device_name(0))
+print(torch.rand(3,3).cuda()) 
+```
+
+### 开跑！
+
+​	在 PyCharm 专业版中设置解释器，`On SSH...`：
+
+![png](07.png)
+
+​	设置对应的参数：
+
+- `Host`：`10.188.65.154`
+- `Port`：`22`
+- `Username`：`guanz`
+
+![png](08.png)
+
+​	设置相应的密码：
+
+![png](09.png)
+
+​	设置相应的解释器：`/home/guanz/anaconda3/envs/pytorch/bin/python`：
+
+![png](10.png)
+
+​	开跑！可以看到可以跑，但是显存全被伟哥占光了orz
+
+```
+True
+cuda:0
+NVIDIA GeForce RTX 3080
+Traceback (most recent call last):
+  File "/tmp/pycharm_project_2/testGpu.py", line 10, in <module>
+    print(torch.rand(3,3).cuda()) 
+RuntimeError: CUDA error: out of memory
+CUDA kernel errors might be asynchronously reported at some other API call,so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1.
+
+Process finished with exit code 1
+```
+
+### 代码同步
+
+​	`Deployment` → `Configuration`：
+
+![png](11.png)
+
+​	设置 `Connection`：
+
+![png](12.png)
+
+​	设置 `Mappings`：
+
+- `Local path`：本地目录
+- `Deployment path`：服务器目录
+
+![png](13.png)
+
+​	设置好后，就可以进行 `Upload`、`Download` 等操作：
+
+![png](14.png)
+
+​	`Options` 中如果将 `Upload changed filesautomatically to the default server` 设为 `On explicit save action (Ctrl+S)`，则可以在每次保存的时候就上传代码：
+
+![png](15.png)
+
+## Winscp
+
+![png](16.png)
+
+​	Winscp 软件可以很方便从本机和服务器之前传输文件。
+
+## 如果我润回家了还想用冀大服务器怎么办
+
+### 冀大 VPN
+
+​	得用这个 [河北大学校园网VPN系统 (hbu.cn)](http://vpn.hbu.cn/) 但是好像不知道密码，寄！
+
+​	还是找人帮忙开机吧……谢谢伟哥！

@@ -1,0 +1,2117 @@
+---
+title: Pytorch-放一放之前看的一些代码
+date: Sat May 20 2023 20:54:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - Pytorch
+  - Python
+  - 李宏毅
+categories: 学习
+description: 李宏毅《机器学习 2022》的作业代码。
+---
+
+
+# **Homework 1: COVID-19 Cases Prediction (Regression)**
+
+Objectives:
+
+- Solve a regression problem with deep neural networks (DNN).
+  - 用 DNN 解决回归问题
+- Understand basic DNN training tips.
+  - 了解 DNN 的训练技巧
+- Familiarize yourself with PyTorch.
+  - 熟悉 Pytorch
+
+If you have any questions, please contact the TAs via TA hours, NTU COOL, or email to mlta-2023-spring@googlegroups.com
+
+
+```python
+# check gpu type
+!nvidia-smi
+```
+
+    Tue May  2 06:43:11 2023       
+    +-----------------------------------------------------------------------------+
+    | NVIDIA-SMI 525.85.12    Driver Version: 525.85.12    CUDA Version: 12.0     |
+    |-------------------------------+----------------------+----------------------+
+    | GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
+    | Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+    |                               |                      |               MIG M. |
+    |===============================+======================+======================|
+    |   0  Tesla T4            Off  | 00000000:00:04.0 Off |                    0 |
+    | N/A   60C    P8    11W /  70W |      0MiB / 15360MiB |      0%      Default |
+    |                               |                      |                  N/A |
+    +-------------------------------+----------------------+----------------------+
+                                                                                   
+    +-----------------------------------------------------------------------------+
+    | Processes:                                                                  |
+    |  GPU   GI   CI        PID   Type   Process name                  GPU Memory |
+    |        ID   ID                                                   Usage      |
+    |=============================================================================|
+    |  No running processes found                                                 |
+    +-----------------------------------------------------------------------------+
+
+
+# Download data
+
+If the Google Drive links below do not work, you can use the dropbox link below or download data from [Kaggle](https://www.kaggle.com/competitions/ml2023spring-hw1/overview), and upload data manually to the workspace.
+
+如果下面的 Google Drive 链接不起作用，您可以使用下面的 dropbox 链接或从 Kaggle 下载数据，然后手动将数据上传到工作区。
+
+
+
+```python
+# google drive link
+# !gdown --id '1BjXalPZxq9mybPKNjF3h5L3NcF7XKTS-' --output covid_train.csv
+# !gdown --id '1B55t74Jg2E5FCsKCsUEkPKIuqaY7UIi1' --output covid_test.csv
+
+# dropbox link
+!wget -O covid_train.csv https://www.dropbox.com/s/lmy1riadzoy0ahw/covid.train.csv?dl=0
+!wget -O covid_test.csv https://www.dropbox.com/s/zalbw42lu4nmhr2/covid.test.csv?dl=0
+```
+
+    --2023-05-02 06:43:11--  https://www.dropbox.com/s/lmy1riadzoy0ahw/covid.train.csv?dl=0
+    Resolving www.dropbox.com (www.dropbox.com)... 162.125.1.18, 2620:100:6016:18::a27d:112
+    Connecting to www.dropbox.com (www.dropbox.com)|162.125.1.18|:443... connected.
+    HTTP request sent, awaiting response... 302 Found
+    Location: /s/raw/lmy1riadzoy0ahw/covid.train.csv [following]
+    --2023-05-02 06:43:11--  https://www.dropbox.com/s/raw/lmy1riadzoy0ahw/covid.train.csv
+    Reusing existing connection to www.dropbox.com:443.
+    HTTP request sent, awaiting response... 302 Found
+    Location: https://uc5421dd31d98edf16e9af0f0b3d.dl.dropboxusercontent.com/cd/0/inline/B7R_XAdqGQ7y45IwWWr91JE9O5ftQ1LzcdRGRkGnWhDV7CbEgZ1gwBymu8fh5bpaPWp9zICKowq6MjrON0BR4nSmqUicNGD370j62Mq2GXwtl0e-8qpV5Oi-x6JOi1bcQMGLMbska_B9vEIgQgpg2S6ny5XiLPOameEMqLg9dA_Eog/file# [following]
+    --2023-05-02 06:43:11--  https://uc5421dd31d98edf16e9af0f0b3d.dl.dropboxusercontent.com/cd/0/inline/B7R_XAdqGQ7y45IwWWr91JE9O5ftQ1LzcdRGRkGnWhDV7CbEgZ1gwBymu8fh5bpaPWp9zICKowq6MjrON0BR4nSmqUicNGD370j62Mq2GXwtl0e-8qpV5Oi-x6JOi1bcQMGLMbska_B9vEIgQgpg2S6ny5XiLPOameEMqLg9dA_Eog/file
+    Resolving uc5421dd31d98edf16e9af0f0b3d.dl.dropboxusercontent.com (uc5421dd31d98edf16e9af0f0b3d.dl.dropboxusercontent.com)... 162.125.1.15, 2620:100:6016:15::a27d:10f
+    Connecting to uc5421dd31d98edf16e9af0f0b3d.dl.dropboxusercontent.com (uc5421dd31d98edf16e9af0f0b3d.dl.dropboxusercontent.com)|162.125.1.15|:443... connected.
+    HTTP request sent, awaiting response... 200 OK
+    Length: 2162766 (2.1M) [text/plain]
+    Saving to: ‘covid_train.csv’
+    
+    covid_train.csv     100%[===================>]   2.06M  4.86MB/s    in 0.4s    
+    
+    2023-05-02 06:43:12 (4.86 MB/s) - ‘covid_train.csv’ saved [2162766/2162766]
+    
+    --2023-05-02 06:43:13--  https://www.dropbox.com/s/zalbw42lu4nmhr2/covid.test.csv?dl=0
+    Resolving www.dropbox.com (www.dropbox.com)... 162.125.1.18, 2620:100:6016:18::a27d:112
+    Connecting to www.dropbox.com (www.dropbox.com)|162.125.1.18|:443... connected.
+    HTTP request sent, awaiting response... 302 Found
+    Location: /s/raw/zalbw42lu4nmhr2/covid.test.csv [following]
+    --2023-05-02 06:43:13--  https://www.dropbox.com/s/raw/zalbw42lu4nmhr2/covid.test.csv
+    Reusing existing connection to www.dropbox.com:443.
+    HTTP request sent, awaiting response... 302 Found
+    Location: https://uc77577a7cac975663cf90524f71.dl.dropboxusercontent.com/cd/0/inline/B7T1uyyfVM4P3twEWZx3H4-pVXJ-c4Y5vMd0jVufeZ8aideA5_Zpgz2vdLvJjQsnLRbk7gffgKO4b2TWtNHYcAbfYb4YLQNQd7oa3etDtxXpWd1xxwoSg_emm6WNprlrzqzAFbQVh448Xp2PGEai1MO7BatFrLvH4to5CoOCRBs9Zg/file# [following]
+    --2023-05-02 06:43:13--  https://uc77577a7cac975663cf90524f71.dl.dropboxusercontent.com/cd/0/inline/B7T1uyyfVM4P3twEWZx3H4-pVXJ-c4Y5vMd0jVufeZ8aideA5_Zpgz2vdLvJjQsnLRbk7gffgKO4b2TWtNHYcAbfYb4YLQNQd7oa3etDtxXpWd1xxwoSg_emm6WNprlrzqzAFbQVh448Xp2PGEai1MO7BatFrLvH4to5CoOCRBs9Zg/file
+    Resolving uc77577a7cac975663cf90524f71.dl.dropboxusercontent.com (uc77577a7cac975663cf90524f71.dl.dropboxusercontent.com)... 162.125.1.15, 2620:100:6016:15::a27d:10f
+    Connecting to uc77577a7cac975663cf90524f71.dl.dropboxusercontent.com (uc77577a7cac975663cf90524f71.dl.dropboxusercontent.com)|162.125.1.15|:443... connected.
+    HTTP request sent, awaiting response... 200 OK
+    Length: 638359 (623K) [text/plain]
+    Saving to: ‘covid_test.csv’
+    
+    covid_test.csv      100%[===================>] 623.40K  --.-KB/s    in 0.04s   
+    
+    2023-05-02 06:43:14 (16.9 MB/s) - ‘covid_test.csv’ saved [638359/638359]
+
+
+​	
+
+# Import packages
+
+
+```python
+# Numerical Operations 数值运算
+import math
+import numpy as np
+
+# Reading/Writing Data 读写数据
+import pandas as pd
+import os
+import csv
+
+# For Progress Bar 进度条
+from tqdm import tqdm
+
+# Pytorch
+import torch 
+import torch.nn as nn
+from torch.utils.data import Dataset, DataLoader, random_split
+
+# For plotting learning curve 绘制损失函数曲线
+from torch.utils.tensorboard import SummaryWriter
+```
+
+# Some Utility Functions
+
+一些实用程序函数
+
+You do not need to modify this part.
+
+
+```python
+def same_seed(seed): 
+    '''
+    Fixes random number generator seeds for reproducibility.
+    固定随机数种子以获得可复现性。
+    '''
+    torch.backends.cudnn.deterministic = True  # 将 CuDNN 的随机性设置为确定性模式，这是为了确保每次运行时 CuDNN 生成的随机数列是一样的。
+    torch.backends.cudnn.benchmark = False  # 禁用 CuDNN 的自动调整功能，避免出现由于 CuDNN 自动调整导致的运行时间不稳定的情况。
+    np.random.seed(seed)  # 设置 NumPy 库的随机数种子，如果程序中有使用到 NumPy 生成的随机数，也可以保证其生成的随机数序列是一致的。
+    torch.manual_seed(seed)  # 设置 PyTorch 的 CPU 随机数种子。
+    if torch.cuda.is_available():  # 如果 GPU 可用，则设置 PyTorch 的 GPU 随机数种子。
+        torch.cuda.manual_seed_all(seed)
+
+def train_valid_split(data_set, valid_ratio, seed):
+    '''
+    Split provided training data into training set and validation set
+    将提供的训练数据拆分为训练集和验证集
+    '''
+    valid_set_size = int(valid_ratio * len(data_set))  # 根据验证集所占比例和数据集的大小，计算出验证集的大小
+    train_set_size = len(data_set) - valid_set_size  # 通过数据集的总大小和验证集的大小计算出训练集的大小
+    '''
+    使用 random_split 函数将 data_set 随机划分为训练集和验证集，
+    具体来说，
+    函数的第一个参数是要划分的数据集，
+    第二个参数是一个列表，表示训练集和验证集的大小，列表的元素按照训练集和验证集的顺序排列，
+    第三个参数是用于生成随机数的生成器，需要手动设置随机数种子
+    '''
+    train_set, valid_set = random_split(data_set, [train_set_size, valid_set_size], generator=torch.Generator().manual_seed(seed))
+    return np.array(train_set), np.array(valid_set)  # 将训练集和验证集转换为 NumPy 数组格式，并返回
+
+def predict(test_loader, model, device):
+    '''
+    用于在给定的测试集上使用已训练好的神经网络模型进行预测并返回预测结果。
+    test_loader：一个 PyTorch 的 DataLoader 对象，用于逐批次地加载测试数据；
+    model：一个已训练好的神经网络模型；
+    device：指定计算设备，如"cpu"或者"cuda"。
+    '''
+    model.eval() # Set your model to evaluation mode. 函数调用 model.eval()将模型设置为评估模式（即在推断过程中不会进行梯度计算，以加速运行）
+    preds = []  # 定义一个空列表 preds 用于存储每个批次的预测结果。
+    for x in tqdm(test_loader):  # 通过一个循环来逐批次地遍历 test_loader 中的测试数据
+        x = x.to(device)  # 将当前的批次数据 x 移动到指定的设备上（如 GPU 设备）
+        with torch.no_grad():  # 关闭梯度计算的上下文环境，以减少内存占用和加快计算速度
+            pred = model(x)  # 对当前批次的数据进行预测
+            preds.append(pred.detach().cpu())  # 将预测结果 pred 附加到 preds 列表中
+    '''
+    在所有批次预测结束后，使用 torch.cat 函数将所有预测结果沿着指定维度（通常是批次维度）拼接成一个大的张量，并将其转换为 NumPy 数组格式返回
+    '''
+    preds = torch.cat(preds, dim=0).numpy()
+    return preds
+```
+
+## Dataset
+
+
+```python
+class COVID19Dataset(Dataset):
+    '''
+    x: Features.  特征
+    y: Targets, if none, do prediction. 标签，如果为空，则做 prediction
+    '''
+    def __init__(self, x, y=None):
+        if y is None:
+            self.y = y  # 设为 none
+        else:
+            self.y = torch.FloatTensor(y)  # 转成 tensor 格式
+        self.x = torch.FloatTensor(x)
+
+    def __getitem__(self, idx):
+        if self.y is None:
+            return self.x[idx]  # 返回标签
+        else:
+            return self.x[idx], self.y[idx]  # 返回特征和对应的标签
+
+    def __len__(self):
+        return len(self.x)  # 返回数据集长度
+```
+
+## Neural Network Model
+
+Try out different model architectures by modifying the class below.
+
+通过修改下面的类来尝试不同的模型体系结构。
+
+
+```python
+class My_Model(nn.Module):  # 声明了一个自定义的 PyTorch 神经网络模型，继承自 nn.Module
+    def __init__(self, input_dim):  # 定义了该神经网络模型的初始化方法。参数 input_dim 表示输入张量的维度
+        super(My_Model, self).__init__()  # 调用父类的初始化方法，即 nn.Module 中的__init__()方法，来初始化该自定义模型。
+        # TODO: modify model's structure, be aware of dimensions. 
+        '''
+        self.layers 声明了一个由多个层和激活函数组成的神经网络模型，
+        用于传递输入数据并输出预测结果。
+        其中，nn.Sequential()表示将多个层按顺序组合在一起，组成一个网络模型。
+        3 个线性层，2 个 ReLU 激活函数
+        '''
+        self.layers = nn.Sequential(
+            nn.Linear(input_dim, 16),
+            nn.ReLU(),
+            nn.Linear(16, 8),
+            nn.ReLU(),
+            nn.Linear(8, 1)
+        )
+
+    def forward(self, x):
+        '''
+        定义了该自定义神经网络模型的前向传播方法，即输入数据 x 经过一系列层和激活函数的变换之后，最终输出预测结果。
+        '''
+        x = self.layers(x)  # 表示将输入数据 x 输入到 self.layers 中，进行多层次的线性变换和非线性激活。
+        # 表示对最终输出的张量进行压缩，将形状为(batch_size, 1)的张量压缩为形状为(batch_size,)的张量，方便后续处理和计算损失值
+        x = x.squeeze(1) # (B, 1) -> (B)
+        return x
+```
+
+## Feature Selection
+
+Choose features you deem useful by modifying the function below.
+
+通过修改下面的功能来选择您认为有用的功能。
+
+
+```python
+def select_feat(train_data, valid_data, test_data, select_all=True):
+    '''
+    定义了一个函数 select_feat，该函数接受三个张量类型的输入参数 train_data、valid_data 和 test_data，
+    分别表示训练数据集、验证数据集和测试数据集。
+    另外，该函数还包含一个可选参数 select_all，默认为 True，表示是否选择全部特征列。
+    '''
+    '''Selects useful features to perform regression'''
+    y_train, y_valid = train_data[:,-1], valid_data[:,-1]  # 将原始的训练数据集和验证数据集中的标签列（最后一列）提取出来，分别赋值给变量 y_train 和 y_valid，用于后续的回归分析。
+    '''
+    将原始的训练数据集、验证数据集和测试数据集中除标签列之外的所有列提取出来，
+    分别赋值给变量 raw_x_train、raw_x_valid 和 raw_x_test，用于后续的特征选择。
+    '''
+    raw_x_train, raw_x_valid, raw_x_test = train_data[:,:-1], valid_data[:,:-1], test_data
+
+    if select_all:
+        feat_idx = list(range(raw_x_train.shape[1]))  # 将所有原始特征列的索引放入一个列表中，并赋值给变量 feat_idx
+    else:
+        feat_idx = [0,1,2,3,4] # TODO: Select suitable feature columns.  选择适当的特征列
+    '''
+    返回特征选择后的训练数据、验证数据和测试数据。
+    其中，raw_x_train[:,feat_idx]表示从训练数据集中选择指定的特征列，
+    raw_x_valid[:,feat_idx]表示从验证数据集中选择指定的特征列，
+    raw_x_test[:,feat_idx]表示从测试数据集中选择指定的特征列，
+    最后两个参数 y_train 和 y_valid 表示训练数据集和验证数据集的标签列。
+    '''
+    return raw_x_train[:,feat_idx], raw_x_valid[:,feat_idx], raw_x_test[:,feat_idx], y_train, y_valid
+```
+
+## Training Loop
+
+
+```python
+def trainer(train_loader, valid_loader, model, config, device):
+    # 定义了一个均方误差损失函数 MSELoss，用于计算模型预测结果和真实标签之间的差异。
+    criterion = nn.MSELoss(reduction='mean') # Define your loss function, do not modify this. 
+
+    # Define your optimization algorithm.  定义你自己的优化函数
+    # TODO: Please check https://pytorch.org/docs/stable/optim.html to get more available algorithms.
+    # TODO: L2 regularization (optimizer(weight decay...) or implement by your self).  L2 正则化（优化器（权重衰减…）或自行实现）。
+    '''
+    定义了一个随机梯度下降（SGD）优化器，用于优化模型的参数。
+    其中，model.parameters()表示需要优化的模型参数，
+    lr=config['learning_rate']表示学习率，
+    momentum=0.7 表示使用动量法进行优化。
+    '''
+    optimizer = torch.optim.SGD(model.parameters(), lr=config['learning_rate'], momentum=0.7)
+    writer = SummaryWriter() # Writer of tensoboard.  创建了一个 SummaryWriter 对象，用于将训练过程中的监控指标写入 tensorboard 日志文件。
+
+    if not os.path.isdir('./models'):
+        os.mkdir('./models') # Create directory of saving models.  创建一个文件夹以保存模型
+    # 设置了几个变量，包括训练轮数 n_epochs、最佳损失值 best_loss、当前训练步数 step 和早停计数器 early_stop_count
+    n_epochs, best_loss, step, early_stop_count = config['n_epochs'], math.inf, 0, 0
+
+    for epoch in range(n_epochs):  # 开始迭代训练，共进行 n_epochs 轮训练。
+        model.train() # Set your model to train mode.  将模型切换为训练模式。
+        loss_record = []  # 新建一个列表以存储每一个 epoch 损失函数的值。
+
+        # tqdm is a package to visualize your training progress.  使用 tqdm 库创建一个进度条，用于可视化训练进度。
+        train_pbar = tqdm(train_loader, position=0, leave=True)
+
+        for x, y in train_pbar:  # 开始迭代训练集，依次提取出输入特征 x 和标签 y。
+            optimizer.zero_grad()  # Set gradient to zero.  清零梯度，避免上一次的梯度对本次梯度的影响。
+            x, y = x.to(device), y.to(device)   # Move your data to device. 将输入特征 x 和标签 y 复制到 GPU 设备上进行加速计算。
+            pred = model(x)  # 将输入特征 x 输入到模型中，得到预测结果 pred。
+            loss = criterion(pred, y)  # 计算预测结果 pred 和真实标签 y 之间的误差，即损失函数值。
+            loss.backward()  # Compute gradient(backpropagation).  自动计算损失函数对各个参数的梯度。
+            optimizer.step()  # Update parameters.  通过优化器更新模型参数。
+            step += 1
+            loss_record.append(loss.detach().item())  # 将每一批次的损失函数值记录下来。
+            
+            # Display current epoch number and loss on tqdm progress bar.
+            train_pbar.set_description(f'Epoch [{epoch+1}/{n_epochs}]')  # 在进度条中显示当前轮数和总轮数。
+            train_pbar.set_postfix({'loss': loss.detach().item()})  # 在进度条中显示当前批次的损失函数值。
+
+        mean_train_loss = sum(loss_record)/len(loss_record)  # 计算当前轮训练集的平均损失函数值。
+        writer.add_scalar('Loss/train', mean_train_loss, step)  # 将训练集的平均损失函数值写入 tensorboard 日志文件。
+
+        model.eval() # Set your model to evaluation mode.  将模型切换为评估模式，用于对验证集进行预测和评估。
+        loss_record = []  # 新建一个列表以存储每一个 epoch 损失函数的值。
+        for x, y in valid_loader:  # 开始迭代验证集，依次提取出输入特征 x 和标签 y。
+            x, y = x.to(device), y.to(device)  # 将输入特征 x 和标签 y 复制到 GPU 设备上进行加速计算。
+            with torch.no_grad():  # 评估验证集的时候不改变模型参数，关闭梯度
+                pred = model(x)  # 将输入特征 x 输入到模型中，得到预测结果 pred。
+                loss = criterion(pred, y)  # 计算预测结果 pred 和真实标签 y 之间的误差，即损失函数值。
+
+            loss_record.append(loss.item())  # 将每一批次的损失函数值记录下来。
+            
+        mean_valid_loss = sum(loss_record)/len(loss_record)  # 计算当前轮验证集的平均损失函数值。
+        # 打印当前轮的训练集和验证集的平均损失函数值。
+        print(f'Epoch [{epoch+1}/{n_epochs}]: Train loss: {mean_train_loss:.4f}, Valid loss: {mean_valid_loss:.4f}')
+        # writer.add_scalar('Loss/valid', mean_valid_loss, step)
+
+        if mean_valid_loss < best_loss:
+            '''
+            如果当前轮的验证集平均损失函数值优于历史最佳值，则更新最佳损失值和最佳模型参数，并将模型保存到指定路径
+            '''
+            best_loss = mean_valid_loss
+            torch.save(model.state_dict(), config['save_path']) # Save your best model
+            print('Saving model with loss {:.3f}...'.format(best_loss))
+            early_stop_count = 0
+        else:  # 如果当前轮的验证集平均损失函数值没有优于历史最佳值，则早停计数器加 1
+            early_stop_count += 1
+
+        if early_stop_count >= config['early_stop']:  # 如果早停计数器超过早停阈值，则停止训练并返回
+            print('\nModel is not improving, so we halt the training session.')
+            return
+```
+
+## Configurations
+
+`config` contains hyper-parameters for training and the path to save your model.
+
+config 包含用于训练的超参数和保存模型的路径。
+
+
+```python
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+config = {
+    'seed': 5201314,      # Your seed number, you can pick your lucky number. :)
+    'select_all': True,   # Whether to use all features.
+    'valid_ratio': 0.2,   # validation_size = train_size * valid_ratio
+    'n_epochs': 5000,     # Number of epochs.            
+    'batch_size': 256, 
+    'learning_rate': 1e-5,              
+    'early_stop': 600,    # If model has not improved for this many consecutive epochs, stop training.  若模型在这么多连续的时期内并没有得到改善，就停止训练。     
+    'save_path': './models/model.ckpt'  # Your model will be saved here.
+}
+
+```
+
+## Dataloader
+
+Read data from files and set up training, validation, and testing sets. You do not need to modify this part.
+
+从文件中读取数据，并设置培训、验证和测试集。您不需要修改此部件。
+
+
+```python
+same_seed(config['seed'])  # 设置随机数种子，保证每次训练的结果可复现。
+# 从指定文件路径读取训练集和测试集数据，并将其转换成 numpy 数组的形式。
+train_data, test_data = pd.read_csv('./covid_train.csv').values, pd.read_csv('./covid_test.csv').values
+# 将训练集拆分为新的训练集和验证集，其中 train_valid_split()函数接受三个参数：原始训练集、验证集比例和随机数种子。
+train_data, valid_data = train_valid_split(train_data, config['valid_ratio'], config['seed'])
+
+# Print out the data size.  打印出训练集、验证集和测试集的大小。
+print(f"""train_data size: {train_data.shape} 
+valid_data size: {valid_data.shape} 
+test_data size: {test_data.shape}""")
+
+## Select features
+'''
+选择特征，其中 select_feat()函数接受四个参数：
+训练集、验证集、测试集和是否选择所有特征（如果是，则选择所有特征；如果否，则根据一定规则筛选特征）。
+'''
+x_train, x_valid, x_test, y_train, y_valid = select_feat(train_data, valid_data, test_data, config['select_all'])
+
+# Print out the number of features.
+# 打印出特征数量。
+print(f'number of features: {x_train.shape[1]}')
+
+# 创建训练集、验证集和测试集的数据集。
+train_dataset, valid_dataset, test_dataset = COVID19Dataset(x_train, y_train), \
+                                            COVID19Dataset(x_valid, y_valid), \
+                                            COVID19Dataset(x_test)
+
+# Pytorch data loader loads pytorch dataset into batches.
+'''
+使用 PyTorch 提供的 DataLoader 将训练集数据集加载到内存中，并设置每个 batch 的大小、是否打乱顺序以及是否将数据存储在 GPU 显存中。
+同样，valid_loader 和 test_loader 也是通过 DataLoader 加载验证集和测试集数据集。
+'''
+train_loader = DataLoader(train_dataset, batch_size=config['batch_size'], shuffle=True, pin_memory=True)
+valid_loader = DataLoader(valid_dataset, batch_size=config['batch_size'], shuffle=True, pin_memory=True)
+test_loader = DataLoader(test_dataset, batch_size=config['batch_size'], shuffle=False, pin_memory=True)
+```
+
+    train_data size: (2408, 89) 
+    valid_data size: (601, 89) 
+    test_data size: (997, 88)
+    number of features: 88
+
+
+## Start training!
+
+
+```python
+model = My_Model(input_dim=x_train.shape[1]).to(device) # put your model and data on the same computation device.
+trainer(train_loader, valid_loader, model, config, device)
+```
+
+    Epoch [1/5000]: 100%|██████████| 10/10 [00:03<00:00,  3.26it/s, loss=131]
+
+
+    Epoch [1/5000]: Train loss: 263.8631, Valid loss: 94.9638
+    Saving model with loss 94.964...
+
+
+……
+
+
+    Epoch [998/5000]: Train loss: 3.8978, Valid loss: 6.7839
+
+
+    Epoch [999/5000]: 100%|██████████| 10/10 [00:00<00:00, 135.57it/s, loss=2.35]
+
+
+## Plot learning curves with `tensorboard` (optional)
+
+`tensorboard` is a tool that allows you to visualize your training progress.
+
+If this block does not display your learning curve, please wait for few minutes, and re-run this block. It might take some time to load your logging information. 
+
+tensorboard 是一个工具，可以让你可视化你的训练进度。
+如果此块没有显示您的学习曲线，请等待几分钟，然后重新运行此块。加载日志信息可能需要一些时间。
+
+
+```python
+%reload_ext tensorboard
+%tensorboard --logdir=./runs/
+```
+
+## Testing
+
+The predictions of your model on testing set will be stored at `pred.csv`.
+
+您的模型在测试集上的预测将存储在 pred.csv 中。
+
+
+```python
+def save_pred(preds, file):
+    '''
+    Save predictions to specified file
+    自定义函数 save_pred()，接受两个参数：预测结果和指定的文件路径。
+    '''
+    with open(file, 'w') as fp:  # 使用指定的路径打开文件，以写入的模式打开（'w'）。
+        writer = csv.writer(fp)  # 使用 Python 标准库 csv 中的 writer()方法创建一个写入器
+        writer.writerow(['id', 'tested_positive'])  # 写入文件头。
+        for i, p in enumerate(preds):  # 循环遍历预测结果，并将每个样本的 ID 和预测值写入文件中。
+            writer.writerow([i, p])
+
+model = My_Model(input_dim=x_train.shape[1]).to(device)  # 创建一个名为 My_Model 的模型，其中 input_dim 是输入数据的特征维度。
+model.load_state_dict(torch.load(config['save_path']))  # 利用 PyTorch 提供的 load_state_dict()方法加载训练好的模型参数。
+preds = predict(test_loader, model, device)  #  使用定义好的 predict()函数对测试集进行预测，其中 predict()函数接受三个参数：测试集的数据加载器、模型以及设备类型。
+save_pred(preds, 'pred.csv')  # 将预测结果保存到指定文件中。
+```
+
+## Download
+
+Run this block to download the `pred.csv` automatically.
+
+
+```python
+from google.colab import files
+files.download('pred.csv')
+```
+
+## Reference
+
+This notebook uses code written by Heng-Jui Chang @ NTUEE (https://github.com/ga642381/ML2021-Spring/blob/main/HW01/HW01.ipynb)
+
+# **Homework 2: Phoneme Classification**
+
+
+**Task Description**
+
+- Phoneme Classification
+  - 音素分类
+- Training data: 3429 preprocessed audio features w/ labels (total 2116794 frames)
+  - 训练数据：3429 个带标签的预处理音频特征（共 2116794 帧）
+- Testing data: 857 preprocessed audio features w/o labels (total 527364 frames)
+  - 测试数据：857 个带标签（共 527364 帧）的预处理语音特征
+- Label: 41 classes, each class represents a phoneme
+  - 标签：41 个类，每个类代表一个音素
+
+Objectives:
+
+- Solve a classification problem with deep neural networks (DNNs).
+  - 使用 DNN 解决分类问题
+- Understand recursive neural networks (RNNs).
+  - 了解递归神经网络（RNN）。
+    If you have any questions, please contact the TAs via TA hours, NTU COOL, or email to mlta-2023-spring@googlegroups.com
+
+## Some Utility Functions
+
+**Fixes random number generator seeds for reproducibility.**
+
+固定随机数生成器种子以获得再现性。
+
+
+```python
+import numpy as np
+import torch
+import random
+
+def same_seeds(seed):
+    random.seed(seed) 
+    np.random.seed(seed)  
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed) 
+    torch.backends.cudnn.benchmark = False  # 将 CuDNN 的随机性设置为确定性模式，这是为了确保每次运行时 CuDNN 生成的随机数列是一样的。
+    torch.backends.cudnn.deterministic = True  # 禁用 CuDNN 的自动调整功能，避免出现由于 CuDNN 自动调整导致的运行时间不稳定的情况。
+```
+
+**Helper functions to pre-process the training data from raw MFCC features of each utterance.**
+
+**辅助函数用于预处理来自每个话语的原始 MFCC 特征的训练数据。**
+
+A phoneme may span several frames and is dependent to past and future frames. \
+Hence we concatenate neighboring phonemes for training to achieve higher accuracy. The **concat_feat** function concatenates past and future k frames (total 2k+1 = n frames), and we predict the center frame.
+
+一个音素可能跨越几个帧，并依赖于过去和未来的帧。\
+因此，我们将相邻的音素连接起来进行训练，以获得更高的精度。**concat_filt**函数连接过去和未来的 k 帧（总共 2k+1=n 帧），我们预测中心帧。
+
+
+Feel free to modify the data preprocess functions, but **do not drop any frame** (if you modify the functions, remember to check that the number of frames are the same as mentioned in the slides)
+
+可以随意修改数据预处理函数，但**不要丢弃任何帧**（如果修改函数，请记住检查帧数是否与幻灯片中提到的相同）
+
+
+```python
+import os
+import torch
+from tqdm import tqdm
+
+def load_feat(path):
+    feat = torch.load(path)  # 用于加载已保存模型的函数。该函数接受一个文件路径参数，返回包含模型参数的 Python 字典对象。
+    return feat
+
+def shift(x, n):
+    '''
+    shift 函数用来实现对一个一维或二维的 Tensor x 进行循环移位操作。其中，移位的距离为整数值 n，可以为正、负、零。
+    
+    repeat() 函数是用来对一个序列进行重复的函数，即将原序列中的元素按照指定次数进行重复。
+    具体而言，对于一个具有 n 个元素的序列 x，
+    调用 x.repeat(m) 函数可以得到一个新的序列，其中包含原序列 x 中的所有元素，每个元素均重复 m 次。
+    例如，对于 [1, 2, 3] 序列执行 repeat(3) 操作后得到的序列为 [1, 2, 3, 1, 2, 3, 1, 2, 3]。
+    '''
+    if n < 0:
+        '''
+        如果 n < 0，表示向左移动，
+        此时函数会将 x 最左侧的 n 个元素复制到 x 的最右侧，
+        同时将 x 原来的前 n 个元素截取出来放到 x 的末尾；
+        '''
+        left = x[0].repeat(-n, 1)
+        right = x[:n]
+    elif n > 0:
+        '''
+        如果 n > 0，表示向右移动，
+        此时函数会将 x 最右侧的 n 个元素复制到 x 的最左侧，
+        同时将 x 原来的后 n 个元素截取出来放到 x 的开头；
+        '''
+        right = x[-1].repeat(n, 1)
+        left = x[n:]
+    else:
+        '''
+        如果 n = 0，表示不需要移位，直接返回原始的 x。
+        '''
+        return x
+    # 使用 torch.cat() 函数将左右两个部分进行拼接，其中 dim=0 表示在第 0 维（即在行方向上）进行拼接。最后返回拼接后的结果。
+    return torch.cat((left, right), dim=0)
+
+def concat_feat(x, concat_n):
+    '''
+    将输入的张量 x 沿着第 0 维进行拼接。
+    具体而言，将原始的 seq_len x feature_dim 的二维张量，复制 concat_n 次后变为 seq_len x (concat_n*feature_dim) 的形状。
+    将一个二维张量沿着第 0 维进行拼接，并实现了一些操作来保证拼接后的结果具有一定的对称性和规律性。
+    '''
+    # assert 语句会在程序中检查某个条件是否成立，如果不成立，就会抛出一个 AssertionError 异常，并给出错误信息。
+    assert concat_n % 2 == 1 # n must be odd 对输入的 concat_n 进行判断，确保其为奇数
+    if concat_n < 2:  # 如果 concat_n 小于 2，则直接返回原始的张量 x。
+        return x
+    seq_len, feature_dim = x.size(0), x.size(1)  # 对输入的张量获取其 seq_len 和 feature_dim（即第 0 维和第 1 维的大小）
+    x = x.repeat(1, concat_n)  # 使用 repeat() 函数将输入张量在第 1 维上重复 concat_n 次，得到一个新的形状为 seq_len x (concat_n * feature_dim) 的张量
+    '''
+    使用 view() 函数将张量重新变形，
+    使得第 1 维大小为 concat_n，
+    第 2 维大小为 seq_len，
+    第 3 维大小为 feature_dim。
+    然后使用 permute() 函数交换各维度的位置，使得张量的形状变为 (concat_n, seq_len, feature_dim)。
+    '''
+    x = x.view(seq_len, concat_n, feature_dim).permute(1, 0, 2) # concat_n, seq_len, feature_dim
+    '''
+    找到张量中心位置 mid = (concat_n // 2)，并对从 mid+1 到最后的行进行循环，对这些行进行移位操作。
+    具体来说，对于每一行，将其向右移动 r_idx 个位置，再将移位后的结果放到对称位置上。
+    '''
+    mid = (concat_n // 2)
+    for r_idx in range(1, mid+1):
+        x[mid + r_idx, :] = shift(x[mid + r_idx], r_idx)
+        x[mid - r_idx, :] = shift(x[mid - r_idx], -r_idx)
+    # 使用 permute() 和 view() 函数将张量恢复到 seq_len x (concat_n*feature_dim) 的形状，并返回拼接后的张量
+    return x.permute(1, 0, 2).view(seq_len, concat_n * feature_dim)
+
+def preprocess_data(split, feat_dir, phone_path, concat_nframes, train_ratio=0.8):
+    '''
+    用于对数据集进行预处理。
+    split: 数据集的划分，可选值为 'train'、'val' 和 'test'。
+    feat_dir: 特征文件所在的目录。
+    phone_path: 声音标签文件所在的目录。
+    concat_nframes: 需要拼接的帧数。
+    train_ratio: 训练集和验证集的划分比例，缺省值为 0.8。
+    '''
+    class_num = 41 # NOTE: pre-computed, should not need change 设置音素总数 class_num（注意，此处的值是预先计算好的，不需要更改）。
+
+    # 根据 split 参数判断数据集模式 mode，如果是 'train' 或 'val'，就设置为 'train'，否则设置为 'test'。
+    if split == 'train' or split == 'val':
+        mode = 'train'
+    elif split == 'test':
+        mode = 'test'
+    else:
+        raise ValueError('Invalid \'split\' argument for dataset: PhoneDataset!')
+
+    label_dict = {}
+    if mode == 'train':  # 如果是训练模式
+        # 从标签文件中读取标签信息到字典 label_dict 中
+        for line in open(os.path.join(phone_path, f'{mode}_labels.txt')).readlines():
+            line = line.strip('\n').split(' ')
+            label_dict[line[0]] = [int(p) for p in line[1:]]
+        
+        # split training and validation data
+        # 从训练集划分文件中读取训练集和验证集的使用情况，并按照参数 train_ratio 进行划分。
+        usage_list = open(os.path.join(phone_path, 'train_split.txt')).readlines()
+        random.shuffle(usage_list)
+        train_len = int(len(usage_list) * train_ratio)
+        usage_list = usage_list[:train_len] if split == 'train' else usage_list[train_len:]
+
+    elif mode == 'test':
+        usage_list = open(os.path.join(phone_path, 'test_split.txt')).readlines()
+
+    # 从数据划分文件中读取使用的文件名列表到 usage_list 中，然后将其格式化为标准格式（去除换行符）
+    usage_list = [line.strip('\n') for line in usage_list]
+    # 打印有关数据集的信息，包括电话类别总数和数据集划分情况。
+    print('[Dataset] - # phone classes: ' + str(class_num) + ', number of utterances for ' + split + ': ' + str(len(usage_list)))
+
+    # 初始化张量 X 和 y（仅在训练模式下）
+    max_len = 3000000
+    X = torch.empty(max_len, 39 * concat_nframes)
+    if mode == 'train':
+        y = torch.empty(max_len, dtype=torch.long)
+
+    # 按顺序读入特征文件中的信息到 X 中，同时将标签信息读入到 y 中。
+    idx = 0
+    for i, fname in tqdm(enumerate(usage_list)):
+        feat = load_feat(os.path.join(feat_dir, mode, f'{fname}.pt'))
+        cur_len = len(feat)
+        feat = concat_feat(feat, concat_nframes)
+        if mode == 'train':
+          label = torch.LongTensor(label_dict[fname])
+
+        X[idx: idx + cur_len, :] = feat
+        if mode == 'train':
+          y[idx: idx + cur_len] = label
+
+        idx += cur_len
+
+    # 去掉张量 X 和 y 中多余的部分（即在初始化时申请的空间）
+    X = X[:idx, :]
+    if mode == 'train':
+      y = y[:idx]
+
+    print(f'[INFO] {split} set')
+    print(X.shape)
+    # 返回处理后的张量 X（和可选的张量 y）
+    if mode == 'train':
+      print(y.shape)
+      return X, y
+    else:
+      return X
+
+```
+
+## Dataset
+
+
+```python
+import torch
+from torch.utils.data import Dataset
+
+class LibriDataset(Dataset):
+    def __init__(self, X, y=None):
+        self.data = X
+        if y is not None:
+            self.label = torch.LongTensor(y)
+        else:
+            self.label = None
+
+    def __getitem__(self, idx):
+        if self.label is not None:
+            return self.data[idx], self.label[idx]
+        else:
+            return self.data[idx]
+
+    def __len__(self):
+        return len(self.data)
+
+```
+
+## Model
+
+Feel free to modify the structure of the model.
+
+请随意修改模型的结构。
+
+
+```python
+import torch.nn as nn
+
+class BasicBlock(nn.Module):
+    def __init__(self, input_dim, output_dim):
+        super(BasicBlock, self).__init__()
+        '''
+        BasicBlock 是一个基本的神经网络模块，包含一个全连接层和一个 ReLU 激活层。
+        输入向量的维度是 input_dim，输出向量的维度是 output_dim
+        '''
+        self.block = nn.Sequential(
+            nn.Linear(input_dim, output_dim),
+            nn.ReLU(),
+        )
+
+    def forward(self, x):
+        x = self.block(x)
+        return x
+
+
+class Classifier(nn.Module):
+    '''
+    定义了一个名为 Classifier 的神经网络模型，包含几个 BasicBlock 模块。
+    '''
+    def __init__(self, input_dim, output_dim=41, hidden_layers=1, hidden_dim=256):
+        '''
+        input_dim: 输入向量的维度。
+        output_dim: 输出向量的维度，即分类类别总数，默认为 41。
+        hidden_layers: 隐藏层的数量，缺省值为 1。
+        hidden_dim: 隐藏层的神经元数。
+        '''
+        super(Classifier, self).__init__()
+
+        self.fc = nn.Sequential(
+            # 首先通过一个 BasicBlock 将样本输入从 input_dim 维度降到 hidden_dim 维度
+            BasicBlock(input_dim, hidden_dim),
+            # 通过一个 for 循环堆叠多个 BasicBlock 来增加模型深度和表达能力
+            *[BasicBlock(hidden_dim, hidden_dim) for _ in range(hidden_layers)],
+            # 通过一个全连接层将输出映射到 output_dim 维度上，完成整个分类任务。
+            nn.Linear(hidden_dim, output_dim)
+        )
+
+    def forward(self, x):
+        x = self.fc(x)
+        return x
+```
+
+## Hyper-parameters
+
+
+```python
+# data prarameters 数据参数
+# 要连接的帧数，n 必须是奇数（总共 2k+1=n 帧）
+concat_nframes = 3  # the number of frames to concat with, n must be odd (total 2k+1 = n frames)
+# 用于训练的数据比例，其余数据将用于验证
+train_ratio = 0.75  # the ratio of data used for training, the rest will be used for validation
+
+# training parameters  训练参数
+seed = 1213  # random seed  随机数种子
+batch_size = 512  # batch size 批大小
+num_epoch = 10  # the number of training epoch，epoch 次数
+learning_rate = 1e-4  # learning rate 学习率
+model_path = './model.ckpt'  # the path where the checkpoint will be saved 检查点保存位置
+
+# model parameters  模型参数
+# 模型的输入维数，不应更改该值
+input_dim = 39 * concat_nframes  # the input dim of the model, you should not change the value
+# 隐藏层数
+hidden_layers = 2  # the number of hidden layers
+# 隐藏层维数
+hidden_dim = 64  # the hidden dim
+```
+
+## Dataloader
+
+
+```python
+from torch.utils.data import DataLoader
+import gc  # 导入 gc 模块，用于进行垃圾回收操作
+
+same_seeds(seed)  # 设置了随机数的种子
+# 根据是否有 GPU 加速设备来确定程序的运行设备
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+print(f'DEVICE: {device}')
+
+# preprocess data
+# 通过 preprocess_data() 函数对训练数据和验证数据进行预处理，并将其存储到 train_X、train_y、val_X 和 val_y 这四个变量中
+train_X, train_y = preprocess_data(split='train',
+                                   # 语音特征文件所在目录的路径
+                                   feat_dir='/kaggle/input/ml2023spring-hw2/libriphone/feat',
+                                   # 语音标签文件所在的路径
+                                   phone_path='/kaggle/input/ml2023spring-hw2/libriphone',
+                                   # 将前后几帧的音频特征拼接成新的特征向量
+                                   concat_nframes=concat_nframes,
+                                   # 训练集和验证集的划分比例
+                                   train_ratio=train_ratio)
+val_X, val_y = preprocess_data(split='val',
+                               feat_dir='/kaggle/input/ml2023spring-hw2/libriphone/feat',
+                               phone_path='/kaggle/input/ml2023spring-hw2/libriphone',
+                               concat_nframes=concat_nframes,
+                               train_ratio=train_ratio)
+
+## get dataset
+'''
+使用数据集的类 LibriDataset 对每个数据集进行实例化，
+传入训练集和验证集的 X 和 y（即上一步中得到的 train_X, train_y 和 val_X, val_y），
+并将其赋值给 train_set 和 val_set 变量。
+'''
+train_set = LibriDataset(train_X, train_y)
+val_set = LibriDataset(val_X, val_y)
+
+# remove raw feature to save memory
+del train_X, train_y, val_X, val_y  # 为了释放内存，删除 train_X, train_y, val_X 和 val_y 这四个变量
+gc.collect()  # 用 gc.collect() 释放所有未引用的内存
+
+## get dataloader
+'''
+使用 DataLoader 类为训练集和验证集创建 DataLoader 实例，
+指定批次大小 batch_size 和是否需要打乱数据 shuffle，
+并将其赋值给 train_loader 和 val_loader 变量，以供模型训练时使用
+'''
+train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
+val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=False)
+```
+
+    DEVICE: cuda
+    [Dataset] - # phone classes: 41, number of utterances for train: 2571
+
+
+    2571it [00:23, 107.38it/s]
+
+
+    [INFO] train set
+    torch.Size([1588590, 117])
+    torch.Size([1588590])
+    [Dataset] - # phone classes: 41, number of utterances for val: 858
+
+
+    858it [00:02, 308.31it/s]
+
+
+    [INFO] val set
+    torch.Size([525078, 117])
+    torch.Size([525078])
+
+
+## Training
+
+
+```python
+# create model, define a loss function, and optimizer
+'''
+创建了一个用于分类的模型实例，
+这里使用了 Classifier 类，指定了输入数据的维度 input_dim、隐藏层的数量 hidden_layers 和每个隐藏层的维度 hidden_dim。
+并将其移动到之前确定的设备中。
+'''
+model = Classifier(input_dim=input_dim, hidden_layers=hidden_layers, hidden_dim=hidden_dim).to(device)
+# 定义交叉熵损失函数 nn.CrossEntropyLoss() 
+criterion = nn.CrossEntropyLoss() 
+# 优化器 Adam，将模型的参数传入优化器中，以便进行反向传播来更新权重。
+optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+
+best_acc = 0.0
+for epoch in range(num_epoch):  # 开始对模型进行训练，循环执行 num_epoch 次
+    # 在每次循环的时候，将 train_acc 和 train_loss、val_acc 和 val_loss 分别初始化为 0
+    train_acc = 0.0
+    train_loss = 0.0
+    val_acc = 0.0
+    val_loss = 0.0
+    
+    # training 将模型设为“训练模式”
+    model.train() # set the model to training mode
+    for i, batch in enumerate(tqdm(train_loader)):  # 对 train_loader 中的每个 batch 进行循环操作
+        # 在每个 batch 中，将 features 和 labels 数据移动到之前设置的设备上（即 device）
+        features, labels = batch
+        features = features.to(device)
+        labels = labels.to(device)
+        
+        # 将模型中的梯度设置为 0
+        optimizer.zero_grad() 
+        # 使用模型对 features 进行前向传播，得到预测结果 outputs
+        outputs = model(features) 
+        
+        # 计算损失值 loss
+        loss = criterion(outputs, labels)
+        # 通过反向传播计算出梯度
+        loss.backward() 
+        # 更新模型参数
+        optimizer.step() 
+        
+        # 获取预测结果中的最大值
+        _, train_pred = torch.max(outputs, 1) # get the index of the class with the highest probability
+        # 将其与标签进行比较，得到得到 train_acc 的值
+        '''
+        train_pred 是模型在训练集上的预测结果，labels 是该 batch 中样本的标签。
+        train_pred.detach() 和 labels.detach() 是为了防止其梯度反向传播而被计算的前后关联（detach 方法是将一个 tensor 从计算图中分离出来，不再参与自动求导）。
+        通过 train_pred.detach() == labels.detach() 的判断，得到一个 boolean 类型的 Tensor，表示模型预测结果是否正确。
+        接着对这个 Tensor 进行 sum() 操作，计算其中 True 的元素个数，即预测正确的样本数。
+        最后使用 item() 方法将结果作为 Python 的 float 类型，累加到 train_acc 变量中。
+        '''
+        train_acc += (train_pred.detach() == labels.detach()).sum().item()
+        # 将损失值加入 train_loss 中
+        train_loss += loss.item()
+    
+    # validation
+    model.eval() # set the model to evaluation mode 将模型设为“评估模式”
+    with torch.no_grad():
+        for i, batch in enumerate(tqdm(val_loader)):  # 对 val_loader 中的每个 batch 进行循环操作
+            features, labels = batch
+            features = features.to(device)
+            labels = labels.to(device)
+            outputs = model(features)  # 调用模型进行前向计算
+            
+            loss = criterion(outputs, labels)  # 计算 loss 损失值
+            
+            _, val_pred = torch.max(outputs, 1) 
+            # 计算出预测准确率 val_acc 和 val_loss
+            val_acc += (val_pred.cpu() == labels.cpu()).sum().item() # get the index of the class with the highest probability
+            val_loss += loss.item()
+    # 在每个 epoch 结束后，计算出 train_acc、train_loss、val_acc 和 val_loss 的平均值，并将其输出以监控训练过程
+    print(f'[{epoch+1:03d}/{num_epoch:03d}] Train Acc: {train_acc/len(train_set):3.5f} Loss: {train_loss/len(train_loader):3.5f} | Val Acc: {val_acc/len(val_set):3.5f} loss: {val_loss/len(val_loader):3.5f}')
+
+    # if the model improves, save a checkpoint at this epoch
+    """
+    如果当前模型的验证准确率 val_acc 超过了之前的最佳准确率 best_acc，
+    则将 best_acc 更新为当前的 val_acc 值，
+    将模型的参数保存到指定文件名的模型路径 model_path 中，
+    并输出日志记录保存的模型及其准确率值。
+    """
+    if val_acc > best_acc:
+        best_acc = val_acc
+        torch.save(model.state_dict(), model_path)
+        print(f'saving model with acc {best_acc/len(val_set):.5f}')
+
+```
+
+    100%|██████████| 3103/3103 [00:19<00:00, 156.88it/s]
+    100%|██████████| 1026/1026 [00:03<00:00, 273.11it/s]
+
+
+    [001/010] Train Acc: 0.39279Loss: 2.21685 | Val Acc: 0.43877 loss: 1.97101
+    saving model with acc 0.43877
+
+
+    100%|██████████| 3103/3103 [00:17<00:00, 175.27it/s]
+    100%|██████████| 1026/1026 [00:03<00:00, 277.94it/s]
+
+
+……
+
+
+    [009/010] Train Acc: 0.49606Loss: 1.72781 | Val Acc: 0.49852 loss: 1.71150
+    saving model with acc 0.49852
+
+
+    100%|██████████| 3103/3103 [00:17<00:00, 180.14it/s]
+    100%|██████████| 1026/1026 [00:04<00:00, 241.12it/s]
+    
+    [010/010] Train Acc: 0.49840Loss: 1.71736 | Val Acc: 0.50044 loss: 1.70057
+    saving model with acc 0.50044
+
+
+​	
+​	
+
+
+```python
+del train_set, val_set
+del train_loader, val_loader
+gc.collect()
+```
+
+
+
+
+    23
+
+
+
+## Testing
+
+Create a testing dataset, and load model from the saved checkpoint.
+
+
+```python
+# load data
+test_X = preprocess_data(split='test', feat_dir='/kaggle/input/ml2023spring-hw2/libriphone/feat', phone_path='/kaggle/input/ml2023spring-hw2/libriphone', concat_nframes=concat_nframes)
+test_set = LibriDataset(test_X, None)
+test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False)
+```
+
+    [Dataset] - # phone classes: 41, number of utterances for test: 857
+
+
+    857it [00:08, 103.10it/s]
+    
+    [INFO] test set
+    torch.Size([527364, 117])
+
+
+​	
+​	
+
+
+```python
+## load model
+model = Classifier(input_dim=input_dim, hidden_layers=hidden_layers, hidden_dim=hidden_dim).to(device)
+model.load_state_dict(torch.load(model_path))
+```
+
+
+
+
+    <All keys matched successfully>
+
+
+
+Make prediction.
+
+
+```python
+pred = np.array([], dtype=np.int32)  # 创建一个空的 numpy 数组 pred，其数据类型为 np.int32
+
+model.eval()  # 将模型设置为“评估模式”
+with torch.no_grad():  # 使用 with torch.no_grad() 上下文管理器，以避免在评估模式下无意中修改了梯度。
+    for i, batch in enumerate(tqdm(test_loader)):  # 在 test_loader 上进行循环操作，每次从中取出一个 batch，并将其转换到指定的设备 device 上
+        # 使用模型对 features 进行前向传播，得到预测结果 outputs
+        features = batch
+        features = features.to(device)
+
+        outputs = model(features)
+        
+        # 通过 torch.max(outputs, 1) 可以得到每个样本在每个类别上的分数，
+        # _ 表示分数张量，test_pred 是在第 1 维度（即类别）上具有最大值的索引，代表模型预测的类别
+        _, test_pred = torch.max(outputs, 1) # get the index of the class with the highest probability
+        # 将 test_pred 转回 numpy 数组，并使用 np.concatenate() 方法将其与之前的 pred 数组进行拼接，生成更新后的预测结果
+        pred = np.concatenate((pred, test_pred.cpu().numpy()), axis=0)
+# 最终，当所有测试集的样本都被预测完毕后，pred 数组中将保存模型在测试集上的所有预测结果。
+```
+
+    100%|██████████| 1031/1031 [00:01<00:00, 533.21it/s]
+
+
+Write prediction to a CSV file.
+
+After finish running this block, download the file `prediction.csv` from the files section on the left-hand side and submit it to Kaggle.
+
+
+```python
+with open('prediction.csv', 'w') as f:
+    f.write('Id,Class\n')
+    for i, y in enumerate(pred):
+        f.write('{},{}\n'.format(i, y))
+```
+
+## **HW3 Image Classification**
+
+#### Solve image classification with convolutional neural networks(CNN).
+
+使用卷积神经网络处理图像分类问题。
+
+#### If you have any questions, please contact the TAs via TA hours, NTU COOL, or email to mlta-2023-spring@googlegroups.com
+
+
+```python
+# check GPU type.
+!nvidia-smi
+```
+
+    Tue May  2 10:05:59 2023       
+    +-----------------------------------------------------------------------------+
+    | NVIDIA-SMI 470.161.03   Driver Version: 470.161.03   CUDA Version: 11.4     |
+    |-------------------------------+----------------------+----------------------+
+    | GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
+    | Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+    |                               |                      |               MIG M. |
+    |===============================+======================+======================|
+    |   0  Tesla P100-PCIE...  Off  | 00000000:00:04.0 Off |                    0 |
+    | N/A   33C    P0    25W / 250W |      0MiB / 16280MiB |      0%      Default |
+    |                               |                      |                  N/A |
+    +-------------------------------+----------------------+----------------------+
+                                                                                   
+    +-----------------------------------------------------------------------------+
+    | Processes:                                                                  |
+    |  GPU   GI   CI        PID   Type   Process name                  GPU Memory |
+    |        ID   ID                                                   Usage      |
+    |=============================================================================|
+    |  No running processes found                                                 |
+    +-----------------------------------------------------------------------------+
+
+
+### Import Packages
+
+
+```python
+_exp_name = "sample"
+```
+
+
+```python
+# Import necessary packages.
+import numpy as np
+import pandas as pd
+import torch
+import os
+import torch.nn as nn
+import torchvision.transforms as transforms
+from PIL import Image
+# "ConcatDataset" and "Subset" are possibly useful when doing semi-supervised learning.
+# 在进行半监督学习时，“ConcatDataset”和“Subset”可能很有用。
+from torch.utils.data import ConcatDataset, DataLoader, Subset, Dataset
+from torchvision.datasets import DatasetFolder, VisionDataset
+# This is for the progress bar.
+from tqdm.auto import tqdm
+import random
+```
+
+
+```python
+myseed = 6666  # set a random seed for reproducibility
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
+np.random.seed(myseed)
+torch.manual_seed(myseed)
+if torch.cuda.is_available():
+    torch.cuda.manual_seed_all(myseed)
+```
+
+### Transforms
+
+
+```python
+# Normally, We don't need augmentations in testing and validation.
+# 通常情况下，我们不需要在测试和验证中进行增强。
+# All we need here is to resize the PIL image and transform it into Tensor.
+# 这里我们所需要的只是调整 PIL 图像的大小并将其转换为张量。
+test_tfm = transforms.Compose([
+    transforms.Resize((128, 128)),
+    transforms.ToTensor(),
+])
+
+# However, it is also possible to use augmentation in the testing phase.
+# 然而，在测试阶段也可以使用增强功能。
+# You may use train_tfm to produce a variety of images and then test using ensemble methods
+# 您可以使用 train_tfm 生成各种图像，然后使用集成方法进行测试
+train_tfm = transforms.Compose([
+    # Resize the image into a fixed shape (height = width = 128)
+    transforms.Resize((128, 128)),
+    # You may add some transforms here.
+    
+    # ToTensor() should be the last one of the transforms.  ToTensor（）应该是最后一个 transform。
+    transforms.ToTensor(),
+])
+```
+
+### Datasets
+
+
+```python
+class FoodDataset(Dataset):
+    '''
+    该类继承了 PyTorch 中的 Dataset 类，是将数据导入 PyTorch 模型中训练和测试所必需的组件之一
+    '''
+
+    def __init__(self,path,tfm=test_tfm,files = None):
+        '''
+        用于初始化该类，其中 path 是数据集的路径，tfm 是一个可选参数，代表数据预处理的方法（默认为 test_tfm），
+        files 是一个可选参数，是指要加载的文件列表（默认为 None）。
+        '''
+        super(FoodDataset).__init__()
+        self.path = path
+        # 在初始化时，根据给定的路径获取图片文件列表 self.files，并排序，
+        self.files = sorted([os.path.join(path,x) for x in os.listdir(path) if x.endswith(".jpg")])
+        # 若 files 不为 None，则使用 files 中指定的文件列表。接着对输入图片进行数据预处理，并将其转化为张量。
+        if files != None:
+            self.files = files
+            
+        self.transform = tfm
+  
+    def __len__(self):
+        '''
+        获取该数据集的长度
+        '''
+        return len(self.files)
+  
+    def __getitem__(self,idx):
+        '''
+        用于获取指定索引 idx 的样本，并将其转换为模型所需的数据格式。
+        '''
+        # 该函数会根据 idx 获取 self.files 中对应位置的图片文件名 fname
+        fname = self.files[idx]
+        # 读取图片文件为 PIL.Image 格式的对象 im
+        im = Image.open(fname)
+        # 通过 transform 对象对 im 进行数据预处理，并将结果转换为 torch.Tensor 格式的张量
+        im = self.transform(im)
+        
+        # 通过解析文件名 fname 获取样本的标签 label，若 fname 的名称格式不符，则将 label 设为 -1（test 数据集没有 label）。
+        try:
+            label = int(fname.split("/")[-1].split("_")[0])
+        excerpt:
+            label = -1 # test has no label
+            
+        return im,label
+```
+
+### Model
+
+
+```python
+class Classifier(nn.Module):
+    def __init__(self):
+        super(Classifier, self).__init__()
+        # torch.nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding)
+        # torch.nn.MaxPool2d(kernel_size, stride, padding)
+        # input 維度 [3, 128, 128]
+        self.cnn = nn.Sequential(
+            nn.Conv2d(3, 64, 3, 1, 1),  # [64, 128, 128]
+            nn.BatchNorm2d(64),
+            nn.ReLU(),
+            nn.MaxPool2d(2, 2, 0),      # [64, 64, 64]
+
+            nn.Conv2d(64, 128, 3, 1, 1), # [128, 64, 64]
+            nn.BatchNorm2d(128),
+            nn.ReLU(),
+            nn.MaxPool2d(2, 2, 0),      # [128, 32, 32]
+
+            nn.Conv2d(128, 256, 3, 1, 1), # [256, 32, 32]
+            nn.BatchNorm2d(256),
+            nn.ReLU(),
+            nn.MaxPool2d(2, 2, 0),      # [256, 16, 16]
+
+            nn.Conv2d(256, 512, 3, 1, 1), # [512, 16, 16]
+            nn.BatchNorm2d(512),
+            nn.ReLU(),
+            nn.MaxPool2d(2, 2, 0),       # [512, 8, 8]
+            
+            nn.Conv2d(512, 512, 3, 1, 1), # [512, 8, 8]
+            nn.BatchNorm2d(512),
+            nn.ReLU(),
+            nn.MaxPool2d(2, 2, 0),       # [512, 4, 4]
+        )
+        self.fc = nn.Sequential(
+            nn.Linear(512*4*4, 1024),
+            nn.ReLU(),
+            nn.Linear(1024, 512),
+            nn.ReLU(),
+            nn.Linear(512, 11)
+        )
+
+    def forward(self, x):
+        out = self.cnn(x)
+        out = out.view(out.size()[0], -1)  # flatten
+        return self.fc(out)
+```
+
+### Configurations
+
+
+```python
+# "cuda" only when GPUs are available.
+device = "cuda" if torch.cuda.is_available() else "cpu"
+
+# Initialize a model, and put it on the device specified.
+model = Classifier().to(device)
+
+# The number of batch size.
+batch_size = 64
+
+# The number of training epochs.
+n_epochs = 8
+
+# If no improvement in 'patience' epochs, early stop.
+patience = 300
+
+# For the classification task, we use cross-entropy as the measurement of performance.
+criterion = nn.CrossEntropyLoss()
+
+# Initialize optimizer, you may fine-tune some hyperparameters such as learning rate on your own.
+optimizer = torch.optim.Adam(model.parameters(), lr=0.0003, weight_decay=1e-5)
+```
+
+### Dataloader
+
+
+```python
+# Construct train and valid datasets.
+# The argument "loader" tells how torchvision reads the data.
+train_set = FoodDataset("/kaggle/input/ml2023spring-hw3/train", tfm=train_tfm)
+train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=0, pin_memory=True)
+valid_set = FoodDataset("/kaggle/input/ml2023spring-hw3/valid", tfm=test_tfm)
+valid_loader = DataLoader(valid_set, batch_size=batch_size, shuffle=True, num_workers=0, pin_memory=True)
+```
+
+### Start Training
+
+
+```python
+# Initialize trackers, these are not parameters and should not be changed
+stale = 0
+best_acc = 0
+
+for epoch in range(n_epochs):
+
+    # ---------- Training ----------
+    # Make sure the model is in train mode before training.
+    model.train()
+
+    # These are used to record information in training.
+    train_loss = []
+    train_accs = []
+
+    for batch in tqdm(train_loader):
+
+        # A batch consists of image data and corresponding labels.
+        imgs, labels = batch
+        #imgs = imgs.half()
+        #print(imgs.shape,labels.shape)
+
+        # Forward the data. (Make sure data and model are on the same device.)
+        logits = model(imgs.to(device))
+
+        # Calculate the cross-entropy loss.
+        # We don't need to apply softmax before computing cross-entropy as it is done automatically.
+        # 在计算交叉熵之前，我们不需要应用 softmax，因为它是自动完成的。
+        loss = criterion(logits, labels.to(device))
+
+        # Gradients stored in the parameters in the previous step should be cleared out first.
+        # 应首先清除上一步中存储在参数中的梯度。
+        optimizer.zero_grad()
+
+        # Compute the gradients for parameters.
+        loss.backward()
+
+        # Clip the gradient norms for stable training.
+        '''
+        该代码调用了 PyTorch 中 nn.utils.clip_grad_norm_() 方法，该方法旨在对梯度进行截断，并返回一个梯度范数。
+        该方法接收两个参数：第一个参数是模型的参数，即 model.parameters()，
+        第二个参数是一个 float 类型的变量，表示梯度的最大范数（即 L2 范数）。
+        在这里，max_norm 的值被设置为 10。
+        '''
+        grad_norm = nn.utils.clip_grad_norm_(model.parameters(), max_norm=10)
+
+        # Update the parameters with computed gradients.
+        optimizer.step()
+
+        # Compute the accuracy for current batch.
+        acc = (logits.argmax(dim=-1) == labels.to(device)).float().mean()
+
+        # Record the loss and accuracy.
+        train_loss.append(loss.item())
+        train_accs.append(acc)
+        
+    train_loss = sum(train_loss) / len(train_loss)
+    train_acc = sum(train_accs) / len(train_accs)
+
+    # Print the information.
+    print(f"[ Train | {epoch + 1:03d}/{n_epochs:03d} ] loss = {train_loss:.5f}, acc = {train_acc:.5f}")
+
+    # ---------- Validation ----------
+    # Make sure the model is in eval mode so that some modules like dropout are disabled and work normally.
+    model.eval()
+
+    # These are used to record information in validation.
+    valid_loss = []
+    valid_accs = []
+
+    # Iterate the validation set by batches.
+    for batch in tqdm(valid_loader):
+
+        # A batch consists of image data and corresponding labels.
+        imgs, labels = batch
+        #imgs = imgs.half()
+
+        # We don't need gradient in validation.
+        # Using torch.no_grad() accelerates the forward process.
+        with torch.no_grad():
+            logits = model(imgs.to(device))
+
+        # We can still compute the loss (but not the gradient).
+        loss = criterion(logits, labels.to(device))
+
+        # Compute the accuracy for current batch.
+        acc = (logits.argmax(dim=-1) == labels.to(device)).float().mean()
+
+        # Record the loss and accuracy.
+        valid_loss.append(loss.item())
+        valid_accs.append(acc)
+        #break
+
+    # The average loss and accuracy for entire validation set is the average of the recorded values.
+    valid_loss = sum(valid_loss) / len(valid_loss)
+    valid_acc = sum(valid_accs) / len(valid_accs)
+
+    # Print the information.
+    print(f"[ Valid | {epoch + 1:03d}/{n_epochs:03d} ] loss = {valid_loss:.5f}, acc = {valid_acc:.5f}")
+
+
+    # update logs
+    if valid_acc > best_acc:
+        with open(f"./{_exp_name}_log.txt","a"):
+            print(f"[ Valid | {epoch + 1:03d}/{n_epochs:03d} ] loss = {valid_loss:.5f}, acc = {valid_acc:.5f} -> best")
+    else:
+        with open(f"./{_exp_name}_log.txt","a"):
+            print(f"[ Valid | {epoch + 1:03d}/{n_epochs:03d} ] loss = {valid_loss:.5f}, acc = {valid_acc:.5f}")
+
+
+    # save models
+    if valid_acc > best_acc:
+        print(f"Best model found at epoch {epoch}, saving model")
+        torch.save(model.state_dict(), f"{_exp_name}_best.ckpt") # only save best to prevent output memory exceed error
+        best_acc = valid_acc
+        stale = 0
+    else:
+        stale += 1
+        if stale > patience:
+            print(f"No improvment {patience} consecutive epochs, early stopping")
+            break
+```
+
+
+      0%|          | 0/157 [00:00<?, ?it/s]
+
+
+    [ Train | 001/008 ] loss = 1.87167, acc = 0.34385
+    
+      0%|          | 0/57 [00:00<?, ?it/s]
+
+
+    [ Valid | 001/008 ] loss = 1.87423, acc = 0.34339
+    [ Valid | 001/008 ] loss = 1.87423, acc = 0.34339 -> best
+    Best model found at epoch 0, saving model
+
+……
+
+
+    [ Train | 008/008 ] loss = 0.66352, acc = 0.77070
+    
+      0%|          | 0/57 [00:00<?, ?it/s]
+
+
+    [ Valid | 008/008 ] loss = 1.28541, acc = 0.58910
+    [ Valid | 008/008 ] loss = 1.28541, acc = 0.58910
+
+
+### Dataloader for test
+
+
+```python
+# Construct test datasets.
+# The argument "loader" tells how torchvision reads the data.
+test_set = FoodDataset("/kaggle/input/ml2023spring-hw3/test", tfm=test_tfm)
+test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False, num_workers=0, pin_memory=True)
+```
+
+### Testing and generate prediction CSV
+
+
+```python
+model_best = Classifier().to(device)
+model_best.load_state_dict(torch.load(f"{_exp_name}_best.ckpt"))
+model_best.eval()
+prediction = []
+with torch.no_grad():
+    for data,_ in tqdm(test_loader):
+        test_pred = model_best(data.to(device))
+        test_label = np.argmax(test_pred.cpu().data.numpy(), axis=1)
+        prediction += test_label.squeeze().tolist()
+```
+
+
+      0%|          | 0/47 [00:00<?, ?it/s]
+
+
+
+```python
+#create test csv
+def pad4(i):
+    return "0"*(4-len(str(i)))+str(i)
+df = pd.DataFrame()
+df["Id"] = [pad4(i) for i in range(len(test_set))]
+df["Category"] = prediction
+df.to_csv("submission.csv",index = False)
+```
+
+# **HW4 Self-attention**
+
+```python
+# ---初始化---
+import numpy as np
+import torch
+import random
+
+def set_seed(seed):
+    np.random.seed(seed)
+    random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.deterministic = True
+
+set_seed(114514)
+```
+
+
+```python
+# --- Dataset ---
+import os
+import json
+import torch
+import random
+from pathlib import Path
+from torch.utils.data import Dataset
+from torch.nn.utils.rnn import pad_sequence
+ 
+class myDataset(Dataset):
+    def __init__(self, data_dir, segment_len=128):
+        '''
+        data_dir 是指音频文件的路径
+        segment_len 是指每个音频片段的长度（默认为 128）
+        '''
+        self.data_dir = data_dir
+        self.segment_len = segment_len
+        
+        # 加载从名字到 id 的映射 读取数据集文件夹中的 mapping.json
+        mapping_path = Path(data_dir) / "mapping.json"
+        mapping = json.load(mapping_path.open())
+        self.speaker2id = mapping["speaker2id"]  # 演讲者名称到 ID
+
+        # 加载元数据
+        metadata_path = Path(data_dir) / "metadata.json"
+        metadata = json.load(open(metadata_path))["speakers"]  # 包含了所有演讲者的语音数据信息
+
+        # Get the total number of speaker.
+        self.speaker_num = len(metadata.keys())
+        self.data = []
+        
+        # 建立语音->ID 的数据    
+        for speaker in metadata.keys():  # 遍历 metadata.json 文件中 speakers 字段中的所有键值对
+            for utterances in metadata[speaker]:
+                # 将形如 [utterances["feature_path"], self.speaker2id[speaker]] 的数据添加到 self.data 中
+                self.data.append([utterances["feature_path"], self.speaker2id[speaker]])
+            
+ 
+    def __len__(self):
+        '''
+        返回音频片段数量
+        '''
+        return len(self.data)
+ 
+    def __getitem__(self, index):
+        feat_path, speaker = self.data[index]
+        # 元数据的语音 & 名字 ID
+        # 打开音频文件？
+        mel = torch.load(os.path.join(self.data_dir,feat_path))
+        
+       # 将 mel-spectrogram 分割成 长度为"segment_len" 帧.
+        if len(mel) > self.segment_len:
+            # 随机截取一段，先随机起点，然后开读
+            start = random.randint(0, len(mel) - self.segment_len)
+            mel = torch.FloatTensor(mel[start:start+self.segment_len])
+        else:
+            mel = torch.FloatTensor(mel)
+        # 强转转成 long
+        speaker = torch.FloatTensor([speaker]).long()
+        # 返回真音频 ID
+        return mel, speaker 
+ 
+    def get_speaker_number(self):
+        '''
+        返回数据集中演讲者数量
+        '''
+        return self.speaker_num
+```
+
+
+```python
+# --- Dataloader ---
+import torch
+from torch.utils.data import DataLoader, random_split
+from torch.nn.utils.rnn import pad_sequence
+
+
+def collate_batch(batch):
+    # Process features within a batch.
+    """Collate a batch of data."""
+    mel, speaker = zip(*batch)
+    # 因为我们一批一批地训练模型，所以我们需要在同一批中填充特征，以使它们的长度相同。
+    # 对于较短的 mel 音频特征，pad_sequence 函数会自动添加 0 填充。
+    # 这样，在训练神经网络时，不同长度的 mel 特征就可以组成一个 batch 进行训练了。
+    # Because we train the model batch by batch, we need to pad the features in the same batch to make their lengths the same.
+    mel = pad_sequence(mel, batch_first=True, padding_value=-20)    # pad log 10^(-20) which is very small value.
+    # mel: (batch size, length, 40)
+    return mel, torch.FloatTensor(speaker).long()
+
+
+def get_dataloader(data_dir, batch_size, n_workers):
+    """
+    Generate dataloader
+    data_dir：数据集路径
+    batch_size：batch 大小
+    n_workers：读取数据的线程数
+    """
+    dataset = myDataset(data_dir)
+    speaker_num = dataset.get_speaker_number()
+    # 分割数据
+    trainlen = int(0.9 * len(dataset))
+    lengths = [trainlen, len(dataset) - trainlen]
+    trainset, validset = random_split(dataset, lengths)
+
+    train_loader = DataLoader(
+        trainset,  # 数据集
+        batch_size=batch_size,  # 每个 batch 的大小 
+        shuffle=True, #traindata 随机排序
+        num_workers=n_workers,  # 加载数据时所使用的 CPU 线程数
+        drop_last=True,  # 如果最后一个 batch 的样本数小于 batch_size，则丢弃该 batch
+        pin_memory=True,  # 将内存固定到 GPU 上，加快数据传输
+        collate_fn=collate_batch,  # 对每个 batch 中的数据进行批处理和填充，具体实现由 collate_batch 函数完成
+    )
+    valid_loader = DataLoader(
+        validset,
+        batch_size=batch_size,
+        num_workers=n_workers,
+        drop_last=True,
+        pin_memory=True,
+        collate_fn=collate_batch,
+    )
+
+    return train_loader, valid_loader, speaker_num
+```
+
+
+```python
+# --- Model ---
+!pip install conformer
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from conformer import ConformerBlock
+
+class Classifier(nn.Module):
+    def __init__(self, d_model=256, n_spks=600, dropout=0.2):
+        '''
+        该模型是一个语音分类器，用于将语音信号分为不同的说话人。
+        其中，d_model 表示特征维度，n_spks 表示说话人的数量，dropout 表示 dropout 概率。
+        '''
+        super().__init__()
+        # input -> d_model
+        '''
+        Prenet：通过一个全连接层对输入的 mel 音频特征进行转换，将 40 维的 mel 特征转化为 d_model 维的表示。
+        '''
+        self.prenet = nn.Linear(40, d_model)
+        
+# self.encoder_layer = nn.TransformerEncoderLayer(
+# d_model=d_model, dim_feedforward=256, nhead=2
+# )
+# self.encoder = nn.TransformerEncoder(self.encoder_layer, num_layers=2)
+        # transformer 不行，不如 conformer
+        '''
+        Encoder：使用 ConformerBlock 实现的编码器，将 Prenet 输出的 mel 音频特征序列编码成固定长度的向量，以便进行分类。
+        该编码器在多头 self-attention 机制的基础上，结合了深度可分离卷积，使用多层非线性变换对输入进行处理，提取更加抽象的特征表示。
+        '''
+        self.encoder=ConformerBlock(
+            dim=d_model,
+            dim_head=4,
+            heads=4,  # attension 层头数？
+            ff_mult=4,  # 在 feed forward network 作为乘数的参数
+            conv_expansion_factor=2,  #在卷积层中作成乘数的参数
+            conv_kernel_size=20,
+            attn_dropout=dropout,  # attendsion 层
+            ff_dropout=dropout,  # feed forward 层
+            conv_dropout=dropout  # 卷积层
+        )
+        # Project the the dimension of features from d_model into speaker nums.
+        # 将 d_model 中的特征尺寸投影到 speaker 的编号中。
+        self.pred_layer = nn.Sequential(
+            '''
+            Pred_layer：用于预测说话人标签的全连接神经网络
+            '''
+            nn.BatchNorm1d(d_model),  # 对小批量 e2d 或 3d 输入进行批标准化
+            nn.Linear(d_model, d_model),  # 过两层全连接层将其映射到 n_spks 维的向量
+            nn.Sigmoid(),  # 通过 sigmoid 函数将每个维度的值限制在 [0, 1] 范围内
+            nn.Linear(d_model, n_spks),  # 最后一层采用线性变换输出分类结果
+        )
+
+    def forward(self, mels):
+        """
+        args:
+            mels: (batch size, length, 40)
+        return:
+            out: (batch size, n_spks)
+        """
+        # out: (batch size, length, d_model)
+        '''
+        在前向传播过程中，首先将输入的 mels 序列通过 Prenet 层进行特征转换，
+        得到一个形状为 (batch size, length, d_model) 的张量 out，其中 d_model 表示特征维度
+        '''
+        out = self.prenet(mels)  # 先上到 d_model
+        # out: (length, batch size, d_model)
+        '''
+        通过调用 out.permute(1, 0, 2) 将其第一维和第二维交换位置，变成形状为 (length, batch size, d_model) 的张量，
+        以符合编码器 ConformerBlock 对输入的要求
+        '''
+        out = out.permute(1, 0, 2)  # 变形
+        # The encoder layer expect features in the shape of (length, batch size, d_model).
+        '''
+        将 out 作为编码器的输出传入 self.encoder 中，得到一个 shape 为 (length, batch size, d_model) 的张量 out
+        这里使用的是 ConformerBlock 编码器，它采用了改进的 Transformer 结构，
+        在原有的自注意力机制的基础上加入了深度可分离卷积以及位置相关的 Feed-Forward 结构，能够更好地捕捉语音信号的时序特征。
+        '''
+        out = self.encoder(out)  # encoder 就得酱紫，怪捏
+        # out: (batch size, length, d_model)
+        '''
+        将 out 再次变形，将其第一维和第二维交换回来形成一个 shape 为 (batch size, length, d_model) 的张量
+        '''
+        out = out.transpose(0, 1)  # 再变形
+        # mean pooling
+        '''
+        对该张量沿着第一维做 mean pooling 操作，
+        生成一个 shape 为 (batch size, d_model) 的统计量 stats，代表了该批次中每个音频序列的平均特征向量
+        '''
+        stats = out.mean(dim=1)  # 取第 1 维的平均
+
+        # out: (batch, n_spks)
+        '''
+        将 stats 作为输入传入全连接神经网络模型 self.pred_layer，得到一个 (batch size, n_spks) 维的输出向量 out，
+        其中 n_spks 表示说话人数量。该输出向量表示每个音频序列属于不同说话人的概率分布情况。
+        '''
+        out = self.pred_layer(stats)
+        return out
+```
+
+
+```python
+import math
+
+import torch
+from torch.optim import Optimizer
+from torch.optim.lr_scheduler import LambdaLR #注意这玩意
+
+##学习率调整计划
+def get_cosine_schedule_with_warmup(
+    optimizer: Optimizer,  # 需要进行学习率调度的优化器对象。
+    num_warmup_steps: int,  # 学习率预热期的步长，也就是训练前需要逐步提高学习率的迭代次数。
+    num_training_steps: int,  # 训练总步长，也就是整个训练过程中的总迭代次数。
+    num_cycles: float = 0.5,  # 余弦函数波形的周期数量，默认值为 0.5，表示每个周期内有一个完整的余弦波形变化。
+    last_epoch: int = -1,  # 可选参数，可以指定学习率调度器在开始训练时的起始 epoch 值。
+):
+    def lr_lambda(current_step):
+        '''
+        函数内部采用了一个嵌套函数 lr_lambda，其输入为当前训练的步数 current_step。
+        这个函数首先对前 num_warmup_steps 步采用线性递增的方式来提高学习率（因为在训练初期往往需要更小的学习率以避免模型梯度爆炸或消失）。
+        '''
+        # Warmup
+        '''
+        首先对前 num_warmup_steps 步采用线性递增的方式来提高学习率（因为在训练初期往往需要更小的学习率以避免模型梯度爆炸或消失）
+        '''
+        if current_step < num_warmup_steps:
+            return float(current_step) / float(max(1, num_warmup_steps))
+        # decadence
+        '''
+        在剩余的 num_training_steps 步中，学习率会随着训练步数的增加而不断地逐渐下降。
+        '''
+        progress = float(current_step - num_warmup_steps) / float(
+            max(1, num_training_steps - num_warmup_steps)
+        )
+        return max(
+            0.0, 0.5 * (1.0 + math.cos(math.pi * float(num_cycles) * 2.0 * progress))
+        )
+    '''
+    将 lr_lambda 函数和相关参数使用 LambdaLR 类进行包装，并返回该实例对象供模型训练过程中进行学习率的调度。
+    '''
+    return LambdaLR(optimizer,lr_lambda,last_epoch)
+```
+
+
+```python
+# 训练部分
+import torch
+
+def model_fn(batch, model, criterion, device):
+    """Forward a batch through the model."""
+    # model.train()
+    # 拿数据环节
+    mels, labels = batch
+    mels = mels.to(device)
+    labels = labels.to(device)
+    # 求损失环节
+    outs = model(mels)
+    loss = criterion(outs, labels)
+    # 返回概率最高的 speakerID
+    preds = outs.argmax(1)
+    # 求准确率
+    accuracy = torch.mean((preds == labels).float())
+
+    return loss, accuracy
+```
+
+
+```python
+# 验证部分
+from tqdm import tqdm
+import torch
+
+
+def valid(dataloader, model, criterion, device): 
+    """Validate on validation set."""
+
+    model.eval()
+    running_loss = 0.0
+    running_accuracy = 0.0
+    pbar = tqdm(total=len(dataloader.dataset), ncols=0, desc="Valid", unit=" uttr")
+
+    for i, batch in enumerate(dataloader):
+        with torch.no_grad():
+            loss, accuracy = model_fn(batch, model, criterion, device)
+            running_loss += loss.item()
+            running_accuracy += accuracy.item()
+
+        pbar.update(dataloader.batch_size)
+        pbar.set_postfix(
+            loss=f"{running_loss / (i+1):.2f}",
+            accuracy=f"{running_accuracy / (i+1):.2f}",
+        )
+
+    pbar.close()
+    model.train()
+
+    return running_accuracy / len(dataloader)
+```
+
+
+```python
+from tqdm import tqdm
+import torch
+import torch.nn as nn
+from torch.optim import AdamW
+from torch.utils.data import DataLoader, random_split
+
+
+def parse_args():
+    # 设定超参数
+    config = {
+        "data_dir": "/kaggle/input/ml2023springhw4/Dataset",
+        "save_path": "/kaggle/working/model.ckpt",
+        "batch_size": 32,
+        "n_workers": 8,
+        "valid_steps": 2000,
+        "warmup_steps": 1000,
+        "save_steps": 10000,
+        "total_steps": 70000,
+    }
+
+    return config
+
+
+def main(
+    data_dir,
+    save_path,
+    batch_size,
+    n_workers,
+    valid_steps,
+    warmup_steps,
+    total_steps,
+    save_steps,
+):
+    """Main function."""
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"[Info]: Use {device} now!")
+
+    train_loader, valid_loader, speaker_num = get_dataloader(data_dir, batch_size, n_workers)
+    train_iterator = iter(train_loader)
+    print(f"[Info]: Finish loading data!",flush = True)
+    
+    # 定义模型
+    model = Classifier(n_spks=speaker_num).to(device)
+    # 定义损失函数
+    criterion = nn.CrossEntropyLoss()
+    # 定义优化器
+    optimizer = AdamW(model.parameters(), lr=1e-3)
+    # 对优化器的学习率进行调整
+    scheduler = get_cosine_schedule_with_warmup(optimizer, warmup_steps, total_steps)
+    print(f"[Info]: Finish creating model!",flush = True)
+    
+    model.load_state_dict(torch.load(f"/kaggle/input/hw4model3/model (3).ckpt"))
+    
+    best_accuracy = -1.0
+    best_state_dict = None
+
+    pbar = tqdm(total=valid_steps, ncols=0, desc="Train", unit=" step")
+    torch.save(best_state_dict, save_path)
+    for step in range(total_steps):
+        # Get data
+        try:
+            batch = next(train_iterator)
+        excerpt StopIteration:
+            train_iterator = iter(train_loader)
+            batch = next(train_iterator)
+
+        loss, accuracy = model_fn(batch, model, criterion, device)
+        batch_loss = loss.item()
+        batch_accuracy = accuracy.item()
+
+        # Updata model
+        loss.backward()
+        optimizer.step()
+        scheduler.step()
+        optimizer.zero_grad()
+        # Log
+        pbar.update()
+        pbar.set_postfix(
+            loss=f"{batch_loss:.2f}",
+            accuracy=f"{batch_accuracy:.2f}",
+            step=step + 1,
+        )
+
+        # Do validation
+        if (step + 1) % valid_steps == 0:
+            pbar.close()
+    
+            valid_accuracy = valid(valid_loader, model, criterion, device)
+
+            # keep the best model
+            if valid_accuracy > best_accuracy:
+                best_accuracy = valid_accuracy
+                best_state_dict = model.state_dict()
+
+            pbar = tqdm(total=valid_steps, ncols=0, desc="Train", unit=" step")
+
+        # Save the best model so far.
+        if (step + 1) % save_steps == 0 and best_state_dict is not None:
+            torch.save(best_state_dict, save_path)
+            pbar.write(f"Step {step + 1}, best model saved. (accuracy={best_accuracy:.4f})")
+
+    pbar.close()
+
+
+if __name__ == "__main__":
+    main(**parse_args())
+```
+
+
+```python
+import json
+import csv
+from pathlib import Path
+from tqdm.notebook import tqdm
+
+import torch
+from torch.utils.data import DataLoader
+
+def parse_args():
+    """arguments"""
+    config = {
+        "data_dir": "/kaggle/input/ml2023springhw4/Dataset",
+        "model_path": "/kaggle/working/model.ckpt",
+        "output_path": "/kaggle/working/output.csv",
+    }
+
+    return config
+
+
+def main(
+    data_dir,
+    model_path,
+    output_path,
+):
+    """Main function."""
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"[Info]: Use {device} now!")
+
+    mapping_path = Path(data_dir) / "mapping.json"
+    mapping = json.load(mapping_path.open())
+
+    dataset = InferenceDataset(data_dir)
+    dataloader = DataLoader(
+        dataset,
+        batch_size=1,
+        shuffle=False,
+        drop_last=False,
+        num_workers=8,
+        collate_fn=inference_collate_batch,
+    )
+    print(f"[Info]: Finish loading data!",flush = True)
+
+    speaker_num = len(mapping["id2speaker"])
+    model = Classifier(n_spks=speaker_num).to(device)
+    model.load_state_dict(torch.load(model_path))
+    model.eval()
+    print(f"[Info]: Finish creating model!",flush = True)
+
+    results = [["Id", "Category"]]
+    for feat_paths, mels in tqdm(dataloader):
+        with torch.no_grad():
+            mels = mels.to(device)
+            outs = model(mels)
+            preds = outs.argmax(1).cpu().numpy()
+            for feat_path, pred in zip(feat_paths, preds):
+                results.append([feat_path, mapping["id2speaker"][str(pred)]])
+
+    with open(output_path, 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerows(results)
+
+
+if __name__ == "__main__":
+    main(**parse_args())
+```
+
+
+```python
+# ---下面就是交数据啦—--
+import os
+import json
+import torch
+from pathlib import Path
+from torch.utils.data import Dataset
+
+
+class InferenceDataset(Dataset):
+    def __init__(self, data_dir):
+        testdata_path = Path(data_dir) / "testdata.json"
+        metadata = json.load(testdata_path.open())
+        self.data_dir = data_dir
+        self.data = metadata["utterances"]
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, index):
+        utterance = self.data[index]
+        feat_path = utterance["feature_path"]
+        mel = torch.load(os.path.join(self.data_dir, feat_path))
+
+        return feat_path, mel
+
+
+def inference_collate_batch(batch):
+    """Collate a batch of data."""
+    feat_paths, mels = zip(*batch)
+
+    return feat_paths, torch.stack(mels)
+     
+```
+

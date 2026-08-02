@@ -1,0 +1,127 @@
+---
+title: Paper-Fast Poisson Disk Sampling in Arbitrary Dimensions
+date: Sat Nov 04 2023 13:49:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - 论文
+  - 代码复现
+  - 数学
+categories: 学习
+description: 论文阅读。
+---
+
+
+# 资源
+
+- [bluenoise.dvi (ubc.ca)](https://www.cs.ubc.ca/~rbridson/docs/bridson-siggraph07-poissondisk.pdf)
+
+- [有人知道泊松盘采样算法吗？看了几天没看懂？- 知乎 (zhihu.com)](https://www.zhihu.com/question/276554643)
+
+# 原文
+
+## Abstract
+
+在图形的许多应用中，特别是渲染中，从蓝色噪声分布生成样本是很重要的。然而，现有的有效技术不容易推广到二维之外。在这里，我演示了对飞镖投掷的一个简单修改，它允许在 $O(N)$ 时间内生成泊松圆盘样本，可以在任意维度中轻松实现。
+
+## 1 Introduction
+
+在这个草图中，我提出了一种新的算法，可以在任意维度上轻松实现，它保证需要 $O(N)$ 时间来生成 $N$ 个泊松圆盘样本。
+
+## 2 The Algorithm
+
+该算法将 $\mathbf R^n$ 中的样本域的范围、样本之间的最小距离 $r$ 以及常数 $k$ 作为在算法中拒绝之前要选择的样本的极限（通常 $k＝30$）作为输入。
+
+**Step0** 初始化用于存储样本和加速空间搜索的 $n$ 维背景网格。我们选择以 $r/\sqrt n$ 为界的单元格大小，这样每个网格单元格最多包含一个样本，因此网格可以实现为一个简单的二维整数数组：默认的 $−1$ 表示没有样本，非负整数给出位于单元格中的样本的索引。
+
+**Step1** 从域中随机均匀选择初始样本 $x_0$ 从域中随机选择。将其插入背景网格，并以该索引（零）初始化“活动列表”（一个样本索引数组）。活动列表"（样本索引数组）的初始化。
+
+**Step2** 当活动列表不为空时，从中选择一个随机索引（比如 $i$）。生成从 $x_i$ 周围半径 $r$ 和 $2r$ 之间的球面环中均匀选择的多达 $k$ 个点。依次检查每个点是否在现有样本的距离 $r$ 内（使用背景网格仅测试附近的样本）。如果某个点距离现有采样足够远，则将其作为下一个采样发射，并将其添加到活动列表中。如果在 $k$ 次尝试之后没有找到这样的点，则将 $i$ 从活动列表中删除。
+
+## 3 Analysis
+Step2 执行 $2N−1$ 次，产生 $N$ 个样本：每次迭代要么产生一个新样本并将其添加到活动列表中，要么从活动列表中删除一个现有样本。Step2 的每次迭代花费 $O(k)$ 时间，并且由于 $k$ 保持恒定（通常非常小），因此算法是线性的。
+
+# 代码
+
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+
+r = 1  # 样本间的最小距离
+d = r / np.sqrt(2)  # 单元格大小
+k = 30  # 算法中拒绝之前要选择的样本的极限
+width = 20  # 样本域宽
+height = 16  # 样本域高
+
+# 将网格实现为一个简单的二维数组
+nx = int(width / d) + 1
+ny = int(height / d) + 1
+occupied = np.zeros((ny, nx))  # 用于记录网格是否被占用
+occupied_coord = np.zeros((ny, nx, 2))  # 记录每个被占用网格对应的坐标
+active_list = []  # 待处理点集
+sampled = []  # 已经采样的点集
+
+# 定义了一个相对坐标矩阵 relative，它包含了一个中心点和其周围 18 个格点的相对坐标。
+relative = np.array([[-1, 2], [0, 2], [1, 2],
+                     [-2, 1], [-1, 1], [0, 1], [1, 1], [2, 1],
+                     [-2, 0], [-1, 0], [1, 0], [2, 0],
+                     [-2, -1], [-1, -1], [0, -1], [1, -1], [2, -1],
+                     [-1, -2], [0, -2], [1, -2]])
+np.random.seed(0)
+# 使用 numpy.random.rand 函数生成一个随机的初始点，并将其添加到相应的数组中
+x, y = np.random.rand() * width, np.random.rand() * height
+idx_x, idx_y = int(x / d), int(y / d)
+occupied[idx_y, idx_x] = 1
+occupied_coord[idx_y, idx_x] = (x, y)
+active_list.append((x, y))
+sampled.append((x, y))
+
+sampled_idx = 0
+
+while len(active_list) > 0:  # 当活动列表不为空时
+    idx = np.random.choice(np.arange(len(active_list)))  # 选择一个随机索引, 比如 i
+    # 生成从 x_i 周围半径 r 和 2r 之间的球面环中均匀选择的多达 k 个点
+    ref_x, ref_y = active_list[idx]
+    radius = (np.random.rand(k) + 1) * r
+    theta = np.random.rand(k) * np.pi * 2
+    candidate = radius * np.cos(theta) + ref_x, radius * np.sin(theta) + ref_y
+    flag_out = False
+    for _x, _y in zip(*candidate):
+        # 依次检查每个点是否在现有样本的距离 r 内
+        if _x < 0 or _x > width or _y < 0 or _y > height:
+            continue
+        # other geo constraints
+        flag = True
+        idx_x, idx_y = int(_x / d), int(_y / d)
+        if occupied[idx_y, idx_x] != 0:
+            continue
+        else:
+            neighbours = relative + np.array([idx_x, idx_y])
+        for cand_x, cand_y in neighbours:
+            # 检查其坐标是否超出画布范围。如果超出，则跳过该点
+            if cand_x < 0 or cand_x >= nx or cand_y < 0 or cand_y >= ny:
+                continue
+            if occupied[cand_y, cand_x] == 1:
+                # 找到该网格对应的点
+                cood = occupied_coord[cand_y, cand_x]
+                # 计算该网格对应的点与候选点之间的距离，如果小于最小半径 r，则说明候选点不满足几何约束条件，需要舍弃
+                if (_x - cood[0]) ** 2 + (_y - cood[1]) ** 2 < r ** 2:
+                    flag = False
+                    break
+        if flag:  # 将该点标记为已占据，并添加到已采样点集和活动列表中。
+            flag_out = True
+            occupied[idx_y, idx_x] = 1
+            occupied_coord[idx_y, idx_x] = (_x, _y)
+            sampled.append((_x, _y))
+            active_list.append((_x, _y))
+            sampled_idx += 1
+            break
+    if not flag_out:  # 如果在 k 次尝试之后没有找到这样的点，则将 i 从活动列表中删除
+        active_list.pop(idx)
+
+fig, ax = plt.subplots(1, 1, figsize=(9, 6))
+fig.set_tight_layout(True)
+ax.scatter(*zip(*sampled), c='g')
+ax.set_xlim([0, width])
+ax.set_ylim([0, height])
+plt.show()
+```
+

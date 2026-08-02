@@ -1,0 +1,124 @@
+---
+title: AI-基于 PaddleOCR 将扫描 PDF 转为 MD
+date: Thu Apr 02 2026 14:28:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - OCR
+categories: 学习
+description: 研究智能图文信息处理技术！
+---
+
+
+# 资源
+
+- [PaddlePaddle/PaddleOCR: Turn any PDF or image document into structured data for your AI. A powerful, lightweight OCR toolkit that bridges the gap between images/PDFs and LLMs. Supports 100+ languages.](https://github.com/PaddlePaddle/PaddleOCR)
+- [PaddleOCR - 文档解析与智能文字识别 | 支持API调用与MCP服务 - 飞桨星河社区](https://aistudio.baidu.com/paddleocr)
+
+# 正文
+
+​	据说 PaddleOCR 又更新了，而且性能看着很厉害。从[官网](https://aistudio.baidu.com/paddleocr)调用一下 API 以实现一些智能图文信息处理的任务！
+
+<Figure caption="官网调用 PaddleOCR-VL-1.5 API 的示例">
+```python {8,10,23}
+# Please make sure the requests library is installed
+# pip install requests
+import base64
+import os
+import requests
+
+API_URL = "https://yeqfvfa988bbcard.aistudio-app.com/layout-parsing"
+TOKEN = "<access token>"
+
+file_path = "<local file path>"
+
+with open(file_path, "rb") as file:
+    file_bytes = file.read()
+    file_data = base64.b64encode(file_bytes).decode("ascii")
+
+headers = {
+    "Authorization": f"token {TOKEN}",
+    "Content-Type": "application/json"
+}
+
+required_payload = {
+    "file": file_data,
+    "fileType": <file type>,  # For PDF documents, set `fileType` to 0; for images, set `fileType` to 1
+}
+
+optional_payload = {
+    "useDocOrientationClassify": False,
+    "useDocUnwarping": False,
+    "useChartRecognition": False,
+}
+
+payload = {**required_payload, **optional_payload}
+
+response = requests.post(API_URL, json=payload, headers=headers)
+print(response.status_code)
+assert response.status_code == 200
+result = response.json()["result"]
+
+output_dir = "output"
+os.makedirs(output_dir, exist_ok=True)
+
+for i, res in enumerate(result["layoutParsingResults"]):
+    md_filename = os.path.join(output_dir, f"doc_{i}.md")
+    with open(md_filename, "w") as md_file:
+        md_file.write(res["markdown"]["text"])
+    print(f"Markdown document saved at {md_filename}")
+    for img_path, img in res["markdown"]["images"].items():
+        full_img_path = os.path.join(output_dir, img_path)
+        os.makedirs(os.path.dirname(full_img_path), exist_ok=True)
+        img_bytes = requests.get(img).content
+        with open(full_img_path, "wb") as img_file:
+            img_file.write(img_bytes)
+        print(f"Image saved to: {full_img_path}")
+    for img_name, img in res["outputImages"].items():
+        img_response = requests.get(img)
+        if img_response.status_code == 200:
+            # Save image to local
+            filename = os.path.join(output_dir, f"{img_name}_{i}.jpg")
+            with open(filename, "wb") as f:
+                f.write(img_response.content)
+            print(f"Image saved to: {filename}")
+        else:
+            print(f"Failed to download image, status code: {img_response.status_code}")
+```
+</Figure>
+
+
+## PDF2MD
+
+​	尝试将 Z-library 上的扫描版 .pdf《[闽都别记](https://zh.z-lib.fm/book/pZ88yl5XZ9/闽都别记.html)》转成文本形式组成的 .md。
+
+<FileTreeViewer title="PDF2MD">
+    <FileTreeViewerFile
+        name="paddle.py"
+        path="./paddle.py"
+        defaultSelected
+    />
+    <FileTreeViewerFile
+        name="merge_markdown.py"
+        path="./merge_markdown.py"
+    />
+    <FileTreeViewerFile
+        name="pyproject.toml"
+        path="./pyproject.toml"
+    />
+    <FileTreeViewerFolder name="output">
+        <FileTreeViewerFolder name="chunk_013_p01041-01120">
+        <FileTreeViewerFile
+            path="./output/chunk_013_p01041-01120/doc_38.md"
+        />
+        <FileTreeViewerFile
+            path="./output/chunk_013_p01041-01120/layout_det_res_38.jpg"
+            defaultSelected
+        />
+        </FileTreeViewerFolder>
+    </FileTreeViewerFolder>
+</FileTreeViewer>
+
+​	`paddle.py` 负责 PDF2MD。考虑到这个文档页数极多，因此需要将其按 80 页分片，然后逐个片段调用 API 以 OCR。各个片段的识别结果见 `output/`。
+
+​	`merge_markdown.py` 负责将 output 片段整合成完整一个的 MD 文档。
+
+​	设置好 API Key，执行 `uv sync`、`uv run python paddle.py` 及 `uv run python merge_markdown.py`。最后人工审查并处理 OCR 的结果，得到 [闽都别记（上）.md](闽都别记（上）.md)、[闽都别记（中）.md](闽都别记（中）.md) 及 [闽都别记（下）.md](闽都别记（下）.md)。

@@ -1,0 +1,263 @@
+---
+title: Hexo-侧边栏
+date: Thu May 02 2024 15:22:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - Hexo
+  - EJS
+  - Javascript
+categories: 学习
+description: 在正文旁边加点辅助信息！
+---
+
+
+# 前言
+
+​	没错！我又开始瞎鼓捣我的博客了！本次更新了侧边栏功能！便于在正文旁边加点辅助信息，提升阅读体验。
+
+# 布局
+
+## post_centent
+
+​	`post_centent.ejs` 的内容如下：
+
+```ejs
+<div class="post-content">
+    <article class="post-content-info">
+        <%- page.content %>
+        <%- partial('widget/comments'); %>
+    </article>
+    <% if(page.aside != false) { %>
+        <%- partial('_partial/post_aside'); %>
+    <% } %>
+</div>
+```
+
+​	一个 `<div class="post-content">` 存储主体信息。
+
+- `<article class="post-content-info">` 正文内容。
+- `<%- partial('_partial/post_aside'); %>` 侧边栏内容。
+  - 如果文章头的参数 `aside` 设为 `false`，不创建侧边栏。
+
+---
+
+​	当屏幕宽度大于 `960px` 时，`.post-content` 使用弹性布局，将侧边栏放在正文内容右边：
+
+```css
+display: flex;
+margin: -100px auto 95px;
+width: 100%;
+justify-content: center;
+```
+
+​	当屏幕宽度下于 `960px` 时，将“侧边栏”放在正文内容下边（像 butterfly 那么做）：
+
+```css
+flex-direction: column;
+```
+
+## post_aside
+
+​	`post_aside.ejs` 下的内容（简略）：
+
+```ejs
+<div class="aside">
+    <%- js('js/widget/aside.js'); %>
+    <script>
+        showAside();
+    </script>
+
+    <div class="aside-top">
+        <div class="aside-top-about aside-card">
+...
+            </div>
+        </div> 
+
+        <% if(page.series) { %>
+            <div class="aside-top-series aside-card">
+...
+    </div>
+
+    <div class="aside-bottom">
+        <% if(page.toc) { %>
+...
+            <div class="aside-bottom-toc aside-card">
+...
+            </div>
+        <% } %>
+    </div>
+</div>
+```
+
+​	`<div class="aside">` 下有：
+
+- `<div class="aside-top">`，这个是相对布局：
+
+```css
+position: relative;
+z-index: 2;
+margin-left: 20px;
+width: min(260px, 20vw);
+```
+
+- `<div class="aside-bottom">`，这个是 sticky 布局，主要是让视图滚动时也能显示目录。
+
+```css
+position: sticky;
+top: 80px;
+margin-left: 20px;
+width: min(260px, 20vw);
+```
+
+## aside-card
+
+```css
+width: calc(100% - 20px);
+border-radius: 10px;
+background: var(--background-primary);
+box-shadow: 0 1px 3px hsla(0, 0%, 7%, 0.1);
+padding: 10px;
+border: 1px solid rgba(18, 24, 58, 0.06);
+transition: background 0.3s ease-out;
+```
+
+​	写一个侧边栏卡片样式。
+
+# Series 标签
+
+​	我设计了一个新的文章属性：`series`！据我所知，这个功能还是我独创的。
+
+```yaml
+series: Hexo
+```
+
+​	这个 `series` 的值必须在 `tags` 里存在，算是一个文章的系列标签，或是我学习一门重要技术时探索的时间线。
+
+```ejs
+<ol class="series">
+    <% let serialNumber = 0; %>
+    <% let seriesCount = 0; %>
+    <% let find = false; %>
+    <% site.posts.sort('date').forEach(function(post) { %>
+        <% if (post.series === page.series) { %>
+            <% seriesCount += 1; %>
+            <% if (!find) {serialNumber += 1;} %>
+            <% if (post.path === page.path) { %>
+                <% find = true; %>
+                <li class="series-item active">
+                    <a class="series-link active" href="/<%= post.path %>">
+                        &nbsp;&nbsp;<span class="text"><%= post.title %></span>
+                    </a>
+                </li>
+            <% } else { %>
+                <li class="series-item">
+                    <a class="series-link" href="/<%= post.path %>">
+                        &nbsp;&nbsp;<span class="text"><%= post.title %></span>
+                    </a>
+                </li>
+            <% } %>
+        <% } %>
+    <% }); %>
+</ol>
+```
+
+​	渲染时会查找所有跟 `series` 相同的文章并按时间顺序排列后放到侧边栏中，便于读者快速找到其它相关文章。
+
+# 自定义侧边栏
+
+​	现在文章通过 JS 可以自定义侧边栏！原理就是使用 JS 往 `<div class="aside-top">` 或 `<div class="aside-bottom">` 下面插入 `<div class="aside-card">`。
+
+​	由于渲染顺序的关系，只能在文章属性的 `inject.bottom` 里设置相应的 JS 逻辑（这个功能是抄 butterfly 的）（虽然把逻辑放到前端会拖慢网页加载速度，但我觉得这么写不会显得那么屎山，而且就这么点代码问题也不大你说是不是）。
+
+```yaml
+inject:
+  bottom:
+    - <script src="test_aside.js"></script>
+```
+
+- [HTML 转 JavaScript 在线工具 | 菜鸟工具 (jyshare.com)](https://www.jyshare.com/front-end/846/) 这个工具好使！
+
+```javascript
+function createNode_1() {
+    var e_0 = document.createElement("div");
+    e_0.setAttribute("class", "poem aside-card");
+    var e_1 = document.createElement("div");
+    e_1.setAttribute("class", "top");
+    var e_2 = document.createElement("h1");
+    e_2.appendChild(document.createTextNode("长安古意"));
+    e_1.appendChild(e_2);
+    var e_3 = document.createElement("span");
+    e_3.appendChild(document.createTextNode("唐·卢照邻"));
+    e_1.appendChild(e_3);
+    e_0.appendChild(e_1);
+    var e_4 = document.createElement("p");
+    e_4.appendChild(document.createTextNode("\n长安大道连狭斜，"));
+    var e_5 = document.createElement("br");
+    e_4.appendChild(e_5);
+
+...
+    
+    e_4.appendChild(document.createTextNode("飞来飞去袭人裾。"));
+    var e_72 = document.createElement("br");
+    e_4.appendChild(e_72);
+    e_0.appendChild(e_4);
+    return e_0;
+}
+
+function createNode_2() {
+    var e_0 = document.createElement("div");
+    e_0.setAttribute("class", "poem aside-card");
+    var e_1 = document.createElement("div");
+    e_1.setAttribute("class", "top");
+    var e_2 = document.createElement("h1");
+    e_2.appendChild(document.createTextNode("春江花月夜"));
+    e_1.appendChild(e_2);
+    var e_3 = document.createElement("span");
+    e_3.appendChild(document.createTextNode("唐·张若虚"));
+    e_1.appendChild(e_3);
+    e_0.appendChild(e_1);
+    var e_4 = document.createElement("p");
+    e_4.appendChild(document.createTextNode("\n春江潮水连海平，"));
+    var e_5 = document.createElement("br");
+    e_4.appendChild(e_5);
+
+...
+    
+    e_4.appendChild(document.createTextNode("落月摇情满江树。"));
+    var e_40 = document.createElement("br");
+    e_4.appendChild(e_40);
+    e_0.appendChild(e_4);
+    return e_0;
+}
+
+function createNode_3() {
+    var e_0 = document.createElement("div");
+    e_0.setAttribute("class", "poem aside-card");
+    var e_1 = document.createElement("div");
+    e_1.setAttribute("class", "top");
+    var e_2 = document.createElement("h1");
+    e_2.appendChild(document.createTextNode("音乐"));
+    e_1.appendChild(e_2);
+    var e_3 = document.createElement("div");
+    const ap = new APlayer({
+        container: e_3,
+        audio: [{
+            name: '梦之津渡',
+            artist: '啃书',
+            url: '/musics/梦之津渡.mp3',
+            cover: '/musics/梦之津渡.jpg'
+        }]
+    });
+    e_0.appendChild(e_3);
+    return e_0;
+}
+
+$(document).ready(function() {
+    document.querySelector(".aside-top").appendChild(createNode_1());
+    document.querySelector(".aside-bottom").appendChild(createNode_2());
+    var parentElement = document.querySelector(".aside-bottom");
+    var firstChild = parentElement.firstChild;
+    parentElement.insertBefore(createNode_3(), firstChild);
+});
+```
+
+​	这段代码可以让你在侧边栏感受中华优秀传统文化！还可以听听音乐！

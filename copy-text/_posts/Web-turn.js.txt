@@ -1,0 +1,142 @@
+---
+title: Web-turn.js
+date: Tue Feb 13 2024 09:59:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - 前端
+  - jQuery
+  - JavaScript
+categories: 学习
+description: H5 电子书翻页效果。
+---
+
+
+<style type="text/css">
+#magazine{
+	margin: 1em auto;
+}
+#magazine div{
+	background-size:cover;
+}
+#magazine .turn-page{
+	background-color:#fff;
+	background-size:100% 100%;
+}
+</style>
+
+# 资源
+
+- 官网：[Turn.js: The page flip effect in HTML5 (turnjs.com)](http://turnjs.com/)
+- GitHub：[blasten/turn.js: The page flip effect for HTML5 (github.com)](https://github.com/blasten/turn.js)（emmm 仓库里好像年久失修了）
+
+# 快速开始
+
+> ​	**Turn.js** is a JavaScript library that will make your content look like a real book or magazine using all the advantages of HTML5. The web is getting beautiful with new user interfaces based in HTML5; turn.js is the best fit for a magazine, book or catalog based in HTML5.
+
+​	先实现一个简单的：
+
+​	从 [Turn.js: The page flip effect in HTML5 (turnjs.com)](http://turnjs.com/) 里下载源码和示例。
+
+​	官方示例似乎考虑到了不兼容 HTML5 的情况，我们就简化点，直接使用 `turn.min.js`（还应导入 JQuery，不过这个博客主题自带，就不需要引入）：
+
+```html
+<script src="/js/turn.min.js"></script>
+```
+
+​	接下来创建一个电子书：
+
+{% tabs quick_start %}
+<!-- tab CSS -->
+
+```css
+#magazine{
+	margin: 1em auto;
+}
+#magazine div{
+	background-size:cover;
+}
+#magazine .turn-page{
+	background-color:#fff;
+	background-size:100% 100%;
+}
+```
+
+<!-- endtab -->
+
+<!-- tab HTML -->
+
+​	一个 `<div></div>` 代表一页。
+
+```html
+<div id="magazine">
+    <div style="background-image:url(pages/01.jpg);"></div>
+    <div style="background: #ccc;">Hello World!</div>
+    <div style="background-image:url(pages/02.jpg);"></div>
+    <div style="background-image:url(pages/03.jpg);"></div>
+    <div style="background-image:url(pages/04.jpg);"></div>
+    <div style="background-image:url(pages/05.jpg);"></div>
+    <div style="background-image:url(pages/06.jpg);"></div>
+    <div style="background: #ccc;">Hello World!</div>
+</div>
+```
+
+<!-- endtab -->
+
+<!-- tab JS -->
+
+- `$(document).ready(function () {` 设置电子书的宽高，宽度为 `95%`，高度随宽度而定，比例 `752 / 1152` 是根据电子书图片的宽高（$576\times752$）计算得到。
+- `$(window).ready(function () {}` 设置电子书的属性：
+  - `display`: `double` 双页电子书。
+  - 其它默认。
+- `$(window).bind('keydown', function (e) {}` 设置按钮监听，按下键盘左键和右键时翻页。
+
+```javascript
+$(document).ready(function () {
+	// 获取容器元素
+	var container = $('#magazine');
+	// 设置容器宽度
+	container.css('width', '95%');
+	// 计算高度
+	var width = container.width(); // 获取容器的实际宽度
+	var height = (752 / 1152) * width; // 根据比例计算高度
+	// 设置容器高度
+	container.css('height', height + 'px'); // 将高度值赋给容器的高度属性
+});
+
+$(window).ready(function () {
+	$('#magazine').turn({
+		display: 'double',
+		acceleration: true,
+		gradients: !$.isTouch,
+		elevation: 50,
+		when: {
+			turned: function (e, page) {
+				/*console.log('Current view: ', $(this).turn('view'));*/
+			}
+		}
+	});
+});
+
+$(window).bind('keydown', function (e) {
+	if (e.keyCode == 37)
+		$('#magazine').turn('previous');
+	else if (e.keyCode == 39)
+		$('#magazine').turn('next');
+});
+```
+
+<!-- endtab -->
+
+{% endtabs %}
+
+​	最终效果：
+
+<div id="magazine">
+    <div style="background-image:url(pages/01.jpg);"></div>
+    <div style="background: #ccc;">Hello World!</div>
+    <div style="background-image:url(pages/02.jpg);"></div>
+    <div style="background-image:url(pages/03.jpg);"></div>
+    <div style="background-image:url(pages/04.jpg);"></div>
+    <div style="background-image:url(pages/05.jpg);"></div>
+    <div style="background-image:url(pages/06.jpg);"></div>
+    <div style="background: #ccc;">Hello World!</div>
+</div>

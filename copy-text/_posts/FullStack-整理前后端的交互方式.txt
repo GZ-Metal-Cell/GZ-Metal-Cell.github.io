@@ -1,0 +1,430 @@
+---
+title: FullStack-整理前后端的交互方式
+date: Sat Apr 11 2026 12:56:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - JavaScript
+  - FastAPI
+categories: 学习
+description: Learn to be a full stack developer!
+---
+
+
+# 正文
+
+## 总览
+
+<FileTreeViewer title="Project">
+  <FileTreeViewerFile name="requirements.txt" path="./requirements.txt" />
+  <FileTreeViewerFolder name="common">
+    <FileTreeViewerFile name="__init__.py" path="./common/__init__.py" />
+    <FileTreeViewerFile name="flow_log.py" path="./common/flow_log.py" />
+  </FileTreeViewerFolder>
+  <FileTreeViewerFolder name="01_http">
+    <FileTreeViewerFile name="app.py" path="./01_http/app.py" />
+    <FileTreeViewerFolder name="static">
+      <FileTreeViewerFile name="index.html" path="./01_http/static/index.html" />
+    </FileTreeViewerFolder>
+  </FileTreeViewerFolder>
+  <FileTreeViewerFolder name="02_websocket">
+    <FileTreeViewerFile name="app.py" path="./02_websocket/app.py" />
+    <FileTreeViewerFolder name="static">
+      <FileTreeViewerFile name="index.html" path="./02_websocket/static/index.html" />
+    </FileTreeViewerFolder>
+  </FileTreeViewerFolder>
+  <FileTreeViewerFolder name="03_sse">
+    <FileTreeViewerFile name="app.py" path="./03_sse/app.py" />
+    <FileTreeViewerFolder name="static">
+      <FileTreeViewerFile name="index.html" path="./03_sse/static/index.html" />
+    </FileTreeViewerFolder>
+  </FileTreeViewerFolder>
+  <FileTreeViewerFolder name="04_polling">
+    <FileTreeViewerFile name="app.py" path="./04_polling/app.py" />
+    <FileTreeViewerFolder name="static">
+      <FileTreeViewerFile name="index.html" path="./04_polling/static/index.html" />
+    </FileTreeViewerFolder>
+  </FileTreeViewerFolder>
+  <FileTreeViewerFolder name="05_long_polling">
+    <FileTreeViewerFile name="app.py" path="./05_long_polling/app.py" />
+    <FileTreeViewerFolder name="static">
+      <FileTreeViewerFile name="index.html" path="./05_long_polling/static/index.html" />
+    </FileTreeViewerFolder>
+  </FileTreeViewerFolder>
+  <FileTreeViewerFolder name="06_graphql">
+    <FileTreeViewerFile name="app.py" path="./06_graphql/app.py" />
+    <FileTreeViewerFolder name="static">
+      <FileTreeViewerFile name="index.html" path="./06_graphql/static/index.html" />
+    </FileTreeViewerFolder>
+  </FileTreeViewerFolder>
+  <FileTreeViewerFolder name="07_grpc">
+    <FileTreeViewerFile name="app.py" path="./07_grpc/app.py" />
+    <FileTreeViewerFile name="demo.proto" path="./07_grpc/demo.proto" />
+    <FileTreeViewerFile name="demo_pb2.py" path="./07_grpc/demo_pb2.py" />
+    <FileTreeViewerFile name="demo_pb2_grpc.py" path="./07_grpc/demo_pb2_grpc.py" />
+    <FileTreeViewerFile name="grpc_client.py" path="./07_grpc/grpc_client.py" />
+    <FileTreeViewerFile name="grpc_server.py" path="./07_grpc/grpc_server.py" />
+    <FileTreeViewerFolder name="static">
+      <FileTreeViewerFile name="index.html" path="./07_grpc/static/index.html" />
+    </FileTreeViewerFolder>
+  </FileTreeViewerFolder>
+  <FileTreeViewerFolder name="08_form_submit">
+    <FileTreeViewerFile name="app.py" path="./08_form_submit/app.py" />
+    <FileTreeViewerFolder name="static">
+      <FileTreeViewerFile name="index.html" path="./08_form_submit/static/index.html" />
+    </FileTreeViewerFolder>
+  </FileTreeViewerFolder>
+</FileTreeViewer>
+
+概述：
+
+| 文件夹            | 内容                                                         |
+| :---------------- | :----------------------------------------------------------- |
+| `01_http`         | `GET /api/data` + 页面里 `fetch`                             |
+| `02_websocket`    | `WebSocket /ws` + 页面里 `WebSocket`                         |
+| `03_sse`          | `GET /stream`（`text/event-stream`）+ `EventSource`          |
+| `04_polling`      | `GET /api/status` + `setInterval` + `fetch`                  |
+| `05_long_polling` | `GET /poll?since=` 挂起直到有新 `seq` 或超时 + 链式 `fetch`  |
+| `06_graphql`      | Strawberry `POST /graphql` + 页面里 `fetch` + JSON body      |
+| `07_grpc`         | `demo.proto` + `grpc_server.py` / `grpc_client.py` + 已生成的 `demo_pb2*.py`；`app.py` 只用来托管说明页（`http://127.0.0.1:8007/`） |
+| `08_form_submit`  | `POST /submit` 接收表单字段 + 纯 HTML `<form method="POST">` |
+
+使用方法：
+
+```shell
+python -m pip install -r requirements.txt
+python -m uvicorn app:app --app-dir 01_http --reload --port 8001
+python -m uvicorn app:app --app-dir 02_websocket --reload --port 8002
+python -m uvicorn app:app --app-dir 03_sse --reload --port 8003
+python -m uvicorn app:app --app-dir 04_polling --reload --port 8004
+python -m uvicorn app:app --app-dir 05_long_polling --reload --port 8005
+python -m uvicorn app:app --app-dir 06_graphql --reload --port 8006
+python -m uvicorn app:app --app-dir 07_grpc --reload --port 8007
+python -m uvicorn app:app --app-dir 08_form_submit --reload --port 8008
+```
+
+心智模型：
+
+```mermaid
+flowchart LR
+    subgraph 短连接
+        A[HTTP / GraphQL / 表单]
+    end
+    subgraph 长连接
+        B[WebSocket]
+    end
+    subgraph 长响应单向
+        C[SSE]
+    end
+    subgraph 用 HTTP 模拟实时
+        D[轮询]
+        E[长轮询]
+    end
+    subgraph 服务间
+        F[gRPC]
+    end
+```
+
+## HTTP
+
+单次 **请求-响应**，无长连接。
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant B as 浏览器
+    participant S as FastAPI<br/>(Uvicorn)
+
+    B->>S: HTTP GET /api/data
+    Note over B,S: fetch() 发起；连接可随响应关闭或由连接复用池管理
+    S-->>B: 200 application/json<br/>{"msg":"hello"}
+    Note over B,S: 一次往返完成；典型 CRUD / API 调用
+```
+
+![webp](images/01.webp)
+
+```
+INFO:     Uvicorn running on http://127.0.0.1:8001 (Press CTRL+C to quit)
+INFO:     Started reloader process [18684] using WatchFiles
+INFO:     Started server process [23244]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:51883 - "GET / HTTP/1.1" 200 OK
+[数据流 06:19:33 | 01_http] 前端→后端 GET /api/data
+[数据流 06:19:33 | 01_http] 后端→前端 200 application/json | {"msg": "hello"}
+INFO:     127.0.0.1:51883 - "GET /api/data HTTP/1.1" 200 OK
+```
+
+## WebSocket
+
+先 **升级协议** 建立全双工通道，之后在**同一连接**上多次收发。
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant B as 浏览器
+    participant S as FastAPI<br/>WebSocket 端点
+
+    B->>S: HTTP Upgrade → WebSocket<br/>GET /ws
+    S-->>B: 101 Switching Protocols<br/>accept()
+    Note over B,S: 连接保持打开
+
+    loop 会话期内可重复任意次
+        B->>S: 文本帧（如 "hello"）
+        S-->>B: 文本帧（如 "echo: hello"）
+    end
+
+    B--xS: 关闭连接（或异常断开）
+    Note over B,S: 双向随时可发；适合聊天、协作、游戏状态
+```
+
+![webp](images/02.webp)
+
+```
+INFO:     Uvicorn running on http://127.0.0.1:8002 (Press CTRL+C to quit)
+INFO:     Started reloader process [16584] using WatchFiles
+INFO:     Started server process [29804]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:64857 - "GET / HTTP/1.1" 304 Not Modified
+[数据流 06:22:37 | 02_websocket] 前端→后端 WebSocket 握手 /ws | 浏览器发起连接
+INFO:     127.0.0.1:55746 - "WebSocket /ws" [accepted]
+[数据流 06:22:37 | 02_websocket] 后端→前端 WebSocket accept | 连接已建立，可双向收发文本帧
+INFO:     connection open
+[数据流 06:22:49 | 02_websocket] 前端→后端 WS 文本帧（前端→后端） | TEST
+[数据流 06:22:49 | 02_websocket] 后端→前端 WS 文本帧（后端→前端） | echo: TEST
+```
+
+## SSE
+
+浏览器用 **EventSource** 发起 **GET**，服务端在**同一响应体**里持续写入 `text/event-stream` 分帧。
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant B as 浏览器<br/>EventSource
+    participant S as FastAPI<br/>StreamingResponse
+
+    B->>S: HTTP GET /stream
+    activate S
+    Note over S: 响应不立刻结束；media_type = text/event-stream
+
+    loop 流式推送（示例中多次）
+        S-->>B: SSE 帧：data: 0\n\n …
+        Note over B: onmessage 触发
+    end
+
+    S-->>B: 流结束，连接关闭
+    deactivate S
+    Note over B,S: 仅服务端→客户端推送；若要上行需另用 fetch/WS
+```
+
+![webp](images/03.webp)
+
+```
+INFO:     Uvicorn running on http://127.0.0.1:8003 (Press CTRL+C to quit)
+INFO:     Started reloader process [5032] using WatchFiles
+INFO:     Started server process [34184]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:64359 - "GET / HTTP/1.1" 304 Not Modified
+[数据流 06:25:12 | 03_sse] 前端→后端 GET /stream | 浏览器 EventSource 打开单向流
+[数据流 06:25:12 | 03_sse] 后端→前端 200 text/event-stream | 开始 StreamingResponse 生成器
+INFO:     127.0.0.1:64359 - "GET /stream HTTP/1.1" 200 OK
+[数据流 06:25:12 | 03_sse] 后端→前端 SSE 推一条 default 消息 | {"wire": "data: 0\\n\\n"}
+[数据流 06:25:13 | 03_sse] 后端→前端 SSE 推一条 default 消息 | {"wire": "data: 1\\n\\n"}
+[数据流 06:25:14 | 03_sse] 后端→前端 SSE 推一条 default 消息 | {"wire": "data: 2\\n\\n"}
+[数据流 06:25:15 | 03_sse] 后端→前端 SSE 推一条 default 消息 | {"wire": "data: 3\\n\\n"}
+[数据流 06:25:16 | 03_sse] 后端→前端 SSE 推一条 default 消息 | {"wire": "data: 4\\n\\n"}
+[数据流 06:25:17 | 03_sse] 后端→前端 SSE 推一条 default 消息 | {"wire": "data: 5\\n\\n"}
+[数据流 06:25:18 | 03_sse] 后端→前端 SSE 推一条 default 消息 | {"wire": "data: 6\\n\\n"}
+[数据流 06:25:19 | 03_sse] 后端→前端 SSE 推一条 default 消息 | {"wire": "data: 7\\n\\n"}
+[数据流 06:25:20 | 03_sse] 后端→前端 SSE 推一条 default 消息 | {"wire": "data: 8\\n\\n"}
+[数据流 06:25:21 | 03_sse] 后端→前端 SSE 推一条 default 消息 | {"wire": "data: 9\\n\\n"}
+[数据流 06:25:22 | 03_sse] 后端→前端 SSE 流结束 | 已发送 10 条，连接将关闭
+[数据流 06:25:25 | 03_sse] 前端→后端 GET /stream | 浏览器 EventSource 打开单向流
+[数据流 06:25:25 | 03_sse] 后端→前端 200 text/event-stream | 开始 StreamingResponse 生成器
+INFO:     127.0.0.1:64359 - "GET /stream HTTP/1.1" 200 OK
+[数据流 06:25:25 | 03_sse] 后端→前端 SSE 推一条 default 消息 | {"wire": "data: 0\\n\\n"}
+[数据流 06:25:26 | 03_sse] 后端→前端 SSE 推一条 default 消息 | {"wire": "data: 1\\n\\n"}
+...
+```
+
+## 轮询 Polling
+
+多次独立的 **HTTP 请求**，模拟「刷新感」。
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant B as 浏览器<br/>setInterval
+    participant S as FastAPI
+
+    loop 每 3 秒（示例）
+        B->>S: HTTP GET /api/status
+        S-->>B: 200 JSON（uptime、tick 等）
+    end
+
+    Note over B,S: 每次都是新请求；简单但有空转与延迟权衡
+```
+
+![webp](images/04.webp)
+
+```
+INFO:     Uvicorn running on http://127.0.0.1:8004 (Press CTRL+C to quit)
+INFO:     Started reloader process [14632] using WatchFiles
+INFO:     Started server process [33876]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:55666 - "GET / HTTP/1.1" 200 OK
+[数据流 06:28:05 | 04_polling] 前端→后端 GET /api/status | 定时轮询命中
+[数据流 06:28:05 | 04_polling] 后端→前端 200 application/json | {"uptime_sec": 2.45, "tick": 1775888885}
+INFO:     127.0.0.1:55666 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55666 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+[数据流 06:28:08 | 04_polling] 前端→后端 GET /api/status | 定时轮询命中
+[数据流 06:28:08 | 04_polling] 后端→前端 200 application/json | {"uptime_sec": 5.49, "tick": 1775888888}
+INFO:     127.0.0.1:55666 - "GET /api/status HTTP/1.1" 200 OK
+[数据流 06:28:11 | 04_polling] 前端→后端 GET /api/status | 定时轮询命中
+[数据流 06:28:11 | 04_polling] 后端→前端 200 application/json | {"uptime_sec": 8.41, "tick": 1775888891}
+INFO:     127.0.0.1:55666 - "GET /api/status HTTP/1.1" 200 OK
+[数据流 06:28:14 | 04_polling] 前端→后端 GET /api/status | 定时轮询命中
+[数据流 06:28:14 | 04_polling] 后端→前端 200 application/json | {"uptime_sec": 11.42, "tick": 1775888894}
+```
+
+## 长轮询 Polling
+
+单次 HTTP **长时间占用**，服务端在「有数据或超时」后才返回；客户端拿到结果后**立刻再发起**下一次。
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant B as 浏览器
+    participant S as FastAPI<br/>/poll
+
+    B->>S: GET /poll?since=0
+    activate S
+    Note over S: 在内存中等待条件满足<br/>（新 seq 或超时）
+    S-->>B: 200 JSON（可能数秒～数十秒后才返回）
+    deactivate S
+
+    B->>S: GET /poll?since=上次seq
+    activate S
+    Note over S: 再次挂起等待…
+    S-->>B: 200 JSON
+    deactivate S
+
+    Note over B,S: 仍是「一问一答」，但「问」会等很久；不能替代真双向实时
+```
+
+![webp](images/05.webp)
+
+```
+INFO:     Uvicorn running on http://127.0.0.1:8005 (Press CTRL+C to quit)
+INFO:     Started reloader process [18264] using WatchFiles
+INFO:     Started server process [4792]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:52964 - "GET / HTTP/1.1" 200 OK
+[数据流 06:29:47 | 05_long_polling] 前端→后端 GET /poll（长连接等待中） | {"since": 0}
+INFO:     127.0.0.1:53624 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+[数据流 06:29:53 | 05_long_polling] 后端→前端 200 application/json（长轮询返回） | {"seq": 1, "msg": "new data"}
+INFO:     127.0.0.1:52964 - "GET /poll?since=0 HTTP/1.1" 200 OK
+[数据流 06:29:53 | 05_long_polling] 前端→后端 GET /poll（长连接等待中） | {"since": 1}
+[数据流 06:30:01 | 05_long_polling] 后端→前端 200 application/json（长轮询返回） | {"seq": 2, "msg": "new data"}
+INFO:     127.0.0.1:52964 - "GET /poll?since=1 HTTP/1.1" 200 OK
+[数据流 06:30:01 | 05_long_polling] 前端→后端 GET /poll（长连接等待中） | {"since": 2}
+[数据流 06:30:09 | 05_long_polling] 后端→前端 200 application/json（长轮询返回） | {"seq": 3, "msg": "new data"}
+```
+
+## GraphQL
+
+语义上仍是 **HTTP 请求-响应**，但路径常为 **`POST /graphql`**，**要哪些字段**写在 body 的 `query` 里。
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant B as 浏览器
+    participant S as Strawberry<br/>GraphQLRouter
+
+    B->>S: POST /graphql<br/>Body: {"query":"{ user { name } }"}
+    Note over S: 解析 query → 执行 resolver → 组装 data/errors
+    S-->>B: 200 JSON<br/>{"data":{"user":{"name":"Ada"}}}
+
+    Note over B,S: 一个 URL；不同客户端可带不同 query；适合大型前端取数
+```
+
+![webp](images/06.webp)
+
+```
+INFO:     Uvicorn running on http://127.0.0.1:8006 (Press CTRL+C to quit)
+INFO:     Started reloader process [23384] using WatchFiles
+INFO:     Started server process [24648]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:56578 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56578 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+[数据流 06:35:41 | 06_graphql] 前端→后端 POST /graphql | {"query":"{ user { name } }"}
+[数据流 06:35:41 | 06_graphql] 后端→前端 HTTP 200 | GraphQL 执行完成（响应体由 Starlette 写出）
+INFO:     127.0.0.1:56578 - "POST /graphql HTTP/1.1" 200 OK
+```
+
+
+
+## gRPC
+
+**浏览器页面**若用本仓库里的 FastAPI，仅用于静态说明；**真正 gRPC** 在独立进程里，客户端多为**命令行或其它服务**。
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant C as grpc_client.py<br/>（或其它服务）
+    participant G as grpc_server.py<br/>:50051
+
+    C->>G: SayHello(HelloRequest)<br/>HTTP/2 + Protobuf 帧
+    Note over C,G: 非本仓库 HTML 默认路径；需 grpc 库 / 生成代码
+
+    G-->>C: HelloReply(message=...)
+
+    Note over C,G: 高性能、强类型；前端若要调用需 gRPC-Web 或网关转 HTTP
+```
+
+**说明页（可选）**与典型 HTTP 静态资源相同：
+
+```mermaid
+sequenceDiagram
+    participant B as 浏览器
+    participant H as FastAPI<br/>07_grpc 静态页
+
+    B->>H: GET /
+    H-->>B: 200 text/html（说明文档）
+```
+
+## 表单提交
+
+**无 JavaScript** 也可：表单 **POST** 后浏览器**整页**进入新文档。
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant B as 浏览器
+    participant S as FastAPI
+
+    B->>S: POST /submit<br/>Content-Type: application/x-www-form-urlencoded<br/>body: username=...
+    Note over S: Form(...) 解析字段
+    S-->>B: 200 text/html（结果页）
+    Note over B: 地址栏可能变为 /submit；页面刷新/导航
+```
+
+
+
+```
+INFO:     Uvicorn running on http://127.0.0.1:8008 (Press CTRL+C to quit)
+INFO:     Started reloader process [24252] using WatchFiles
+INFO:     Started server process [24648]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:58761 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58761 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+[数据流 06:32:16 | 08_form] 前端→后端 POST /submit (application/x-www-form-urlencoded) | {"username": "admin"}
+[数据流 06:32:16 | 08_form] 后端→前端 200 text/html | 整页 HTML 结果（浏览器将导航到新文档）
+INFO:     127.0.0.1:55984 - "POST /submit HTTP/1.1" 200 OK
+```
+

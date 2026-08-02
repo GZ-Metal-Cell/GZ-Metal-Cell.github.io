@@ -1,0 +1,483 @@
+---
+title: OS-终端、进程组和 UNIX Shell
+date: Sun Oct 26 2025 11:27:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - OS
+  - 南京大学《操作系统原理》
+categories: 学习
+description: 学习自 B 站 UP 主绿导师原谅你了。
+---
+
+
+# 资源
+
+-   [2025 南京大学操作系统原理 哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1XZAbeqEyt/)
+-   [Yanyan's Wiki](https://jyywiki.cn/)
+-   [2025春季 操作系统 | Xintao Niu (钮鑫涛)](https://niuxintao.github.io/courses/2025Spring-OS/main/)
+
+# 正文
+
+## 8. 终端和 UNIX Shell
+
+### 8.1 终端
+
+#### 打字机时代
+
+**打字机**
+
+**WERTY 键盘 (1860s)**
+
+- 为降低打字速度设计的防卡纸方案
+  - 毕竟机械结构，每一下都需要足够的力量
+
+**打字机时代的遗产**
+
+**Shift**
+
+- 使字锤或字模向上移动一段距离，切换字符集
+
+**CR & LF**
+
+- `\r` CR (Carriage Return): 回车，将打印头移回行首
+  - `print('Hel\rlo')`
+- `\n` LF (Line Feed): 换行，将纸张向上移动一行
+  - UNIX 的 `\n` 同时包含 CR 和 LF
+
+**Tab & Backspace**
+
+- 位置移动 (~~Backspace + 减号 = 错了划掉~~)
+
+| 按键          | 原理                                | 在今天的计算机里表现 |
+| ------------- | ----------------------------------- | -------------------- |
+| **Shift**     | 让字模上移，切换字符集（小写→大写） | 保留成大小写切换     |
+| **CR** (`\r`) | Carriage Return：打印头回到行首     | 在字符串中回到行首   |
+| **LF** (`\n`) | Line Feed：纸张上移一行             | 在字符串中换行       |
+| **Tab**       | 快速移动到下一个“列”位置            | 保留为制表符         |
+| **Backspace** | 退一个字符位置                      | 删除一个字符         |
+
+**电传打字机**（Teletypewriter，TTY）
+
+**为了发电报设计（收发两端同时打印）**
+
+- Telex (teleprinter exchange): 1920s，早于计算机
+  - 使用 Baudot Code (5-bit code)
+  - 很自然地也能用在计算机上
+
+![webp](01.webp)
+
+> 使用 **Baudot Code（5 位编码）**。
+>
+> 因为能把输入变成信号再传到远方，非常自然地被计算机用来作为输入/输出设备。
+>
+> 所以“终端”最早其实是**一个打字机 + 电缆**的组合。
+
+**VT100: 封神之路**
+
+**Video Teletypewriter (DEC, 1978)**
+
+- 成为事实上的行业标准
+  - 首个完整实现 ANSI Escape Sequence 的终端
+  - 80×24 字符显示成为标准布局
+
+> 1978 年 DEC 公司推出 **VT100**。
+>
+> 它定义了一套标准的“控制序列”：**ANSI Escape Sequences**，用于控制光标、颜色、清屏等。
+>
+> 这成为**后来的终端标准**（比如 `\033[2J` 表示清屏）。
+>
+> 同时确立了“80×24 字符”的标准屏幕大小。
+
+#### 计算机终端：原理
+
+**作为输出设备**
+
+- 接受 UART 信号并显示 (Escape Sequence 就非常自然了)
+
+**作为输入设备**
+
+- 把按键的 ASCII 码输出到 UART (所以有很多控制字符)
+
+![webp](02.webp)
+
+#### 今天：伪终端（Pseudo Terminal）
+
+**一对 “管道” 提供双向通信通道**
+
+- 主设备 (PTY Master): 连接到终端模拟器
+- 从设备 (PTY Slave): 连接到 shell 或其他程序
+  - 例如 `/dev/pts/0`
+
+**伪终端经常被创建**
+
+- ssh, tmux new-window, ctrl-alt-t, ...
+- `openpty()`: 通过 `/dev/ptmx` 申请一个新终端
+  - 返回两个文件描述符 (master/slave)
+  - (感受到 “操作系统对象” 的恐怖体量了吧)
+
+> 你在桌面打开一个终端窗口（master）。
+>
+> 操作系统创建一个 `/dev/pts/0`（slave）。
+>
+> Shell 的输入输出都指向这个 slave。
+>
+> 你敲键盘 → master 把键发给 slave → shell 收到命令。
+>
+> shell 输出文字 → slave 发回给 master → 显示在屏幕上。
+
+#### 终端模拟器（Terminal Emulator）
+
+**这下你也会实现了**
+
+- `openpty` + `fork`
+  - 子进程：stdin/stdout/stderr 指向 slave
+  - 父进程：从 master 读取输出显示到屏幕；将键盘输入写入 master
+
+**甚至可以扩展 Escape Sequence 来显示图片**
+
+- Kitty: `\033[60C\_` 开头，`\033\` 结尾
+  - 允许控制大小、位置、动画等
+  - `kitten icat img.png | cat`
+
+#### 终端：更多功能
+
+**终端模式**
+
+- Canonical Mode: 按行处理
+  - 回车发送数据（终端提供行编辑功能）
+
+> 按**行**处理输入。
+>
+> 回车才把整行发给程序。
+>
+> 支持行编辑（比如按 Backspace 删除）。
+>
+> 普通命令行程序（bash）用这种模式。
+
+- Non-canonical Mode: 按字符处理
+  - 每个字符立即发送给程序
+  - 用于实现交互式程序: `vim`, `ssh sshtron.zachlatta.com`
+
+> 按**字符**立即发送给程序。
+>
+> 用于交互性强的程序（比如 vim、ssh、游戏）。
+>
+> 程序自己处理光标移动、删除、显示等。
+
+**终端属性控制**
+
+- tcgetattr/tcsetattr (terminal control)
+- 可以控制终端的各种行为：回显、信号处理、特殊字符等
+  - （你输密码的时候关闭了终端的回显）
+
+### 8.2 终端和操作系统
+
+#### 程序和终端配对
+
+**用户登录的起点**
+
+- 系统启动 (内核 → init → getty)
+- 远程登录 (sshd → fork → openpty)
+  - stdin, stdout, stderr 都会指向分配的终端
+- vscode (fork → openpty)
+
+**login 程序继承分配的终端**
+
+- （是的，login 是一个程序）
+- `fork()` 会继承文件描述符（指针）
+  - 因此，子进程也会指向同一个终端
+
+#### 进程管理：要解决的问题
+
+> 我们有那么大一棵进程树，都指向同一个终端，有的在前台，有的在后台，`Ctrl-C` 到底终止哪个进程？
+
+**答案：终端才不管呢**
+
+- 它只管传输**字符**
+  - `Ctrl-C`: End of Text (ETX), `\x03`
+  - `Ctrl-D`: End of Transmission (EOT), `\x04`
+  - `stty -a`: 你可以看到按键绑定 (奇怪的知识增加了)
+- 但**操作系统**收到了这个字符
+  - 就可以对 “当前” 的进程采取行动
+
+| 层级     | 发生的事                               | 谁负责   |
+| -------- | -------------------------------------- | -------- |
+| 键盘输入 | 产生 `Ctrl+C`（ASCII 0x03）            | 用户     |
+| 终端设备 | 把字符传给内核                         | 驱动     |
+| 内核     | 检测到特殊控制字符，发信号给前台进程组 | 操作系统 |
+| 程序     | 收到 `SIGINT`，默认终止                | 应用程序 |
+
+#### 终端上的“当前进程”
+
+> 作为操作系统的设计者，需要在收到 `Ctrl-C` 的时候找到一个 “当前进程”
+
+你会怎么做？
+
+- `fork()` 会产生树状结构
+  - （还有托孤行为）
+- `Ctrl-C` 应该终止所有前台的 “进程们”
+  - 但不能误伤后台的 “进程们”
+
+#### 会话（Session）和进程组（Process Group）
+
+![webp](03.webp)
+
+**给进程引入一个额外编号 (Session ID，大分组)**
+
+- 子进程会继承父进程的 Session ID
+  - 一个 Session 关联一个控制终端 (controlling terminal)
+  - Leader 退出时，全体进程收到 Hang Up (SIGHUP)
+
+**再引入另一个编号 (Process Group ID，小分组)**
+
+- 只能有一个前台进程组
+- 操作系统收到 Ctrl-C，向前台进程组**所有进程**发送 SIGINT
+
+| 层级   | 名称                 | 含义                                   | 用途                |
+| ------ | -------------------- | -------------------------------------- | ------------------- |
+| 大分组 | **Session ID**       | 一组相关进程的集合（通常一个登录会话） | 区分不同登录终端    |
+| 小分组 | **Process Group ID** | 在一个 Session 内的子分组              | 区分前台/后台进程组 |
+
+> - 用户按下 `Ctrl-C` → 终端设备驱动收到控制字符 `\x03`。
+>
+> - 驱动层识别出“中断信号”事件。 → 操作系统知道当前终端属于哪个会话。
+>
+> - 操作系统查找该终端的 **前台进程组（Foreground PGID）**。
+>
+> - 向这个进程组的**所有成员**发送 `SIGINT` 信号。
+
+#### 会话和进程组：API
+
+**太不优雅了**
+
+- setsid/getsid
+  - setsid 会脱离 controlling terminal
+- setpgid/getpgid
+- tcsetpgrp/tcgetpgrp
+  - 迷惑 API
+
+| 函数名                    | 作用                                                         | 典型使用场景                                       | 注意事项                                                     |
+| ------------------------- | ------------------------------------------------------------ | -------------------------------------------------- | ------------------------------------------------------------ |
+| **`setsid()`**            | 创建一个新的会话（session）并成为其 leader，同时脱离当前的 controlling terminal。 | 守护进程（daemon）启动时使用，使进程脱离终端控制。 | 调用者不能是已有会话的 leader，否则调用失败（`EPERM`）。     |
+| **`getsid(pid)`**         | 获取指定进程 `pid` 所属的 session ID。                       | 查看当前进程或其他进程的 session 关系。            | `getsid(0)` 获取当前进程的 session ID。                      |
+| **`setpgid(pid, pgid)`**  | 将进程 `pid` 加入（或创建）进程组 `pgid`。                   | shell 在启动子进程时分配前台/后台进程组。          | 只能操作自己会话中的进程；父进程通常在 `fork()` 后、`exec()` 前调用。 |
+| **`getpgid(pid)`**        | 获取指定进程 `pid` 的进程组 ID。                             | 判断进程属于哪个进程组。                           | `getpgid(0)` 获取当前进程的进程组 ID。                       |
+| **`tcsetpgrp(fd, pgrp)`** | 将终端（文件描述符 `fd`）的前台进程组设置为 `pgrp`。         | 实现前台/后台任务切换（如 `fg`/`bg` 命令）。       | 只能由控制终端的会话 leader 调用。                           |
+| **`tcgetpgrp(fd)`**       | 获取终端（文件描述符 `fd`）当前的前台进程组 ID。             | shell 判断哪个进程组在前台。                       | 通常配合 `tcsetpgrp` 使用。                                  |
+
+> 因为这些函数都是在 1970s–1980s UNIX 环境演化出来的——**那时候根本没有图形界面、没有多窗口、甚至没有多终端。**
+>
+> 结果这些底层接口在后来的系统（比如 Linux、Android、macOS）都不得不继续兼容
+
+**以及……uid, effective uid (?), saved uid (???)**
+
+- [Setuid Demystified](https://www.usenix.org/conference/11th-usenix-security-symposium/setuid-demystified)
+  - 任何软件都很难逃脱千疮百孔的设计
+
+#### 终于能实现 Job Control 了
+
+**窗口和多任务：终端可以有 “一个前台进程组”**
+
+- “最小化” = Ctrl-Z (SIGTSTP)
+  - SIGTSTP 默认行为暂停进程，收到 SIGCONT 后恢复
+- “切换” = fg/bg (tcsetpgrp)
+
+**为了实现 “窗口栏上的按钮”，还很是大费周章**
+
+- 还不如 tmux 管理多个 pty 呢 (选择性 “绘制” 在终端上)
+  - 那是因为发明 session/pg 的时候还没有 pty 呢……
+
+**但是，这是 POSIX 的一部分……**
+
+-  几乎任何人都无法预知 “软件” 的未来
+
+**回头看这个问题**
+
+- 我们不需要 “绑定进程到设备”
+
+> “会话、进程组、信号”这些设计在今天看来有点笨重，但它们奠定了所有现代系统的多任务与隔离基础。
+
+- 管理程序 (tmux, gnome, ...) 去模拟就行
+  - Window Manager: 只需要 “进程组” 就行了
+    - 关窗口，全部一个不留
+  - Android: 每个 app 都是不同的用户
+    - 强行终止 = 杀掉属于这个用户的所有进程
+  - Snap: 程序在隔离的沙箱运行
+    - AppArmor + seccomp + namespaces (真狠)
+
+**从未来回头看现在**
+
+**人机交互的方式根本不应该是这样的**
+
+- 我们很少能清醒地认识到
+  - 我要做 $X$
+  - 应该分解成 $Y→(Z,W)→T$
+- 因此，**坐在电脑前的大部分时间都浪费了**
+
+#### 总结：Ctrl-C 到底做了什么
+
+**signal**
+
+- 注册一个信号的 “处理程序” $f$
+  - 操作系统会记下这个 $f$
+
+> 程序可以**注册**某个信号的处理函数 `f`。
+>
+> 操作系统在检测到某种事件（比如 Ctrl-C）时，会在合适的时机让程序“执行”这个函数。
+
+**kill**
+
+- 在程序从操作系统返回时，强制加一个向 $f$ 的跳转
+  - 程序 = 状态机
+  - 只要 “模拟” 调用 $f$ 的行为即可
+
+### 8.3 UNIX Shell 编程语言
+
+#### “多任务”不是人机交互的全部
+
+![webp](04.webp)
+
+#### The Shell Programming Language
+
+**UNIX 的用户可都是 hackers!**
+
+- UNIX Shell: **基于文本替换的极简编程语言**
+  - 只有一种类型：字符串
+  - 算术运算？对不起，我们不支持  (但可以 expr 1 + 2)
+
+**语言机制**
+
+- 预处理: `$()`, `<()`
+- 重定向: `cmd > file < file 2> /dev/null`
+- 顺序结构: `cmd1; cmd2`, `cmd1 && cmd2`, `cmd1 || cmd2`
+- 管道: `cmd1 | cmd2`
+  - 这些**命令**被翻译成**系统调用**序列 (open, dup, pipe, fork, execve, waitpid, ...)
+
+#### 例子：实现重定向
+
+**利用子进程继承文件描述符的特性**
+
+> 利用 **子进程继承父进程文件描述符** 的特性，把标准输入/输出指向文件，再执行命令。
+
+- 在父进程打开好文件，到子进程里腾挪
+  - 发现还是 Windows API 更 “优雅”
+
+```c
+int fd_in  = open(..., O_RDONLY | O_CLOEXEC);
+int fd_out = open(..., O_WRONLY | O_CLOEXEC);
+```
+
+> 父进程先打开输入输出文件：
+>
+> - `fd_in` 指向要读取的文件（重定向 stdin）
+> - `fd_out` 指向要写入的文件（重定向 stdout）
+> - `O_CLOEXEC` 表示 **在 execve() 时自动关闭**，防止文件泄露给其他程序
+
+```c
+int pid = fork();
+if (pid == 0) {
+    dup2(fd_in, 0);
+    dup2(fd_out, 1);
+    execve(...);
+}
+```
+
+> 子进程做两件事：
+>
+> - `dup2(fd_in, 0)` → 把文件描述符 `fd_in` 覆盖到标准输入（stdin = 0）
+>
+> - `dup2(fd_out, 1)` → 把文件描述符 `fd_out` 覆盖到标准输出（stdout = 1）
+>
+> - `execve(...)` → 执行目标程序（如 `cat`、`grep` 等），此时程序的 stdin/stdout 已经是文件了
+
+```c
+else {
+    close(fd_in);
+    close(fd_out);
+    waitpid(pid, &status, 0);
+}
+```
+
+> 父进程做两件事：
+>
+> - 关闭文件描述符（释放资源）
+> - 等待子进程结束（`waitpid` 收集状态）
+
+```shell
+grep foo < input.txt > output.txt
+```
+
+| Shell 命令     | 系统调用等价实现                                  |
+| -------------- | ------------------------------------------------- |
+| `< input.txt`  | `open("input.txt", O_RDONLY)` + `dup2(fd, 0)`     |
+| `> output.txt` | `open("output.txt", O_WRONLY                      |
+| `grep foo`     | `fork()` + `execve("grep", ["grep","foo"], envp)` |
+
+#### 读一读手册
+
+> dash（或其他 shell）就是 POSIX 标准的“命令行翻译器”，把用户输入的文本命令翻译成操作系统的行为。
+
+#### UNIX Shell：优点/缺点
+
+**优点：高效、简介、精确**
+
+- 一种 “自然编程语言”：一行命令，协同多个程序
+  - `make -nB | grep ...`
+  - 最适合 quick & dirty 的 hackers
+
+**无奈的取舍**
+
+- Shell 的设计被 “1970s 的算力、算法和工程能力” 束缚了
+  - 后人只好将错就错（PowerShell: 我好用，但没人用）
+
+**例子：操作的 “优先级”？**
+
+- `ls > a.txt | cat`
+  - 我已经重定向给 a.txt 了，cat 是不是就收不到输入了？
+- bash/zsh 的行为是不同的
+  - 所以脚本用 `#!/bin/bash` 甚至 `#!/bin/sh` 保持兼容
+- 文本数据 “责任自负”
+  - 空格 = 灾难
+
+> Shell 是 1970s 的高效工具语言，它轻量、精确、组合力强，但受限于历史设计，文本数据容易出错，行为在不同 shell 间不统一。
+
+```shell
+$ echo hello > /etc/a.txt
+bash: /etc/a.txt: Permission denied
+
+$ sudo echo hello > /etc/a.txt
+bash: /etc/a.txt: Permission denied
+```
+
+| 命令                                   | 谁执行                               | 权限             | 是否成功 |
+| -------------------------------------- | ------------------------------------ | ---------------- | -------- |
+| `echo hello > /etc/a.txt`              | 普通用户 shell                       | 普通用户         | ❌        |
+| `sudo echo hello > /etc/a.txt`         | root 的 echo + 普通用户 shell 重定向 | 普通用户 shell   | ❌        |
+| `echo hello                            | sudo tee /etc/a.txt`                 | tee 以 root 执行 | root     |
+| `sudo sh -c 'echo hello > /etc/a.txt'` | root 的 shell                        | root             | ✅        |
+
+#### A Zero-dependency UNIX Shell
+
+**真正体现 “Shell 是 Kernel 之外的 壳”**
+
+- 来自 xv6
+- 完全基于系统调用 API，零库函数依赖
+  - -ffreestanding 编译、ld 链接
+
+> **Shell = Kernel 之外的壳（user-level program）**
+>
+> 不依赖任何库函数，只调用 **系统调用（syscall）**：
+>
+> - `fork()`, `execve()`, `wait()`, `pipe()`, `open()`, `dup2()` 等
+>
+> 这是 xv6 的做法，也是教学中常见的例子
+>
+> 编译方式：
+>
+> - `-ffreestanding` → 不依赖标准库
+> - `ld` 链接 → 手动控制可执行文件布局
+
+**支持的功能**
+
+- 重定向/管道 `ls > a.txt`, `ls | wc -l`
+- 后台执行 `ls &`
+- 命令组合 `(echo a ; echo b) | wc -l`

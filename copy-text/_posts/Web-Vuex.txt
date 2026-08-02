@@ -1,0 +1,779 @@
+---
+title: Web-Vuex
+date: Thu Dec 12 2024 12:13:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - 前端
+  - Vue
+categories: 学习
+description: 学习自尚硅谷。
+---
+
+
+# 资源
+
+- [尚硅谷Vue2.0+Vue3.0全套教程丨vuejs从入门到精通_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1Zy4y1K7SH/)
+- [阿里云盘分享](https://www.aliyundrive.com/s/B8sDe5u56BU)
+
+# 正文
+
+## 105 Vuex 案例简介
+
+> [!Note]
+>
+> **Vuex 是什么**
+>
+> - 概念：专门在 Vue 中实现集中式状态（数据）管理的一个 Vue 插件，对 Vue 应用中
+>   多个组件的共享状态进行集中式的管理（读/写），也是一种组件间通信的方式，且适用于任意组件间通信。
+> - Github 地址：[vuejs/vuex: 🗃️ Centralized State Management for Vue.js.](https://github.com/vuejs/vuex)
+>
+> **什么时候使用 Vuex**
+>
+> - 多个组件依赖于同一状态
+> - 来自不同组件的行为需要变更同一状态
+>
+
+{% div subfields %}
+
+{% div subfield %}
+
+![webp](105-1.webp)
+
+{% enddiv %}
+
+{% div subfield %}
+
+![webp](105-2.webp)
+
+{% enddiv %}
+
+{% enddiv %}
+
+## 106 求和案例_纯 Vue 版
+
+{% tabs Tabs_106 %}
+
+<!-- tab App.vue -->
+
+```vue
+<template>
+	<div>
+		<Count/>
+	</div>
+</template>
+
+<script>
+import Count from './components/Count';
+export default {
+	name: 'App',
+	components: {
+		Count
+	},
+}
+</script>
+
+<style lang="css">
+	button {
+		margin-left: 5px;
+	}
+</style>
+```
+
+<!-- endtab -->
+
+<!-- tab Count.vue -->
+
+```vue
+<template>
+    <div>
+        <h1>当前求和为：{{ sum }}</h1>
+        <select v-model.number="n">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+        </select>
+        <button @click="increment">+</button>
+        <button @click="decrement">-</button>
+        <button @click="incrementOdd">当前求和为奇数再加</button>
+        <button @click="incrementWait">等一等再加</button>
+    </div>
+</template>
+
+<script>
+/* eslint-disable vue/multi-word-component-names */
+export default {
+    name: 'Count',
+    data() {
+        return {
+            n: 1,  // 用户选择的数字
+            sum: 0,  // 当前求和
+        }
+    },
+    methods: {
+        increment() {
+            this.sum += this.n;
+        },
+        decrement() {
+            this.sum -= this.n;
+        },
+        incrementOdd() {
+            if (this.sum % 2 === 1) {
+                this.sum += this.n;
+            }
+        },
+        incrementWait() {
+            setTimeout(() => {
+                this.sum += this.n;
+            }, 500);
+        }
+    }
+}
+</script>
+```
+
+<!-- endtab -->
+
+{% endtabs %}
+
+## 107 Vuex 工作原理图
+
+- [Vuex 是什么？ | Vuex](https://vuex.vuejs.org/zh/)（Vue3）
+
+- [Vuex 是什么？ | Vuex](https://v3.vuex.vuejs.org/zh/)（Vue2）
+
+> [!Note]
+>
+> ​	Vuex 是一个专为 Vue.js 应用程序开发的**状态管理模式**。它采用集中式存储管理应用的所有组件的状态，并以相应的规则保证状态以一种可预测的方式发生变化。
+
+![webp](107-1.webp)
+
+​	这张图展示了 Vuex 的工作原理。
+
+- `Vue Components` 相当于顾客，当顾客需要点餐时，可以找 `Actions`，也可直接找 `Mutations`（也就是说 `Actions` 是可以省略的）。
+- `Actions` 相当于服务员，对顾客点餐的内容做出判断，将信息传给 `Mutaions`。
+- `Mutations` 相当于后厨，加工收到的信息，更新给 `State`。
+- `State` 相当于菜品，由 `Mutations` 处理得到，最后交给 `Vue Components`。
+
+- `Actions`、`Mutations` 和 `State` 为 Vuex 的组成部分，放在一个 `store` 中。
+
+> [!NOte]
+>
+> **什么情况下我应该使用 Vuex？**
+>
+> ​	Vuex 可以帮助我们管理共享状态，并附带了更多的概念和框架。这需要对短期和长期效益进行权衡。
+>
+> ​	如果您不打算开发大型单页应用，使用 Vuex 可能是繁琐冗余的。确实是如此——如果您的应用够简单，您最好不要使用 Vuex。一个简单的 [store 模式 (opens new window)](https://v2.cn.vuejs.org/v2/guide/state-management.html#简单状态管理起步使用) 就足够您所需了。但是，如果您需要构建一个中大型单页应用，您很可能会考虑如何更好地在组件外部管理状态，Vuex 将会成为自然而然的选择。引用 Redux 的作者 Dan Abramov 的话说就是：
+>
+> > Flux 架构就像眼镜：您自会知道什么时候需要它。
+
+## 108 搭建 Vuex 环境
+
+> [!Warning]
+>
+> - Vue2 中，要用 Vuex 的 3 版本
+> - Vue3 中，要用 Vuex 的 4 版本
+
+```shell
+npm i vuex@3
+```
+
+```
+added 1 package in 14s
+
+122 packages are looking for funding
+  run `npm fund` for details
+```
+
+![webp](108-1.webp)
+
+​	当 `vm` 和 `vc` 对象都具有属性 `$store` 时，视为 Vuex 安装成功。
+
+​	如此构建项目：
+
+<script>
+    const N108_1 = new CodeFileTreeNode('node108_1', false, '108/src/main.js');
+    const N108_2 = new CodeFileTreeNode('node108_2', false, '108/src/App.vue');
+    const N108_3 = new CodeFileTreeNode('node108_3', false, '108/src/store/index.js');
+    const N108_4 = new CodeFileTreeNode('node108_4', true, 'store', [N108_3]);
+    const N108_5 = new CodeFileTreeNode('node108_5', true, 'src', [N108_1, N108_2, N108_4]);
+    new CodeFileTree('tree108', N108_5, N108_3).render();
+</script>
+
+- `main.js` 在使用 `new Vue()` 创建 vm 时，附带参数 `store`。
+- 一般 Vuex 的 `store` 配置在 `src/store/index.js` 中。
+
+## 109 求和案例_Vuex 版
+
+<script>
+    const N109_1 = new CodeFileTreeNode('node109_1', false, '109/src/main.js');
+    const N109_2 = new CodeFileTreeNode('node109_2', false, '109/src/App.vue');
+    const N109_3 = new CodeFileTreeNode('node109_3', false, '109/src/store/index.js');
+    const N109_4 = new CodeFileTreeNode('node109_4', false, '109/src/components/Count.vue');
+    const N109_5 = new CodeFileTreeNode('node109_5', true, 'components', [N109_4]);
+    const N109_6 = new CodeFileTreeNode('node109_6', true, 'store', [N109_3]);
+    const N109_7 = new CodeFileTreeNode('node109_7', true, 'src', [N109_1, N109_2, N109_6, N109_5]);
+    new CodeFileTree('tree109', N109_7, N109_3).render();
+</script>
+
+​	还是根据这个图来：
+
+![webp](107-1.webp)
+
+- `$store.state` 存储着数据。
+- `Vue Components` 可以通过 `this.$store.dispatch` 向 `Acitons` 发送请求，也可以直接使用 `this.$store.commit` 向 `Mutations` 发送请求。
+- `Actions` 接收请求，可以做一些预处理，通过 `this.$store.commit` 向 `Mutations` 发送请求。
+- `Mutations` 可以对 `$store.state` 里的值进行修改。
+- `$store.state` 的值修改后，更新 `Vue Components` 。
+
+## 110 Vuex 开发者工具的使用
+
+## 111 getters 配置项
+
+- 概念：当 `state` 中的数据需要经过加工后再使用时，可以使用 `getters` 再加工。
+
+- 在 `store.js` 中追加 `getters` 配置：
+
+  ```javascript
+  ......
+  
+  const getters = {
+      bigSum(state) {
+          return state.sum * 10
+      }
+  }
+  
+  // 创建并暴露 store
+  export default new Vuex.Store({
+      ......
+      getters
+  })
+  ```
+
+- 组件中读取数据：`$store.getters.bigSum`
+
+{% tabs Tabs_111 %}
+
+<!-- tab index.js -->
+
+```javascript
+// 该文件用于创建 Vuex 中最为核心的 store
+import Vue from 'vue'
+// 引入 Vuex
+import Vuex from 'vuex'
+
+Vue.use(Vuex)
+
+// 准备 actions 用于相应组件中的动作
+const actions = {
+    addOdd(context, value) {
+        console.log('actions addOdd', value)
+        if(state.sum % 2 === 1) {
+            context.commit('ADD_ODD', value)
+        }
+    },
+    addWait(context, value) {
+        console.log('actions addWait', value)
+        setTimeout(() => {
+            context.commit('ADD', value)
+        }, 500)
+    }
+}
+// 准备 mutations 用于修改 state（数据）
+const mutations = { 
+    ADD_ODD(state, value) {
+        // 这里可以做一些异步操作，比如发送请求，修改本地数据等
+        // 这里只是简单地修改 state 中的 sum 字段
+        console.log('mutations ADD_ODD', value)
+        state.sum += value
+    },
+    ADD(state, value) {
+        console.log('mutations ADD', value)
+        state.sum += value
+    },
+    MINUS(state, value) {
+        console.log('mutations MINUS', value)
+        state.sum -= value
+    }
+}
+// 准备 state 用于存储数据
+const state = {
+    sum: 0
+}
+// 准备 getters 用于将 state 中的数据进行加工
+const getters = {
+    bigSum(state) {
+        return state.sum * 10
+    }
+}
+
+// 创建并暴露 store
+export default new Vuex.Store({
+    actions,
+    mutations,
+    state,
+    getters
+})
+
+```
+
+<!-- endtab -->
+
+<!-- tab Count.vue -->
+
+```vue
+<template>
+    <div>
+        <h1>当前求和为：{{ $store.state.sum }}</h1>
+        <h1>当前求和放大 10 倍为：{{ $store.getters.bigSum }}</h1>
+        <select v-model.number="n">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+        </select>
+        <button @click="increment">+</button>
+        <button @click="decrement">-</button>
+        <button @click="incrementOdd">当前求和为奇数再加</button>
+        <button @click="incrementWait">等一等再加</button>
+    </div>
+</template>
+
+<script>
+/* eslint-disable vue/multi-word-component-names */
+export default {
+    name: 'Count',
+    data() {
+        return {
+            n: 1,  // 用户选择的数字
+        }
+    },
+    methods: {
+        increment() {
+            this.$store.commit('ADD', this.n)
+        },
+        decrement() {
+            this.$store.commit('MINUS', this.n)
+        },
+        incrementOdd() {
+            this.$store.dispatch('addOdd', this.n)
+        },
+        incrementWait() {
+            this.$store.dispatch('addWait', this.n)
+        }
+    },
+    mounted() {
+        console.log('Count', this.$store)
+    },
+}
+</script>
+```
+
+<!-- endtab -->
+
+{% endtabs %}
+
+## 112 mapState 与 mapGetters
+
+- **mapState 方法**：用于帮我们映射 `state` 中的数据为**计算属性**。
+
+  ```javascript
+  computed: {
+      // 借助 mapstate 生成计算属性：sum、school、subject（对象写法）
+      ...mapState({sum: 'sum', school: 'school', subject: 'subject'}),
+      // 借助 mapstate 生成计算属性：sum、school、subject（数组写法）
+      ...mapState(['sum', 'school', 'subject']),
+  }
+  ```
+
+- **mapGetters 方法**：用于帮助我们映射 `getters` 中的数据为**计算属性**。
+
+  ```javascript
+  computed: {
+      // 借助 mapGetters 生成计算属性：bigSum（对象写法）
+      ...mapGetters({bigSum: 'bigSum'}),
+      // 借助 mapGetters 生成计算属性：bigSum（数组写法）
+      ...mapGetters(['bigSum']),
+  }
+  ```
+
+![webp](112-1.webp)
+
+## 113 mapActions 与 mapMutations
+
+- `mapActions` 方法：用于帮助我们生成与 `actions` 对话的方法，即：包含 `$store.dispatch(xxx)` 的函数
+
+  ```javascript
+  methods:{
+  	//靠 mapActions 生成：incrementOdd、incrementWait（对象形式）
+      ...mapActions({incrementOdd: 'jiaOdd', incrementWait: 'jiaWait'})
+      
+  	// 靠 mapActions 生成：incrementOdd、incrementWait（数组形式）
+      ...mapActions(['jiaOdd', 'jiaWait'])
+  }
+  ```
+
+- `mapMutations` 方法：用于帮助我们生成与 `mutations` 对话的方法，即：包含 `$store.commit(xxx)` 的函数
+
+  ```javascript
+  methods:{
+  	// 靠 mapActions 生成：increment、decrement（对象形式）
+      ...mapMutations({increment:'JIA', decrement;'JIAN'}),
+      // 靠 mapMutations 生成：JIA、JIAN（对象形式）
+      ...mapMutations(['JIA','JIAN']),
+  }
+  ```
+
+> [!Tip]
+>
+> ​	备注：`mapActions` 与 `mapMutatons` 使用时，若需要传递参数需要：在模板中绑定事件时传递好参数，否则参数是事件对象。
+
+{% tabs Tabs_113 %}
+
+<!-- tab index.js -->
+
+```javascript
+// 该文件用于创建 Vuex 中最为核心的 store
+import Vue from 'vue'
+// 引入 Vuex
+import Vuex from 'vuex'
+
+Vue.use(Vuex)
+
+// 准备 actions 用于相应组件中的动作
+const actions = {
+    addOdd(context, value) {
+        console.log('actions addOdd', value)
+        if(state.sum % 2 === 1) {
+            context.commit('ADD_ODD', value)
+        }
+    },
+    addWait(context, value) {
+        console.log('actions addWait', value)
+        setTimeout(() => {
+            context.commit('ADD', value)
+        }, 500)
+    }
+}
+// 准备 mutations 用于修改 state（数据）
+const mutations = { 
+    ADD_ODD(state, value) {
+        // 这里可以做一些异步操作，比如发送请求，修改本地数据等
+        // 这里只是简单地修改 state 中的 sum 字段
+        console.log('mutations ADD_ODD', value)
+        state.sum += value
+    },
+    ADD(state, value) {
+        console.log('mutations ADD', value)
+        state.sum += value
+    },
+    MINUS(state, value) {
+        console.log('mutations MINUS', value)
+        state.sum -= value
+    }
+}
+// 准备 state 用于存储数据
+const state = {
+    sum: 0,
+    school: 'Harvard',
+    subject: 'Computer Science'
+}
+// 准备 getters 用于将 state 中的数据进行加工
+const getters = {
+    bigSum(state) {
+        return state.sum * 10
+    }
+}
+
+// 创建并暴露 store
+export default new Vuex.Store({
+    actions,
+    mutations,
+    state,
+    getters
+})
+```
+
+<!-- endtab -->
+
+<!-- tab Count.vue -->
+
+```vue
+<template>
+    <div>
+        <h1>当前求和为：{{ sum }}</h1>
+        <h1>当前求和放大 10 倍为：{{ bigSum }}</h1>
+        <h1>欢迎来到 {{ school }} 学习 {{ subject }} 课程</h1>
+        <select v-model.number="n">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+        </select>
+        <button @click="increment(n)">+</button>
+        <button @click="decrement(n)">-</button>
+        <button @click="incrementOdd(n)">当前求和为奇数再加</button>
+        <button @click="incrementWait(n)">等一等再加</button>
+    </div>
+</template>
+
+<script>
+/* eslint-disable vue/multi-word-component-names */
+import { mapState, mapGetters, mapActions, mapMutations } from 'vuex'
+export default {
+    name: 'Count',
+    data() {
+        return {
+            n: 1,  // 用户选择的数字
+        }
+    },
+    methods: {
+        ...mapActions({incrementOdd:'ADD', incrementWait:'jiaWait'}),
+        ...mapMutations({increment:'ADD', decrement: 'MINUS'}),
+    },
+    computed: {
+        // 借助 mapState 生成计算属性，从 state 中获取数据。（对象写法）
+        // ...mapState({sum: 'sum', school: 'school', subject: 'subject'})
+        // 借助 mapState 生成计算属性，从 state 中获取数据。数组写法）
+        ...mapState(['sum', 'school', 'subject']),
+        // 借助 mapGetters 生成计算属性：bigSum（对象写法）
+        // ...mapGetters({ bigSum: 'bigSum' }),
+        // 借助 mapGetters 生成计算属性：bigSum（数组写法）
+        ...mapGetters(['bigSum']),
+    },
+    mounted() {
+        const x = mapState({ he: 'sum', xuexiao: 'school', xueke: 'subject' })
+        console.log(x)
+    },
+}
+</script>
+```
+
+<!-- endtab -->
+
+{% endtabs %}
+
+## 114 多组件共享数据
+
+{% tabs Tabs_114 %}
+
+<!-- tab index.js -->
+
+```javascript
+// 该文件用于创建 Vuex 中最为核心的 store
+import Vue from 'vue'
+// 引入 Vuex
+import Vuex from 'vuex'
+
+Vue.use(Vuex)
+
+// 准备 actions 用于相应组件中的动作
+const actions = {
+    addOdd(context, value) {
+        console.log('actions addOdd', value)
+        if(state.sum % 2 === 1) {
+            context.commit('ADD_ODD', value)
+        }
+    },
+    addWait(context, value) {
+        console.log('actions addWait', value)
+        setTimeout(() => {
+            context.commit('ADD', value)
+        }, 500)
+    }
+}
+// 准备 mutations 用于修改 state（数据）
+const mutations = { 
+    ADD_ODD(state, value) {
+        // 这里可以做一些异步操作，比如发送请求，修改本地数据等
+        // 这里只是简单地修改 state 中的 sum 字段
+        console.log('mutations ADD_ODD', value)
+        state.sum += value
+    },
+    ADD(state, value) {
+        console.log('mutations ADD', value)
+        state.sum += value
+    },
+    MINUS(state, value) {
+        console.log('mutations MINUS', value)
+        state.sum -= value
+    },
+    ADD_PERSON(state, person) {
+        console.log('mutations ADD_PERSON', person)
+        state.personList.unshift(person)
+    }
+}
+// 准备 state 用于存储数据
+const state = {
+    sum: 0,
+    school: 'Harvard',
+    subject: 'Computer Science',
+    personList: [
+        {id: '001', name: '张三'}
+    ]
+}
+// 准备 getters 用于将 state 中的数据进行加工
+const getters = {
+    bigSum(state) {
+        return state.sum * 10
+    }
+}
+
+// 创建并暴露 store
+export default new Vuex.Store({
+    actions,
+    mutations,
+    state,
+    getters
+})
+```
+
+<!-- endtab -->
+
+<!-- tab App.vue -->
+
+```vue
+<template>
+	<div>
+		<Count/>
+		<Person/>
+	</div>
+</template>
+
+<script>
+import Count from './components/Count.vue';
+import Person from './components/Person.vue';
+export default {
+	name: 'App',
+	components: {
+		Count,
+		Person
+	},
+	mounted() {
+		console.log(this);
+	}
+}
+</script>
+
+<style lang="css">
+	button {
+		margin-left: 5px;
+	}
+</style>
+```
+
+<!-- endtab -->
+
+<!-- tab Count.vue -->
+
+```vue
+<template>
+    <div>
+        <h1>当前求和为：{{ sum }}</h1>
+        <h1>当前求和放大 10 倍为：{{ bigSum }}</h1>
+        <h1>欢迎来到 {{ school }} 学习 {{ subject }} 课程</h1>
+        <h3>下方组件的总人数为：{{ personList.length }}</h3>
+        <select v-model.number="n">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+        </select>
+        <button @click="increment(n)">+</button>
+        <button @click="decrement(n)">-</button>
+        <button @click="incrementOdd(n)">当前求和为奇数再加</button>
+        <button @click="incrementWait(n)">等一等再加</button>
+    </div>
+</template>
+
+<script>
+/* eslint-disable vue/multi-word-component-names */
+import { mapState, mapGetters, mapActions, mapMutations } from 'vuex'
+export default {
+    name: 'Count',
+    data() {
+        return {
+            n: 1,  // 用户选择的数字
+        }
+    },
+    methods: {
+        ...mapActions({incrementOdd:'ADD', incrementWait:'jiaWait'}),
+        ...mapMutations({increment:'ADD', decrement: 'MINUS'}),
+    },
+    computed: {
+        // 借助 mapState 生成计算属性，从 state 中获取数据。（对象写法）
+        // ...mapState({sum: 'sum', school: 'school', subject: 'subject'})
+        // 借助 mapState 生成计算属性，从 state 中获取数据。数组写法）
+        ...mapState(['sum', 'school', 'subject', 'personList']),
+        // 借助 mapGetters 生成计算属性：bigSum（对象写法）
+        // ...mapGetters({ bigSum: 'bigSum' }),
+        // 借助 mapGetters 生成计算属性：bigSum（数组写法）
+        ...mapGetters(['bigSum']),
+    },
+    mounted() {
+        const x = mapState({ he: 'sum', xuexiao: 'school', xueke: 'subject' })
+        console.log(x)
+    },
+}
+</script>
+```
+
+<!-- endtab -->
+
+<!-- tab Person.vue -->
+
+```vue
+<template>
+    <div>
+        <h1>人员列表</h1>
+        <h3 style="color: red">Count 组件求和为:{{ sum }}</h3>
+        <input type="text" placeholder="请输入名字" v-model="name">
+        <button @click="addPerson">添加</button>
+        <ul>
+            <li v-for="p in personList" :key="p.id">{{ p.name }}</li>
+        </ul>
+    </div>
+</template>
+
+<script>
+/* eslint-disable vue/multi-word-component-names */
+import { mapState } from 'vuex'
+import { nanoid} from 'nanoid'
+export default {
+    name: 'Person',
+    data() {
+        return {
+            name: ''
+        }
+    },
+    computed: {
+        ...mapState(['personList', 'sum'])
+    },
+    methods: {
+        addPerson() {
+            const personObj = {id: nanoid(), name: this.name}
+            this.$store.commit('ADD_PERSON', personObj)
+        }
+    }
+}
+</script>
+```
+
+<!-- endtab -->
+
+{% endtabs %}
+
+![webp](114-1.webp)
+
+## 115-116 Vuex 模块化 + namespace
+
+- 目的：让代码更好维护，让多种数据分类更加明确。
+
+<script>
+    const N115_1 = new CodeFileTreeNode('node115_1', false, '115/src/components/Count.vue');
+    const N115_2 = new CodeFileTreeNode('node115_2', false, '115/src/components/Person.vue');
+    const N115_3 = new CodeFileTreeNode('node115_3', true, 'components', [N115_1, N115_2]);
+    const N115_4 = new CodeFileTreeNode('node115_4', false, '115/src/store/count.js');
+    const N115_5 = new CodeFileTreeNode('node115_5', false, '115/src/store/index.js');
+    const N115_6 = new CodeFileTreeNode('node115_6', false, '115/src/store/person.js');
+    const N115_7 = new CodeFileTreeNode('node115_7', true, 'store', [N115_4, N115_5, N115_6]);
+    const N115_8 = new CodeFileTreeNode('node115_8', false, '115/src/App.vue');
+    const N115_9 = new CodeFileTreeNode('node115_9', false, '115/src/main.js');
+    const N115_10 = new CodeFileTreeNode('node115_10', true, 'src', [N115_3, N115_7, N115_8, N115_9]);
+    new CodeFileTree('tree115', N115_10, N115_5).render();
+</script>

@@ -1,0 +1,712 @@
+---
+title: Blender-Text Effects In Blender (7-12)
+date: Wed Jun 14 2023 14:38:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - Blender
+  - Python
+categories: 学习
+description: Blender 中的文字效果。学习自 Youtube 博主 5 Minutes Blender。
+---
+
+
+# 资源
+
+- [Text Effects In Blender YouTube](https://www.youtube.com/playlist?list=PLtV6EPHDRNQKj4S7hYAmRbmGM91XJF3ps)
+
+# 课程
+
+## Add Flickering Effect | Flickering Neon Sign | Simple & Easy Method | Blender Eevee (All Versions)
+
+1. 打开教程 6 的渲染界面，选中 `Camera` 对象：
+
+![png](7_1.png)
+
+2. 设置关键帧：
+
+![png](7_2.png)
+
+3. 100 帧后设置关键帧，可以通过移动缩放旋转来改变物体位置，改变的会变成黄色。右键会出现插入关键帧，点击，该物体位置信息就会插入到该关键帧中。
+
+![png](7_3.png)
+
+4. 设置输出文件夹：
+
+![png](7_4.png)
+
+5. 渲染图像：
+
+![png](7_5.png)
+
+6. 此时就输出了 100 帧图像：
+
+![png](7_6.png)
+
+7. Blender 还具有视频编辑功能！
+
+![png](7_7.png)
+
+## [3.x] Create Better & Clean 3D Text Using Geometry Nodes In Blender | Easy Step-by-Step Tutorial
+
+1. 给新工程自带的 `Cude` 对象不断调整其 `Geometry`，直到这样：
+
+![png](8_1.png)
+
+```python
+import bpy
+import os
+
+# 获取当前选中的网格对象
+bpy.ops.mesh.primitive_cube_add()
+text_obj = bpy.context.object
+
+# 创建 Geometry Nodes 网络
+text_modifier = text_obj.modifiers.new(type='NODES', name="Geometry Nodes")
+bpy.ops.node.new_geometry_node_group_assign()
+node_tree = text_modifier.node_group
+
+# 删除 Group Input 节点
+node_tree.nodes.remove(node_tree.nodes.get("Group Input"))
+
+# 创建 String to Curves 节点
+string_to_curves_node = node_tree.nodes.new(type='GeometryNodeStringToCurves')
+string_to_curves_node.location = (-400, 50)
+
+string_to_curves_node.align_x = "CENTER"
+string_to_curves_node.align_y = "MIDDLE"
+string_to_curves_node.inputs[0].default_value = "Hello,\nWorld!"
+string_to_curves_node.inputs[1].default_value = 2.2
+
+string_to_curves_node.font = bpy.data.fonts.load(os.path.abspath(os.path.join(os.path.abspath(os.path.dirname(bpy.data.filepath))
+                                                                      , './fonts/Neon_Future.ttf')))
+
+# 创建 Resample Curve 节点
+resample_curve_node = node_tree.nodes.new(type='GeometryNodeResampleCurve')
+resample_curve_node.location = (-150, 50)
+
+resample_curve_node.mode = "EVALUATED"
+
+# 创建 Fill Curve 节点
+fill_curve_node = node_tree.nodes.new(type='GeometryNodeFillCurve')
+fill_curve_node.location = (50, 50)
+
+# 创建 Extrude Mesh 节点
+extrude_mesh_node = node_tree.nodes.new(type='GeometryNodeExtrudeMesh')
+extrude_mesh_node.location = (250, 150)
+
+extrude_mesh_node.inputs[3].default_value = 0.4
+extrude_mesh_node.inputs[4].default_value = False
+
+# 创建 Flip Faces 节点
+flip_faces_node = node_tree.nodes.new(type='GeometryNodeFlipFaces')
+flip_faces_node.location = (250, -100)
+
+# 创建 Join Geometry 节点
+join_geometry_node = node_tree.nodes.new(type='GeometryNodeJoinGeometry')
+join_geometry_node.location = (450, 50)
+
+# 创建 Realize Instances 节点
+realize_instances_node = node_tree.nodes.new(type='GeometryNodeRealizeInstances')
+realize_instances_node.location = (650, 50)
+
+# 创建 Merge by Distance 节点
+merge_by_distance_node = node_tree.nodes.new(type='GeometryNodeMergeByDistance')
+merge_by_distance_node.location = (850, 50)
+
+# 获取 output node 节点
+output_node = node_tree.nodes.get("Group Output")
+output_node.location = (1050, 50)
+
+# 连接节点
+node_tree.links.new(string_to_curves_node.outputs[0], resample_curve_node.inputs[0])
+node_tree.links.new(resample_curve_node.outputs[0], fill_curve_node.inputs[0])
+node_tree.links.new(fill_curve_node.outputs[0], extrude_mesh_node.inputs[0])
+node_tree.links.new(fill_curve_node.outputs[0], flip_faces_node.inputs[0])
+node_tree.links.new(extrude_mesh_node.outputs[0], join_geometry_node.inputs[0])
+node_tree.links.new(flip_faces_node.outputs[0], join_geometry_node.inputs[0])
+node_tree.links.new(join_geometry_node.outputs[0], realize_instances_node.inputs[0])
+node_tree.links.new(realize_instances_node.outputs[0], merge_by_distance_node.inputs[0])
+node_tree.links.new(merge_by_distance_node.outputs[0], output_node.inputs[0])
+```
+
+2. 再添加 `Bevel`：
+
+![png](8_2.png)
+
+```python
+text_modifier_bevel = text_obj.modifiers.new(name="Bevel", type="BEVEL")
+text_modifier_bevel.width = 0.05
+text_modifier_bevel.segments = 5
+text_modifier_bevel.use_clamp_overlap = False
+text_modifier_bevel.harden_normals = True
+```
+
+3. 再添加 `Simple Deform`：
+
+![png](8_3.png)
+
+```python
+text_modifier_simple_deform = text_obj.modifiers.new(name="SimpleDeform", type="SIMPLE_DEFORM")
+text_modifier_simple_deform.deform_method = "BEND"
+text_modifier_simple_deform.angle = - np.pi / 4
+text_modifier_simple_deform.deform_axis = "Z"
+```
+
+---
+
+完整代码：
+
+```python
+import bpy
+import os
+import numpy as np
+
+# 获取当前选中的网格对象
+bpy.ops.mesh.primitive_cube_add()
+text_obj = bpy.context.object
+
+# 创建 Geometry Nodes 网络
+text_modifier_geometrynodes = text_obj.modifiers.new(type='NODES', name="Geometry Nodes")
+bpy.ops.node.new_geometry_node_group_assign()
+node_tree = text_modifier_geometrynodes.node_group
+
+# delete Group Input
+node_tree.nodes.remove(node_tree.nodes.get("Group Input"))
+
+# 创建 String to Curves 节点
+string_to_curves_node = node_tree.nodes.new(type='GeometryNodeStringToCurves')
+string_to_curves_node.location = (-400, 50)
+
+string_to_curves_node.align_x = "CENTER"
+string_to_curves_node.align_y = "MIDDLE"
+string_to_curves_node.inputs[0].default_value = "Hello,\nWorld!"
+string_to_curves_node.inputs[1].default_value = 2.2
+
+string_to_curves_node.font = bpy.data.fonts.load(os.path.abspath(os.path.join(os.path.abspath(os.path.dirname(bpy.data.filepath))
+                                                                      , './fonts/Neon_Future.ttf')))
+
+# 创建 Resample Curve 节点
+resample_curve_node = node_tree.nodes.new(type='GeometryNodeResampleCurve')
+resample_curve_node.location = (-150, 50)
+
+resample_curve_node.mode = "EVALUATED"
+
+# 创建 Fill Curve 节点
+fill_curve_node = node_tree.nodes.new(type='GeometryNodeFillCurve')
+fill_curve_node.location = (50, 50)
+
+# 创建 Extrude Mesh 节点
+extrude_mesh_node = node_tree.nodes.new(type='GeometryNodeExtrudeMesh')
+extrude_mesh_node.location = (250, 150)
+
+extrude_mesh_node.inputs[3].default_value = 0.4
+extrude_mesh_node.inputs[4].default_value = False
+
+# 创建 Flip Faces 节点
+flip_faces_node = node_tree.nodes.new(type='GeometryNodeFlipFaces')
+flip_faces_node.location = (250, -100)
+
+# 创建 Join Geometry 节点
+join_geometry_node = node_tree.nodes.new(type='GeometryNodeJoinGeometry')
+join_geometry_node.location = (450, 50)
+
+# 创建 Realize Instances 节点
+realize_instances_node = node_tree.nodes.new(type='GeometryNodeRealizeInstances')
+realize_instances_node.location = (650, 50)
+
+# 创建 Merge by Distance 节点
+merge_by_distance_node = node_tree.nodes.new(type='GeometryNodeMergeByDistance')
+merge_by_distance_node.location = (850, 50)
+
+# get output node
+output_node = node_tree.nodes.get("Group Output")
+output_node.location = (1050, 50)
+
+# 连接节点
+node_tree.links.new(string_to_curves_node.outputs[0], resample_curve_node.inputs[0])
+node_tree.links.new(resample_curve_node.outputs[0], fill_curve_node.inputs[0])
+node_tree.links.new(fill_curve_node.outputs[0], extrude_mesh_node.inputs[0])
+node_tree.links.new(fill_curve_node.outputs[0], flip_faces_node.inputs[0])
+node_tree.links.new(extrude_mesh_node.outputs[0], join_geometry_node.inputs[0])
+node_tree.links.new(flip_faces_node.outputs[0], join_geometry_node.inputs[0])
+node_tree.links.new(join_geometry_node.outputs[0], realize_instances_node.inputs[0])
+node_tree.links.new(realize_instances_node.outputs[0], merge_by_distance_node.inputs[0])
+node_tree.links.new(merge_by_distance_node.outputs[0], output_node.inputs[0])
+
+text_modifier_bevel = text_obj.modifiers.new(name="Bevel", type="BEVEL")
+text_modifier_bevel.width = 0.05
+text_modifier_bevel.segments = 5
+text_modifier_bevel.use_clamp_overlap = False
+text_modifier_bevel.harden_normals = True
+
+text_modifier_simple_deform = text_obj.modifiers.new(name="SimpleDeform", type="SIMPLE_DEFORM")
+text_modifier_simple_deform.deform_method = "BEND"
+text_modifier_simple_deform.angle = - np.pi / 4
+text_modifier_simple_deform.deform_axis = "Z"
+```
+
+## [3.x] Create Multi-line Text Using Geometry Nodes In Blender | Easy Step-by-Step Tutorial
+
+调整之前的 `Geometry Node`，使其可以多行显示文字：
+
+![png](9_1.png)
+
+```python
+import bpy
+import os
+import numpy as np
+
+# 获取当前选中的网格对象
+bpy.ops.mesh.primitive_cube_add()
+text_obj = bpy.context.object
+
+# 创建 Geometry Nodes 网络
+text_modifier_geometrynodes = text_obj.modifiers.new(type='NODES', name="Geometry Nodes")
+bpy.ops.node.new_geometry_node_group_assign()
+node_tree = text_modifier_geometrynodes.node_group
+
+# delete Group Input
+node_tree.nodes.remove(node_tree.nodes.get("Group Input"))
+
+# 创建 Special Characters 节点
+special_characters_node = node_tree.nodes.new(type='FunctionNodeInputSpecialCharacters')
+special_characters_node.location = (-800, 200)
+
+# 创建 String to Curves 节点
+string_to_curves_nodes = []
+for i in range(2):
+    string_to_curves_nodes.append(node_tree.nodes.new(type='GeometryNodeStringToCurves'))
+    string_to_curves_nodes[-1].location = (-400, 350 - 400 * i)
+    string_to_curves_nodes[-1].align_x = "CENTER"
+    string_to_curves_nodes[-1].align_y = "MIDDLE"
+    string_to_curves_nodes[-1].inputs[1].default_value = 2.2
+string_to_curves_nodes[0].font = bpy.data.fonts.load(os.path.abspath(os.path.join(os.path.abspath(os.path.dirname(bpy.data.filepath))
+                                                                  , './fonts/Neon_Future.ttf')))
+string_to_curves_nodes[1].font = bpy.data.fonts.load(os.path.abspath(os.path.join(os.path.abspath(os.path.dirname(bpy.data.filepath))
+                                                                  , './fonts/Ourland.otf')))
+
+# 创建 Resample Curve 节点
+resample_curve_node = node_tree.nodes.new(type='GeometryNodeResampleCurve')
+resample_curve_node.location = (250, 50)
+
+resample_curve_node.mode = "EVALUATED"
+
+# 创建 Fill Curve 节点
+fill_curve_node = node_tree.nodes.new(type='GeometryNodeFillCurve')
+fill_curve_node.location = (450, 50)
+
+# 创建 Extrude Mesh 节点
+extrude_mesh_node = node_tree.nodes.new(type='GeometryNodeExtrudeMesh')
+extrude_mesh_node.location = (650, 150)
+
+extrude_mesh_node.inputs[3].default_value = 0.4
+extrude_mesh_node.inputs[4].default_value = False
+
+# 创建 Flip Faces 节点
+flip_faces_node = node_tree.nodes.new(type='GeometryNodeFlipFaces')
+flip_faces_node.location = (650, -100)
+
+# 创建 Join Geometry 节点
+join_geometry_nodes = []
+for i in range(2):
+    join_geometry_nodes.append(node_tree.nodes.new(type='GeometryNodeJoinGeometry'))
+join_geometry_nodes[0].location = (50, 50)
+join_geometry_nodes[1].location = (850, 50)
+
+# 创建 Realize Instances 节点
+realize_instances_node = node_tree.nodes.new(type='GeometryNodeRealizeInstances')
+realize_instances_node.location = (1050, 50)
+
+# 创建 Merge by Distance 节点
+merge_by_distance_node = node_tree.nodes.new(type='GeometryNodeMergeByDistance')
+merge_by_distance_node.location = (1250, 50)
+
+# get output node
+output_node = node_tree.nodes.get("Group Output")
+output_node.location = (1450, 50)
+
+# 创建 String 节点
+string_nodes = []
+for i in range(3):
+    string_nodes.append(node_tree.nodes.new(type='FunctionNodeInputString'))
+    string_nodes[-1].location = (-800, -150 * i + 50)
+string_nodes[0].string = 'Taco'
+string_nodes[1].string = 'Tuesday!'
+string_nodes[2].string = 'gigigigigi~'
+
+# 创建 Join Strings 节点
+join_strings_node = node_tree.nodes.new(type='GeometryNodeStringJoin')
+join_strings_node.location = (-600, 75)
+
+# 创建 Set Position 节点
+set_position_nodes = []
+for i in range(2):
+    set_position_nodes.append(node_tree.nodes.new(type='GeometryNodeSetPosition'))
+    set_position_nodes[-1].location = (-150, -250 * i + 200)
+set_position_nodes[0].inputs[3].default_value[1] = 2
+set_position_nodes[1].inputs[3].default_value[1] = -1
+
+# 连接节点
+node_tree.links.new(special_characters_node.outputs[0], join_strings_node.inputs[0])
+node_tree.links.new(string_nodes[1].outputs[0], join_strings_node.inputs[1])
+node_tree.links.new(string_nodes[0].outputs[0], join_strings_node.inputs[1])
+node_tree.links.new(string_nodes[2].outputs[0], string_to_curves_nodes[1].inputs[0])
+node_tree.links.new(join_strings_node.outputs[0], string_to_curves_nodes[0].inputs[0])
+node_tree.links.new(string_to_curves_nodes[0].outputs[0], set_position_nodes[0].inputs[0])
+node_tree.links.new(string_to_curves_nodes[1].outputs[0], set_position_nodes[1].inputs[0])
+node_tree.links.new(set_position_nodes[0].outputs[0], join_geometry_nodes[0].inputs[0])
+node_tree.links.new(set_position_nodes[1].outputs[0], join_geometry_nodes[0].inputs[0])
+node_tree.links.new(join_geometry_nodes[0].outputs[0], resample_curve_node.inputs[0])
+node_tree.links.new(resample_curve_node.outputs[0], fill_curve_node.inputs[0])
+node_tree.links.new(fill_curve_node.outputs[0], extrude_mesh_node.inputs[0])
+node_tree.links.new(fill_curve_node.outputs[0], flip_faces_node.inputs[0])
+node_tree.links.new(extrude_mesh_node.outputs[0], join_geometry_nodes[1].inputs[0])
+node_tree.links.new(flip_faces_node.outputs[0], join_geometry_nodes[1].inputs[0])
+node_tree.links.new(join_geometry_nodes[1].outputs[0], realize_instances_node.inputs[0])
+node_tree.links.new(realize_instances_node.outputs[0], merge_by_distance_node.inputs[0])
+node_tree.links.new(merge_by_distance_node.outputs[0], output_node.inputs[0])
+
+# 创建 Bevel modifier
+
+text_modifier_bevel = text_obj.modifiers.new(name="Bevel", type="BEVEL")
+text_modifier_bevel.width = 0.05
+text_modifier_bevel.segments = 5
+text_modifier_bevel.use_clamp_overlap = False
+text_modifier_bevel.harden_normals = True
+
+# 创建 SimpleDeform modifier，使文本弯曲
+
+text_modifier_simple_deform = text_obj.modifiers.new(name="SimpleDeform", type="SIMPLE_DEFORM")
+text_modifier_simple_deform.deform_method = "BEND"
+text_modifier_simple_deform.angle = - np.pi / 4
+text_modifier_simple_deform.deform_axis = "Z"
+```
+
+## Create Wavy or Curvy Text In Blender | Easy Tutorial On Wave Modifier | Dancing Text | Waving Text
+
+1. 新建一个 `Text` 对象，调整其文字， `Bevel`，`Alignment`：
+
+![png](10_1.png)
+
+```python
+import bpy
+
+bpy.ops.object.text_add()
+text_obj = bpy.context.object
+
+text_obj.data.body = "Hello, World!"
+text_obj.data.extrude = 0.1
+text_obj.data.bevel_depth = 0.02
+text_obj.data.align_x = "CENTER"
+text_obj.data.align_y = "CENTER"
+```
+
+2. 给它一个 `Wave` 修改器，调整其参数，就会获得一个波浪动画效果：
+
+![png](10_2.png)
+
+```python
+text_modifier = text_obj.modifiers.new(name="Wave", type="WAVE")
+text_modifier.height = 0.75
+text_modifier.width = 5
+text_modifier.narrowness = 1
+text_modifier.start_position_x = 6
+text_modifier.speed = 0.2
+```
+
+---
+
+完整代码：
+
+```python
+import bpy
+import numpy as np
+
+bpy.ops.object.text_add()
+text_obj = bpy.context.object
+
+text_obj.data.body = "Hello, World!"
+text_obj.data.extrude = 0.1
+text_obj.data.bevel_depth = 0.02
+text_obj.data.align_x = "CENTER"
+text_obj.data.align_y = "CENTER"
+
+text_modifier = text_obj.modifiers.new(name="Wave", type="WAVE")
+text_modifier.height = 0.75
+text_modifier.width = 5
+text_modifier.narrowness = 1
+text_modifier.start_position_x = 6
+text_modifier.speed = 0.2
+```
+
+3. 如果要将它立起来，先转成 `Mesh`：
+
+![png](10_3.png)
+
+```python
+text_obj.rotation_euler[0] = np.pi / 2
+```
+
+4. 删除多余的边：`Mesh` → `Merge` → `By distance`：
+
+![png](10_4.png)
+
+```python
+bpy.ops.object.editmode_toggle()
+bpy.ops.mesh.select_all(action="SELECT")
+bpy.ops.mesh.remove_doubles(threshold=0.01)
+```
+
+5. 调整其 `Rotation`，`Object` → `Apply` → `All Transforms`：
+
+![png](10_5.png)
+
+```python
+bpy.ops.object.editmode_toggle()
+text_obj.rotation_euler[0] = np.pi / 2
+bpy.ops.object.transform_apply()
+```
+
+6. 添加 `Wave`：
+
+![png](10_6.png)
+
+```python
+bpy.ops.object.editmode_toggle()
+text_obj.rotation_euler[0] = np.pi / 2
+bpy.ops.object.transform_apply()
+```
+
+---
+
+完整代码：
+
+```python
+import bpy
+import numpy as np
+
+bpy.ops.object.text_add()
+text_obj = bpy.context.object
+
+text_obj.data.body = "Hello, World!"
+text_obj.data.extrude = 0.1
+text_obj.data.bevel_depth = 0.02
+text_obj.data.align_x = "CENTER"
+text_obj.data.align_y = "CENTER"
+
+bpy.ops.object.convert(target="MESH")
+
+bpy.ops.object.editmode_toggle()
+bpy.ops.mesh.select_all(action="SELECT")
+bpy.ops.mesh.remove_doubles(threshold=0.01)
+
+bpy.ops.object.editmode_toggle()
+text_obj.rotation_euler[0] = np.pi / 2
+bpy.ops.object.transform_apply()
+
+text_modifier = text_obj.modifiers.new(name="Wave", type="WAVE")
+text_modifier.height = 0.75
+text_modifier.width = 5
+text_modifier.narrowness = 1
+text_modifier.start_position_x = 6
+text_modifier.speed = 0.2
+```
+
+## Easy Method to Engrave Your Text or Logo | How To Carve Any Text | 3D Text Effects In Blender
+
+1. 新建一个 `Text` 对象，设置其内容，`Alignment`，`Location`：
+
+![png](11_1.png)
+
+```python
+import bpy
+import os
+
+bpy.ops.object.text_add()
+text_obj = bpy.context.object
+
+text_obj.data.align_x = "CENTER"
+text_obj.data.align_y = "CENTER"
+
+text_obj.data.body = "Hello,\nWorld!"
+
+text_obj.location[2] = 0.15
+
+text_obj.data.extrude = 0.3
+```
+
+2. 转换为 `MESH`：
+
+![png](11_2.png)
+
+```python
+bpy.ops.object.convert(target="MESH")
+```
+
+3. 按住 `X` 右键，删除 `Limit Dissolve`：
+
+![png](11_3.png)
+
+```python
+bpy.ops.object.editmode_toggle()
+bpy.ops.mesh.dissolve_limited()
+```
+
+4.`Mesh` → `Merge` → `By Distance`：
+
+![png](11_4.png)
+
+![png](11_5.png)
+
+```python
+bpy.ops.mesh.select_all(action="SELECT")
+bpy.ops.mesh.remove_doubles(threshold=0.01)
+bpy.ops.object.editmode_toggle()
+```
+
+5. 按住 `E` 网上拖，获得 `Extrude`：
+
+![png](11_6.png)
+
+```python
+bpy.ops.mesh.extrude_region_move(TRANSFORM_OT_translate={"value":(0, 0, 0.3)})
+bpy.ops.object.editmode_toggle()
+```
+
+6. 新建一个 `Cube`，设置其 `Scale`：
+
+![png](11_7.png)
+
+```python
+bpy.ops.mesh.primitive_cube_add()
+cube_obj = bpy.context.object
+
+cube_obj.scale[0:3] = [2.5, 1.2, 0.25]
+```
+
+7. 设置 `Boolean`：
+
+![png](11_8.png)
+
+```python
+cube_modifier_boolean = cube_obj.modifiers.new(name="Boolean", type="BOOLEAN")
+cube_modifier_boolean.object = text_obj
+bpy.ops.object.modifier_apply(modifier="Boolean")
+
+bpy.ops.object.transform_apply()
+```
+
+8. 设置材质，应用 `Boolean`：
+
+![png](11_9.png)
+
+```python
+cube_material = bpy.data.materials.new(name="Material")
+cube_material.use_nodes = True
+nodes = cube_material.node_tree.nodes
+principled_bsdf = nodes.get("Principled BSDF")
+if principled_bsdf is not None:
+    principled_bsdf.inputs[0].default_value = (0, 0, 0, 1)
+
+cube_obj.data.materials.append(cube_material)
+```
+
+9. 应用 `Scale`：
+
+![png](11_10.png)
+
+```python
+bpy.ops.object.transform_apply()
+```
+
+10. 设置 `Bevel` 及其相关参数：
+
+![png](11_11.png)
+
+```python
+cube_modifier_bevel = cube_obj.modifiers.new(name="Bevel", type="BEVEL")
+cube_modifier_bevel.width = 0.01
+cube_modifier_bevel.segments = 1
+cube_modifier_bevel.use_clamp_overlap = False
+cube_modifier_bevel.harden_normals = True
+
+text_obj.hide_viewport = True
+text_obj.hide_render = True
+```
+
+11. 导出 `.glb` 格式，可被 3D Viewer 读取。
+
+![png](11_12.png)
+
+```python
+bpy.ops.export_scene.gltf(filepath=os.path.abspath(os.path.join(os.path.abspath(os.path.dirname(bpy.data.filepath))
+                                                                      , './outputs/1')))
+```
+
+---
+
+完整代码：
+
+```python
+import bpy
+import os
+
+bpy.ops.object.text_add()
+text_obj = bpy.context.object
+
+text_obj.data.align_x = "CENTER"
+text_obj.data.align_y = "CENTER"
+
+text_obj.data.body = "Hello,\nWorld!"
+
+text_obj.location[2] = 0.15
+
+# text_obj.data.extrude = 0.3
+
+bpy.ops.object.convert(target="MESH")
+
+bpy.ops.object.editmode_toggle()
+bpy.ops.mesh.dissolve_limited()
+
+bpy.ops.mesh.select_all(action="SELECT")
+bpy.ops.mesh.remove_doubles(threshold=0.01)
+bpy.ops.mesh.extrude_region_move(TRANSFORM_OT_translate={"value":(0, 0, 0.3)})
+bpy.ops.object.editmode_toggle()
+
+bpy.ops.mesh.primitive_cube_add()
+cube_obj = bpy.context.object
+
+cube_obj.scale[0:3] = [2.5, 1.2, 0.25]
+
+cube_material = bpy.data.materials.new(name="Material")
+cube_material.use_nodes = True
+nodes = cube_material.node_tree.nodes
+principled_bsdf = nodes.get("Principled BSDF")
+if principled_bsdf is not None:
+    principled_bsdf.inputs[0].default_value = (0, 0, 0, 1)
+
+cube_obj.data.materials.append(cube_material)
+
+cube_modifier_boolean = cube_obj.modifiers.new(name="Boolean", type="BOOLEAN")
+cube_modifier_boolean.object = text_obj
+bpy.ops.object.modifier_apply(modifier="Boolean")
+
+bpy.ops.object.transform_apply()
+
+cube_modifier_bevel = cube_obj.modifiers.new(name="Bevel", type="BEVEL")
+cube_modifier_bevel.width = 0.01
+cube_modifier_bevel.segments = 1
+cube_modifier_bevel.use_clamp_overlap = False
+cube_modifier_bevel.harden_normals = True
+
+text_obj.hide_viewport = True
+text_obj.hide_render = True
+
+bpy.ops.export_scene.gltf(filepath=os.path.abspath(os.path.join(os.path.abspath(os.path.dirname(bpy.data.filepath))
+                                                                      , './outputs/1')))
+```
+
+## Easy Method to Emboss Your Text or Logo | How To Create Raised Letters | 3D Text Effects In Blender
+
+emmmm 差不多就是把上一个的 `Boolean` 中的 `DIfference` 改为 `UNION`。如果有破，要自己修复：
+
+![png](12_1.png)

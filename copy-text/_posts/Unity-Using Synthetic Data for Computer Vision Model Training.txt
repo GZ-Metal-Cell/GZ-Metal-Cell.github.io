@@ -1,0 +1,611 @@
+---
+title: Unity-Using Synthetic Data for Computer Vision Model Training
+date: Tue Sep 19 2023 20:05:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - Unity
+  - UnityPerception
+categories: 学习
+description: 关于使用 Unity 合成数据的讲座笔记。
+---
+
+
+# 资源
+
+- [Using Synthetic Data for Computer Vision Model Training - YouTube](https://www.youtube.com/watch?v=vQfableD-Cc&t=1455s&ab_channel=Unity-ANZSEA)
+
+![png](8.png)
+
+Computer Vision Webinar 计算机视觉网络研讨会
+
+# 正文
+
+## Agenda 
+
+![png](9.png)
+
+Agenda 议程
+
+- Computer Vision Overview + Advantages of Synthetic Data
+  - 计算机视觉概述 + 合成数据的优势
+- Applying Synthetic Data to Production Systems
+  - 将合成数据应用于生产系统
+- Synthetic Data Case Studies
+  - 合成数据案例研究
+- Unity's Research on Synthetic Data
+  - Unity 对合成数据的研究
+- Synthetic Data Generators
+  - 合成数据生成器
+
+## Computer Vision Overview + Advantages of Synthetic Data
+
+![png](10.png)
+
+### High volume, labeled data is critical to efficiently train a Computer Vision model
+
+![png](11.png)
+
+- **High volume, labeled data** is critical to efficiently train a Computer Vision model
+  - 大量标记数据对于有效训练计算机视觉模型至关重要
+
+### Training computer vision models onreal-world data has been the answer, but...
+
+![png](12.png)
+
+Training computer vision models onreal-world data has been the answer, but...
+
+在真实世界的数据上训练计算机视觉模型一直是答案，但是......
+
+- It's expensive.
+  - 成本高
+- It's time consuming.
+  - 耗时长
+- It's biased and inefficient.
+  - 有偏见且低效
+- lt's not always privacy-compliant.
+  - 涉及隐私问题
+
+### Typical computer vision workflow
+
+![png](13.png)
+
+Typical computer vision workflow 典型的计算机视觉工作流程
+
+- Acquire real world images
+  - 获取真实世界的图像
+
+- Label and annotate images
+  - 标记和批注图像
+- Train CV model
+  - 训练 CV 模型
+- Evaluate CV model
+  - 评估 CV 模型（如果效果不好，重新 Iteration）
+- Deploy CV model
+  - 部署 CV 模型
+
+### Challenges with...
+
+![png](14.png)
+
+**Data Collection 收集数据**
+
+- **Insufficient data** for their project due to non-availability of data
+  - 由于数据不可得，其项目**数据不足**
+- **Privacy and compliance** hindering data collection
+  - **隐私和合规性**阻碍数据收集
+- **Bias/errors** in collected data as the collected data represents only a subset of the population
+  - 收集数据中的**偏差/错误**，因为收集的数据仅代表总体的一个子集
+
+**Data Labelling 数据标注**
+
+- Human labeling is **costly**
+  - 人工贴标成本高昂
+- Human labeling is **time consuming**
+  - 人工贴标非常**耗时**
+- Human labeling is **error prone**
+  - 人类标签是容易**出错**
+
+### Cost of labeling increases with complexity
+
+![png](15.png)
+
+Cost of labeling increases with complexity 标签成本随着复杂性的增加而增加
+
+对于一张 Input，对应的 Labels 可能有：
+
+- Object detection
+  - 目标检测
+- Semantic segmentation
+  - 语义分割
+- Instance segmentation
+  - 实例分割
+- Panoptic segmentation
+  - 全景分割
+
+### lmpracticality of Real World Data in Many Situation
+
+![png](16.png)
+
+lmpracticality of Real World Data in Many Situation 真实世界数据在很多情况下的实用性
+
+- Situations w/lots of assets tolabel or background labeling is
+  required
+  - 需要大量资产标签或背景标签的情况
+- When the situation occurs very infrequently or is impractical to capture
+  - 当这种情况很少发生或不切实际时
+- When variational differences are subtle
+  - 当变化很微妙时
+
+### Typical vs. Unity
+
+![png](17.png)
+
+- Acquire real world images 获取真实世界的图像
+- Hand label and annotate images 手动标记和注释图像
+  - Typcial: Manually labeling images can add immense cost and production time
+    - 手动标记图像会增加巨大的成本和生产时间
+  - Unity: Accurately labeled andannotated synthetic images using Unity are ready for training
+    - 使用 Unity 准确标记和注释的合成图像已准备好进行训练
+- Validate collected images 验证收集的图像
+  - Typical: Rejected images must be refined and annotated until approved
+    - 被拒绝的图片必须细化注释直到批准
+  - Unity: Computer generated images are pre-labeled and annotated
+    - 计算机生成的图像带有预先标记和注释
+- Time it takes to train, evaluate, and deploy 训练、评估和部署所需的时间
+  - 使用合成数据耗时更短
+
+### Domain Randomization
+
+![png](18.png)
+
+**Domain Randomization **域随机化
+
+Vary features of your dataset to make your model more robust 改变数据集的特征以使模型更加可靠
+
+- Lighting 光照
+- Background 背景
+- Object Orientation 对象角度
+- Distractor Objects 干扰物体
+
+## Applying Synthetic Data to Production Systems
+
+![png](19.png)
+
+Applying Synthetic Data to Production Systems 将合成数据应用于生产系统
+
+### Bringing AI to Production
+
+![png](20.png)
+
+**Bringing AI to Production 将 AI 投入生产**
+
+- **Problem**: “Quality of Service” - How can I be sure that my system workswell, and continues to work well, in the real world? 
+
+  **问题**：“服务质量” - 我如何确定我的系统在现实世界中运行良好，并继续运行良好？
+
+  - Pre-production: Development / Production data mismatch, edge cases, selection bias
+
+    预生产：开发/生产数据不匹配、边缘情况、选择偏差
+
+- **Solution**: Model Generalization with Synthetic Data via Domain Randomization
+
+  **解决方案**：通过域随机化对合成数据进行模型泛化
+
+  - Synthetic data solution != Real world solution
+
+    合成数据解决方案 != 真实世界解决方案
+
+  - We want to leverage the programmability of synthetic data as a strength
+
+    我们希望利用合成数据的可编程性作为优势
+
+### Why does it work?
+
+![png](21.png)
+
+- Domain randomization
+
+  域随机化
+
+  - Perturbations to the environment do not have to be realistic, but merely show variation along dimensions that also vary in the real world
+
+    对环境的扰动不一定是现实的，而只是显示沿维度的变化，这些变化在现实世界中也有所不同
+
+    [[2012.02055] Intervention Design for Effective Sim2Real Transfer (arxiv.org)](https://arxiv.org/abs/2012.02055)
+
+    > 这篇论文《Intervention Design for Effective Sim2Real Transfer》是研究仿真到真实环境迁移的干预设计的。随着机器学习和强化学习的发展，训练模型在虚拟仿真环境中表现出色，但在真实世界中的表现却不尽如人意。因此，为了有效地将在仿真环境中训练的模型迁移到真实环境中，需要设计有效的干预策略。
+    >
+    > 该论文介绍了一种基于强化学习的方法来设计这些干预策略。该方法通过引入额外的干预信号或任务来改善仿真到真实迁移的性能。干预信号可以是模拟环境中一些与真实环境相关的信息，如深度图像、物体位置等。在训练过程中，模型需要同时完成主任务和与干预信号相关的附加任务，以逐步减少仿真和真实环境之间的差距。
+    >
+    > 为了验证该方法的有效性，作者进行了一系列实验。实验结果表明，通过设计合理的干预策略，可以显著提高模型在真实环境中的表现。同时，该方法还具有一定的泛化能力，能够适应不同的真实环境和任务。
+    >
+    > 总之，这篇论文提出了一种基于强化学习的干预设计方法，可以改善仿真到真实环境迁移的性能。这对于加速机器学习模型在实际场景中的应用具有重要意义。
+
+  - Focuses on building“Domain lnvariance" - if backgrounds should not matter for detecting objects, teach the model that the background does not matter.
+
+    专注于构建“域方差” - 如果背景对于检测对象无关紧要，请告诉模型背景无关紧要。
+
+- Well-known research on domain randomization
+
+  关于域随机化的知名研究
+
+  - [[1703.06907] Domain Randomization for Transferring Deep Neural Networks from Simulation to the Real World (arxiv.org)](https://arxiv.org/abs/1703.06907)
+
+    > 这篇论文是围绕如何通过域随机化技术将深度神经网络从仿真环境迁移到真实世界进行的研究，主要针对机器人控制等领域。文章提出，由于机器人在真实世界中的表现不如在虚拟世界中训练得好，因此需要一种方法来缓解这种差异，并提高机器人在真实世界中的表现。
+    >
+    > 该方法通过在虚拟训练过程中引入随机性，使训练数据更丰富多样，以期提高模型的泛化能力。具体而言，作者提出了一种“域随机化”(Domain Randomization)的方法，即在每次训练迭代中，将部分参数随机化，比如图像大小、光照强度、相机角度等。这样可以使训练数据尽可能地覆盖真实情况下可能遇到的所有变化。
+    >
+    > 为了验证这种域随机化方法的有效性，作者设计了一系列实验证明该方法可以显著提高深度神经网络在真实环境中的表现。此外，该方法还可以与其他领域迁移技术相结合，进一步提高网络的泛化性能。
+    >
+    > 总之，这篇论文提出了一种基于域随机化的方法，通过增加训练数据的丰富性和多样性，来提高深度神经网络从仿真环境到真实环境的迁移能力。这一方法在机器人控制等领域具有重要的应用前景。
+  
+  - [[1810.10093] Structured Domain Randomization: Bridging the Reality Gap by Context-Aware Synthetic Data (arxiv.org)](https://arxiv.org/abs/1810.10093)
+  
+    > 这篇论文提出了一种结构化域随机化方法，通过上下文感知的合成数据来缩小虚拟环境和真实世界之间的差距，以便更好地将在虚拟环境中训练的模型应用于真实世界中。作者指出，传统的域随机化方法往往会导致过度的随机性，从而使模型无法准确学习到真实世界的特征和约束。
+    >
+    > 该方法基于强化学习框架，通过结合真实图像和合成数据，构建一个上下文感知的域随机化模型。具体而言，作者提出了一个生成对抗网络（GAN）来生成合成数据，并利用语义分割网络将真实图像和合成图像进行配对。在训练过程中，模型需要同时处理真实图像和合成图像，以学习到真实世界的特征和上下文信息。
+    >
+    > 为了评估这种结构化域随机化方法的有效性，作者进行了一系列实验。实验结果表明，相比于传统的域随机化方法，该方法能够在各种真实世界任务中取得更好的性能，并且能够更好地适应真实世界的约束和特征。
+    >
+    > 综上所述，这篇论文提出了一种结构化域随机化方法，通过上下文感知的合成数据来缩小虚拟环境和真实世界之间的差距。这一方法在加强模型对真实世界特征的学习、提高模型性能和适应真实世界约束方面具有潜在的应用价值。
+  
+  - Annotation Saved is an Annotation Earned: Using Fully Synthetic Training for Object Large sets of highly-vared synthetic data + small sets of real world dat
+  
+    保存注释是获得的注释：对对象使用完全合成训练 大型高度可变的合成数据集 + 小集现实世界的数据
+
+### Neural Pocket
+
+#### Customer Problem
+
+![png](22.png)
+
+- **Customer Problem**
+
+  **客户问题**
+
+  - As a smart city solutions provider Neural Pocket needs scalable ways to train systems to recognize vehicles,people, smartphones. and identify potential security threats.
+
+    作为智慧城市解决方案提供商，Neural Pocket 需要可扩展的方式来训练系统以识别车辆、人、智能手机。并识别潜在的安全威胁。
+
+- **Resulting Objective**
+
+  **结果目标**
+
+  - Reduce the cycle time and overall costs for creating production ready computer vision models
+
+    减少创建生产就绪型计算机视觉模型的周期时间和总体成本
+
+- **Cost of the Real World Data**
+
+  **真实世界数据的成本**
+
+  - Using real world data Neural Pocket typically had to do 30 training cycles which costs $60-150K and took 4-6months per project
+
+    使用真实世界的数据，Neural Pocket 通常必须进行 30 个训练周期，成本为 60-150K 美元，每个项目需要 4-6 个月
+
+#### Object Detection / Recognition
+
+![png](23.png)
+
+这个合成数据集长这样。
+
+#### Results
+
+![png](24.png)
+
+结果是，加入合成数据集训练的神经网络效果更佳。
+
+### Audere
+
+![png](25.png)
+
+**Audere**: Customer Problem
+
+- **Customer Problem**
+
+  **客户问题**
+
+  - High labor costs to read COVID tests and report results, possibility for human error at scale.
+
+    阅读 COVID 测试和报告结果的劳动力成本高，可能性大
+    大规模人为错误。
+
+- **Resulting Objective**
+
+  **结果目标**
+
+  - Build an mobile application that will read a result from a COVID test kit to improve reliability andreduce costs, with minimal human oversight.
+
+    构建一个移动应用程序，该应用程序将从 COVID 检测试剂盒中读取结果，以提高可靠性并降低成本，同时最大限度地减少人工监督。
+
+- **Cost of the Real World Data**
+
+  **真实世界数据的成本**
+
+  - COVID kits change frequently (monthly), test result appearances vary widely even within a single kit.Kits are required to be stored in a bio safety lab with no windows until deployment to real world, no available real training data with natural lighting or shadows.
+
+    COVID 试剂盒经常更换（每月一次），即使在单个试剂盒内，测试结果的外观也有很大差异。试剂盒需要存储在生物安全实验室中，在部署到现实世界之前没有窗口，没有可用的具有自然光或阴影的真实训练数据。
+
+![png](26.png)
+
+Audere: Task
+
+- **Object Detection** for locating the test kit parts (brand, diagnostic)
+  - 用于定位测试套件部件的对象检测（品牌、诊断）
+- **lmage classification** for reading test results as positive/negative
+  - 将测试结果读取为阳性 / 阴性的图像分类
+
+#### Approach and Results
+
+![png](27.png)
+
+Approach and Results 方法和结果
+
+1. Create digital copy of test kits with an artist
+
+   与艺术家一起创建测试套件的数字副本
+
+2. Place test kits into Unity with random backgrounds, lighting, blur, etc.
+
+   将测试套件放入具有随机背景、光照、模糊等的 Unity 中。
+
+3. Use procedural material for test kit strips tocreate high variations on test results
+
+   使用检测试剂盒条的程序材料，使检测结果具有很大的差异性
+
+Results: 
+
+- Able to match performance of full real world dataset using 4x less real world data and ~8 ksynthetic images
+
+  能够使用少 4 倍的真实世界数据和 ~8 k 合成图像匹配完整真实世界数据集的性能
+
+- Synthetic trained models were more resilient to adverse conditions
+
+  合成训练模型对不利条件更具弹性
+
+### PeopleSansPeople
+
+![png](28.png)
+
+People + Sans (Middle English for “without”) + People
+
+A data generator for a few human-centric computer vision tasks without needing real-world human data.
+
+用于一些以人为中心的计算机视觉任务的数据生成器，无需现实世界的人类数据。
+
+![png](29.png)
+
+![png](30.png)
+
+![png](31.png)
+
+#### What does PeopleSansPeople provide?
+
+![png](33.png)
+
+- 28 parameterized simulation-ready 3D human assets
+
+  28 个参数化仿真就绪的 3D 人力资产
+
+- 39 diverse animation clips
+
+  39 个不同的动画剪辑
+
+- 21,952 unique clothing textures (from 28 albedos, 28masks, and 28 normals)
+
+  21,952 种独特的服装纹理（来自 28 个反照率、28 个面具和 28 个法线）
+
+- Parameterized lighting
+
+  参数化照明
+
+- Parameterized camera system
+
+  参数化摄像系统
+
+- Natural backgrounds
+
+  自然背景
+
+- Primitive occluders / distractors
+
+  原始遮挡器 / 干扰项
+
+- All packaged in a macOS and Linux binary
+
+  全部打包在 macOS 和 Linux 二进制文件中
+
+#### Which CV tasks does PeopleSansPeople target?
+
+![png](34.png)
+
+- Human (2D and 3D bounding box) detection
+- Human keypoint detection
+
+- Human semantic / instance segmentation
+
+### PeopleSansPeople - Exposed Parameters, Objects
+
+![png](35.png)
+
+### PeopleSansPeople - Exposed Parameters, Renderers
+
+![png](36.png)
+
+### Dataser Statstics and Analysis
+
+![png](37.png)
+
+|       | # train  | # validation | # instances (train) | # instances w / kpts (train) |
+| ----- | -------- | ------------ | ------------------- | ---------------------------- |
+| COCO  | 64, 115  | 2, 693       | 262, 465            | 149, 813                     |
+| Synth | 490, 000 | 10, 000      | >3, 070, 000        | > 2, 900, 000                |
+
+合成的数据集数量巨大。
+
+![png](38.png)
+
+![png](39.png)
+
+![png](40.png)
+
+合成的数据集多样性更好。
+
+#### Model Training
+
+![png](41.png)
+
+- Detectron2 Keypoint R-CNN R50-FPN model
+
+  Detectron2 Keypoint R-CNN R50-FPN 模型
+
+- We train models from scratch on real and synthetic data
+
+  我们根据真实和合成数据从头开始训练模型
+
+- We train models pre-trained on synthetic data and fine-tune on real data
+
+  我们训练在合成数据上预先训练的模型，并对真实数据进行微调
+
+- In both cases above, we
+
+  在上述两种情况下，我们
+
+  - use different subsets of the data (1%, 10%, 50%, and 100%)
+
+    使用不同的数据子集（1%、10%、50% 和 100%）
+
+  - perform evaluation on real data
+
+    对真实数据进行评估
+
+#### Results
+
+![png](42.png)
+
+如果在训练中添加真实数据（zero shot），效果会很差，但是一旦添加一些真实数据，效果就会很好。
+
+#### Results
+
+![png](43.png)
+
+![png](44.png)
+
+效果不错。
+
+#### Improved Model Performance - 6411 COCO images
+
+![png](45.png)
+
+使用合成数据的 Pre-training 模型要比使用 ImageNet 的性能要好。
+
+![png](46.png)
+
+## Synthetic Data Generators
+
+![png](47.png)
+
+### Creating a Synthetic Data Generator
+
+![png](48.png)
+
+- Optimal synthetic data generation does not involve replicating real datacollection strategies
+  - Start with data diversity
+  - Then focus on domain adaptation (as needed)
+- Define your problem
+  - What am I predicting?
+  - What distributions do l know that I need?
+  - Which variables do l have uncertainty?
+- Build a“Data Generator”: Assets + Sensor/Labeler + Randomizers -> Data
+  - These generators allow experimentation across ranges and distributions with multiple exposed “data hyperparameters”
+  - Scale in the cloud
+
+---
+
+- 最佳合成数据生成不涉及复制真实数据收集策略
+  - 从数据多样性开始
+  - 然后根据需要进行领域适应
+- 定义你的问题
+  - 我在预测什么？
+  - 我知道我需要哪些分布？
+  - 我哪些变量存在不确定性？
+- 构建一个“数据生成器”：资产 + 传感器/标注器 + 随机化器 -> 数据
+  - 这些生成器允许在多个暴露的“数据超参数”下跨范围和分布进行实验
+  - 在云端进行扩展
+
+### Digital Assets
+
+![png](50.png)
+
+### Asset Sourcing
+
+![png](51.png)
+
+- Often need very specific objects for your use case - products, parts, etc. Multiple approachesto acquiring "digital twins”:
+  - Artist modeling
+    - Contract artists to build assets or environments on a contract basis
+    - Often see costs up to $100 per object
+    - Building assets for computer vision use cases is relatively new and requirements are not wel lunderstood
+  - Scanning
+    - Create a 3D shape and scan all sides of the object
+    - Works well for rectangular/boxy objects, more difficult for complex shapes
+    - Typically needs artist cleanup / refinement
+  - Photogrammetry
+    - Use a 3D scanner to create a digital twin
+    - Many tools do not reliably handle reflections and transparency and require artist cleanup / augmentation
+- Procedural / Parameterized models
+  - Useful for cases where vou need a wide variance of a particular semantic category
+
+---
+
+- 在您的用例中通常需要非常具体的对象 - 产品、零件等。获取“数字孪生”的多种方法：
+  - 艺术建模
+    - 合同艺术家进行资产或环境构建
+    - 对于每个对象通常会看到高达 100 美元的成本
+    - 为计算机视觉用例构建资产相对较新，对需求的理解还不充分
+  - 扫描
+    - 创建一个 3D 形状并扫描物体的所有侧面
+    - 对于矩形/盒状物体效果良好，对于复杂形状较困难
+    - 通常需要艺术家进行清理/修正
+  - 摄影测量
+    - 使用 3D 扫描仪创建数字孪生
+    - 许多工具不能可靠地处理反射和透明度，并需要艺术家进行清理/增强
+- 程序化/参数化模型
+  - 在需要特定语义类别的广泛变化时非常有用
+
+#### Unity Asset Store
+
+![png](52.png)
+
+### Sensors and Labels
+
+![png](53.png)
+
+### Randomization - PeopleSansPeople
+
+![png](54.png)
+
+PeopleSansPeople 使用的随机化器
+
+### Common questions
+
+![png](55.png)
+
+- Any question you can think about that involves the words “photorealism” or"ray tracing”
+  - lmportance depends on your starting point - existing data, target task, performancegoals, training methodology. We have seen significant performance boosts without it.
+- Isn't data augmentation easier?
+  - For some tasks it can be, but the sim2real gap still exists
+  - Example: compositing - difficult to manage occlusion diversity, difficult to have consistent scene lighting/shadows
+- Can we use GANs for domain adaptation?
+  - Active research area, no clear winners that generalize well yet
+
+---
+
+- 任何你能想到的涉及“逼真画质”或“光线追踪”的问题
+  - 重要性取决于你的起点 - 现有数据、目标任务、性能目标、训练方法。我们已经看到了显著的性能提升，即使不需要这些技术也可以实现。
+- 难道数据增强不更容易吗？
+  - 对于某些任务可能是这样，但仍存在从模拟到真实世界的差距
+  - 例如：合成 - 很难管理遮挡的多样性，很难保持一致的场景光照/阴影
+- 我们可以使用 GAN 进行领域适应吗？
+  - 这是一个积极研究的领域，还没有清晰的通用解
+
+![png](56.png)

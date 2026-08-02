@@ -1,0 +1,411 @@
+---
+title: DIP-Python tutorials for image processing and machine learning(55-58)-Supervised Learning
+date: Sat Dec 03 2022 13:05:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - DigitalSreeni
+  - Python
+categories: 学习
+description: 学习自 Youtube 博主 DigitalSreeni。
+---
+
+
+# 正文
+
+## 55 - How to read proprietary microscope images into Python
+
+（给使用显微镜的人看的，略）
+
+## 56 - What are features in machine learning
+
+（听不懂，寄）
+
+![png](56_1.png)
+
+## 57 - How to generate features in Python for machine learning
+
+```python
+import matplotlib.pyplot as plt
+import cv2
+
+img = cv2.imread('images/scratch.jpg', 0)
+plt.imshow(img, cmap='gray')
+```
+
+
+
+
+    <matplotlib.image.AxesImage at 0x181098b9220>
+
+
+
+
+![png](57_1.png)
+    
+
+
+- 这个图像很难使用传统的直方图方法来分割
+
+- 使用熵过滤器来分割，像素点越白，表示熵越高
+
+
+```python
+from skimage.filters.rank import entropy
+from skimage.morphology import disk
+
+entropy_img = entropy(img, disk(1))
+plt.imshow(entropy_img, cmap='gray')
+```
+
+
+
+
+    <matplotlib.image.AxesImage at 0x1810981b2e0>
+
+
+
+
+![png](57_2.png)
+    
+
+
+---
+
+- 但在如下图像中，熵过滤器的效果并不好
+
+
+```python
+import matplotlib.pyplot as plt
+import cv2
+from skimage.filters.rank import entropy
+from skimage.morphology import disk
+
+img = cv2.imread('images/Yeast_Cells.png', 0)
+entropy_img = entropy(img, disk(1))
+
+fig = plt.figure(figsize=(10, 10))
+
+ax1 = fig.add_subplot(121)
+ax1.imshow(img, cmap='gray')
+ax1.title.set_text('img')
+
+ax2 = fig.add_subplot(122)
+ax2.imshow(entropy_img, cmap='gray')
+ax2.title.set_text('entropy_img')
+plt.show()
+```
+
+
+![png](57_3.png)
+    
+
+
+---
+
+- 使用 Sobel 过滤器
+
+
+```python
+import matplotlib.pyplot as plt
+import cv2
+from skimage.filters.rank import entropy
+from skimage.morphology import disk
+
+img = cv2.imread('images/Yeast_Cells.png', 0)
+entropy_img = entropy(img, disk(1))
+
+from scipy import ndimage as nd
+
+gaussian_img = nd.gaussian_filter(img, sigma=3)
+
+from skimage.filters import sobel
+
+sobel_img = sobel(img)
+
+fig = plt.figure(figsize=(10, 10))
+
+ax1 = fig.add_subplot(131)
+ax1.imshow(img, cmap='gray')
+ax1.title.set_text('img')
+
+ax2 = fig.add_subplot(132)
+ax2.imshow(gaussian_img, cmap='gray')
+ax2.title.set_text('gaussian_img')
+
+ax3 = fig.add_subplot(133)
+ax3.imshow(sobel_img, cmap='gray')
+ax3.title.set_text('sobel_img')
+
+plt.show()
+```
+
+
+![png](57_4.png)
+    
+
+
+---
+
+- 使用 Pandas 统计数据用于机器学习
+
+
+```python
+import matplotlib.pyplot as plt
+import cv2
+from skimage.filters.rank import entropy
+from skimage.morphology import disk
+from scipy import ndimage as nd
+from skimage.filters import sobel
+import pandas as pd
+
+img = cv2.imread('images/Yeast_Cells.png', 0)
+img2 = img.reshape(-1)
+
+df = pd.DataFrame()
+df['Original Pixel Values'] = img2
+
+entropy_img = entropy(img, disk(1))
+entropy1 = entropy_img.reshape(-1)
+df['Entropy'] = entropy1
+
+gaussian_img = nd.gaussian_filter(img, sigma=3)
+gaussian1 = gaussian_img.reshape(-1)
+df['Gaussian'] = gaussian1
+
+sobel_img = sobel(img)
+sobel1 = sobel_img.reshape(-1)
+df['Sobel'] = sobel1
+
+df
+```
+
+
+
+<table border="1">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Original Pixel Values</th>
+      <th>Entropy</th>
+      <th>Gaussian</th>
+      <th>Sobel</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>123</td>
+      <td>1.584963</td>
+      <td>116</td>
+      <td>0.027311</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>122</td>
+      <td>1.500000</td>
+      <td>113</td>
+      <td>0.025565</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>116</td>
+      <td>2.000000</td>
+      <td>109</td>
+      <td>0.032590</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>114</td>
+      <td>2.000000</td>
+      <td>103</td>
+      <td>0.063612</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>99</td>
+      <td>2.000000</td>
+      <td>97</td>
+      <td>0.098479</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>1048571</th>
+      <td>111</td>
+      <td>2.000000</td>
+      <td>107</td>
+      <td>0.022570</td>
+    </tr>
+    <tr>
+      <th>1048572</th>
+      <td>118</td>
+      <td>2.000000</td>
+      <td>107</td>
+      <td>0.007466</td>
+    </tr>
+    <tr>
+      <th>1048573</th>
+      <td>106</td>
+      <td>2.000000</td>
+      <td>108</td>
+      <td>0.021702</td>
+    </tr>
+    <tr>
+      <th>1048574</th>
+      <td>109</td>
+      <td>1.500000</td>
+      <td>108</td>
+      <td>0.012783</td>
+    </tr>
+    <tr>
+      <th>1048575</th>
+      <td>112</td>
+      <td>1.584963</td>
+      <td>108</td>
+      <td>0.005280</td>
+    </tr>
+  </tbody>
+</table>
+<p>1048576 rows × 4 columns</p>
+
+## 58 - What are Gabor filters
+
+- [Gabor filter - Wikipedia](https://en.wikipedia.org/wiki/Gabor_filter)
+
+- [Gabor滤波简介与Opencv中的实现及参数变化实验](https://blog.csdn.net/lhanchao/article/details/55006663)
+
+- 复数表达：
+
+$$g(x,y;\lambda,\theta,\psi,\sigma,\gamma)=\exp \left(-\frac{x'^2+\gamma^2y'^2}{2\sigma^2}\right)\cdot\exp\left[i\left(2\pi\frac{x'}{\lambda}+\psi\right)\right]$$
+
+- 根据欧拉公式：
+
+$$e^{ix}=\cos x + i \sin x$$
+
+- 实数部分：
+
+$$g(x,y;\lambda,\theta,\psi,\sigma,\gamma)=\exp \left(-\frac{x'^2+\gamma^2y'^2}{2\sigma^2}\right)\cdot\cos\left(2\pi\frac{x'}{\lambda}+\psi\right)$$
+
+- 虚数部分：
+
+$$g(x,y;\lambda,\theta,\psi,\sigma,\gamma)=\exp \left(-\frac{x'^2+\gamma^2y'^2}{2\sigma^2}\right)\cdot\sin\left(2\pi\frac{x'}{\lambda}+\psi\right)$$
+
+其中 $x'=x\cos\theta + y\sin \theta$, $y'=-x\sin\theta + y\cos \theta$
+
+- $\lambda$ represents the wavelength of the sinusoidal factor.
+  - $\lambda$表示正弦因子的波长。
+
+- $\theta$ represents the orientation of the normal to the parallel stripes of a Gabor function.
+  - $\theta$表示Gabor函数平行条纹的法线方向。
+
+- $\psi$ is the phase offset.
+  - $\psi$ 为相位偏移量。
+
+- $\sigma$ is the sigma/standard deviation of the Gaussian envelope.
+  - $\sigma$ 为高斯包络线的标准差/标准差。
+
+- $\gamma$ is the spatial aspect ratio, and specifies the ellipticity of the support of the Gabor function.
+  - $\gamma$ 为空间纵横比，表示Gabor函数支持度的椭圆度。越接近 1，越像圆；越接近 0，越像椭圆。
+
+
+```python
+# kernel = cv2.getGaborKernel((ksize, ksize), sigma, theta, lamda, gamma, phi, ktype=cv2.CV_32F)
+```
+
+
+```python
+import numpy as np
+import cv2
+import matplotlib.pyplot as plt
+
+ksize = 5
+sigma = 3
+theta = 1 * np.pi / 4
+lamda = 1 * np.pi / 4
+gamma = 0.5
+phi = 0
+
+kernel = cv2.getGaborKernel((ksize, ksize), sigma, theta, lamda, gamma, phi, ktype=cv2.CV_32F)
+plt.imshow(kernel, cmap='gray')
+```
+
+
+
+
+    <matplotlib.image.AxesImage at 0x2021c8e8d90>
+
+
+![png](58_1.png)
+    
+
+```python
+img = cv2.imread('images/synthetic.jpg', 0)
+plt.imshow(img, cmap='gray')
+```
+
+
+
+
+    <matplotlib.image.AxesImage at 0x2021c966fd0>
+
+
+
+![png](58_2.png)
+    
+
+
+- [opencv学习之CV_8UC3的含义](https://blog.csdn.net/weixin_43243787/article/details/104727193)
+
+- [OpenCV 图像卷积：cv.filter2D() 函数详解](https://blog.csdn.net/hysterisis/article/details/113097507)
+
+
+```python
+fimg = cv2.filter2D(img, cv2.CV_8UC3, kernel)
+plt.imshow(fimg, cmap='gray')
+```
+
+
+
+
+    <matplotlib.image.AxesImage at 0x2021c9bec40>
+
+
+
+
+![png](58_3.png)
+    
+
+
+---
+
+通过修改 $\theta$ 的值来使 Gabor 过滤器识别右下斜线。
+
+
+```python
+import numpy as np
+import cv2
+import matplotlib.pyplot as plt
+
+ksize = 5
+sigma = 3
+theta = 3 * np.pi / 4
+lamda = 1 * np.pi / 4
+gamma = 0.5
+phi = 0
+
+kernel = cv2.getGaborKernel((ksize, ksize), sigma, theta, lamda, gamma, phi, ktype=cv2.CV_32F)
+fimg = cv2.filter2D(img, cv2.CV_8UC3, kernel)
+plt.imshow(fimg, cmap='gray')
+```
+
+
+
+
+    <matplotlib.image.AxesImage at 0x2021c697b20>
+
+
+![png](58_4.png)

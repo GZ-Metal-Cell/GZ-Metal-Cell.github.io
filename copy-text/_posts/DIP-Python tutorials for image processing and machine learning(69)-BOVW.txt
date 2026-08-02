@@ -1,0 +1,448 @@
+---
+title: DIP-Python tutorials for image processing and machine learning(69)-BOVW
+date: Sat Dec 17 2022 09:23:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - DigitalSreeni
+  - Python
+categories: 学习
+description: 学习自 Youtube 博主 DigitalSreeni。
+---
+
+
+# 正文
+
+## 69 - Image classification using Bag of Visual Words -BOVW-
+
+[Bag-of-words 模型入门](https://zhuanlan.zhihu.com/p/29933242)
+
+> 它用于图像分类，而不是像素分割
+
+> All cell images resized to 128 x 128  
+> Images used for test are completely different that the ones used for training.  
+> 136 images for testing, each parasitized and uninfected (136 x 2)  
+> 104 images for training, each parasitized and uninfected (104 x 2)  
+> Cannot import lots of data to Github, so uploaded 10 images of each.  
+> Download full dataset from: ftp://lhcftp.nlm.nih.gov/Open-Access-Datasets/Malaria/cell_images.zip  
+> 这个链接好像打不开？找了个其他地址：https://www.kaggle.com/datasets/iarunava/cell-images-for-detecting-malaria?resource=download
+
+### Train_BOVW
+
+
+```python
+import cv2
+import numpy as np
+import os
+```
+
+- Get the training classes names and store them in a list
+- Here we use folder names for class names
+
+
+```python
+train_path = 'images/cell_images/train'  # Folder Names are Parasitized and Uninfected
+training_names = os.listdir(train_path)
+```
+
+- Get path to all images and save them in a list
+- image_paths and the corresponding label（对应标签）in image_paths
+
+
+```python
+image_paths = []
+image_classes = []
+class_id = 0
+```
+
+- To make it easy to list all file names in a directory let us define a function
+
+
+```python
+def imglist(path):    
+    return [os.path.join(path, f) for f in os.listdir(path)]
+```
+
+- Fill the placeholder empty lists with image path, classes, and add class ID number
+  - 用 image path，classes 和 class ID number 填充 empty lists
+
+
+```python
+for training_name in training_names:
+    dir = os.path.join(train_path, training_name)
+    class_path = imglist(dir)
+    image_paths += class_path
+    image_classes += [class_id] * len(class_path)
+    class_id += 1
+```
+
+
+```python
+image_paths
+```
+
+
+
+
+    ['images/cell_images/train\\Parasitized\\C37BP2_thinF_IMG_20150620_133111a_cell_87.png',
+     'images/cell_images/train\\Parasitized\\C37BP2_thinF_IMG_20150620_133111a_cell_88.png',
+     'images/cell_images/train\\Parasitized\\C37BP2_thinF_IMG_20150620_133205a_cell_87.png',
+     'images/cell_images/train\\Parasitized\\C37BP2_thinF_IMG_20150620_133205a_cell_88.png',
+     'images/cell_images/train\\Parasitized\\C37BP2_thinF_IMG_20150620_133238a_cell_97.png',
+     'images/cell_images/train\\Parasitized\\C38P3thinF_original_IMG_20150621_112043_cell_202.png',
+     'images/cell_images/train\\Parasitized\\C38P3thinF_original_IMG_20150621_112043_cell_203.png',
+     'images/cell_images/train\\Parasitized\\C38P3thinF_original_IMG_20150621_112116_cell_204.png',
+     'images/cell_images/train\\Parasitized\\C38P3thinF_original_IMG_20150621_112116_cell_205.png',
+     'images/cell_images/train\\Parasitized\\C38P3thinF_original_IMG_20150621_112138_cell_183.png',
+     'images/cell_images/train\\Uninfected\\C1_thinF_IMG_20150604_104919_cell_240.png',
+     'images/cell_images/train\\Uninfected\\C1_thinF_IMG_20150604_104942_cell_102.png',
+     'images/cell_images/train\\Uninfected\\C1_thinF_IMG_20150604_104942_cell_11.png',
+     'images/cell_images/train\\Uninfected\\C1_thinF_IMG_20150604_104942_cell_139.png',
+     'images/cell_images/train\\Uninfected\\C1_thinF_IMG_20150604_104942_cell_151.png',
+     'images/cell_images/train\\Uninfected\\C1_thinF_IMG_20150604_104942_cell_20.png',
+     'images/cell_images/train\\Uninfected\\C1_thinF_IMG_20150604_104942_cell_4.png',
+     'images/cell_images/train\\Uninfected\\C1_thinF_IMG_20150604_104942_cell_59.png',
+     'images/cell_images/train\\Uninfected\\C1_thinF_IMG_20150604_104942_cell_72.png',
+     'images/cell_images/train\\Uninfected\\C1_thinF_IMG_20150604_104942_cell_98.png']
+
+
+
+- 总共两类：Parasitized 寄生，Uninfected 未被感染
+
+
+```python
+image_classes
+```
+
+
+
+
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+
+
+
+
+```python
+class_id
+```
+
+
+
+
+    2
+
+
+
+- Create feature extraction and keypoint detector objects
+  - 创建特征提取和关键点检测器对象
+- SIFT is not available anymore in openCV   
+  - SIFT 在 openCV 中不再可用
+- Create List where all the descriptors will be stored
+  - 创建一个列表存储所有的描述符
+
+
+```python
+des_list = []
+```
+
+[OpenCV 尺度不变特征检测：SIFT、SURF、BRISK、ORB](https://developer.aliyun.com/article/666725)
+
+- BRISK is a good replacement to SIFT. ORB also works but didn't work well for this example
+  - BRISK 是 SIFT 的良好替代品。ORB 也可以工作，但在本例中效果不佳
+
+
+```python
+brisk = cv2.BRISK_create(30)
+for image_path in image_paths:
+    im = cv2.imread(image_path)
+    kpts, des = brisk.detectAndCompute(im, None)
+    des_list.append((image_path, des))   
+```
+
+- Stack all the descriptors vertically in a numpy array
+  - 在 numpy 数组中垂直堆叠所有描述符
+
+
+```python
+descriptors = des_list[0][1]
+for image_path, descriptor in des_list[1:]:
+    descriptors = np.vstack((descriptors, descriptor))  
+descriptors
+```
+
+
+
+
+    array([[244, 255, 223, ...,   0,  17,  48],
+           [254, 191, 247, ...,   8,  25,   0],
+           [240, 255, 255, ..., 137,  25,   0],
+           ...,
+           [128, 255, 255, ...,   0,   0,   0],
+           [176, 255, 255, ...,   0,   0,   0],
+           [240, 255, 255, ...,   0,   0,   0]], dtype=uint8)
+
+
+
+- kmeans works only on float, so convert integers to float
+
+
+```python
+descriptors_float = descriptors.astype(float)
+```
+
+- Perform k-means clustering and vector quantization
+  - 执行 k 均值聚类和矢量量化
+
+这里使用 k-means，也可以使用 SVM 或 随机森林。
+
+
+```python
+from scipy.cluster.vq import kmeans, vq
+
+k = 200  # k means with 100 clusters gives lower accuracy for the aeroplane example
+voc, variance = kmeans(descriptors_float, k, 1) 
+```
+
+- Calculate the histogram of features and represent them as vector
+  - 计算特征的直方图并将其表示为向量
+- vq Assigns codes from a code book to observations.
+  - vq 将代码簿中的代码分配给观察值
+
+
+```python
+im_features = np.zeros((len(image_paths), k), "float32")
+for i in range(len(image_paths)):
+    words, distance = vq(des_list[i][1],voc)
+    for w in words:
+        im_features[i][w] += 1
+```
+
+
+```python
+words
+```
+
+
+
+
+    array([ 48,  14,  24,  50,  86, 177, 199,  91,  24,  15,  21,  44,  86,
+           192,  71,  46, 193,  59, 154,   2,  80, 119,  43])
+
+
+
+
+```python
+distance
+```
+
+
+
+
+    array([ 79.62537284,  76.25693411, 150.61976132,   0.        ,
+           189.20699172, 167.46438427,   0.        , 132.3697473 ,
+            95.40341975, 137.6727198 , 113.90895487, 104.85068749,
+           104.80526159,   0.        , 170.24394262, 220.20785635,
+           118.6493433 ,  77.81910113,   0.        , 101.40636075,
+           217.89599966,  84.18283673, 133.43163043])
+
+
+
+- 执行 Tf-Idf 矢量化
+
+
+```python
+nbr_occurences = np.sum((im_features > 0) * 1, axis=0)
+idf = np.array(np.log((1.0 * len(image_paths) + 1) / (1.0 * nbr_occurences + 1)), 'float32')
+```
+
+- Scaling the words standardize features by removing the mean and scaling to unit variance in a way normalization
+  - 通过去除均值并以归一化的方式缩放到单位方差来缩放单词标准化特征
+
+
+```python
+from sklearn.preprocessing import StandardScaler
+stdSlr = StandardScaler().fit(im_features)
+im_features = stdSlr.transform(im_features)
+```
+
+- Train an algorithm to discriminate vectors corresponding to positive and negative training images
+- Train the Linear SVM
+
+
+```python
+from sklearn.svm import LinearSVC
+clf = LinearSVC(max_iter=10000)  # Default of 100 is not converging
+clf.fit(im_features, np.array(image_classes))
+```
+
+- Save the SVM
+- Joblib dumps Python object into one file
+  - Joblib 将 Python 对象转储到一个文件中
+
+
+```python
+import joblib
+joblib.dump((clf, training_names, stdSlr, k, voc), "bovw.pkl", compress=3)    
+```
+
+
+
+
+    ['bovw.pkl']
+
+
+
+### Validate_BOVW
+
+
+```python
+import cv2
+import numpy as np
+import os
+import pylab as pl
+from sklearn.metrics import confusion_matrix, accuracy_score  # sreeni
+import joblib
+```
+
+- Load the classifier, class names, scaler, number of clusters and vocabulary from stored pickle file (generated during training)
+  - 从存储的 pickle 文件中加载分类器、类名、缩放器、聚类数和词汇表（在训练期间生成）
+
+
+```python
+clf, classes_names, stdSlr, k, voc = joblib.load("bovw.pkl")
+```
+
+- instead of test if you use train then we get great accuracy
+  - 如果你用训练集来代替测试，我们会得到很高的准确性
+
+
+```python
+test_path = 'images/cell_images/test'
+testing_names = os.listdir(test_path)
+```
+
+
+```python
+# Get path to all images and save them in a list
+# image_paths and the corresponding label in image_paths
+image_paths = []
+image_classes = []
+class_id = 0
+
+# To make it easy to list all file names in a directory let us define a function
+
+def imglist(path):
+    return [os.path.join(path, f) for f in os.listdir(path)]
+
+# Fill the placeholder empty lists with image path, classes, and add class ID number
+
+for testing_name in testing_names:
+    dir = os.path.join(test_path, testing_name)
+    class_path = imglist(dir)
+    image_paths+=class_path
+    image_classes+=[class_id]*len(class_path)
+    class_id+=1
+    
+# Create feature extraction and keypoint detector objects
+# SIFT is not available anymore in openCV    
+# Create List where all the descriptors will be stored
+des_list = []
+
+# BRISK is a good replacement to SIFT. ORB also works but didn;t work well for this example
+brisk = cv2.BRISK_create(30)
+
+for image_path in image_paths:
+    im = cv2.imread(image_path)
+    kpts, des = brisk.detectAndCompute(im, None)
+    des_list.append((image_path, des))   
+    
+# Stack all the descriptors vertically in a numpy array
+descriptors = des_list[0][1]
+for image_path, descriptor in des_list[0:]:
+    descriptors = np.vstack((descriptors, descriptor)) 
+
+# Calculate the histogram of features
+# vq Assigns codes from a code book to observations.
+from scipy.cluster.vq import vq    
+test_features = np.zeros((len(image_paths), k), "float32")
+for i in range(len(image_paths)):
+    words, distance = vq(des_list[i][1],voc)
+    for w in words:
+        test_features[i][w] += 1
+
+# Perform Tf-Idf vectorization
+nbr_occurences = np.sum( (test_features > 0) * 1, axis = 0)
+idf = np.array(np.log((1.0*len(image_paths)+1) / (1.0*nbr_occurences + 1)), 'float32')
+
+# Scale the features
+# Standardize features by removing the mean and scaling to unit variance
+# Scaler (stdSlr comes from the pickled file we imported)
+test_features = stdSlr.transform(test_features)
+```
+
+- Until here most of the above code is similar to Train excerpt for kmeans clustering
+
+---
+
+- Report true class names so they can be compared with predicted classes
+  - 报告真实的类别名称，以便与预测的类别进行比较
+
+
+```python
+true_class = [classes_names[i] for i in image_classes]
+```
+
+- Perform the predictions and report predicted class names. 
+  - 执行预测，并报告预测的类名。
+
+
+```python
+predictions = [classes_names[i] for i in clf.predict(test_features)]
+```
+
+- Print the true class and Predictions
+
+
+```python
+print ("true_class =" + str(true_class))
+print ("prediction =" + str(predictions))
+```
+
+    true_class =['Parasitized', 'Parasitized', 'Parasitized', 'Parasitized', 'Parasitized', 'Parasitized', 'Parasitized', 'Parasitized', 'Parasitized', 'Parasitized', 'Uninfected', 'Uninfected', 'Uninfected', 'Uninfected', 'Uninfected', 'Uninfected', 'Uninfected', 'Uninfected', 'Uninfected', 'Uninfected']
+    prediction =['Parasitized', 'Parasitized', 'Uninfected', 'Parasitized', 'Uninfected', 'Parasitized', 'Uninfected', 'Uninfected', 'Parasitized', 'Uninfected', 'Parasitized', 'Uninfected', 'Uninfected', 'Uninfected', 'Uninfected', 'Uninfected', 'Uninfected', 'Uninfected', 'Uninfected', 'Uninfected']
+
+
+- To make it easy to understand the accuracy let us print the confusion matrix
+
+
+```python
+def showconfusionmatrix(cm):
+    pl.matshow(cm)
+    pl.title('Confusion matrix')
+    pl.colorbar()
+    pl.show()
+```
+
+
+```python
+accuracy = accuracy_score(true_class, predictions)
+print ("accuracy = ", accuracy)
+cm = confusion_matrix(true_class, predictions)
+print (cm)
+```
+
+    accuracy =  0.7
+    [[5 5]
+     [1 9]]
+
+
+
+```python
+showconfusionmatrix(cm)
+```
+
+
+​	
+![png](69_1.png)
+​	
+
+
+如果传统方法（SVM、K-Means、Random Forest）仍不能得到较好的准确性，需要考虑深度神经网络等技术。

@@ -1,0 +1,248 @@
+---
+title: ML-李宏毅-Lecture 8-Auto-encoder Anomaly Detection
+date: Wed Feb 08 2023 11:57:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - 李宏毅
+categories: 学习
+description: 李宏毅《机器学习2022》课程学习笔记。
+---
+
+
+# Preparation
+
+# 【機器學習 2021】自編碼器 -Auto-encoder- -上- – 基本概念
+
+![png](P1.1.png)
+
+​	Auto-encoder 也可算作是 Self-supervising Learning（又叫做 Pre-train，经过 Fine-tune 后模型就可已处理 Downstream Tasks）的一环（尽管它出现的比 Self-supervised Learning 更早）
+
+![png](P1.2.png)
+
+**Ontline**
+
+- Basic ldea of Auto-encoder
+- Feature Disentanglement 解缠
+- Discrete Latent 潜在 Representation 表示
+- More Applications
+
+![png](P1.3.png)
+
+​	high dim 的 old feature 经过 NN Encoder 后得到 low dim 的 Vector，再经过 NN Decoder 后得到新的图片，要求新的图片与旧的图片尽可能相近（重建 reconstruction）。
+
+![png](P1.4.png)
+
+​	Auto-Encoder 可以用在 Dimension Reduction 中，这并不基于 DL。
+
+- PCA：[ML Lecture 13: Unsupervised Learning - Linear Methods - YouTube](https://www.youtube.com/watch?v=iwh5o_M4BNU&ab_channel=Hung-yiLee)
+- t-SNE：[ML Lecture 15: Unsupervised Learning - Neighbor Embedding - YouTube](https://www.youtube.com/watch?v=GBUEjkpoxXc&ab_channel=Hung-yiLee)
+
+![png](P1.5.png)
+
+​	降维：假设高维的图像就这么几种变换（樊一翁的胡子），则可用低维向量把它们标记出来（樊一翁的头）。
+
+![png](P1.6.png)
+
+![png](P1.7.png)
+
+​	早期的 Auto-encoder
+
+![png](P1.8.png)
+
+​	De-noising Auto-encoder 是 Auto-encoder 的一个部分，用于图像降噪。
+
+![png](P1.9.png)
+
+​	BERT 似乎也是一种 De-Noising Auto-Encoder，把 Mask 的部分当作 noise 来看。
+
+## 【機器學習 2021】自編碼器 -Auto-encoder- -下- – 領結變聲器與更多應用
+
+![png](P2.1.png)
+
+​	Encoder 产生的低维向量包含着源文件的特征信息。
+
+### Feature Disentangle
+
+![png](P2.2.png)
+
+​	Feature Disentangle：把声音中产生的向量中的内容和音色的信息分离出来。
+
+- [[1904.05742\] One-shot Voice Conversion by Separating Speaker and Content Representations with Instance Normalization (arxiv.org)](https://arxiv.org/abs/1904.05742)
+- [[1804.02812\] Multi-target Voice Conversion without Parallel Data by Adversarially Learning Disentangled Audio Representations (arxiv.org)](https://arxiv.org/abs/1804.02812)
+- [[1905.05879\] AUTOVC: Zero-Shot Voice Style Transfer with Only Autoencoder Loss (arxiv.org)](https://arxiv.org/abs/1905.05879)
+
+![png](P2.3.png)
+
+![png](P2.4.png)
+
+​	Feature Disentangle 的应用：Voice Conversion。
+
+​	Speakers A and B are talking about completely different things.
+
+![png](P2.5.png)
+
+### Discrete Representation
+
+![png](P2.6.png)
+
+​	把 Encoder 出来的向量用离散形式表示。
+
+![png](P2.7.png)
+
+​	把 Encoder 出来的向量与 Codebook 中的向量比较，找出一个最接近的向量作为输入给 Decoder，以找到某些关键特征。
+
+- [[1711.00937\] Neural Discrete Representation Learning (arxiv.org)](https://arxiv.org/abs/1711.00937)
+
+​	For speech, the codebook represents phonetic 语音 information 信息
+
+- [[1901.08810\] Unsupervised speech representation learning using WaveNet autoencoders (arxiv.org)](https://arxiv.org/abs/1901.08810)
+
+![png](P2.8.png)
+
+​	把 Auto-Encoder 用在 Unsupervised Summarization 会不成功，因为产生的 word sequence 只有 Decoder 能看懂。
+
+![png](P2.9.png)
+
+​	需要一个 Decoder 控制输出的 Summary 像个人样。
+
+![png](P2.10.png)
+
+![png](P2.11.png)
+
+![png](P2.12.png)
+
+​	还可以把信息存在一个树中。
+
+- [[1806.07832\] StructVAE: Tree-structured Latent Variable Models for Semi-supervised Semantic Parsing (arxiv.org)](https://arxiv.org/abs/1806.07832)
+- [[1904.03746\] Unsupervised Recurrent Neural Network Grammars (arxiv.org)](https://arxiv.org/abs/1904.03746)
+
+### More Applications
+
+#### Generator
+
+![png](P2.14.png)
+
+​	把后一半部分拿出来当作 Generator。With some modification, we have variational auto-encoder (VAE).
+
+![png](P2.16.png)
+
+- [[1708.00838\] An End-to-End Compression Framework Based on Convolutional Neural Networks (arxiv.org)](https://arxiv.org/abs/1708.00838)
+- [[1703.00395\] Lossy Image Compression with Compressive Autoencoders (arxiv.org)](https://arxiv.org/abs/1703.00395)
+
+#### Anomaly Detection
+
+![png](P2.17.png)
+
+​	给一个训练集 $\{x^1,x^2,...,x^N\}$，判断输入 $x$ 是否与训练集中的数据相似。
+
+![png](P2.18.png)
+
+![png](P2.19.png)
+
+​	与二分类问题不同的是，数据集中并没有 anomaly 的数据
+
+应用:
+
+- 欺诈检测（正常刷卡行为/盗刷）
+- 网络攻击检测（正常连线/攻击行为）
+- 癌细胞检测（正常细胞/癌细胞）
+
+![png](P2.20.png)
+
+​	是 normal 就可以 reconstructed。
+
+![png](P2.21.png)
+
+​	如果是 anomaly，就不能被 Decoder 所 reconstructed。
+
+## Anomaly Detection
+
+![png](P3.1.png)
+
+​	让机器"知之为知之，不知为不知，是知也"
+
+![png](P3.2.png)
+
+​		给一个训练集 $\{x^1,x^2,...,x^N\}$，判断输入 $x$ 是否与训练集中的数据相似。
+
+![png](P3.3.png)
+
+​	异常样本 $\tilde x$ 较少，不能把异常检测简单当作 Binary Classification 来看。
+
+![png](P3.4.png)
+
+![png](P3.5.png)
+
+![png](P3.6.png)
+
+![png](P3.7.png)
+
+​	设计一个分类器，对于输入 $x$，输出分类 $y$ 和自信评分 $c$。
+
+​	异常检测函数：
+
+$$f(x)=\left\{ \begin{matrix}normal,c(x)>\lambda\\anomaly,c(x)\le\lambda\end{matrix}\right.$$
+
+![png](P3.8.png)
+
+![png](P3.9.png)
+
+![png](P3.10.png)
+
+​	对于异常信息，自信评分分布会比较平均。
+
+![png](P3.11.png)
+
+![png](P3.12.png)
+
+![png](P3.13.png)
+
+​	使用正确率评价异常检测不合理，因为异常的样本很少。一个机器什么都不做也可能获得高准确率。
+
+![png](P3.14.png)
+
+​	给误判设定更大的惩罚：Cost Table
+
+![png](P3.15.png)
+
+![png](P3.16.png)
+
+​	可能出现的问题，一些特定的异常图像获得很高的自信评分。
+
+![png](P3.17.png)
+
+![png](P3.18.png)
+
+​	无标签的异常检测：找“Troll”
+
+![png](P3.19.png)
+
+![png](P3.20.png)
+
+![png](P3.21.png)
+
+![png](P3.22.png)
+
+​	根据最大似然法找到异常分布的数据。
+
+![png](P3.23.png)
+
+![png](P3.24.png)
+
+​	等高线就是 $\lambda $
+
+
+![png](P3.25.png)
+
+
+![png](P3.26.png)
+
+![png](P3.27.png)
+
+​	使用 Auto-encoder，根据是否能 reconstruction 判断是否异常。
+
+![png](P3.28.png)
+
+​	SVM 和 Isolated Forest 也可用于异常检测
+
+![png](P3.29.png)
+

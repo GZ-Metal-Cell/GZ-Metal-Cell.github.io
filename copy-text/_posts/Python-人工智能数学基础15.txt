@@ -1,0 +1,1416 @@
+---
+title: Python-人工智能数学基础15
+date: Fri Jul 29 2022 12:02:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - Python
+  - 《人工智能数学基础》
+categories: 学习
+description: 唐宇迪《人工智能数学基础》学习笔记第 15 章。
+---
+
+
+# 正文
+
+## 15 方差分析
+
+### 15.1 方差分析概述
+
+通过对实验数据进行分析, 检验方差<font color="red">相同</font>的多个正态总体<font color="red">均值</font>是否相等
+
+实例: 为了对几个行业的服务质量进行评价, 消费者协会在 4 个行业中分别抽取了不同的企业作为样本.最近一年中消费者总共对 23 家企业投诉的次数如下表所示
+
+
+```python
+import numpy as np
+import pandas as pd
+
+data = np.array([[57, 68, 31, 44],
+                 [66, 39, 49, 51],
+                 [49, 29, 21, 65],
+                 [40, 45, 34, 77],
+                 [34, 56, 40, 58],
+                 [53, 51, None, None],
+                 [44, None, None, None]])
+df = pd.DataFrame(data, index=range(1, 8), columns=["零售业", "旅游业", "航空业", "家电制造业"])
+df.index.name = "观测值"
+df
+```
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+
+</style>
+
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>零售业</th>
+      <th>旅游业</th>
+      <th>航空业</th>
+      <th>家电制造业</th>
+    </tr>
+    <tr>
+      <th>观测值</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>1</th>
+      <td>57</td>
+      <td>68</td>
+      <td>31</td>
+      <td>44</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>66</td>
+      <td>39</td>
+      <td>49</td>
+      <td>51</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>49</td>
+      <td>29</td>
+      <td>21</td>
+      <td>65</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>40</td>
+      <td>45</td>
+      <td>34</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>34</td>
+      <td>56</td>
+      <td>40</td>
+      <td>58</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>53</td>
+      <td>51</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>44</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+  </tbody>
+</table>
+
+</div>
+
+
+
+
+```python
+import matplotlib.pyplot as plt
+
+# 解决中文显示问题
+plt.rcParams['font.sans-serif']=['SimHei']
+plt.rcParams['axes.unicode_minus'] = False
+
+plt.figure()
+for i in range(data.shape[1]):
+    plt.scatter(i * np.ones(data.shape[0]), data.T[i])
+plt.xticks(range(data.shape[1]), ('零售业', '旅游业', '航空业', '家电制造业'))
+plt.ylabel('被投诉次数')  # 设置坐标轴名称
+plt.xlabel('行业')
+plt.show()
+```
+
+
+![png](15.1.png)
+    
+
+
+从散点图中可以看出, 不同行业被投诉的次数的均值是有差异的, 但这种差异也可能是由抽样的<font color="red">随机性</font>造成的, 需要有更准确的方法来检验这种差异是否显著
+
+### 15.2 方差的比较
+
+- 组内方差: 某一因素的<font color="red">同一</font>水平(同一个总体)下样本数据的方差, 例如, 零售业被投诉次数的方差. 组内方差只包含<font color="red">随机误差</font>
+
+- 组间方差: 某一因素的<font color="red">不同</font>水平(不同总体)下个样本之间的方差, 例如, 4 个行业被投诉次数之间的方差. 组间方差既包含<font color="red">随机误差</font>, 也包含<font color="red">系统误差</font>
+
+如果不同行业对投诉次数没有影响, 则组间误差中<font color="red">只</font>包含随机误差, 没有系统误差, 此时组件误差与组内误差经过平均后的数值很接近, 它们的比值会接近于 1
+
+如果不同行业对投诉次数有影响, 在组间误差中除包含随机误差之外, <font color="red">还</font>会包含系统误差, 此时它们的比值会大于 1
+
+### 15.3 方差分析
+
+#### 15.3.1 单因素方差分析
+
+#### 与方差分析相关的统计量:
+
+##### 1 水平(总体)的均值
+
+$$\bar X_i=\frac{1}{n_i}\Sigma^{n_i}_{j=1}X_{ij}, i=1,...,k$$
+
+
+```python
+X_bar = []
+for i in range(data.shape[1]):
+    X_bar.append(data.T[i][data.T[i] != np.array(None)].mean())
+X_bar
+```
+
+
+
+
+    [49.0, 48.0, 35.0, 59.0]
+
+
+
+##### 2 全部观察值的总均值
+
+全部观察值$X_ij$的总和 除以 观察值的个数
+
+$$\bar{\bar{X}}=\frac{1}{n}\Sigma^k_{i=1}\Sigma^{n_i}_{j=1}X_{ij}=\frac{1}{n}\Sigma^k_{i=1}n_i\bar{X_i}$$
+
+
+```python
+X_bar_bar = data.T[data.T != np.array(None)].mean()  # 不知道咋念...
+X_bar_bar
+```
+
+
+
+
+    47.869565217391305
+
+
+
+##### 3 总离差平方和(SST)
+
+样本全部观察值$X_{ij}$与总平均值$\bar{\bar X}$的离差平方和, 反映全部观察值的离散情况.
+
+$$SST=\Sigma^k_{i=1}\Sigma^{n_i}_{j=1}(X_{ij}- \bar{\bar X})^2$$
+
+
+```python
+SST = ((data.T[data.T != np.array(None)] - X_bar_bar) ** 2).sum()
+SST
+```
+
+
+
+
+    4164.608695652174
+
+
+
+##### 4 水平项平方和(SSA)
+
+各个水平$A_i$下样本均值$\bar X_i$与样本总平均$\bar{\bar X}$的偏差平方和, 它在一定程度上反映了各总体均值$\mu_j$之间的差异引起的波动, 又称组间平方和, 该平方和既包括随机误差, 也包括系统误差
+
+$$SSA=\Sigma^k_{i=1}\Sigma^{n_i}_{j=1}(\bar X_i-\bar{\bar X})^2=\Sigma^k_{i=1}n_i(\bar X_i-\bar{\bar X})^2$$
+
+
+```python
+SSA = 0
+for i in range(data.shape[1]):
+    SSA += len(data.T[i][data.T[i] != np.array(None)]) *\
+    (data.T[i][data.T[i] != np.array(None)].mean() - X_bar_bar) ** 2
+SSA
+```
+
+
+
+
+    1456.608695652174
+
+
+
+##### 5 误差项平方和(SSE)
+
+在各个总体$A_i$下, 样本数据$X_{ij}$与其总体均值$\bar X_i$的偏差平方和反映了抽样的随机性引起的样本数据$X_{ij}$的波动, 又称组内平方和, 该平方和反映的是随机误差的大小
+
+$$SSE=\Sigma^k_{i=1}\Sigma^{n_i}_{j=1}(X_{ij}-\bar{X_i})^2$$
+
+
+```python
+SSE = 0
+for i in range(data.shape[1]):
+    for j in data.T[i][data.T[i] != np.array(None)]:
+        SSE += (j - X_bar[i]) ** 2
+SSE
+```
+
+
+
+
+    2708.0
+
+
+
+##### 6 总离差平方和的分解
+
+$$SST=SSE+SSA$$
+
+##### 7 各自由度
+
+$SST$的自由度为$n-1$, 其中$n$为全部观察值的个数
+
+误差项离差平方和($SSE$)的自由度为$k-1$, 其中$k$为因素水平(总体)的个数
+
+水平项离差平方和($SSA$)的自由度为$n-k$
+
+##### 8 各误差的均方差 MSA 和 MSE
+
+组间方差$SSA$的均方差记为$MSA$
+
+组内方差$SSE$的均方差记为$MSE$
+
+计算方法是用误差平方 除以 相应的自由度
+
+#### 设置检验统计量
+
+$$F=\frac{SSA/(k-1)}{SSE/(n-k)}=\frac{MSA}{MSE}F(k-1, n-k)$$
+
+
+```python
+k = len(data[1])
+n = len(data[data!= np.array(None)])
+F = (SSA / (k - 1)) / (SSE / (n - k))
+F
+```
+
+
+
+
+    3.4066426904716036
+
+
+
+上述分析的结果可排成表格的形式, 称为单因素实验方差分析表: 
+    
+
+<table>
+    <tr>
+        <th>方差来源</th>
+        <th>误差平方和</th>
+        <th>自由度</th>  
+        <th>均方差</th>
+        <th>F 值</th>
+	 </tr>
+   	<tr>
+        <td>组间</td>
+        <td>SSA</td>
+        <td>k-1</td>
+        <td>MSA</td>
+        <td rowspan="3">MSA/MSE</td>
+	 </tr>
+   	<tr>
+        <td>组内</td>
+        <td>SSE</td>
+        <td>n-k</td>
+        <td>MSE</td>
+	 </tr>
+    <tr>
+        <td>总和</td>
+        <td>SST=SSE+SSA</td>
+        <td>n-1</td>
+	 </tr>
+</table>
+
+
+
+#### 15.3.2 方差分析中的多重比较
+
+为了进一步了解因素 A 的各个总体对观测变量的具体影响效果
+
+多重比较检验就是通过对各个总体观测变量均值的<font color="red">逐对</font>比较, 来进一步检验到底哪些均值之间存在差异, 并找出最优水平.
+
+如果原假设$H_0:\mu_i=\mu_j,i,j=1,2,...,r,i\ne j$成立, 检验统计量应较小, 因此拒绝域为$|\bar X_i-\bar X_j|>t_{\alpha/2}\sqrt{MSE(\frac{1}{n
+_i}+\frac{1}{n_j})}$
+
+如果满足拒绝域条件, 则认为$\mu_i$与$\mu_j$有显著性差异, 否则认为它们之间没有显著性差异
+
+##### 例 15.2
+
+
+```python
+import pandas as pd
+import numpy as np
+
+data = np.array([[26.5, 31.2, 27.9, 30.8],
+                [28.7, 28.3, 25.1, 29.6],
+                [25.1, 30.8, 28.5, 32.4],
+                [29.1, 27.9, 24.2, 31.7],
+                [27.2, 29.6, 26.5, 32.8]])
+df = pd.DataFrame(data, index=range(1, 6), columns=["无色", "粉色", "橘黄色", "绿色"])
+df.index.name = "样本"
+df
+```
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+
+</style>
+
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>无色</th>
+      <th>粉色</th>
+      <th>橘黄色</th>
+      <th>绿色</th>
+    </tr>
+    <tr>
+      <th>样本</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>1</th>
+      <td>26.5</td>
+      <td>31.2</td>
+      <td>27.9</td>
+      <td>30.8</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>28.7</td>
+      <td>28.3</td>
+      <td>25.1</td>
+      <td>29.6</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>25.1</td>
+      <td>30.8</td>
+      <td>28.5</td>
+      <td>32.4</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>29.1</td>
+      <td>27.9</td>
+      <td>24.2</td>
+      <td>31.7</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>27.2</td>
+      <td>29.6</td>
+      <td>26.5</td>
+      <td>32.8</td>
+    </tr>
+  </tbody>
+</table>
+
+</div>
+
+
+
+
+```python
+X_bar = []
+for i in data.T:
+    X_bar.append(np.round(i.mean(), 2))
+X_bar
+```
+
+
+
+
+    [27.32, 29.56, 26.44, 31.46]
+
+
+
+
+```python
+SSE = 0
+for i in range(data.shape[1]):
+    for j in data.T[i][data.T[i] != np.array(None)]:
+        SSE += (j - X_bar[i]) ** 2
+SSE
+```
+
+
+
+
+    39.083999999999975
+
+
+
+
+```python
+n = data.size
+k = data.shape[1]
+MSE = SSE / (n - k)
+MSE
+```
+
+
+
+
+    2.4427499999999984
+
+
+
+令显著性水平$\alpha=0.05,t_{\alpha/2}(16)=2.12,n_i=n_j=5,i,j=1,2,3,4,5$
+
+$t_{\alpha/2}\sqrt{MSE(\frac{1}{n_i}+\frac{1}{n_j})}=2.096$
+
+
+```python
+from scipy.stats import t
+
+alpha = 0.05
+t_alpha_div_2 = t.ppf(1 - alpha / 2, (n - k))
+t_alpha_div_2
+```
+
+
+
+
+    2.1199052992210112
+
+
+
+
+```python
+np.round(t_alpha_div_2 * np.sqrt(MSE * (1 / data.shape[0] + 1 / data.shape[0])), 3)
+```
+
+
+
+
+    2.095
+
+
+
+
+```python
+for i in range(len(X_bar) - 1):
+    for j in range(i + 1, len(X_bar)):
+        print("|\\bar X_{} - \\bar X_{}| ={})".format(i + 1, j + 1, np.round(np.abs(X_bar[i]-X_bar[j]), 2)))
+```
+
+    |\bar X_1 - \bar X_2| =2.24)
+    |\bar X_1 - \bar X_3| =0.88)
+    |\bar X_1 - \bar X_4| =4.14)
+    |\bar X_2 - \bar X_3| =3.12)
+    |\bar X_2 - \bar X_4| =1.9)
+    |\bar X_3 - \bar X_4| =5.02)
+
+
+依据上面结果可得出相应的影响效果, 
+
+如$|\bar X_1 - \bar X_2|>2.095$, 则说明$X_1$和$X_2$有显著性差异, 也就是说明无色和粉色对产品销售的影响有显著性差异
+
+$|\bar X_2 - \bar X_4|<2.095$, 说明$X_2$和$X_4$没有显著性差异, 也就是说粉色和绿色对产品销售的影响没有显著性差异
+
+#### 15.3.3 多因素方差分析
+
+- <font color="red">无</font>交互效应的双因素离差平法和分解: $SST=SSA+SSB+SSE$
+
+- <font color="red">有</font>交互效应的双因素离差平方和分解: $SST=SSA+SSB+SSAB+SSE$
+
+| 方差来源       | 误差平方和 | 自由度       | 均方差 MS                       | F 值                       |
+| :------------- | :--------- | :----------- | :----------------------------- | :------------------------ |
+| 因素 A          | $SSA$      | $s-1$        | $MSA=\frac{SSA}{s-1}$          | $F_A=\frac{MSA}{MSE}$     |
+| 因素 B          | $SSB$      | $r-1$        | $MSB=\frac{SSB}{r-1}$          | $F_B=\frac{MSB}{MSE}$     |
+| 因素 AB 交互作用 | $SSAB$     | $(r-1)(s-1)$ | $MSAB=\frac{SSAB}{(r-1)(s-1)}$ | $F_{AB}=\frac{MSAB}{MSE}$ |
+| 误差           | $SSE$      | $rs(m-1)$    | $MSE=\frac{SSE}{rs(m-1)}$      |                           |
+| 总和           | $SST$      | $rsm-1$      |                                |                           |
+
+| 统计量                | 服从分布                   |
+| :-------------------- | :------------------------- |
+| $F_A=\frac{MSA}{MSE}$ | $\left[s-1,rs(m-1)\right]$ |
+
+#### 15.3.3 多因素方差分析
+
+- <font color="red">无</font>交互效应的双因素离差平法和分解: $SST=SSA+SSB+SSE$
+
+- <font color="red">有</font>交互效应的双因素离差平方和分解: $SST=SSA+SSB+SSAB+SSE$
+
+| 方差来源       | 误差平方和 | 自由度       | 均方差 MS                       | F 值                       |
+| :------------- | :--------- | :----------- | :----------------------------- | :------------------------ |
+| 因素 A          | $SSA$      | $s-1$        | $MSA=\frac{SSA}{s-1}$          | $F_A=\frac{MSA}{MSE}$     |
+| 因素 B          | $SSB$      | $r-1$        | $MSB=\frac{SSB}{r-1}$          | $F_B=\frac{MSB}{MSE}$     |
+| 因素 AB 交互作用 | $SSAB$     | $(r-1)(s-1)$ | $MSAB=\frac{SSAB}{(r-1)(s-1)}$ | $F_{AB}=\frac{MSAB}{MSE}$ |
+| 误差           | $SSE$      | $rs(m-1)$    | $MSE=\frac{SSE}{rs(m-1)}$      |                           |
+| 总和           | $SST$      | $rsm-1$      |                                |                           |
+
+| 统计量                | 服从分布                   |
+| :-------------------- | :------------------------- |
+| $F_A=\frac{MSA}{MSE}$ | $\left[s-1,rs(m-1)\right]$ |
+
+#### 15.3.3 多因素方差分析
+
+- <font color="red">无</font>交互效应的双因素离差平法和分解: $SST=SSA+SSB+SSE$
+
+- <font color="red">有</font>交互效应的双因素离差平方和分解: $SST=SSA+SSB+SSAB+SSE$
+
+| 方差来源       | 误差平方和 | 自由度       | 均方差 MS                       | F 值                       |
+| :------------- | :--------- | :----------- | :----------------------------- | :------------------------ |
+| 因素 A          | $SSA$      | $s-1$        | $MSA=\frac{SSA}{s-1}$          | $F_A=\frac{MSA}{MSE}$     |
+| 因素 B          | $SSB$      | $r-1$        | $MSB=\frac{SSB}{r-1}$          | $F_B=\frac{MSB}{MSE}$     |
+| 因素 AB 交互作用 | $SSAB$     | $(r-1)(s-1)$ | $MSAB=\frac{SSAB}{(r-1)(s-1)}$ | $F_{AB}=\frac{MSAB}{MSE}$ |
+| 误差           | $SSE$      | $rs(m-1)$    | $MSE=\frac{SSE}{rs(m-1)}$      |                           |
+| 总和           | $SST$      | $rsm-1$      |                                |                           |
+
+| 统计量                    | 服从分布                          |
+| :------------------------ | :-------------------------------- |
+| $F_A=\frac{MSA}{MSE}$     | $\left[s-1,rs(m-1)\right]$        |
+| $F_B=\frac{MSB}{MSE}$     | $\left[r-1,rs(m-1)\right]$        |
+| $F_{AB}=\frac{MSAB}{MSE}$ | $\left[(r-1)(s-1),rs(m-1)\right]$ |
+
+m 为试验次数($\ge2$)
+
+##### 例 15.3
+
+有$s=4$个品牌的彩电在$r=5$个地区销售, 为分析品牌和地区对销售量是否有影响, 每个品牌在各个地区的销售量如下, 试分析品牌和地区对销售量是否有显著影响?$(\alpha=0.05)$
+
+
+```python
+import numpy as np
+import pandas as pd
+
+data = np.array([[365, 350, 343, 340, 323],
+                 [345, 368, 363, 330, 333],
+                 [358, 323, 353, 343, 308],
+                 [288, 280, 298, 260, 298]])
+df = pd.DataFrame(data, columns=["B1", "B2", "B3", "B4", "B5"],
+                  index=["A1", "A2", "A3", "A4"])
+df.index.name = "品牌销售表(因素 A)"
+df.columns.name = "销售地区(因素 B)"
+df
+```
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+
+</style>
+
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>销售地区(因素 B)</th>
+      <th>B1</th>
+      <th>B2</th>
+      <th>B3</th>
+      <th>B4</th>
+      <th>B5</th>
+    </tr>
+    <tr>
+      <th>品牌销售表(因素 A)</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>A1</th>
+      <td>365</td>
+      <td>350</td>
+      <td>343</td>
+      <td>340</td>
+      <td>323</td>
+    </tr>
+    <tr>
+      <th>A2</th>
+      <td>345</td>
+      <td>368</td>
+      <td>363</td>
+      <td>330</td>
+      <td>333</td>
+    </tr>
+    <tr>
+      <th>A3</th>
+      <td>358</td>
+      <td>323</td>
+      <td>353</td>
+      <td>343</td>
+      <td>308</td>
+    </tr>
+    <tr>
+      <th>A4</th>
+      <td>288</td>
+      <td>280</td>
+      <td>298</td>
+      <td>260</td>
+      <td>298</td>
+    </tr>
+  </tbody>
+</table>
+
+</div>
+
+
+
+$SST=365^2+350^2+...+298^2-\frac{6569^2}{20}=17888.95$
+
+
+```python
+SST = (data ** 2).sum() - data.sum() ** 2 / data.size
+SST
+```
+
+
+
+
+    17888.950000000186
+
+
+
+$SSA=\frac{1}{5}(1721^2+1739^2+...+1424^2)-\frac{6569^2}{20}=13004.55$
+
+
+```python
+SSA = 0
+for i in data:
+    SSA += i.sum() ** 2
+SSA /= data.shape[1]
+SSA -= data.sum() ** 2 / data.size
+SSA
+```
+
+
+
+
+    13004.55000000028
+
+
+
+$SSB=\frac{1}{4}(1356^2+1321^2+...+1262^2)-\frac{6569^2}{20}=2011.7$
+
+
+```python
+SSB = 0
+for i in data.T:
+    SSB += i.sum() ** 2
+SSB /= data.shape[0]
+SSB -= data.sum() ** 2 / data.size
+SSB
+```
+
+
+
+
+    2011.7000000001863
+
+
+
+$SSE=SST-SSA-SSB=2872.7$
+
+
+```python
+SSE = SST - SSA - SSB
+SSE
+```
+
+
+
+
+    2872.6999999997206
+
+
+
+| 差异源      | 平方和                           | 自由度              | 均方                               | F 值                  |
+| :---------- | :------------------------------- | :------------------ | :--------------------------------- | :------------------- |
+| 品牌(因素 A) | SSA = 13004.55                   | s - 1 = 3           | MSA = SSA / (s - 1) = 4334.85      | MSA / MSE = 18.10777 |
+| 地区(因素 B) | SSB = 2011.7                     | r - 1 = 4           | MSB = SSB / (r - 1) = 502.925      | MSB / MSE = 2.100846 |
+| 误差        | SSE = 2872.7                     | (r - 1)(s - 1) = 12 | MSE = SSE / (rs(m - 1)) = 239.3917 |                      |
+| 总和        | SST = SSA + SSB + SSE = 17888.95 | rsm - 1 = 19        |                                    |                      |
+
+- 由于$F_A=18.108>F_{0.95}(3, 12)=3.49$, 说明彩电的品牌对销售量有显著影响
+
+- 由于$F_B=2.101<F_{0.95}(4, 12)=3.26$, 说明销售地区对彩电的销售没有显著影响
+
+### 15.4 综合实例——连锁餐饮用户评级分析
+
+#### 15.4.1 单因素方差实例分析
+
+某连锁餐饮在 3 个城市用户评分资料如表所示，已知各城市用户评分的分布近似与正态等方差，是以 95%的可靠性判断城市对用户评分是否有显著影响？
+
+
+```python
+from scipy.stats import f_oneway
+import scipy.stats as stats
+import numpy as np
+import pandas as pd
+from statsmodels.formula.api import ols
+from statsmodels.stats.anova import anova_lm
+
+cityA = [10,9,9,8,8,7,7,8,8,9]
+cityB = [10,8,9,8,7,7,7,8,9,9]
+cityC = [9,9,8,8,8,7,6,9,8,9]
+df = pd.DataFrame(np.vstack((cityA, cityB, cityC)), index=['A', 'B', 'C'])
+df.columns.name = "用户评分"
+df.index.name = "城市"
+df
+```
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+
+</style>
+
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>用户评分</th>
+      <th>0</th>
+      <th>1</th>
+      <th>2</th>
+      <th>3</th>
+      <th>4</th>
+      <th>5</th>
+      <th>6</th>
+      <th>7</th>
+      <th>8</th>
+      <th>9</th>
+    </tr>
+    <tr>
+      <th>城市</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>A</th>
+      <td>10</td>
+      <td>9</td>
+      <td>9</td>
+      <td>8</td>
+      <td>8</td>
+      <td>7</td>
+      <td>7</td>
+      <td>8</td>
+      <td>8</td>
+      <td>9</td>
+    </tr>
+    <tr>
+      <th>B</th>
+      <td>10</td>
+      <td>8</td>
+      <td>9</td>
+      <td>8</td>
+      <td>7</td>
+      <td>7</td>
+      <td>7</td>
+      <td>8</td>
+      <td>9</td>
+      <td>9</td>
+    </tr>
+    <tr>
+      <th>C</th>
+      <td>9</td>
+      <td>9</td>
+      <td>8</td>
+      <td>8</td>
+      <td>8</td>
+      <td>7</td>
+      <td>6</td>
+      <td>9</td>
+      <td>8</td>
+      <td>9</td>
+    </tr>
+  </tbody>
+</table>
+
+</div>
+
+
+
+##### 方法 1 使用 scipy.stats.f_oneway()方法
+
+
+```python
+# 首先检查方差是否相等, 在使用 f_oneway 函数之前需要先检验方差齐性, 这里使用了 levene 方差齐性检验
+"""
+scipy.stats.levene(*samples, center='median', proportiontocut=0.05)
+对等方差执行 Levene 检验。
+小的 p-value 表明总体没有相等的方差。
+"""
+(W, p) = stats.levene(cityA, cityB, cityC)
+if p < 0.05:
+    print(('Warning: the p-value of the Levene test is <0.05: p = {0}'.format(p)))
+```
+
+
+```python
+# 单因素方差分析
+# 第一种方法
+F_statistic, pVal = stats.f_oneway(cityA, cityB, cityC)
+print('单因素方差分析结果（f_oneway）: F = {0}, and p = {1}'.format(F_statistic, pVal))
+if pVal < 0.05:
+    print('One of the groups is significantly different.')
+```
+
+    单因素方差分析结果（f_oneway）: F = 0.10150375939849626, and p = 0.9038208903685354
+
+
+##### 方法 2 利用 statsmodels 库函数中包含的 anova_lm 模型, 使用线性 OLSModel 进行方差分析
+
+
+```python
+# 单因素方差分析
+# 第二种方法 statsmodel 库函数
+# 将数据存入 dataframe 中
+df = pd.DataFrame()
+names = locals()
+for city in ['A','B','C']:
+    s = names['city%c' % city]
+    df_temp = pd.DataFrame({'city':city[-1], 'S':s})
+    df = pd.concat([df, df_temp], ignore_index=True)
+# 使用线性 OLSModel 进行方差分析
+model = ols('S ~ city', df).fit()
+anovaResults = anova_lm(model)
+print('单因素方差分析结果（anova_lm）:')
+print(anovaResults)
+df
+```
+
+    单因素方差分析结果（anova_lm）:
+                df  sum_sq   mean_sq         F    PR(>F)
+    city       2.0     0.2  0.100000  0.101504  0.903821
+    Residual  27.0    26.6  0.985185       NaN       NaN
+
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+
+</style>
+
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>city</th>
+      <th>S</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>A</td>
+      <td>10</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>A</td>
+      <td>9</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>A</td>
+      <td>9</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>A</td>
+      <td>8</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>A</td>
+      <td>8</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>A</td>
+      <td>7</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>A</td>
+      <td>7</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>A</td>
+      <td>8</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>A</td>
+      <td>8</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>A</td>
+      <td>9</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>B</td>
+      <td>10</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>B</td>
+      <td>8</td>
+    </tr>
+    <tr>
+      <th>12</th>
+      <td>B</td>
+      <td>9</td>
+    </tr>
+    <tr>
+      <th>13</th>
+      <td>B</td>
+      <td>8</td>
+    </tr>
+    <tr>
+      <th>14</th>
+      <td>B</td>
+      <td>7</td>
+    </tr>
+    <tr>
+      <th>15</th>
+      <td>B</td>
+      <td>7</td>
+    </tr>
+    <tr>
+      <th>16</th>
+      <td>B</td>
+      <td>7</td>
+    </tr>
+    <tr>
+      <th>17</th>
+      <td>B</td>
+      <td>8</td>
+    </tr>
+    <tr>
+      <th>18</th>
+      <td>B</td>
+      <td>9</td>
+    </tr>
+    <tr>
+      <th>19</th>
+      <td>B</td>
+      <td>9</td>
+    </tr>
+    <tr>
+      <th>20</th>
+      <td>C</td>
+      <td>9</td>
+    </tr>
+    <tr>
+      <th>21</th>
+      <td>C</td>
+      <td>9</td>
+    </tr>
+    <tr>
+      <th>22</th>
+      <td>C</td>
+      <td>8</td>
+    </tr>
+    <tr>
+      <th>23</th>
+      <td>C</td>
+      <td>8</td>
+    </tr>
+    <tr>
+      <th>24</th>
+      <td>C</td>
+      <td>8</td>
+    </tr>
+    <tr>
+      <th>25</th>
+      <td>C</td>
+      <td>7</td>
+    </tr>
+    <tr>
+      <th>26</th>
+      <td>C</td>
+      <td>6</td>
+    </tr>
+    <tr>
+      <th>27</th>
+      <td>C</td>
+      <td>9</td>
+    </tr>
+    <tr>
+      <th>28</th>
+      <td>C</td>
+      <td>8</td>
+    </tr>
+    <tr>
+      <th>29</th>
+      <td>C</td>
+      <td>9</td>
+    </tr>
+  </tbody>
+</table>
+
+</div>
+
+
+
+##### 3 手动计算各误差值, 实现单因素方差分析
+
+
+```python
+from scipy.stats import f_oneway
+import scipy.stats as stats
+import numpy as np
+import pandas as pd
+
+cityA = [10,9,9,8,8,7,7,8,8,9]
+cityB = [10,8,9,8,7,7,7,8,9,9]
+cityC = [9,9,8,8,8,7,6,9,8,9]
+df = pd.DataFrame()
+names = locals()
+for city in ['A','B','C']:
+    s = names['city%c' % city]
+    df_temp = pd.DataFrame({'city':city[-1], 'S':s})
+    df = pd.concat([df, df_temp], ignore_index=True)
+groups = df.groupby('city')
+# The "total sum-square" is the squared deviation from the mean
+ss_total = np.sum((df['S'] - df['S'].mean()) ** 2)
+# 计算 SSE 和 SSA
+(ss_treatments, ss_error) = (0, 0)
+for val, group in groups:
+    ss_error += sum((group['S'] - group['S'].mean()) ** 2)
+    ss_treatments += len(group) * (group['S'].mean() - df['S'].mean()) ** 2
+df_groups = len(groups) - 1
+df_residuals = len(df) - len(groups)
+F = (ss_treatments / df_groups) / (ss_error / df_residuals)
+df = stats.f(df_groups, df_residuals)
+p = df.sf(F)
+print(('单因素方差分析结果(手动计算）: F = {0}, and p = {1}'.format(F, p)))
+```
+
+    单因素方差分析结果(手动计算）: F = 0.1015037593984973, and p=0.9038208903685354
+
+
+由于$F<F_{0.05}(2, 27)=3.35$或$P>0.05$, 所以原假设成立, 不能认为城市对用户评分有影响
+
+#### 15.4.2 多因素方差分析实例
+
+收集在环境等级(environment)和食材等级(ingredients)两个因素影响下的某连锁餐饮店的用户评价数据
+
+
+```python
+#影响餐饮的 2 个因素：环境等级，食材等级
+from scipy import stats
+import pandas as pd
+import numpy as np
+from statsmodels.formula.api import ols
+from statsmodels.stats.anova import anova_lm
+environmental =  [5,5,5,5,5,4,4,4,4,4,3,3,3,3,3,2,2,2,2,2,1,1,1,1,1]
+ingredients    = [5,4,3,2,1,5,4,3,2,1,5,4,3,2,1,5,4,3,2,1,5,4,3,2,1]
+score      =     [5,5,4,3,2,5,4,4,3,2,4,4,3,3,2,4,3,2,2,2,3,3,3,2,1]
+data = {'E':environmental, 'I':ingredients, 'S':score}  # E 表示环境, I 表示食材, S 表示分数
+df = pd.DataFrame(data)
+df
+```
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+
+</style>
+
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>E</th>
+      <th>I</th>
+      <th>S</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>5</td>
+      <td>5</td>
+      <td>5</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>5</td>
+      <td>4</td>
+      <td>5</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>5</td>
+      <td>3</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>5</td>
+      <td>2</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>5</td>
+      <td>1</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>4</td>
+      <td>5</td>
+      <td>5</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>4</td>
+      <td>4</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>4</td>
+      <td>3</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>4</td>
+      <td>2</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>4</td>
+      <td>1</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>3</td>
+      <td>5</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>3</td>
+      <td>4</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <th>12</th>
+      <td>3</td>
+      <td>3</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>13</th>
+      <td>3</td>
+      <td>2</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>14</th>
+      <td>3</td>
+      <td>1</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>15</th>
+      <td>2</td>
+      <td>5</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <th>16</th>
+      <td>2</td>
+      <td>4</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>17</th>
+      <td>2</td>
+      <td>3</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>18</th>
+      <td>2</td>
+      <td>2</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>19</th>
+      <td>2</td>
+      <td>1</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>20</th>
+      <td>1</td>
+      <td>5</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>21</th>
+      <td>1</td>
+      <td>4</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>22</th>
+      <td>1</td>
+      <td>3</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>23</th>
+      <td>1</td>
+      <td>2</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>24</th>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+  </tbody>
+</table>
+
+</div>
+
+
+
+利用 statsmodels 中的 anova_lm 模块进行多因素方差分析
+
+
+```python
+"""
+符号意义:
+(~)隔离自变量和因变量(左边因变量, 右边自变量)
+(+)分离各个自变量
+"""
+formula = 'S~E+I'
+results = anova_lm(ols(formula,df).fit() )
+print(results)
+```
+
+                df  sum_sq    mean_sq           F        PR(>F)
+    E          1.0    7.22   7.220000   46.444444  7.580723e-07
+    I          1.0   18.00  18.000000  115.789474  3.129417e-10
+    Residual  22.0    3.42   0.155455         NaN           NaN
+
+
+由于$P 值很小$, 说明环境和食材两个因素对用户评分影响较大

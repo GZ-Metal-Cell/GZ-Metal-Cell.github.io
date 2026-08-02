@@ -1,0 +1,170 @@
+---
+title: Paper-MMOCR-A Comprehensive Toolbox for Text Detection, Recognition and Understanding
+date: Thu May 30 2024 08:34:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - 文本检测
+  - MMOCR
+categories: 学习
+description: 一个开源 OCR 工具包。
+---
+
+
+# 配置
+
+# 资源
+
+- [[2108.06543] MMOCR: A Comprehensive Toolbox for Text Detection, Recognition and Understanding (arxiv.org)](https://arxiv.org/abs/2108.06543)
+- [open-mmlab/mmocr: OpenMMLab Text Detection, Recognition and Understanding Toolbox (github.com)](https://github.com/open-mmlab/mmocr)
+- [欢迎来到 MMOCR 的中文文档! — MMOCR 1.0.1 文档](https://mmocr.readthedocs.io/zh-cn/dev-1.x/)
+- [文本识别 OCR 神器 MMOCR【OpenMMLab】_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1Ua411x7dB/)
+
+# 正文
+
+## Abstract
+
+​	我们提出了 MMOCR——一个开源工具箱，它提供了一个全面的管道文本检测和识别，以及其下游任务，如命名实体识别和关键信息提取。MMOCR 实现了 14 种最先进的算法，这比我们迄今为止所知道的所有现有开源 OCR 项目都要多得多。为了促进文本识别相关问题的未来研究和工业应用，我们还提供了大量的训练模型和详细的基准测试，以给予深入了解文本检测，识别和理解的性能。MMOCR 在 https://github.com/open-mmlab/mmocr 上公开发布。
+
+## 1 INTRODUCTION
+
+​	不同的方法利用不同的培训数据集，优化策略（例如，优化者，学习率时间表，时期数字，预训练的权重和数据增强管道）和网络设计（例如网络体系结构和损失）。为了涵盖各种模型中使用的组件多样性，我们提出了 MMOCR 工具箱，该工具箱涵盖了统一框架中最近流行的文本检测，识别和理解方法。截至目前，工具箱实现了七种文本检测方法，五个文本识别方法，一种关键信息方法和一种命名实体识别方法。整合各种算法赋予代码可重复使用性，因此大大简化了算法的实现。此外，统一框架允许公平地比较不同的方法，并且可以轻松研究其关键有效组件。据我们所知，MMOCR 在各种开源工具箱中重新实现了最深入的基于学习的文本检测和识别方法，我们认为这将促进未来的文本检测，识别和理解研究。
+
+​	MMOCR 在 Apache-2.0 许可证下在 https://github.com/open-mmlab/mmocr 上公开发布。该存储库包含所有源代码和详细文档，包括安装说明、数据集准备脚本、API 文档、模型动物园、教程和用户手册。MMOCR 重新实现了十多个最先进的文本检测、识别和理解算法，并提供了在流行的学术数据集上训练的广泛基准和模型。为了支持多语言 OCR 任务，MMOCR 还发布了在工业数据集上训练的中文文本识别模型。除了（分布式）培训和测试脚本，MMOCR 还提供了一套丰富的实用工具，涵盖了可视化、演示和部署。MMOCR 提供的模型很容易转换为 Onnx，它得到了部署框架和硬件设备的广泛支持。因此，它对学术研究人员和工业开发人员都很有用。
+
+## 2 RELATED WORK
+
+- 文本检测。**文本检测旨在将文本实例的边界框进行定位。最近的研究重点已转移到具有挑战性的 arbitrary-shaped text detection**。
+  - Mask R-CNN 可用于检测文本，由于基于矩形的 ROI 建议，它可能无法检测弯曲和密集的文本。
+  - 另一方面，TextSnake 用一系列有序的重叠圆盘来描述文本实例。
+  - PSENet 提出了一种渐进式规模扩展网络，可以区分位置接近的弯曲文本实例。
+  - DB 通过向分割网络提出可微分二值化函数来简化场景文本分割的二值化后处理，其中图像概率图的每个点处的阈值可以自适应地预测。
+
+- 文本识别。**文本识别由于能够从文本图像中提取丰富的语义信息而受到越来越多的关注。**
+  - 卷积递归神经网络（CRNN）使用端到端的可训练神经网络，该网络由用于特征提取的深度卷积神经网络（DCNN），用于顺序预测的递归神经网络（RNN）和用于产生标签序列的转录层组成。
+  - RobustScanner 能够通过使用新的位置增强分支和动态融合模块来识别无上下文文本，从而减轻随机文本图像的误识别问题。
+  - 已努力将不规则文本输入纠正为与典型文本识别器兼容的规则文本。例如，薄板样条（TPS）变换在深度神经网络中使用，该深度神经网络结合了空间 Transformer 网络（STN）和序列识别网络（SRN），以在将弯曲和透视文本输入 SRN 之前纠正它们。
+
+- 关键信息提取。**非结构化文档图像（如收据或信用票据）的关键信息提取（KIE）最主要用于办公自动化任务**，包括高效存档和合规性检查。传统的方法，如模板匹配，不能很好地推广看不见的模板的文档。提出了几种模型来解决泛化问题。
+  - 例如，CloudScan 使用 NER 来分析整个发票的连接一维文本序列。
+  - Chargrid 将每个文档页面编码为一个二维字符网格进行语义分割，但由于它只覆盖了小邻域的二维空间布局信息，不能充分利用文本区域之间的非局部、远距离的空间关系。
+  - 最近，已经开发了一种端到端的空间双模态图推理（SDMG-R）模型，该模型对文本识别错误特别鲁棒。它将非结构化文档图像建模为空间双模态图，图节点作为检测到的文本框，图边缘作为节点之间的空间关系。
+
+- 命名实体识别。**命名实体识别（NER）旨在定位命名实体并将其分类为预定义的类别**，例如个人或组织的名称。它们基于双向 LSTM 或条件随机场。
+
+![webp](T1.webp)
+
+- 开源 OCR 工具箱。多年来，已经开发了几种开源 OCR 工具箱，以满足学术界和行业的日益增长的需求。 
+  - Tesseract 是开源 OCR 工具箱的先驱。它于 2005 年公开发布，并提供了 CLI 工具来从图像中提取印刷字体文本。最初，它遵循了传统的分步管道，其中包括连接的组件分析，文本线查找，基线拟合，固定的音高检测和切碎，比例的单词查找和单词识别。现在，它支持基于 LSTM 的 OCR 引擎，并支持 100 多种语言。
+  - 基于深度学习的开源 OCR Toolbox Easyocr 于最近发布。它为工业用户提供了简单的 API，并支持 80 多种语言。它实施了工艺检测器和 CRNN 识别器。但是，它仅用于推理，不支持模型培训。 
+  - Centernocr 是另一个流行的开源 OCR 工具箱。它分别使用 Yolo-V3 和 CRNN 进行文本检测和识别，并使用 OpenCV DNN 进行深层模型推断。
+  - 相比之下，Chineseocr_lite 提供了轻巧的中文检测和识别工具箱，该工具箱使用 DB 检测文本和 CRNN 来识别文本。它提供了基于 NCNN 和 TNN 的远期推理，并且可以轻松地在 Windows，Linux 和 Android 等多个平台上部署。 
+  - Paddleocr 是基于 PaddlePaddle 的实用开源 OCR 工具箱，可以部署在 Linux，Windows 和 MacOS 等多个平台上。目前，它支持 80 多种语言并实施三种文本检测方法（EAST，DB 和 SAST），五种识别方法（CRNN，Rosetta，Star-Net，RAGE 和 SRN），以及一种端到端的文本发现方法（PGNET）。
+
+## 3 TEXT DETECTION STUDIES
+
+​	深度学习模型的性能受许多重要因素影响。在本节中，我们研究了网络架构的主干和颈部。我们在不同基于分割的文本检测方法之间交换上述组件，以衡量性能和计算复杂度的影响。
+
+![webp](T2.webp)
+
+​	**Backbone**。ResNet18 和 ResNet50 在文本检测方法中常被使用。为了实际应用，我们还介绍了一种适用于 GPU 的轻量级主干 ddrnet23-slim。表中比较了将 ResNet18、ResNet50 和 ddrnet23-slim 插入 PSENet、PAN 和 DB 中的 FLOPs 和 H-mean。结果显示，ddrnet23-slim 的表现略逊于 ResNet18 和 ResNet50，其 FLOPs 分别仅为 ResNet18 和 ResNet50 的 45% 和 21%。
+
+![webp](T3.webp)
+
+​	**Neck**。PSENet、PAN 和 DB 提出了不同的类似 FPN 的颈部结构来融合多尺度特征。我们在表中的实验结果显示，PSENet 中提出的 FPNF 可以在 PSENet 和 DB 中达到最佳的 H-mean。然而，它的 FLOPs 明显高于 DB 中提出的 PFNC 和 PAN 中提出的 FPEM_FFM。相比之下，FPEM_FFM 在 PAN 中拥有最低的 FLOPs，并且达到最佳的 H-mean。
+
+## 4 CONCLUSIONS
+
+​	我们已经公开发布了 MMOCR，这是一个涵盖文本检测、识别和理解的综合工具包。MMOCR 已经实现了 14 种最先进的算法，比所有现有的开源 OCR 项目都要多。此外，它提供了广泛的训练模型、基准测试、详细的文档和实用工具。在本报告中，我们广泛地将 MMOCR 与其他开源 OCR 项目进行了比较。此外，我们还引入了一种适用于 GPU 的轻量级主干 ddrnet23-slim，并对主干和颈部的影响进行了认真研究，以指导工业应用中的检测性能和计算复杂度。
+
+## 代码
+
+### 安装
+
+​	创建虚拟环境：
+
+```shell
+conda create -n open-mmlab python=3.8
+conda activate open-mmlab
+```
+
+​	离线安装 pytorch 和 torchvision：
+
+```shell
+pip install torch-1.13.1+cu117-cp38-cp38-win_amd64.whl
+pip install torchvision-0.14.1+cu117-cp38-cp38-win_amd64.whl
+```
+
+​	使用 [MIM](https://github.com/open-mmlab/mim) 安装 [MMEngine](https://github.com/open-mmlab/mmengine)，[MMCV](https://github.com/open-mmlab/mmcv) 和 [MMDetection](https://github.com/open-mmlab/mmdetection)。
+
+```shell
+pip install -U openmim
+mim install mmengine
+mim install mmcv
+mim install mmdet
+```
+
+​	从 [open-mmlab/mmocr: OpenMMLab Text Detection, Recognition and Understanding Toolbox (github.com)](https://github.com/open-mmlab/mmocr) 获取代码，进这个文件夹：
+
+```shell
+pip install -v -e .
+# "-v" 会让安装过程产生更详细的输出
+# "-e" 会以可编辑的方式安装该代码库，你对该代码库所作的任何更改都会立即生效
+```
+
+### 推理
+
+- [推理 — MMOCR 1.0.1 文档](https://mmocr.readthedocs.io/zh-cn/dev-1.x/user_guides/inference.html)
+
+​	快速开始：
+
+```python
+from mmocr.apis import MMOCRInferencer
+ocr = MMOCRInferencer(det='DBNet', rec='CRNN')
+```
+
+> - 要用 MMOCR 的预训练模型进行推理，只需要把它的名字传给参数 `det`，权重将自动从 OpenMMLab 的模型库中下载和加载。[此处](https://mmocr.readthedocs.io/zh-cn/dev-1.x/modelzoo.html#id2)记录了 MMOCR 中可以通过该方法初始化的所有模型。
+>
+>   ```python
+>   MMOCRInferencer(det='DBNet')
+>   ```
+>
+> - 要加载自定义的配置和权重，你可以把配置文件的路径传给 `det`，把权重的路径传给 `det_weights`。
+>
+>   ```python
+>   MMOCRInferencer(det='path/to/dbnet_config.py', det_weights='path/to/dbnet.pth')
+>   ```
+>
+> - 默认情况下，[MMEngine](https://github.com/open-mmlab/mmengine/) 会在训练模型时自动将配置文件转储到权重文件中。如果你有一个在 MMEngine 上训练的权重，你也可以将权重文件的路径传递给 `weights`，而不需要指定 `model`：
+>
+>   ```python
+>   # 如果无法在权重中找到配置文件，则会引发错误
+>   inferencer = TextDetInferencer(weights='path/to/dbnet.pth')
+>   ```
+>
+
+```
+Loads checkpoint by http backend from path: https://download.openmmlab.com/mmocr/textdet/dbnet/dbnet_resnet50-oclip_1200e_icdar2015/dbnet_resnet50-oclip_1200e_icdar2015_20221102_115917-bde8c87a.pth
+Downloading: "https://download.openmmlab.com/mmocr/textdet/dbnet/dbnet_resnet50-oclip_1200e_icdar2015/dbnet_resnet50-oclip_1200e_icdar2015_20221102_115917-bde8c87a.pth" to C:\Users\XXX/.cache\torch\hub\checkpoints\dbnet_resnet50-oclip_1200e_icdar2015_20221102_115917-bde8c87a.pth
+100%|███████████████████████████████████████████████████████████████████████████████| 107M/107M [00:17<00:00, 6.50MB/s]
+05/30 10:22:37 - mmengine - WARNING - Failed to search registry with scope "mmocr" in the "function" registry tree. As a workaround, the current "function" registry in "mmengine" is used to build instance. This may cause unexpected failure when running the built modules. Please check whether "mmocr" is a correct scope, or whether the registry is initialized.
+C:\Users\XXX\.conda\envs\openmmlab\lib\site-packages\mmengine\visualization\visualizer.py:196: UserWarning: Failed to add <class 'mmengine.visualization.vis_backend.LocalVisBackend'>, please provide the `save_dir` argument.
+  warnings.warn(f'Failed to add {vis_backend.__class__}, '
+Loads checkpoint by http backend from path: https://download.openmmlab.com/mmocr/textrecog/crnn/crnn_mini-vgg_5e_mj/crnn_mini-vgg_5e_mj_20220826_224120-8afbedbb.pth
+Downloading: "https://download.openmmlab.com/mmocr/textrecog/crnn/crnn_mini-vgg_5e_mj/crnn_mini-vgg_5e_mj_20220826_224120-8afbedbb.pth" to C:\Users\XXX/.cache\torch\hub\checkpoints\crnn_mini-vgg_5e_mj_20220826_224120-8afbedbb.pth
+100%|█████████████████████████████████████████████████████████████████████████████| 91.8M/91.8M [00:13<00:00, 6.96MB/s]
+The model and loaded state dict do not match exactly
+
+unexpected key in source state_dict: data_preprocessor.mean, data_preprocessor.std
+```
+
+```python
+ocr('demo/demo_text_ocr.jpg', show=True, print_result=True)
+```
+
+![webp](demo_text_ocr.webp)
+
+​	看来它默认不支持中文和弯曲文本……
+
+![webp](HBU.webp)
+
+
+

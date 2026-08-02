@@ -1,0 +1,1411 @@
+---
+title: Web-React
+date: Mon Dec 16 2024 15:39:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - JavaScript
+  - React
+categories: 学习
+description: The library for web and native user interfaces.
+---
+
+
+# 资源
+
+- [React 官方中文文档](https://react.docschina.org/)
+- [React 教程 | 菜鸟教程](https://www.runoob.com/react/react-tutorial.html)
+
+# 教程
+
+## 安装（NPM）
+
+​	这里要我配置 cnpm：
+
+```shell
+npm install -g cnpm --registry=https://registry.npmmirror.com
+npm config set registry https://registry.npmmirror.com
+```
+
+​	创建项目：
+
+```shell
+cnpm install -g create-react-app
+create-react-app my-app
+cd my-app/
+npm i web-vitals --save-dev
+npm start
+```
+
+​	此时打开 http://localhost:3000/：
+
+![webp](01.webp)
+
+​	这个 app 的入口文件在 `src/App.js`，修改其中的内容：
+
+```javascript
+import React, { Component } from 'react';
+import logo from './logo.svg';
+import './App.css';
+ 
+class App extends Component {
+  render() {
+    return (
+      <div className="App">
+        <div className="App-header">
+          <img src={logo} className="App-logo" alt="logo" />
+          <h2>欢迎来到菜鸟教程</h2>
+        </div>
+        <p className="App-intro">
+          你可以在 <code>src/App.js</code> 文件中修改。
+        </p>
+      </div>
+    );
+  }
+}
+ 
+export default App;
+```
+
+![webp](02.webp)
+
+​	创建一个 `Hello.js` 作为组件，在 `App.js` 中引入：
+
+{% tabs Install %}
+
+<!-- tab Hello.js -->
+
+```javascript
+import React from 'react';
+
+function Hello() {
+  return <h1>Hello from a new component!</h1>;
+}
+
+export default Hello;
+```
+
+<!-- endtab -->
+
+<!-- tab App.js -->
+
+```javascript
+import React from 'react';
+import './App.css';
+import Hello from './Hello';
+
+function App() {
+  return (
+    <div className="App">
+      <header className="App-header">
+        <Hello />
+      </header>
+    </div>
+  );
+}
+
+export default App;
+```
+
+<!-- endtab -->
+
+{% endtabs %}
+
+![webp](03.webp)
+
+## 快速入门
+
+- [快速入门 – React 中文文档](https://react.docschina.org/learn)
+
+​	创建一个 `src/Profile.jsx` 文件，并在 `App.js` 中引入并使用：
+
+{% tabs QuickStart %}
+
+<!-- tab Profile.jsx -->
+
+```jsx
+const user = {
+    name: 'Hedy Lamarr',
+    imageUrl: 'https://i.imgur.com/yXOvdOSs.jpg',
+    imageSize: 90,
+};
+
+export default function Profile() {
+    return (
+        <>
+            <h1>{user.name}</h1>
+            <img
+                className="avatar"
+                src={user.imageUrl}
+                alt={'Photo of ' + user.name}
+                style={{
+                    width: user.imageSize,
+                    height: user.imageSize
+                }}
+            />
+        </>
+    );
+}
+```
+
+<!-- endtab -->
+
+<!-- tab App.js -->
+
+```javascript
+import React from 'react';
+import './App.css';
+import Profile from './Profile';
+
+function App() {
+  return (
+    <div className="App">
+      <header className="App-header">
+        <Profile />
+      </header>
+    </div>
+  );
+}
+
+export default App;
+```
+
+<!-- endtab -->
+
+{% endtabs %}
+
+> [!Note]
+>
+> ​	上面所使用的标签语法被称为 JSX。它是可选的，但大多数 React 项目会使用 JSX，主要是它很方便。所有 [我们推荐的本地开发工具](https://react.docschina.org/learn/installation) 都开箱即用地支持 JSX。
+>
+> ​	JSX 比 HTML 更加严格。你必须闭合标签，如 `<br />`。你的组件也不能返回多个 JSX 标签。你必须将它们包裹到一个共享的父级中，比如 `<div>...</div>` 或使用空的 `<>...</>` 包裹。
+
+![webp](04.webp)
+
+# React Project Tutorial
+
+**React Project Tutorial: Build a Responsive Portfolio Website w/ Advanced Animations**
+
+- [React Project Tutorial: Build a Responsive Portfolio Website w/ Advanced Animations - YouTube](https://www.youtube.com/watch?v=hYv6BM2fWd8)
+- [web-dev-projects/personal-portfolio at main · judygab/web-dev-projects](https://github.com/judygab/web-dev-projects/tree/main/personal-portfolio) 从项目中拷贝 `assets/` 和 `App.css` 到项目中。
+
+## 项目介绍 & 初始化 & Navigation
+
+​	在 React 项目上安装 bootstrap：
+
+```shell
+npm install bootstrap
+npm install react-bootstrap
+```
+
+​	新建一个 `src/components/NavBar.js`：
+
+- [Navbars | React Bootstrap](https://react-bootstrap.github.io/docs/components/navbar) 根据这里的内容一阵魔改：
+
+```jsx
+import { Navbar, Nav, Container } from "react-bootstrap";
+import { useEffect, useState } from "react";
+import logo from "../assets/img/logo.svg";
+import navIcon1 from "../assets/img/nav-icon1.svg";
+import navIcon2 from "../assets/img/nav-icon2.svg";
+import navIcon3 from "../assets/img/nav-icon3.svg";
+
+export const NavBar = () => {
+    const [activeLink, setActiveLink] = useState("home");
+    const [scrolled, setScrolled] = useState(false);
+
+    useEffect(() => {
+        const onScrool = () => {
+            if (window.scrollY > 50) {
+                setScrolled(true);
+            } else {
+                setScrolled(false);
+            }
+        }
+        window.addEventListener("scroll", onScrool);
+
+        return () => window.removeEventListener("scroll", onScrool);
+    }, [])
+
+    const onUpdateActiveLink = (value) => {
+        setActiveLink(value);
+    }
+
+    return (
+        <Navbar expand="lg" className={scrolled ? "scrolled" : ""}>
+            <Container>
+                <Navbar.Brand href="#home">
+                    <img src={logo} alt="Logo" />
+                </Navbar.Brand>
+                <Navbar.Toggle aria-controls="basic-navbar-nav">
+                    <span className="navbar-toggler-icon"></span>
+                </Navbar.Toggle>
+                <Navbar.Collapse id="basic-navbar-nav">
+                    <Nav className="me-auto">
+                        <Nav.Link href="#home"
+                            className={activeLink === "home" ? "active navbar-link" : "navbar-link"}
+                            onClick={() => onUpdateActiveLink("home")}>
+                            Home
+                        </Nav.Link>
+                        <Nav.Link href="#skills"
+                            className={activeLink === "skills" ? "active navbar-link" : "navbar-link"}
+                            onClick={() => onUpdateActiveLink("skills")}>
+                            Skills
+                        </Nav.Link>
+                        <Nav.Link href="#projects"
+                            className={activeLink === "projects" ? "active navbar-link" : "navbar-link"}
+                            onClick={() => onUpdateActiveLink("projects")}>
+                            Projects
+                        </Nav.Link>
+                    </Nav>
+                    <span className="navbar-text">
+                        <div className="social-icon">
+                            <a href="#"><img src={navIcon1} alt="" /></a>
+                            <a href="#"><img src={navIcon2} alt="" /></a>
+                            <a href="#"><img src={navIcon3} alt="" /></a>
+                        </div>
+                        <button className="vvd" onClick={() => { console.log("connect") }}>
+                            <span>
+                                Let's Connect
+                            </span>
+                        </button>
+                    </span>
+                </Navbar.Collapse>
+            </Container>
+        </Navbar>
+    )
+}
+```
+
+- `useEffect` 用于添加滚动监听器，当用户滚动超过 50 像素时，`scrolled` 状态被设置为 `true`，否则为 `false`。
+- 在组件卸载时，确保移除事件监听器，以避免内存泄漏。
+
+> [!Note]
+>
+> ​	在 React 中，`className` 是用于为 HTML 元素添加 CSS 类名的属性，类似于普通 HTML 的 `class` 属性。
+>
+> **为什么是 `className` 而不是 `class`？**
+>
+> ​	JavaScript 中，`class` 是一个保留关键字，用于定义类。为了避免冲突，React 使用 `className` 代替 `class` 来指定 CSS 类名。
+
+---
+
+​	在 `App.js` 上放置这个 `<NavBar/>`：
+
+```jsx
+import React from 'react';
+import './App.css';
+import 'bootstrap/dist/css/bootstrap.min.css'
+import { NavBar } from './components/NavBar';
+
+function App() {
+  return (
+    <div className="App">
+		<NavBar />
+    </div>
+  );
+}
+
+export default App;
+```
+
+![webp](05.webp)
+
+## Main Banner
+
+​	再安装一个库。
+
+```shell
+npm install react-bootstrap-icons
+```
+
+​	编写 `src/components/Banner.js`，写一个打字的脚本：
+
+```jsx
+import { Row, Container, Col } from "react-bootstrap";
+import { ArrowRightCircle } from "react-bootstrap-icons";
+import headerImg from "../assets/img/header-img.svg";
+import { useEffect, useState } from "react";
+ 
+export const Banner = () => {
+    const [loopNum, setLoopNum] = useState(0);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const toRotate = ["Web Developer", "Web Designer", "UI/UX Designer"];
+    const [text, setText] = useState('');
+    const [delta, setDelta] = useState(300 - Math.random() * 100);
+    const period = 2000;
+
+    useEffect(() => {
+        let ticker = setInterval(() => {
+            tick();
+        }, delta);
+
+        return () => { clearInterval(ticker); };
+    }, [text]);
+
+    const tick = () => {
+        let i = loopNum % toRotate.length;
+        let fullText = toRotate[i];
+        let updatedText = isDeleting ? fullText.substring(0, text.length - 1) : fullText.substring(0, text.length + 1);
+
+        setText(updatedText);
+
+        if (isDeleting) {
+            setDelta(prevDelta => prevDelta / 2)
+        }
+
+        if(!isDeleting && updatedText === fullText) {
+            setIsDeleting(true);
+            setDelta(period);
+        } else if(isDeleting && updatedText === '') {
+            setIsDeleting(false);
+            setLoopNum(loopNum + 1);
+            setDelta(500);
+        }
+    }
+
+    return (
+        <section className="banner" id="banner">
+            <Container>
+                <Row className="align-items-center">
+                    <Col xs={12} md={6} xl={7}>
+                        <span className="tagline">Welcome to my Portfolio</span>
+                        <h1>{`Hi I'm webdecoded `}<span className="wrap">{text}</span></h1>
+                        <p>
+                            This small book contains a fairy tale,a story about many things.First of all,Innocence of Childhood and love.The prince loves his roses,but felt disappointed by something the rose said.As doubt grows, he decides to explore other planet.The little prince discovers that his rose is not the only one of its kind,there are thousands of them in a garden,but then he realizes that his rose is special "because it is she that I have watered; because it is she that I have put under the glass globe; because it is she that I have sheltered behind the screen".The fox teaches the prince "It is only with the heart that one can see rightly;what is essential is invisible to the eye"
+                        </p>
+                        <button onClick={() => console.log('connect')}>Let's connect<ArrowRightCircle size={25}/></button>
+                    </Col>
+                    <Col xs={12} md={6} xl={5}>
+                        <img src={headerImg} alt="Headder Img" />
+                    </Col>
+                </Row>
+            </Container>
+        </section>
+    )
+}
+```
+
+​	在 `App.js` 中导入并使用它：
+
+```jsx
+import React from 'react';
+import './App.css';
+import 'bootstrap/dist/css/bootstrap.min.css'
+import { Banner } from './components/Banner';
+import { NavBar } from './components/NavBar';
+
+function App() {
+  return (
+    <div className="App">
+        <NavBar />
+        <Banner />
+    </div>
+  );
+}
+
+export default App;
+```
+
+![webp](06.webp)
+
+## Skills Section & Slider
+
+​	安装插件：
+
+```shell
+npm install react-multi-carousel
+```
+
+​	编写 `src/components/Skills.js`，其中轮播组件 `<Carousel/>` 的写法参见 [react-multi-carousel - npm](https://www.npmjs.com/package/react-multi-carousel)：
+
+```jsx
+import Carousel from "react-multi-carousel";
+import { Container, Row, Col } from "react-bootstrap";
+import "react-multi-carousel/lib/styles.css";
+import meter1 from "../assets/img/meter1.svg";
+import meter2 from "../assets/img/meter2.svg";
+import meter3 from "../assets/img/meter3.svg";
+import colorSharp from "../assets/img/color-sharp.png";
+
+export const Skills = () =>{
+    const responsive = {
+        superLargeDesktop: {
+            // the naming can be any, depends on you.
+            breakpoint: { max: 4000, min: 3000 },
+            items: 5
+        },
+        desktop: {
+            breakpoint: { max: 3000, min: 1024 },
+            items: 3
+        },
+        tablet: {
+            breakpoint: { max: 1024, min: 464 },
+            items: 2
+        },
+        mobile: {
+            breakpoint: { max: 464, min: 0 },
+            items: 1
+        }
+    };
+
+    return (
+        <section className="skill" id="skills">
+            <Container>
+                <Row>
+                    <Col>
+                        <div className="skill-bx">
+                            <h2>
+                                Skills
+                            </h2>
+                            <p>
+                                We are on a very excited journey towards version 3.0 of this component which will be rewritten in hooks/context completely. It means smaller bundle size, performance improvement and easier customization of the component and so many more benefits.
+                            </p>
+                            <Carousel responsive={responsive} infinite={true} className="skill-slider">
+                                <div className="item">
+                                    <img src={meter1} alt="Image"/>
+                                    <h5>Web Development</h5>
+                                </div>
+                                <div className="item">
+                                    <img src={meter2} alt="Image"/>
+                                    <h5>Brand Identity</h5>
+                                </div>
+                                <div className="item">
+                                    <img src={meter3} alt="Image"/>
+                                    <h5>Logo Design</h5>
+                                </div>
+                                <div className="item">
+                                    <img src={meter1} alt="Image"/>
+                                    <h5>Web Development</h5>
+                                </div>
+                            </Carousel>
+                        </div>
+                    </Col>
+                </Row>
+            </Container>
+            <img className="background-image-left" src={colorSharp}/>
+        </section>
+    )
+}
+```
+
+​	在 `App.js` 中导入并使用它：
+
+```jsx
+import React from 'react';
+import './App.css';
+import 'bootstrap/dist/css/bootstrap.min.css'
+import { Banner } from './components/Banner';
+import { NavBar } from './components/NavBar';
+import { Skills } from './components/Skills';
+
+function App() {
+  return (
+    <div className="App">
+        <NavBar />
+        <Banner />
+        <Skills />
+    </div>
+  );
+}
+
+export default App;
+```
+
+![webp](07.webp)
+
+## Projects' Section & Tabs
+
+​	根据 [Navs and tabs | React Bootstrap](https://react-bootstrap.github.io/docs/components/navs/#pills) 抄一个布局，`src/components/Projects.js`：
+
+```jsx
+import { Container, Row, Col, Tab, Nav } from "react-bootstrap";
+import { ProjectCard } from "./ProjectCard";
+import colorSharp2 from "../assets/img/color-sharp2.png";
+import proImg1 from "../assets/img/project-img1.png";
+import proImg2 from "../assets/img/project-img2.png";
+import proImg3 from "../assets/img/project-img3.png";
+
+export const Projects = () => {
+    const projects = [
+        {
+            title: "Business Startup",
+            decription: "Design & Development",
+            imgUrl: proImg1,
+        },
+        {
+            title: "Business Startup",
+            decription: "Design & Development",
+            imgUrl: proImg2,
+        },
+        {
+            title: "Business Startup",
+            decription: "Design & Development",
+            imgUrl: proImg3,
+        },
+        {
+            title: "Business Startup",
+            decription: "Design & Development",
+            imgUrl: proImg1,
+        },
+        {
+            title: "Business Startup",
+            decription: "Design & Development",
+            imgUrl: proImg2,
+        },
+        {
+            title: "Business Startup",
+            decription: "Design & Development",
+            imgUrl: proImg3,
+        },
+    ]
+    return (
+        <section className="project" id="project">
+            <Container>
+                <Row>
+                    <Col>
+                        <h2>Projects</h2>
+                        <p>It would mean so much if you could provide help towards the further development of this project as we do this open source work in our own free time especially during this covid-19 crisis.</p>
+                        <Tab.Container id="projects-tabs" defaultActiveKey="first">
+                            <Nav variant="pills" defaultActiveKey="/home" className="nav-pills mb-5 justify-content-center align-items-center" id="pills-tab">
+                                <Nav.Item>
+                                    <Nav.Link eventKey="first">Tab One</Nav.Link>
+                                </Nav.Item>
+                                <Nav.Item>
+                                    <Nav.Link eventKey="second">Tab Two</Nav.Link>
+                                </Nav.Item>
+                                <Nav.Item>
+                                    <Nav.Link eventKey="third" disabled>
+                                        Tab Three
+                                    </Nav.Link>
+                                </Nav.Item>
+                            </Nav>
+                            <Tab.Content>
+                                <Tab.Pane eventKey="first">
+                                    <Row>
+                                        {
+                                            projects.map((project, index) => (
+                                                <ProjectCard
+                                                    key={index}
+                                                    {...project}
+                                                />
+                                            ))
+                                        }
+                                    </Row>
+                                </Tab.Pane>
+                                <Tab.Pane eventKey="second">
+                                    Loren Ipsum
+                                </Tab.Pane>
+                                <Tab.Pane eventKey="third">
+                                    Loren Ipsum
+                                </Tab.Pane>
+                            </Tab.Content>
+                        </Tab.Container>
+                    </Col>
+                </Row>
+            </Container>
+            <img className="background-image-right" src={colorSharp2}></img>
+        </section>
+    );
+};
+```
+
+​	其中，使用 `projects.map((project, index) => ())` 遍历对象数组并将数据传递给子组件 `src/components/ProjectCard.js`：
+
+```jsx
+import { Col } from "react-bootstrap";
+
+export const ProjectCard = ({ title, desription, imgUrl }) => {
+    return (
+        <Col sm={6} md={4}>
+            <div className="proj-imgbx">
+                <img src={imgUrl} />
+                <div className="proj-txtx">
+                    <h4>{title}</h4>
+                    <span>{desription}</span>
+                </div>
+            </div>
+        </Col>
+    )
+}
+```
+
+​	`App.js` 引入并使用这个插件：
+
+```jsx
+import React from 'react';
+import './App.css';
+import 'bootstrap/dist/css/bootstrap.min.css'
+import { Banner } from './components/Banner';
+import { NavBar } from './components/NavBar';
+import { Skills } from './components/Skills';
+import { Projects } from './components/Projects';
+
+function App() {
+  return (
+    <div className="App">
+        <NavBar />
+        <Banner />
+        <Skills />
+        <Projects />
+    </div>
+  );
+}
+
+export default App;
+```
+
+![webp](08.webp)
+
+## Contact form
+
+​	安装包，这些包将用于创建邮箱服务：
+
+```shell
+npm install express cors nodemailer
+```
+
+​	登录一个邮箱（126），启动 **SMTP 服务** 并获得授权码：
+
+![webp](09.webp)
+
+​	写一个 `server.js`（这个 JS 跟前端无关），用于开启服务器：
+
+```javascript
+const express = require("express");
+const router = express.Router();
+const cors = require("cors");
+const nodemailer = require("nodemailer");
+
+// Server to send emails
+const app = express();
+app.use(cors());
+app.use(express.json());
+app.use("/", router);
+app.listen(5000, () => console.log("Server Running"));
+
+const contactEmail = nodemailer.createTransport({
+  host: "smtp.126.com",
+  port: 465,
+  secure: true,
+  auth: {
+    user: "AAA@126.com",
+    pass: "STPXXXfg",
+  },
+});
+
+contactEmail.verify((error) => {
+  if (error) {
+    console.log("SMTP verification failed:", error);
+  } else {
+    console.log("Ready to Send");
+  }
+});
+
+router.post("/contact", (req, res) => {
+  const name = req.body.firstName + " " + req.body.lastName;
+  const email = req.body.email;
+  const message = req.body.message;
+  const phone = req.body.phone;
+
+  const mail = {
+    from: `"${name}" <AAA@126.com>`, // Ensure "from" matches the authenticated email
+    to: "BBB@qq.com",
+    subject: "Contact Form Submission - Portfolio",
+    html: `<p>Name: ${name}</p>
+           <p>Email: ${email}</p>
+           <p>Phone: ${phone}</p>
+           <p>Message: ${message}</p>`,
+  };
+
+  contactEmail.sendMail(mail, (error, info) => {
+    if (error) {
+      console.error("Error sending mail:", error);
+      res.status(500).json({ error: error.message });
+    } else {
+      console.log("Email sent:", info.response);
+      res.status(200).json({ code: 200, status: "Message Sent" });
+    }
+  });
+});
+
+```
+
+​	如此做，服务器如果收到信息，将会使用 `AAA@126.com` 账号，将消息发送给 `BBB@qq.com`！
+
+​	启动服务器，本地可通过 `http://localhost:5000/` 访问这个服务器：
+
+```shell
+node server.js
+```
+
+​	写一个 `src/components/Contact.js`，将要提交的数据存储在 `formInitialDetails` 中；由 `onFormUpdate = (category, value) => {}` 修改数据；提交表单时触发 `handleSubmit()` 与服务器通信：
+
+```jsx
+import { useState } from 'react';
+import { Container, Col, Row } from 'react-bootstrap';
+import contactImg from '../assets/img/contact-img.svg';
+
+export const Contact = () => {
+    const formInitialDetails = {
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        message: ''
+    }
+
+    const [formDetails, setFormDetails] = useState(formInitialDetails);
+    const [buttonText, setButtonText] = useState('Send');
+    const [status, setStatus] = useState({});
+
+    const onFormUpdate = (category, value) => {
+        setFormDetails({
+            ...formDetails,
+            [category]: value
+        })
+    }
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setButtonText('Sending...');
+        let response = await fetch('http://localhost:3000/contact', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formDetails),
+        });
+        setButtonText('Send');
+        let result = response.json();
+        setFormDetails(formInitialDetails);
+        console.log(result);
+        if (result.code === 200) {
+            setStatus({ success: true, message: 'Message sent successfully' });
+        } else {
+            setStatus({ success: false, message: 'Something went wrong. Please try again later.' });
+        }
+    }
+
+    return (
+        <section className="contact" id="connect">
+            <Container>
+                <Row className="align-items-center">
+                    <Col md={6}>
+                        <img src={contactImg} alt="Contact Us" />
+                    </Col>
+                    <Col md={6}>
+                        <h2>Get In Touch</h2>
+                        <form onSubmit={handleSubmit}>
+                            <Row>
+                                <Col sm={6} className="px-1">
+                                    <input type="text" value={formDetails.firstName} placeholder="First Name" onChange={(e) => onFormUpdate('firstName', e.target.value)} />
+                                </Col>
+                                <Col sm={6} className="px-1">
+                                    <input type="text" value={formDetails.lastName} placeholder="Last Name" onChange={(e) => onFormUpdate('lastName', e.target.value)} />
+                                </Col>
+                                <Col sm={6} className="px-1">
+                                    <input type="email" value={formDetails.email} placeholder="Email Address" onChange={(e) => onFormUpdate('email', e.target.value)} />
+                                </Col>
+                                <Col sm={6} className="px-1">
+                                    <input type="tel" value={formDetails.phone} placeholder="Phone No." onChange={(e) => onFormUpdate('phone', e.target.value)} />
+                                </Col>
+                                <Col sm={6} className="px-1">
+                                    <textarea row="6" value={formDetails.message} placeholder="Message" onChange={(e) => onFormUpdate('message', e.target.value)} />
+                                    <button type="submit"><span>{buttonText}</span></button>
+                                </Col>
+                                {
+                                    status.message &&
+                                    <Col>
+                                        <p className={status.success === false ? "danger" : "success"}>{status.message}</p>
+                                    </Col>
+                                }
+                            </Row>
+                        </form>
+                    </Col>
+                </Row>
+            </Container>
+        </section>
+    )
+}
+```
+
+​	`App.js` 引入这个插件：
+
+```jsx
+import React from 'react';
+import './App.css';
+import 'bootstrap/dist/css/bootstrap.min.css'
+import { Banner } from './components/Banner';
+import { NavBar } from './components/NavBar';
+import { Skills } from './components/Skills';
+import { Projects } from './components/Projects';
+import { Contact } from './components/Contact';
+
+function App() {
+  return (
+    <div className="App">
+        <NavBar />
+        <Banner />
+        <Skills />
+        <Projects />
+        <Contact />
+    </div>
+  );
+}
+
+export default App;
+```
+
+​	若服务器正确配置，能够成功建立通讯：
+
+![webp](10.webp)
+
+```
+Server Running
+Ready to Send
+Ready to Send
+Email sent: 250 Mail OK queued as XXX
+```
+
+​	`BBB@qq.com` 也能够正确收到邮件：
+
+![webp](11.webp)
+
+## Newsletter Subscribe
+
+- [react-mailchimp-subscribe - npm](https://www.npmjs.com/package/react-mailchimp-subscribe)
+
+​	这个需要 Mailchimp 账号，在国内不太好用……
+
+```shell
+npm i react-mailchimp-subscribe
+```
+
+​	创建 `src/components/MailchimpForm.js`：
+
+```jsx
+import MailchimpSubscribe from "react-mailchimp-subscribe";
+import { Newsletter } from "./Newsletter";
+
+export const MailchimpForm = () => {
+  const postUrl = `${process.env.REACT_APP_MAILCHIMP_URL}?u=${process.env.REACT_APP_MAILCHIMP_U}&id=${process.env.REACT_APP_MAILCHIMP_ID}`;
+
+  return (
+    <>
+      <MailchimpSubscribe
+        url={postUrl}
+        render={({ subscribe, status, message }) => (
+          <Newsletter
+            status={status}
+            message={message}
+            onValidated={formData => subscribe(formData)}
+            />
+        )}
+        />
+    </>
+  )
+}
+```
+
+​	其中的 `process.env.` 变量由 `.env` 文件定义：
+
+```env
+REACT_APP_MAILCHIMP_URL=""
+REACT_APP_MAILCHIMP_U=""
+REACT_APP_MAILCHIMP_ID=""
+```
+
+​	引用组件 `src/compoents/Newsletter.js`：
+
+```jsx
+import { useState, useEffect } from "react";
+import { Col, Row, Alert } from "react-bootstrap";
+
+export const Newsletter = ({ status, message, onValidated }) => {
+    const [email, setEmail] = useState('');
+
+    useEffect(() => {
+        if (status === 'success') clearFields();
+    }, [status])
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        email &&
+            email.indexOf("@") > -1 &&
+            onValidated({
+                EMAIL: email
+            })
+    }
+
+    const clearFields = () => {
+        setEmail('');
+    }
+
+    return (
+        <Col lg={12}>
+            <div className="newsletter-bx wow slideInUp">
+                <Row>
+                    <Col lg={12} md={6} xl={5}>
+                        <h3>Subscribe to our Newsletter<br></br> & Never miss latest updates</h3>
+                        {status === 'sending' && <Alert>Sending...</Alert>}
+                        {status === 'error' && <Alert variant="danger">{message}</Alert>}
+                        {status === 'success' && <Alert variant="success">{message}</Alert>}
+                    </Col>
+                    <Col md={6} xl={7}>
+                        <form onSubmit={handleSubmit}>
+                            <div className="new-email-bx">
+                                <input value={email} type="email" onChange={(e) => setEmail(e.target.value)} placeholder="Email Address" />
+                                <button type="submit">Submit</button>
+                            </div>
+                        </form>
+                    </Col>
+                </Row>
+            </div>
+        </Col>
+    )
+}
+```
+
+​	`App.js` 引用 `MailchimpForm.js`：
+
+```jsx
+import React from 'react';
+import './App.css';
+import 'bootstrap/dist/css/bootstrap.min.css'
+import { Banner } from './components/Banner'
+import { NavBar } from './components/NavBar';
+import { Skills } from './components/Skills';
+import { Projects } from './components/Projects';
+import { Contact } from './components/Contact';
+import { MailchimpForm } from './components/MailchimpForm'
+
+function App() {
+  return (
+    <div className="App">
+      <header className="App-header">
+        <NavBar />
+        <Banner />
+        <Skills />
+        <Projects />
+        <Contact />
+        <MailchimpForm />
+      </header>
+    </div>
+  );
+}
+
+export default App;
+```
+
+## Footer
+
+​	创建组件 `src/components/Footer.js`：
+
+```jsx
+import { Container, Col, Row } from "react-bootstrap"
+import { MailchimpForm } from "./MailchimpForm";
+import logo from "../assets/img/logo.svg"
+import navIcon1 from "../assets/img/nav-icon1.svg";
+import navIcon2 from "../assets/img/nav-icon2.svg";
+import navIcon3 from "../assets/img/nav-icon3.svg";
+
+export const Footer = () => {
+    return (
+        <footer className="footer">
+            <Container>
+                <Row className="align-items-center">
+                    <MailchimpForm />
+                    <Col sm={6}>
+                        <img src={logo} alt="Logo" />
+                    </Col>
+                    <Col sm={6} className="text-center text-sm-end">
+                        <div className="social-icon">
+                            <a href="#"><img src={navIcon1} alt="Icon" /></a>
+                            <a href="#"><img src={navIcon2} alt="Icon" /></a>
+                            <a href="#"><img src={navIcon3} alt="Icon" /></a>
+                        </div>
+                        <p>CoppyRight 2022. All rights reserved.</p>
+                    </Col>
+                </Row>
+            </Container>
+        </footer>
+    )
+}
+```
+
+​	`App.js` 中引入这个组件：
+
+```jsx
+import React from 'react';
+import './App.css';
+import 'bootstrap/dist/css/bootstrap.min.css'
+import { Banner } from './components/Banner';
+import { NavBar } from './components/NavBar';
+import { Skills } from './components/Skills';
+import { Projects } from './components/Projects';
+import { Contact } from './components/Contact';
+import { Footer } from './components/Footer'
+
+function App() {
+  return (
+    <div className="App">
+      <header className="App-header">
+        <NavBar />
+        <Banner />
+        <Skills />
+        <Projects />
+        <Contact />
+      </header>
+      <Footer />
+    </div>
+  );
+}
+
+export default App;
+```
+
+![webp](12.webp)
+
+## Animation
+
+- [Animate.css | A cross-browser library of CSS animations.](https://animate.style/)
+
+```shell
+npm install animate.css --save
+```
+
+- [react-on-screen - npm](https://www.npmjs.com/package/react-on-screen) 这个组件可以判断 react 组件是否在屏幕可视范围内。
+
+```shell
+npm i react-on-screen
+```
+
+​	如此编写代码，可以在组件在出现在可视范围时播放动画。
+
+```jsx
+<TrackVisibility>
+  {({ isVisible }) =>
+  <div className={isVisible ? "animate__animated animate__fadeIn" : ""}>
+    <span className="tagline">Welcome to my Portfolio</span>
+    <h1>{`Hi! I'm Judy`} <span className="txt-rotate" dataPeriod="1000" data-rotate='[ "Web Developer", "Web Designer", "UI/UX Designer" ]'><span className="wrap">{text}</span></span></h1>
+      <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.</p>
+      <button onClick={() => console.log('connect')}>Let’s Connect <ArrowRightCircle size={25} /></button>
+  </div>}
+</TrackVisibility>
+</Col>
+<Col xs={12} md={6} xl={5}>
+<TrackVisibility>
+  {({ isVisible }) =>
+    <div className={isVisible ? "animate__animated animate__zoomIn" : ""}>
+      <img src={headerImg} alt="Header Img"/>
+    </div>}
+</TrackVisibility>
+```
+
+# Build and Deploy an Awwwards Winning Website | React.js, Tailwind CSS, GSAP
+
+- [Zentry: The Metagame, The Game of Games To Elevate Gaming Culture | Zentry](https://zentry.com/)
+
+- [构建和部署 Awwwards 获奖网站 | React.js、Tailwind CSS、GSAP_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1qHBxYMEQX/)
+
+- [Build and Deploy an Awwwards Winning Website | React.js, Tailwind CSS, GSAP - YouTube](https://www.youtube.com/watch?v=zA9r5zTllx4)
+
+- [adrianhajdin/award-winning-website: A step-by-step course teaching you how to build an award-winning animated website that became an Awwwards Site Of The Month.](https://github.com/adrianhajdin/award-winning-website)
+- [Clippy — CSS clip-path maker](https://bennettfeely.com/clippy/)
+- [Tailwind CSS - 只需书写 HTML 代码，无需书写 CSS，即可快速构建美观的网站。 | TailwindCSS中文文档 | TailwindCSS中文网](https://www.tailwindcss.cn/)
+
+## SETUP
+
+​	创建一个 Vite 应用，使用 `React` 和 `JavaScript`：
+
+```shell
+npm create vite@latest ./
+Need to install the following packages:
+create-vite@6.0.1
+Ok to proceed? (y) y
+√ Package name: ... awwwards
+√ Select a framework: » React
+√ Select a variant: » JavaScript
+
+Scaffolding project in D:\XXX\Awwwards...
+
+Done. Now run:
+
+  npm install
+  npm run dev
+```
+
+​	继续安装：
+
+```shell
+npm install
+```
+
+​	启动本地服务器：
+
+```shell
+npm run dev
+```
+
+```
+> awwwards@0.0.0 dev
+> vite
+
+
+  VITE v6.0.3  ready in 382 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+  ➜  press h + enter to show help
+```
+
+![webp](13.webp)
+
+- [使用 PostCSS 安装 Tailwind CSS - TailwindCSS中文文档 |TailwindCSS中文网](https://www.tailwindcss.cn/docs/installation/using-postcss)
+
+​	安装 Tailwind CSS 并初始化：
+
+```shell
+npm install -D tailwindcss postcss autoprefixer
+npx tailwindcss init -p
+```
+
+​	将以下内容覆盖到 `tailwind.config.js` 中：
+
+```js
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: ["./src/**/*.{html,js,ts,jsx,tsx}"],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+}
+```
+
+​	将以下内容覆盖到 `src/index.css` 中：
+
+```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+```
+
+> [!Note]
+>
+> ​	如果 VSCode 不识别 `@tailwind`，进设置关闭报错提示：
+>
+> ![webp](14.webp)
+
+​	将以下内容覆盖到 `src/App.jsx` 中：
+
+```jsx
+import React from 'react';
+
+const App = () => {
+    return (
+        <main>
+            <h1 className="text-5xl text-orange-500 font-bold">Welcome to Awwwards</h1>
+        </main>
+    )
+}
+
+export default App;
+```
+
+![webp](15.webp)
+
+## TAILWIND CONFIG
+
+​	删除 `public/` 和 `src/assets/`。
+
+​	从 [adrianhajdin/award-winning-website: A step-by-step course teaching you how to build an award-winning animated website that became an Awwwards Site Of The Month.](https://github.com/adrianhajdin/award-winning-website) 下载到 `public/` 到项目中。
+
+​	在 `src/index.css` 中定义字体：
+
+```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    font-family: 'General Sans', sans-serif;
+    width: 100dvw;
+    background-color: #dfdff0;
+    overflow-x: hidden;
+}
+
+@layer base {
+    @font-face {
+        font-family: 'circular-lab';
+        src: url('/fonts/circularweb-book.woff2') format('woff2');
+    }
+
+    @font-face {
+        font-family: 'general';
+        src: url('/fonts/general.woff2') format('woff2');
+    }
+
+    @font-face {
+        font-family: 'robert-medium';
+        src: url('/fonts/robert-medium.woff2') format('woff2');
+    }
+
+    @font-face {
+        font-family: 'robert-regular';
+        src: url('/fonts/robert-regular.woff2') format('woff2');
+    }
+}
+```
+
+​	修改 `tailwind.config.js`，注册新的类：
+
+```js
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+    content: ["./src/**/*.{html,js,ts,jsx,tsx}"],
+    theme: {
+        extend: {
+            fontFamily: {
+                zentry: ['zentry', 'sanf-serif'],
+                general: ['general', 'sanf-serif'],
+                'circular-web': ['circular-web', 'sanf-serif'],
+                'robert-medium': ['robert-medium', 'sanf-serif'],
+                'robert-regular': ['robert-regular', 'sanf-serif']
+            },
+            colors: {
+                blue: {
+                    50: '#DFDFF0',
+                    75: '#DFDFF2',
+                    100: '#F0F2FA',
+                    200: '#010101',
+                    300: '#4FB7DD',
+                },
+                violet: {
+                    300: '#5724FF',
+                },
+                yellow: {
+                    100: '#8E983F',
+                    300: '#EDFF66',
+                }
+            },
+        },
+        plugins: [],
+    }
+}
+```
+
+​	在 `src/App.jsx` 中使用这个属性：
+
+```jsx
+import React from 'react';
+
+const App = () => {
+    return (
+        <main>
+            <h1 className="text-5xl text-orange-500 font-bold text-blue-50">Welcome to Awwwards</h1>
+        </main>
+    )
+}
+
+export default App;
+```
+
+![webp](16.webp)
+
+## HERO SECTION
+
+​	从 [adrianhajdin/award-winning-website: A step-by-step course teaching you how to build an award-winning animated website that became an Awwwards Site Of The Month.](https://github.com/adrianhajdin/award-winning-website) 替换 `src/index.css`。
+
+​	创建 `src/components/Hero.jsx`：
+
+```jsx
+import { useRef, useState } from 'react';
+
+const Hero = () => {
+    const [currentIndex, setCurrentIndex] = useState(1);
+    const [hasClicked, setHasClicked] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [loadedVideos, setLoadedVideos] = useState(0);
+
+    const totalVideos = 3;
+    const nextVideoRef = useRef(null);
+
+    const handleVideoLoad = () => {
+        setLoadedVideos((prev) => prev + 1);
+    }
+
+    const upcomingVideoIndex = (currentIndex % totalVideos) + 1;
+
+    const handleMiniVsClick = () => {
+        setHasClicked(true);
+        setCurrentIndex(upcomingVideoIndex);
+    }
+
+    const getVideoSrc = (index) => `videos/hero-${index}.mp4`;
+
+    return (
+        <div className="relative h-dvh w-screen overflow-x-hidden">
+            <div id="video-frame" className="relative z-10 h-dvh w-screen overflow-hidden rounded-lg bg-blue-75">
+                <div>
+                    <div className="mask-clip-path absolute-center absolute z-50 size-64 cursor-pointer overflow-hidden rounded-lg">
+                        <div onClick={handleMiniVsClick} className="origin-center scale-50 opacity-0 transition-all duration-500 ease-in hover:scale-100 hover:opacity-100">
+                            <video
+                                ref={nextVideoRef}
+                                src={getVideoSrc(upcomingVideoIndex)}
+                                loop
+                                muted
+                                id="current-video"
+                                className="size-64 origin-center scale-150 object-cover object-center"
+                                onLoadedData={handleVideoLoad}
+                            />
+                        </div>
+                    </div>
+                    <video
+                        ref={nextVideoRef}
+                        src={getVideoSrc(currentIndex)}
+                        loop
+                        muted
+                        id="next-video"
+                        className="size-64 origin-center scale-150 object-cover object-center"
+                        onLoadedData={handleVideoLoad}
+                    />
+
+                    <video
+                        src={getVideoSrc(currentIndex === totalVideos - 1 ? 1 : currentIndex)}
+                        autoPlay
+                        loop
+                        muted
+                        className="absolute left-0 top-0 size-full object-cover object-center"
+                        onLoadedData={handleVideoLoad}
+                    />
+                </div>
+                <h1 className="special-font hero-heading absolute bottom-5 right-5 z-40 text-blue-75">G<b>a</b>meing</h1>
+                <div className="absolute left-0 top-0 z-40 size-full">
+                    <div className="mt-24 px-5 sm:px-10">
+                        <h1 className="special-font hero-heading text-blue-100">redefi<b>n</b>e</h1>
+                        <p className="mb-5 max-w-64 font-robert-regular text-blue-100">
+                            Enter the Metagame Layer <br /> Unleash the Play Economy
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
+}
+
+export default Hero;
+```
+
+- [React Icons](https://react-icons.github.io/react-icons/)
+
+```shell
+npm install react-icons
+```
+
+- [Homepage | GSAP](https://gsap.com/)
+
+```shell
+npm install @gsap/react gsap
+```
+
+## ABOUT SECTION

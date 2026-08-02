@@ -1,0 +1,286 @@
+---
+title: Hexo-写点工具加快 hexo g 的速度
+date: Sun Apr 28 2024 13:06:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - Hexo
+  - Python
+categories: 学习
+description: 还能规避 EMFILE: too many open files 的错误！
+---
+
+
+# 前言
+
+​	博客里 bb 了太多的东西，导致每次执行 `hexo cl` 后再执行 `hexo g` 速度都特别慢，而且还会出现 `EMFILE: too many open files` 这种编译失败的错误！而 [问题解答 | Hexo](https://hexo.io/zh-cn/docs/troubleshooting#EMFILE-错误) 这个解决方案只对 Linux 有效。必须找个办法修复😡！
+
+​	不幸运地是，`hexo s` 还是这么慢……
+
+# 解决方案
+
+​	经过排查，应该是 `source/` 下的文件太多了……每次 `hexo g` 都会处理大量不需要编译的无关文件（没有用图床的弊端），我们只需要让 `hexo g` 处理 `.md` 文件就行。
+
+​	所以我想的是：
+
+1. 把 `source/` 下的无关文件先移动到某个临时文件夹；
+2. 执行 `hexo cl`，然后执行 `hexo g` 编译 `.md` 文件；
+3. 再把这些无关文件移动回 `source/` 和 `public/` 的特定位置即可。
+
+# 代码
+
+​	在博客文件夹根目录下创建一个 `./tools` 文件夹，里面创建一个 `quick_complie.py`，里面写上这些神奇代码！
+
+## python
+
+### 导入相关库、定义变量
+
+```python
+import os
+import shutil
+from tqdm import tqdm
+import subprocess
+import yaml
+
+ignore_folder = ['musics']  # 不处理 source/musics 这个文件夹
+ignore_type = ['md', 'ejs']  # 不处理 .md 和 .ejs 类型的文件
+```
+
+### 前处理
+
+​	下面这段代码会将 `source/` 下不需要 `hexo g` 处理的文件移动到 `temp/` 下。
+
+```python
+def move_non_md_files(src, dst):
+    os.makedirs(dst, exist_ok=True)
+    # 遍历源文件夹中的所有文件和子文件夹
+    for item in os.listdir(src):
+        # 构建源文件/文件夹的完整路径
+        src_item = os.path.join(src, item)
+        # 构建目标文件/文件夹的完整路径
+        dst_item = os.path.join(dst, item)
+        
+        # 如果是文件夹，则递归地复制文件夹
+        if os.path.isdir(src_item):
+            move_non_md_files(src_item, dst_item)
+        # 如果是文件且不是 ignore_type 类型下的文件，则复制文件
+        elif os.path.isfile(src_item) and src_item.split('.')[-1] not in ignore_type:
+            shutil.move(src_item, dst)
+
+            
+print("处理文件……")
+if os.path.isdir('../temp'):
+    shutil.rmtree('../temp')
+
+for item in tqdm(os.listdir('../source')):
+    if item not in ignore_folder:
+        item_path = os.path.join('../source', item)
+        # 判断是否为文件夹
+        if os.path.isdir(item_path):
+            try:
+                move_non_md_files(item_path, os.path.join('../temp',item))
+            except Exception as e:
+                print(item_path + ":", e)
+
+print("完成！")
+```
+
+### hexo cl & hexo g
+
+​	使用 python 调用 `hexo cl` 和 `hexo g` 命令。
+
+```python
+print("hexo cl……")
+print(subprocess.run('hexo cl', shell=True, capture_output=True, text=True, encoding='utf-8').stdout)
+print("完成！")
+print("hexo g……")
+print(subprocess.run('hexo g', shell=True, capture_output=True, text=True, encoding='utf-8').stdout)
+print("完成！")
+```
+
+### 后处理
+
+​	下面这段代码会将 `temp/` 下的文件拷贝回 `source/` 和 `public/` 下的对应位置，最后删除 `temp/`。
+
+#### 后处理 _posts
+
+​	对于 `_posts` 下的文件，`temp/` 和 `public/` 的路径**不是**一一对应的，要按照对应的规则拷贝。
+
+```python
+print("后处理 _post 文件……")
+
+md_list = []
+for item in os.listdir('../source/_posts'):
+    if item.endswith('.md'):
+        md_list.append(item)
+
+for item in tqdm(md_list):
+    try:
+        # 读取 Markdown 文件内容
+        with open(os.path.join('../source/_posts', item), 'r', encoding='utf-8') as file:
+            content = file.read()
+        # 解析 YAML 头部信息
+        yaml_header, body = content.split('---\n', 2)[1:]
+        yaml_data = yaml.safe_load(yaml_header)
+        source_folder = '../temp/_posts/' + item[:-3]
+        destination_folder = ('../public/' +
+                              str(yaml_data['date'].year).zfill(2) + '/' +
+                              str(yaml_data['date'].month).zfill(2) + '/' +
+                              str(yaml_data['date'].day).zfill(2) + '/' + item[:-3])
+        shutil.copytree(source_folder, destination_folder, dirs_exist_ok=True)
+    except Exception as e:
+        print("shutil.copytree(source_folder, destination_folder, dirs_exist_ok=True): "+ item + ":", e)
+    try:
+        shutil.copytree(source_folder, os.path.join('../source/_posts', item[:-3]), dirs_exist_ok=True)
+    except Exception as e:
+        print("shutil.copytree(source_folder, '../source/_posts'): " + item + ":", e)
+print("完成！")
+```
+
+#### 后处理其它文件
+
+​	对于**非** `_posts` 下的文件，`temp/` 和 `public/` 的路径**是**一一对应的，要按拷贝回去。最后把临时文件夹 `temp/` 删了。
+
+```python
+print("后处理其它文件……")
+for item in tqdm(os.listdir('../temp')):
+    if item != '_posts' and item not in ignore_folder:
+        item_path = os.path.join('../temp', item)
+        # 判断是否为文件夹
+        if os.path.isdir(item_path):
+            try:
+                shutil.copytree(item_path, os.path.join('../public', item), dirs_exist_ok=True)
+            except Exception as e:
+                print(os.path.join('../public', item) + ":", e)
+            try:
+                shutil.copytree(item_path, os.path.join('../source', item), dirs_exist_ok=True)
+            except Exception as e:
+                print(os.path.join('../source', item) + ":", e)
+
+if os.path.isdir('../temp'):
+    shutil.rmtree('../temp')
+    
+print("完成！")
+```
+
+### 完整代码
+
+```python
+import os
+import shutil
+from tqdm import tqdm
+import subprocess
+import yaml
+
+ignore_folder = ['musics']
+ignore_type = ['md', 'ejs']
+
+
+def move_non_md_files(src, dst):
+    os.makedirs(dst, exist_ok=True)
+    # 遍历源文件夹中的所有文件和子文件夹
+    for item in os.listdir(src):
+        # 构建源文件/文件夹的完整路径
+        src_item = os.path.join(src, item)
+        # 构建目标文件/文件夹的完整路径
+        dst_item = os.path.join(dst, item)
+        
+        # 如果是文件夹，则递归地复制文件夹
+        if os.path.isdir(src_item):
+            move_non_md_files(src_item, dst_item)
+        # 如果是文件且不是 ignore_type 类型下的文件，则复制文件
+        elif os.path.isfile(src_item) and src_item.split('.')[-1] not in ignore_type:
+            shutil.move(src_item, dst)
+
+            
+print("处理文件……")
+if os.path.isdir('../temp'):
+    shutil.rmtree('../temp')
+
+for item in tqdm(os.listdir('../source')):
+    if item not in ignore_folder:
+        item_path = os.path.join('../source', item)
+        # 判断是否为文件夹
+        if os.path.isdir(item_path):
+            try:
+                move_non_md_files(item_path, os.path.join('../temp',item))
+            except Exception as e:
+                print(item_path + ":", e)
+
+print("完成！")
+
+#####################################################
+
+print("hexo cl……")
+print(subprocess.run('hexo cl', shell=True, capture_output=True, text=True, encoding='utf-8').stdout)
+print("完成！")
+print("hexo g……")
+print(subprocess.run('hexo g', shell=True, capture_output=True, text=True, encoding='utf-8').stdout)
+print("完成！")
+
+######################################################
+
+## 后处理 _post 文件
+
+print("后处理 _post 文件……")
+
+md_list = []
+for item in os.listdir('../source/_posts'):
+    if item.endswith('.md'):
+        md_list.append(item)
+
+for item in tqdm(md_list):
+    try:
+        # 读取 Markdown 文件内容
+        with open(os.path.join('../source/_posts', item), 'r', encoding='utf-8') as file:
+            content = file.read()
+        # 解析 YAML 头部信息
+        yaml_header, body = content.split('---\n', 2)[1:]
+        yaml_data = yaml.safe_load(yaml_header)
+        source_folder = '../temp/_posts/' + item[:-3]
+        destination_folder = ('../public/' +
+                              str(yaml_data['date'].year).zfill(2) + '/' +
+                              str(yaml_data['date'].month).zfill(2) + '/' +
+                              str(yaml_data['date'].day).zfill(2) + '/' + item[:-3])
+        shutil.copytree(source_folder, destination_folder, dirs_exist_ok=True)
+    except Exception as e:
+        print("shutil.copytree(source_folder, destination_folder, dirs_exist_ok=True): "+ item + ":", e)
+    try:
+        shutil.copytree(source_folder, os.path.join('../source/_posts', item[:-3]), dirs_exist_ok=True)
+    except Exception as e:
+        print("shutil.copytree(source_folder, '../source/_posts'): " + item + ":", e)
+print("完成！")
+
+## 后处理其它文件
+
+print("后处理其它文件……")
+for item in tqdm(os.listdir('../temp')):
+    if item != '_posts' and item not in ignore_folder:
+        item_path = os.path.join('../temp', item)
+        # 判断是否为文件夹
+        if os.path.isdir(item_path):
+            try:
+                shutil.copytree(item_path, os.path.join('../public', item), dirs_exist_ok=True)
+            except Exception as e:
+                print(os.path.join('../public', item) + ":", e)
+            try:
+                shutil.copytree(item_path, os.path.join('../source', item), dirs_exist_ok=True)
+            except Exception as e:
+                print(os.path.join('../source', item) + ":", e)
+
+if os.path.isdir('../temp'):
+    shutil.rmtree('../temp')
+    
+print("完成！")
+```
+
+## 调用 python 文件
+
+​	写一个 `.bat` 文件快速调用 `quick_complie.py`！
+
+```bash
+@echo off
+python quick_complie.py
+echo 按任意键继续……
+pause
+exit
+```
+

@@ -1,0 +1,1354 @@
+---
+title: Blender-Text Effects In Blender (1-6)
+date: Sat Jun 10 2023 20:35:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - Blender
+  - Python
+categories: 学习
+description: Blender 中的文字效果。学习自 Youtube 博主 5 Minutes Blender。
+---
+
+
+# 资源
+
+- [Text Effects In Blender - YouTube](https://www.youtube.com/playlist?list=PLtV6EPHDRNQKj4S7hYAmRbmGM91XJF3ps)
+
+# 课程
+
+## Linux 下安装 bpy
+
+从 [Releases · TylerGubala/blenderpy (github.com)](https://github.com/TylerGubala/blenderpy/releases) 下载静态安装包，然后：
+
+```
+pip install bpy-2.91a0-cp37-cp37m-manylinux2014_x86_64.whl && bpy_post_install
+```
+
+## Create Curved Text In Blender | Bend Any Text | Part 1 in Text Effects | Two Easy Methods Explained
+
+### 创建文本对象
+
+1. 创建一个 `Text` 对象：
+
+![png](1_1.png)
+
+```python
+import bpy
+
+bpy.ops.object.text_add()
+text_obj = bpy.context.object
+```
+
+2. 将这个 `Text` 对象的 `Rotation X` 和 `Z` 设为 `90°`：
+
+![png](1_2.png)
+
+```python
+import numpy as np
+
+text_obj.rotation_euler[0] = np.pi / 2
+text_obj.rotation_euler[2] = np.pi / 2
+```
+
+3. 将文字设为居中对齐：
+
+![png](1_10.png)
+
+```python
+text_obj.data.align_x = "CENTER"
+text_obj.data.align_y = "CENTER"
+```
+
+4. 将这个 `Text` 的 `Geometry` 的 `Extrude` 设为 `0.1` m，使其具有厚度。
+
+![png](1_3.png)
+
+```python
+text_obj.data.extrude = 0.1
+```
+
+5. 切换到 `Edit Mode`，可以更改其文字内容。
+
+![png](1_4.png)
+
+```python
+text_obj.data.body = "Hello,\nWorld!"
+```
+
+### 直接弯曲
+
+1. 给 `Text` 对象添加一个 `Simple Deform` 的 `Modifier`：
+
+![png](1_11.png)
+
+```python
+text_modifier = text_obj.modifiers.new(name="Bend", type="SIMPLE_DEFORM")
+```
+
+2. 设置其属性：
+
+![png](1_12.png)
+
+```python
+text_modifier.deform_method = "BEND"
+text_modifier.deform_axis = "Z"
+text_modifier.angle = np.pi / 4
+```
+
+得到弯曲后的文本：
+
+![png](1_13.png)
+
+---
+
+完整代码：
+
+```python
+import bpy
+import numpy as np
+
+bpy.ops.object.text_add()
+text_obj = bpy.context.object
+
+text_obj.rotation_euler[0] = np.pi / 2
+text_obj.rotation_euler[2] = np.pi / 2
+
+text_obj.data.align_x = "CENTER"
+text_obj.data.align_y = "CENTER"
+
+text_obj.data.extrude = 0.1
+
+text_obj.data.body = "Hello,\nWorld!"
+
+text_modifier = text_obj.modifiers.new(name="Bend", type="SIMPLE_DEFORM")
+
+text_modifier.deform_method = "BEND"
+text_modifier.deform_axis = "Z"
+text_modifier.angle = np.pi / 4
+```
+
+### 沿 Bezier 曲线弯曲
+
+1. 新建一个 `Circle` 对象，将其 `Rotation Z` 设为 `90°`：
+
+![png](1_5.png)
+
+```python
+bpy.ops.curve.primitive_bezier_circle_add()
+curve_obj = bpy.context.object
+
+curve_obj.rotation_euler[2] = np.pi / 2
+```
+
+2. 给 `Text` 对象添加一个 `Modifier`，选择 `Curve`，然后选择之前新建的 `BezierCircle` 对象：
+
+![png](1_6.png)
+
+```python
+curve_modifier = text_obj.modifiers.new(name="Curve", type="CURVE")
+curve_modifier.object = curve_obj
+```
+
+此时 `Text` 对象就会沿着 `BezierCircle` 曲线变形：
+
+![png](1_7.png)
+
+3. 选中 `BezierCircle`  对象，切换到 `Edit Mode`，选择 `Segments` → `Switch Direction`，便可切换文字方向：
+
+![png](1_8.png)
+
+```python
+bpy.ops.object.editmode_toggle()
+bpy.ops.curve.switch_direction()
+bpy.ops.object.editmode_toggle()
+```
+
+4. 修改 `BezierCircle` 的 `Scale`，`Text` 对象也会随之变化：
+
+![png](1_9.png)
+
+```python
+curve_obj.delta_scale[0:3] = [2, 2, 2]
+```
+
+---
+
+完整代码：
+
+```python
+import bpy
+import numpy as np
+
+# 新建一个 TextCurve 对象
+bpy.ops.object.text_add()
+text_obj = bpy.context.object
+
+# 修改文本位置和旋转角度
+text_obj.rotation_euler[0] = np.pi / 2
+text_obj.rotation_euler[2] = np.pi / 2
+
+# 修改文本对齐方式
+text_obj.data.align_x = "CENTER"
+text_obj.data.align_y = "CENTER"
+
+# 挤出文本
+text_obj.data.extrude = 0.1
+
+# 设置文本内容
+text_obj.data.body = "Hello,\nWorld!"
+
+# 创建一个圆形对象
+bpy.ops.curve.primitive_bezier_circle_add()
+curve_obj = bpy.context.object
+
+# 旋转该圆形对象
+curve_obj.rotation_euler[2] = np.pi / 2
+
+# 让文本沿着圆形变换
+curve_modifier = text_obj.modifiers.new(name="Curve", type="CURVE")
+curve_modifier.object = curve_obj
+
+# 修改方向
+bpy.ops.object.editmode_toggle()
+bpy.ops.curve.switch_direction()
+bpy.ops.object.editmode_toggle()
+
+# 修改圆形大小
+curve_obj.delta_scale[0:3] = [2, 2, 2]
+```
+
+## Add Text To Any Curved Surface In Blender | Part 2 in Text Effects | Blender Eevee & Cycles
+
+1. 新建一个茶壶：
+
+```python
+import bpy
+import numpy as np
+
+bpy.ops.mesh.primitive_teapot_add()
+teapot_obj = bpy.context.object
+```
+
+2. 新建一个文本对象，设置其对齐、位置（使其靠近茶壶表面）、旋转、挤出、文字内容、行间距等：
+
+![png](2_1.png)
+
+![png](2_2.png)
+
+![png](2_3.png)
+
+```python
+bpy.ops.object.text_add()
+text_obj = bpy.context.object
+
+text_obj.data.align_x = "CENTER"
+text_obj.data.align_y = "CENTER"
+
+text_obj.location[1] = -2
+text_obj.location[2] = 1.5
+
+text_obj.rotation_euler[0] = np.pi / 2
+
+text_obj.data.extrude = 0.1
+
+text_obj.data.body = "Hello,\nWorld!"
+
+text_obj.data.space_line = 0.75
+```
+
+3. 给文字对象添加一个红色的材质，此时转到渲染窗口，文字就会呈现红色：
+
+![png](2_4.png)
+
+```python
+text_material = bpy.data.materials.new(name="TextMaterial")
+text_material.use_nodes = True
+nodes = text_material.node_tree.nodes
+principled_bsdf = nodes.get("Principled BSDF")
+if principled_bsdf is not None:
+    principled_bsdf.inputs[0].default_value = (1, 0, 0, 1)
+
+text_obj.data.materials.append(text_material)
+```
+
+4. 新建一个 `Empty` 的 `Cube`，设置其位置使其和 `Text` 相同，设置其旋转角，用于控制 `Text` 的旋转：
+
+![png](2_5.png)
+
+```python
+bpy.ops.object.empty_add(type="CUBE")
+empty_obj = bpy.context.object
+
+empty_obj.location[1] = -2
+empty_obj.location[2] = 1.5
+
+empty_obj.rotation_euler[0] = np.pi / 2
+empty_obj.rotation_euler[2] = np.pi / 2
+```
+
+5. 给 `Text` 对象添加 modifier：
+
+- `Remesh`：用于使字体集合与弯曲操作兼容，选择 `Sharp`，`Octree Depth` 设为 `8`：
+
+![png](2_6.png)
+
+```python
+text_modifier_remesh = text_obj.modifiers.new(name="Remesh", type="REMESH")
+text_modifier_remesh.mode = "SHARP"
+text_modifier_remesh.octree_depth = 8
+text_modifier_remesh.use_remove_disconnected = False
+```
+
+- `SimpleDeform`：用于字体弯曲，选择 `Bend`，`Origin` 选择 `Empty` 对象，`Axis` 选择 `Y` 轴：
+
+![png](2_7.png)
+
+```python
+text_modifier_simple_deform = text_obj.modifiers.new(name="SimpleDeform", type="SIMPLE_DEFORM")
+text_modifier_simple_deform.deform_method = "BEND"
+text_modifier_simple_deform.origin = empty_obj
+text_modifier_simple_deform.deform_axis = "Y"
+```
+
+- `Shrinkwrap`：使得文字映射到 `teapot` 上，`Wrap Method` 选择 `Target Normal Project`，`Target` 选择 `Teapot` 对象，`Offset` 选择 `0.1` m：
+
+![png](2_8.png)
+
+```python
+text_modifier_shrink_wrap = text_obj.modifiers.new(name="Shrinkwrap", type="SHRINKWRAP")
+text_modifier_shrink_wrap.wrap_method = "TARGET_PROJECT"
+text_modifier_shrink_wrap.target = teapot_obj
+text_modifier_shrink_wrap.offset = 0.1
+```
+
+![png](2_9.png)
+
+---
+
+完整代码：
+
+```python
+import bpy
+import numpy as np
+
+# 新建 teapot 对象
+bpy.ops.mesh.primitive_teapot_add()
+teapot_obj = bpy.context.object
+
+# 新建 text 对象
+bpy.ops.object.text_add()
+text_obj = bpy.context.object
+
+# 居中对齐
+text_obj.data.align_x = "CENTER"
+text_obj.data.align_y = "CENTER"
+
+# 设置位置
+text_obj.location[1] = -2
+text_obj.location[2] = 1.5
+
+# 设置旋转角
+text_obj.rotation_euler[0] = np.pi / 2
+
+# 设置挤出举例
+text_obj.data.extrude = 0.1
+
+# 设置文本内容
+text_obj.data.body = "Hello,\nWorld!"
+
+# 设置行间距
+text_obj.data.small_caps_scale = 0.75
+
+# 新建材质
+text_material = bpy.data.materials.new(name="TextMaterial")
+text_material.use_nodes = True
+nodes = text_material.node_tree.nodes
+principled_bsdf = nodes.get("Principled BSDF")
+if principled_bsdf is not None:
+    principled_bsdf.inputs[0].default_value = (1, 0, 0, 1)
+
+# 给文本添加材质
+text_obj.data.materials.append(text_material)
+
+# 新建 empty 对象
+bpy.ops.object.empty_add(type="CUBE")
+empty_obj = bpy.context.object
+
+# 设置 empty 位置
+empty_obj.location[1] = -2
+empty_obj.location[2] = 1.5
+
+# 设置 empty 旋转角
+empty_obj.rotation_euler[0] = np.pi / 2
+empty_obj.rotation_euler[2] = np.pi / 2
+
+# 新建 Remesh 的 modifier
+text_modifier_remesh = text_obj.modifiers.new(name="Remesh", type="REMESH")
+text_modifier_remesh.mode = "SHARP"
+text_modifier_remesh.octree_depth = 8
+text_modifier_remesh.use_remove_disconnected = False
+
+# 新建 SimpleDeform 的 modifier
+text_modifier_simple_deform = text_obj.modifiers.new(name="SimpleDeform", type="SIMPLE_DEFORM")
+text_modifier_simple_deform.deform_method = "BEND"
+text_modifier_simple_deform.origin = empty_obj
+text_modifier_simple_deform.deform_axis = "Y"
+
+# 新建 Shrinkwrap 的 modifier
+text_modifier_shrink_wrap = text_obj.modifiers.new(name="Shrinkwrap", type="SHRINKWRAP")
+text_modifier_shrink_wrap.wrap_method = "TARGET_PROJECT"
+text_modifier_shrink_wrap.target = teapot_obj
+text_modifier_shrink_wrap.offset = 0.1
+```
+
+## Engrave & Emboss Text Easily In Blender | Part 3 in Text Effects | Create 3D Text Logo In Blender
+
+1. 新建一个 `Cube`，并调整其 `Scale`：
+
+![png](3_1.png)
+
+```python
+import bpy
+import numpy as np
+
+bpy.ops.mesh.primitive_cube_add()
+cube_obj = bpy.context.object
+
+cube_obj.scale[0] = 1.5
+cube_obj.scale[1] = 2.5
+```
+
+2. 新建一个 `Text`，调整其 `Transform`：
+
+![png](3_2.png)
+
+```python
+bpy.ops.object.text_add()
+text_obj = bpy.context.object
+
+text_obj.location[2] = 1.15
+text_obj.rotation_euler[2] = np.pi / 2
+```
+
+使其居中对齐：
+
+![png](3_3.png)
+
+```python
+bpy.ops.object.text_add()
+text_obj = bpy.context.object
+
+text_obj.location[2] = 1.15
+text_obj.rotation_euler[2] = np.pi / 2
+```
+
+设置文字内容：
+
+![png](3_4.png)
+
+```python
+text_obj.data.body = "Hello,\nWorld!"
+```
+
+3. 修改完文字内容后，将其转换成 `Mesh`，随后文字内容就不能再改变！
+
+![png](3_5.png)
+
+```python
+bpy.ops.object.convert(target="MESH")
+```
+
+4. 应用 `Decimate` 以减少过多的顶点：
+
+![png](3_6.png)
+
+```python
+text_modifier_decimate = text_obj.modifiers.new(name="Decimate", type="DECIMATE")
+text_modifier_decimate.decimate_type = "DISSOLVE"
+bpy.ops.object.modifier_apply(modifier="Decimate")
+```
+
+5. `Edit Mode` 下，选择 `Text` 对象下的所有顶点，`Mesh` → `Merge` → `By Distance`：
+
+![png](3_7.png)
+
+在对话框中选择 `0.01` m。
+
+![png](3_8.png)
+
+```python
+bpy.ops.object.editmode_toggle()
+bpy.ops.mesh.select_all(action="SELECT")
+bpy.ops.mesh.remove_doubles(threshold=0.01)
+```
+
+6. `Mesh` → `Delete` → `Limited Dissolve`：
+
+![png](3_9.png)
+
+在对话框中选择 `Max Angle`：`10°`：
+
+![png](3_10.png)
+
+```python
+bpy.ops.mesh.dissolve_limited(angle_limit=np.pi / 18)
+bpy.ops.object.editmode_toggle()
+```
+
+7. 给 `Text` 添加一个 `Solidfy`，使其具有高度：
+
+![png](3_11.png)
+
+```python
+text_modifier_solidify = text_obj.modifiers.new(name="Solidify", type="SOLIDIFY")
+text_modifier_solidify.thickness = 0.2
+```
+
+8. `Object Mode` 下，给 `Text` 和 `Cude` 使用 `Shade Smooth`：
+
+![png](3_12.png)
+
+![png](3_13.png)
+
+![png](3_14.png)
+
+```python
+bpy.ops.object.shade_smooth()
+
+text_obj.data.use_auto_smooth = True
+
+cube_obj.data.use_auto_smooth = True
+```
+
+9. 给 `Cude` 添加 `Boolean`，关闭 `Text` 的显示，形成雕刻效果：
+
+![png](3_15.png)
+
+```python
+cube_modifier_boolean = cube_obj.modifiers.new(name="Boolean", type="BOOLEAN")
+cube_modifier_boolean.object = text_obj
+```
+
+10. 给 `Cude` 添加 `Bevel`，形成斜角效果：
+
+![png](3_16.png)
+
+```python
+cube_modifier_bevel = cube_obj.modifiers.new(name="Bevel", type="BEVEL")
+cube_modifier_bevel.width = 0.005
+cube_modifier_bevel.segments = 5
+cube_modifier_bevel.use_clamp_overlap = False
+cube_modifier_bevel.harden_normals = True
+```
+
+11. 将 `Boolean` 改为 `Union`，形成浮雕效果：
+
+![png](3_18.png)
+
+```python
+cube_modifier_boolean.operation = "UNION"
+```
+
+emmmm 如果破了的话好像只能手动处理了。
+
+![png](3_19.png)
+
+---
+
+完整代码：
+
+```python
+import bpy
+import numpy as np
+
+bpy.ops.mesh.primitive_cube_add()
+cube_obj = bpy.context.object
+
+cube_obj.scale[0] = 1.5
+cube_obj.scale[1] = 2.5
+
+bpy.ops.object.text_add()
+text_obj = bpy.context.object
+
+text_obj.location[2] = 1.15
+text_obj.rotation_euler[2] = np.pi / 2
+
+text_obj.data.align_x = "CENTER"
+text_obj.data.align_y = "CENTER"
+
+text_obj.data.body = "Hello,\nWorld!"
+
+bpy.ops.object.convert(target="MESH")
+
+text_modifier_decimate = text_obj.modifiers.new(name="Decimate", type="DECIMATE")
+text_modifier_decimate.decimate_type = "DISSOLVE"
+bpy.ops.object.modifier_apply(modifier="Decimate")
+
+bpy.ops.object.editmode_toggle()
+bpy.ops.mesh.select_all(action="SELECT")
+bpy.ops.mesh.remove_doubles(threshold=0.01)
+
+bpy.ops.mesh.dissolve_limited(angle_limit=np.pi / 18)
+bpy.ops.object.editmode_toggle()
+
+text_modifier_solidify = text_obj.modifiers.new(name="Solidify", type="SOLIDIFY")
+text_modifier_solidify.thickness = 0.2
+
+bpy.ops.object.shade_smooth()
+
+text_obj.data.use_auto_smooth = True
+
+cube_obj.data.use_auto_smooth = True
+
+cube_modifier_boolean = cube_obj.modifiers.new(name="Boolean", type="BOOLEAN")
+cube_modifier_boolean.object = text_obj
+
+text_obj.hide_viewport = True
+text_obj.hide_render = True
+
+cube_modifier_bevel = cube_obj.modifiers.new(name="Bevel", type="BEVEL")
+cube_modifier_bevel.width = 0.005
+cube_modifier_bevel.segments = 5
+cube_modifier_bevel.use_clamp_overlap = False
+cube_modifier_bevel.harden_normals = True
+
+cube_modifier_boolean.operation = "UNION"
+```
+
+## Engrave or Carve Text On Curved Surface | Part 4 in Text Effects | Blender Eevee & Cycles
+
+1. 新建一个圆柱体：
+
+![png](4_1.png)
+
+```python
+import bpy
+import numpy as np
+
+bpy.ops.mesh.primitive_cylinder_add()
+cylinder_obj = bpy.context.object
+```
+
+![png](4_4.png)
+
+```python
+cylinder_obj.scale[0:3] = [1.2, 1.2, 1.2]
+```
+
+![png](4_2.png)
+
+```python
+cylinder_modifier_edgesplit = cylinder_obj.modifiers.new(name="EdgeSplit", type="EDGE_SPLIT")
+bpy.ops.object.modifier_apply(modifier="EdgeSplit")
+```
+
+![png](4_3.png)
+
+```python
+cylinder_modifier_subsurf = cylinder_obj.modifiers.new(name="Subdivision", type="SUBSURF")
+cylinder_modifier_subsurf.levels = 2
+bpy.ops.object.modifier_apply(modifier="Subdivision")
+```
+
+2. 新建一个文本对象：
+
+![png](4_5.png)
+
+```python
+text_obj.location[0] = 1.22
+text_obj.rotation_euler[0] = np.pi / 2
+text_obj.rotation_euler[2] = np.pi / 2
+text_obj.data.align_x = "CENTER"
+text_obj.data.align_y = "CENTER"
+```
+
+![png](4_6.png)
+
+```python
+text_obj.data.font = bpy.data.fonts.load("C:\\windows\\Fonts\\seguiemj.ttf")
+text_obj.data.body = "I❤\nYOU"
+```
+
+```python
+text_obj.data.size = 0.9
+text_obj.data.space_line = 0.75
+```
+
+![png](4_10.png)
+
+```python
+bpy.ops.object.convert(target="MESH")
+```
+
+![png](4_8.png)
+
+```python
+text_modifier_decimate = text_obj.modifiers.new(name="Decimate", type="DECIMATE")
+text_modifier_decimate.decimate_type = "DISSOLVE"
+bpy.ops.object.modifier_apply(modifier="Decimate")
+```
+
+![png](4_9.png)
+
+```python
+text_modifier_solidify = text_obj.modifiers.new(name="Solidify", type="SOLIDIFY")
+text_modifier_solidify.thickness = 0.2
+```
+
+![png](4_11.png)
+
+![png](4_12.png)
+
+```python
+bpy.ops.object.shade_smooth()
+text_obj.data.use_auto_smooth = True
+```
+
+![png](4_14.png)
+
+```python
+bpy.ops.object.empty_add(type="CUBE")
+empty_obj = bpy.context.object
+
+empty_obj.location[0:3] = text_obj.location[0:3]
+empty_obj.rotation_euler[0] = np.pi / 2
+```
+
+![png](4_15.png)
+
+```python
+text_modifier_simple_deform = text_obj.modifiers.new(name="SimpleDeform", type="SIMPLE_DEFORM")
+text_modifier_simple_deform.deform_method = "BEND"
+text_modifier_simple_deform.origin = empty_obj
+text_modifier_simple_deform.angle = - np.pi / 4
+text_modifier_simple_deform.deform_axis = "Y"
+```
+
+![png](4_16.png)
+
+```python
+cylinder_modifier_boolean = cylinder_obj.modifiers.new(name="Boolean", type="BOOLEAN")
+cylinder_modifier_boolean.object = text_obj
+
+text_obj.hide_viewport = True
+text_obj.hide_render = True
+```
+
+![png](4_17.png)
+
+```python
+cylinder_material = bpy.data.materials.new(name="Material")
+cylinder_material.use_nodes = True
+nodes = cylinder_material.node_tree.nodes
+principled_bsdf = nodes.get("Principled BSDF")
+if principled_bsdf is not None:
+    principled_bsdf.inputs[0].default_value = (1, 0.7, 0, 1)
+
+cylinder_obj.data.materials.append(cylinder_material)
+```
+
+---
+
+完整代码：
+
+```python
+import bpy
+import numpy as np
+
+bpy.ops.mesh.primitive_cylinder_add()
+cylinder_obj = bpy.context.object
+
+cylinder_obj.scale[0:3] = [1.2, 1.2, 1.2]
+
+cylinder_modifier_edgesplit = cylinder_obj.modifiers.new(name="EdgeSplit", type="EDGE_SPLIT")
+bpy.ops.object.modifier_apply(modifier="EdgeSplit")
+
+cylinder_modifier_subsurf = cylinder_obj.modifiers.new(name="Subdivision", type="SUBSURF")
+cylinder_modifier_subsurf.levels = 2
+bpy.ops.object.modifier_apply(modifier="Subdivision")
+
+bpy.ops.object.text_add()
+text_obj = bpy.context.object
+
+text_obj.location[0] = 1.22
+text_obj.rotation_euler[0] = np.pi / 2
+text_obj.rotation_euler[2] = np.pi / 2
+text_obj.data.align_x = "CENTER"
+text_obj.data.align_y = "CENTER"
+
+text_obj.data.font = bpy.data.fonts.load("C:\\windows\\Fonts\\seguiemj.ttf")
+text_obj.data.body = "I❤\nYOU"
+
+text_obj.data.size = 0.9
+text_obj.data.space_line = 0.75
+
+bpy.ops.object.convert(target="MESH")
+
+text_modifier_decimate = text_obj.modifiers.new(name="Decimate", type="DECIMATE")
+text_modifier_decimate.decimate_type = "DISSOLVE"
+bpy.ops.object.modifier_apply(modifier="Decimate")
+
+text_modifier_solidify = text_obj.modifiers.new(name="Solidify", type="SOLIDIFY")
+text_modifier_solidify.thickness = 0.2
+
+
+bpy.ops.object.shade_smooth()
+text_obj.data.use_auto_smooth = True
+
+bpy.ops.object.empty_add(type="CUBE")
+empty_obj = bpy.context.object
+
+empty_obj.location[0:3] = text_obj.location[0:3]
+empty_obj.rotation_euler[0] = np.pi / 2
+
+text_modifier_simple_deform = text_obj.modifiers.new(name="SimpleDeform", type="SIMPLE_DEFORM")
+text_modifier_simple_deform.deform_method = "BEND"
+text_modifier_simple_deform.origin = empty_obj
+text_modifier_simple_deform.angle = - np.pi / 4
+text_modifier_simple_deform.deform_axis = "Y"
+
+cylinder_modifier_boolean = cylinder_obj.modifiers.new(name="Boolean", type="BOOLEAN")
+cylinder_modifier_boolean.object = text_obj
+
+text_obj.hide_viewport = True
+text_obj.hide_render = True
+
+cylinder_material = bpy.data.materials.new(name="Material")
+cylinder_material.use_nodes = True
+nodes = cylinder_material.node_tree.nodes
+principled_bsdf = nodes.get("Principled BSDF")
+if principled_bsdf is not None:
+    principled_bsdf.inputs[0].default_value = (1, 0.7, 0, 1)
+
+cylinder_obj.data.materials.append(cylinder_material)
+```
+
+## Emboss Any Text On Curved Surface | Bend Any Text | Part 5 in Text Effects | Blender Eevee & Cycles
+
+1. 新建一个圆柱体。
+
+![png](5_1.png)
+
+```python
+import bpy
+import numpy as np
+
+bpy.ops.mesh.primitive_cylinder_add()
+cylinder_obj = bpy.context.object
+```
+
+2. 添加 `Edgesplit`，并应用，分离边：
+
+![png](5_2.png)
+
+```python
+cylinder_modifier_edgesplit = cylinder_obj.modifiers.new(name="EdgeSplit", type="EDGE_SPLIT")
+bpy.ops.object.modifier_apply(modifier="EdgeSplit")
+```
+
+3. 添加 `Subdivision`，并应用，使得物体更平滑：
+
+![png](5_3.png)
+
+```python
+cylinder_modifier_subsurf = cylinder_obj.modifiers.new(name="Subdivision", type="SUBSURF")
+cylinder_modifier_subsurf.levels = 2
+bpy.ops.object.modifier_apply(modifier="Subdivision")
+```
+
+4. 新建一个 `Text`，调整其参数：
+
+![png](5_4.png)
+
+```python
+bpy.ops.object.text_add()
+text_obj = bpy.context.object
+
+text_obj.location[0] = 1.1
+text_obj.rotation_euler[0] = np.pi / 2
+text_obj.rotation_euler[2] = np.pi / 2
+```
+
+设置文字内容：
+
+![png](5_7.png)
+
+```python
+text_obj.data.body = "Hello,\nWorld!"
+```
+
+![png](5_5.png)
+
+```python
+text_obj.data.align_x = "CENTER"
+text_obj.data.align_y = "CENTER"
+```
+
+![png](5_6.png)
+
+```python
+text_obj.data.size = 0.5
+```
+
+5. 添加一个 `Solidify` 修改器，挤出` 0.15` m：
+
+![png](5_8.png)
+
+```python
+text_modifier_solidify = text_obj.modifiers.new(name="Solidify", type="SOLIDIFY")
+text_modifier_solidify.thickness = 0.15
+```
+
+6. 将 `Text` 转成 `Mesh`：
+
+![png](5_9.png)
+
+```python
+bpy.ops.object.convert(target="MESH")
+```
+
+7. `Remesh` 处理：
+
+![png](5_10.png)
+
+```python
+text_modifier_remesh = text_obj.modifiers.new(name="Remesh", type="REMESH")
+text_modifier_remesh.mode = "SHARP"
+text_modifier_remesh.octree_depth = 8
+text_modifier_remesh.use_remove_disconnected = False
+```
+
+8. `Decimate`处理以减少边的数量：
+
+![png](5_11.png)
+
+```python
+text_modifier_decimate = text_obj.modifiers.new(name="Decimate", type="DECIMATE")
+text_modifier_decimate.decimate_type = "DISSOLVE"
+bpy.ops.object.modifier_apply(modifier="Decimate")
+```
+
+9. 平滑处理：
+
+![png](5_12.png)
+
+![png](5_13.png)
+
+![png](5_14.png)
+
+```python
+bpy.ops.object.shade_smooth()
+
+text_obj.data.use_auto_smooth = True
+
+cylinder_obj.data.use_auto_smooth = True
+```
+
+10. 新建一个 `Empty`，位置和 `Text` 相同，用于文本弯曲：
+
+![png](5_15.png)
+
+```python
+bpy.ops.object.empty_add(type="CUBE")
+empty_obj = bpy.context.object
+
+empty_obj.location[0:3] = text_obj.location[0:3]
+empty_obj.rotation_euler[0] = np.pi / 2
+```
+
+11. 设置 `SimpleDeform`，使 `Text` 弯曲：
+
+![png](5_16.png)
+
+```python
+text_modifier_simple_deform = text_obj.modifiers.new(name="SimpleDeform", type="SIMPLE_DEFORM")
+text_modifier_simple_deform.deform_method = "BEND"
+text_modifier_simple_deform.origin = empty_obj
+text_modifier_simple_deform.angle = - np.pi / 2
+text_modifier_simple_deform.deform_axis = "Y"
+```
+
+12. 形成浮雕有一个简单的方法：`Object` → `Join`：
+
+![png](5_17.png)
+
+13. 如果不用 `Join`，改用 `Boolean` 运算：
+
+![png](5_18.png)
+
+```python
+cylinder_modifier_boolean = cylinder_obj.modifiers.new(name="Boolean", type="BOOLEAN")
+cylinder_modifier_boolean.operation = "UNION"
+cylinder_modifier_boolean.object = text_obj
+```
+
+14. 添加 `Bevel` 使得斜角效果：
+
+![png](5_19.png)
+
+```python
+cylinder_modifier_bevel = cylinder_obj.modifiers.new(name="Bevel", type="BEVEL")
+cylinder_modifier_bevel.width = 0.005
+cylinder_modifier_bevel.segments = 5
+cylinder_modifier_bevel.use_clamp_overlap = False
+cylinder_modifier_bevel.harden_normals = True
+```
+
+```python
+text_obj.hide_viewport = True
+text_obj.hide_render = True
+```
+
+15. 如果有破，只能自己拿工具填边了：
+
+![png](5_20.png)
+
+---
+
+完整代码：
+
+```python
+import bpy
+import numpy as np
+
+bpy.ops.mesh.primitive_cylinder_add()
+cylinder_obj = bpy.context.object
+
+cylinder_modifier_edgesplit = cylinder_obj.modifiers.new(name="EdgeSplit", type="EDGE_SPLIT")
+bpy.ops.object.modifier_apply(modifier="EdgeSplit")
+
+cylinder_modifier_subsurf = cylinder_obj.modifiers.new(name="Subdivision", type="SUBSURF")
+cylinder_modifier_subsurf.levels = 2
+bpy.ops.object.modifier_apply(modifier="Subdivision")
+
+bpy.ops.object.text_add()
+text_obj = bpy.context.object
+
+text_obj.location[0] = 1.1
+text_obj.rotation_euler[0] = np.pi / 2
+text_obj.rotation_euler[2] = np.pi / 2
+text_obj.data.align_x = "CENTER"
+text_obj.data.align_y = "CENTER"
+
+text_obj.data.body = "Hello,\nWorld!"
+
+text_obj.data.size = 0.5
+
+text_modifier_solidify = text_obj.modifiers.new(name="Solidify", type="SOLIDIFY")
+text_modifier_solidify.thickness = 0.15
+
+bpy.ops.object.convert(target="MESH")
+
+text_modifier_remesh = text_obj.modifiers.new(name="Remesh", type="REMESH")
+text_modifier_remesh.mode = "SHARP"
+text_modifier_remesh.octree_depth = 8
+text_modifier_remesh.use_remove_disconnected = False
+
+text_modifier_decimate = text_obj.modifiers.new(name="Decimate", type="DECIMATE")
+text_modifier_decimate.decimate_type = "DISSOLVE"
+bpy.ops.object.modifier_apply(modifier="Decimate")
+
+bpy.ops.object.shade_smooth()
+
+text_obj.data.use_auto_smooth = True
+
+cylinder_obj.data.use_auto_smooth = True
+
+bpy.ops.object.empty_add(type="CUBE")
+empty_obj = bpy.context.object
+
+empty_obj.location[0:3] = text_obj.location[0:3]
+empty_obj.rotation_euler[0] = np.pi / 2
+
+text_modifier_simple_deform = text_obj.modifiers.new(name="SimpleDeform", type="SIMPLE_DEFORM")
+text_modifier_simple_deform.deform_method = "BEND"
+text_modifier_simple_deform.origin = empty_obj
+text_modifier_simple_deform.angle = - np.pi / 2
+text_modifier_simple_deform.deform_axis = "Y"
+
+cylinder_modifier_boolean = cylinder_obj.modifiers.new(name="Boolean", type="BOOLEAN")
+cylinder_modifier_boolean.operation = "UNION"
+cylinder_modifier_boolean.object = text_obj
+
+cylinder_modifier_bevel = cylinder_obj.modifiers.new(name="Bevel", type="BEVEL")
+cylinder_modifier_bevel.width = 0.005
+cylinder_modifier_bevel.segments = 5
+cylinder_modifier_bevel.use_clamp_overlap = False
+cylinder_modifier_bevel.harden_normals = True
+
+text_obj.hide_viewport = True
+text_obj.hide_render = True
+```
+
+## Neon Light or Neon Sign In Blender | Easy & Realistic Method For Blender Eevee (All Versions)
+
+1. 新建一个 `Text` 对象，调整其参数：
+
+![png](6_1.png)
+
+![png](6_2.png)
+
+```python
+import bpy
+import numpy as np
+import os
+
+bpy.ops.object.text_add()
+text_obj = bpy.context.object
+
+text_obj.rotation_euler[0] = np.pi / 2
+text_obj.rotation_euler[2] = np.pi / 2
+text_obj.data.align_x = "CENTER"
+text_obj.data.align_y = "CENTER"
+text_obj.data.space_line = 1.2
+```
+
+2. 修改文字：
+
+![png](6_3.png)
+
+```python
+text_obj.data.body = "BARBEQUE\nNATION"
+```
+
+3. 从 [Neon Future Font | dafont.com](https://www.dafont.com/neon-future.font) 找一个适合霓虹灯的字体，应用之：
+
+![png](6_4.png)
+
+```python
+font_path = os.path.abspath(os.path.join(os.path.abspath(os.path.dirname(bpy.data.filepath))
+                                                                      , './fonts/Neon_Future.ttf'))
+text_obj.data.font = bpy.data.fonts.load(font_path)
+```
+
+4. 设置 `extrude`：
+
+![png](6_5.png)
+
+```python
+text_obj.data.extrude = 0.02
+```
+
+5. 添加一个 `emission` 的材质，设置参数：
+
+![png](6_6.png)
+
+```python
+text_material = bpy.data.materials.new(name="Emission")
+text_material.use_nodes = True
+nodes = text_material.node_tree.nodes
+
+for node in nodes:
+    nodes.remove(node)
+
+emission_node = nodes.new(type='ShaderNodeEmission')
+emission_node.inputs[0].default_value = (0.25, 1, 0.325, 1)
+emission_node.inputs[1].default_value = 4
+
+output_node = nodes.new(type='ShaderNodeOutputMaterial')
+links = text_material.node_tree.links
+links.new(emission_node.outputs[0], output_node.inputs[0])
+
+text_obj.data.materials.append(text_material)
+```
+
+6. 设置 `scene` 里的 `Bloom`：
+
+![png](6_7.png)
+
+```python
+bpy.context.scene.eevee.use_bloom = True
+bpy.context.scene.eevee.bloom_radius = 3
+bpy.context.scene.eevee.bloom_color = (0.25, 1, 0.325)
+bpy.context.scene.eevee.bloom_intensity = 0.25
+```
+
+7. 新建一个 `plane`，用于接受霓虹灯的光线：
+
+![png](6_8.png)
+
+```python
+bpy.ops.mesh.primitive_plane_add()
+plane_obj = bpy.context.object
+plane_obj.rotation_euler[1] = np.pi / 2
+plane_obj.scale[0] = 2.5
+plane_obj.scale[1] = 3.5
+plane_obj.location[0] = -0.25
+```
+
+8. 从网上找一张贴图，给这个 `plane` 一个贴图的纹理：
+
+![png](6_9.png)
+
+```python
+plane_material = bpy.data.materials.new(name="Wall")
+plane_material.use_nodes = True
+nodes = plane_material.node_tree.nodes
+
+image_texture_node = nodes.new(type='ShaderNodeTexImage')
+image_texture_node.image = bpy.data.images.load(os.path.abspath(os.path.join(os.path.abspath(os.path.dirname(bpy.data.filepath))
+                                                                      , './texture/Wall.jpg')))
+```
+
+9. 调整其 shader nodes，翻转贴图：
+
+![png](6_10.png)
+
+![png](6_11.png)
+
+```python
+mapping_node = nodes.new(type='ShaderNodeMapping')
+mapping_node.inputs[2].default_value[2] = np.pi / 2
+
+texcoord_node = nodes.new(type="ShaderNodeTexCoord")
+
+links = plane_material.node_tree.links
+links.new(texcoord_node.outputs[0], mapping_node.inputs[0])
+links.new(mapping_node.outputs[0], image_texture_node.inputs[0])
+links.new(image_texture_node.outputs[0], nodes["Principled BSDF"].inputs[0])
+
+plane_obj.data.materials.append(plane_material)
+```
+
+10. 添加环境光探针，大小包围平面和文字：
+
+![png](6_12.png)
+
+```python
+bpy.ops.object.lightprobe_add(type="GRID")
+```
+
+11. 将 Light Probe 的大小包围屏幕和文字：
+
+![png](6_13.png)
+
+```python
+lightprobe_obj = bpy.context.object
+lightprobe_obj.scale[0:3] = [1, 3.5, 2]
+```
+
+12. `Bake Cubemap Only`：
+
+![png](6_14.png)
+
+13. 调低背景亮度，`Screen Space Reflections`：
+
+![png](6_15.png)
+
+```python
+bpy.data.worlds["World"].node_tree.nodes["Background"].inputs[1].default_value = 0
+bpy.context.scene.eevee.use_ssr = True
+```
+
+14. 添加点光源，补充亮度：
+
+![png](6_16.png)
+
+![png](6_17.png)
+
+```python
+light_obj_list = []
+for i in range(8):
+    bpy.ops.object.light_add(type="POINT")
+    light_obj_list.append(bpy.context.object)
+    light_obj_list[-1].data.color = (0.25, 1, 0.325)
+    if i < 5:
+        light_obj_list[-1].location[1] = -2 + i
+        light_obj_list[-1].location[2] = 0.5
+    else:
+        light_obj_list[-1].location[1] = -6 + i
+        light_obj_list[-1].location[2] = -0.5
+```
+
+---
+
+完整代码：
+
+```python
+import bpy
+import numpy as np
+import os
+
+bpy.ops.object.text_add()
+text_obj = bpy.context.object
+
+text_obj.rotation_euler[0] = np.pi / 2
+text_obj.rotation_euler[2] = np.pi / 2
+text_obj.data.align_x = "CENTER"
+text_obj.data.align_y = "CENTER"
+text_obj.data.space_line = 1.2
+
+text_obj.data.extrude = 0.02
+
+text_obj.data.body = "BARBEQUE\nNATION"
+font_path = os.path.abspath(os.path.join(os.path.abspath(os.path.dirname(bpy.data.filepath))
+                                                                      , './fonts/Neon_Future.ttf'))
+text_obj.data.font = bpy.data.fonts.load(font_path)
+
+text_material = bpy.data.materials.new(name="Emission")
+text_material.use_nodes = True
+nodes = text_material.node_tree.nodes
+
+for node in nodes:
+    nodes.remove(node)
+
+emission_node = nodes.new(type='ShaderNodeEmission')
+emission_node.inputs[0].default_value = (0.25, 1, 0.325, 1)
+emission_node.inputs[1].default_value = 4
+
+output_node = nodes.new(type='ShaderNodeOutputMaterial')
+links = text_material.node_tree.links
+links.new(emission_node.outputs[0], output_node.inputs[0])
+
+text_obj.data.materials.append(text_material)
+
+bpy.context.scene.eevee.use_bloom = True
+bpy.context.scene.eevee.bloom_radius = 3
+bpy.context.scene.eevee.bloom_color = (0.25, 1, 0.325)
+bpy.context.scene.eevee.bloom_intensity = 0.25
+
+bpy.ops.mesh.primitive_plane_add()
+plane_obj = bpy.context.object
+plane_obj.rotation_euler[1] = np.pi / 2
+plane_obj.scale[0] = 2.5
+plane_obj.scale[1] = 3.5
+plane_obj.location[0] = -0.25
+
+plane_material = bpy.data.materials.new(name="Wall")
+plane_material.use_nodes = True
+nodes = plane_material.node_tree.nodes
+
+image_texture_node = nodes.new(type='ShaderNodeTexImage')
+image_texture_node.image = bpy.data.images.load(os.path.abspath(os.path.join(os.path.abspath(os.path.dirname(bpy.data.filepath))
+                                                                      , './texture/Wall.jpg')))
+                                                                      
+mapping_node = nodes.new(type='ShaderNodeMapping')
+mapping_node.inputs[2].default_value[2] = np.pi / 2
+
+texcoord_node = nodes.new(type="ShaderNodeTexCoord")
+
+links = plane_material.node_tree.links
+links.new(texcoord_node.outputs[0], mapping_node.inputs[0])
+links.new(mapping_node.outputs[0], image_texture_node.inputs[0])
+links.new(image_texture_node.outputs[0], nodes["Principled BSDF"].inputs[0])
+
+plane_obj.data.materials.append(plane_material)
+
+bpy.ops.object.lightprobe_add(type="GRID")
+lightprobe_obj = bpy.context.object
+lightprobe_obj.scale[0:3] = [1, 3.5, 2]
+
+bpy.data.worlds["World"].node_tree.nodes["Background"].inputs[1].default_value = 0
+bpy.context.scene.eevee.use_ssr = True
+
+light_obj_list = []
+for i in range(8):
+    bpy.ops.object.light_add(type="POINT")
+    light_obj_list.append(bpy.context.object)
+    light_obj_list[-1].data.color = (0.25, 1, 0.325)
+    if i < 5:
+        light_obj_list[-1].location[1] = -2 + i
+        light_obj_list[-1].location[2] = 0.5
+    else:
+        light_obj_list[-1].location[1] = -6 + i
+        light_obj_list[-1].location[2] = -0.5
+```

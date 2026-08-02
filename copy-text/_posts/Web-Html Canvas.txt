@@ -1,0 +1,1870 @@
+---
+title: Web-Html Canvas
+date: Sat Dec 16 2023 19:47:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - 前端
+  - Canvas
+  - JavaScript
+categories: 学习
+description: 学习自 B 站 UP 主老陈打码。
+---
+
+
+# 资源
+
+- [全新 Canvas 全网最详细课程（2023 年 2 月新更）!_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1kv4y1D7uS)
+
+# 正文
+
+## 01-初识 Canvas
+
+- 创建一个 canvas：
+
+```html
+<canvas id="c" width="600" height="400"></canvas>
+```
+
+- 一个 canvas 画布一般包含三要素：
+
+  - `id`: 标识元素的唯一性
+
+
+  - `width`: 画布的宽度
+
+
+  - `height`: 画布的高度
+
+
+- 在 Canvas 上画画：
+  - 找到 ID 为 `c` 的画布：
+
+
+```javascript
+var c = document.getElementById('c')
+```
+
+- 获取画笔，上下文对象：
+
+```html
+var ctx = c1.getContext('2d');
+```
+
+- 绘制矩形：`fillRect`  (位置 x, 位置 y, 宽度, 高度）
+
+```javascript
+ctx.fillRect(100, 100, 100, 100);
+```
+
+---
+
+- 完整代码：
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <!-- 
+        id: 标识元素的唯一性
+        width: 画布的宽度
+        height: 画布的高度
+     -->
+    <canvas id="c" width="600" height="400"></canvas>
+    <script>
+        // 1. 找到画布
+        var c = document.getElementById('c')
+        // 2. 获取画笔，上下文对象
+        var ctx = c1.getContext('2d');
+        // 3. 绘制图形
+        // 3.1 绘制矩形 fillRect（位置 x, 位置 y, 宽度, 高度）
+        ctx.fillRect(100, 100, 100, 100);
+    </script>
+</body>
+</html>
+```
+
+- 最终效果：
+
+![png](01.png)
+
+## 02-canvas上下文对象与浏览器支持
+
+- 对于不适应 canvas 的浏览器，`c.getContext` 将会返回空，可以输出提示信息：
+
+```javascript
+// 判断是否有 getContext
+if(!c.getContext)
+{
+    console.log("当前浏览器不支持 canvas，请下载最新的浏览器");
+}
+```
+
+- 如果不适应 canvas，canvas 里的内容就不会被覆盖，就可以操作一番：
+
+```html
+<canvas id="c" width="600" height="400">
+    当前浏览器不支持 canvas，请下载最新的浏览器
+    <a href="https://www.google.cn/chrome/index.html">立即下载</a>
+</canvas>
+```
+
+- 画笔有很多属性，`console.log(ctx);` 输出它们：
+
+![png](02.png)
+
+- [HTMLCanvasElement.getContext() - Web API 接口参考 | MDN (mozilla.org)](https://developer.mozilla.org/zh-CN/docs/Web/API/HTMLCanvasElement/getContext) 通过看参考文档查看各个接口的用法。
+
+---
+
+- 完整代码：
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <!-- 
+        id: 标识元素的唯一性
+        width: 画布的宽度
+        height: 画布的高度
+     -->
+    <canvas id="c" width="600" height="400">
+        当前浏览器不支持 canvas，请下载最新的浏览器
+        <a href="https://www.google.cn/chrome/index.html">立即下载</a>
+    </canvas>
+    <script>
+        // 1. 找到画布
+        var c = document.getElementById('c')
+        // 判断是否有 getContext
+        if(!c.getContext)
+        {
+            console.log("当前浏览器不支持 canvas，请下载最新的浏览器");
+        }
+        // 2. 获取画笔，上下文对象
+        var ctx = c1.getContext('2d');
+        console.log(ctx);
+        // 3. 绘制图形
+        // 3.1 绘制矩形 fillRect（位置 x, 位置 y, 宽度, 高度）
+        ctx.fillRect(100, 100, 100, 100);
+    </script>
+</body>
+</html>
+```
+
+## 03-Canvas 填充与路径绘制
+
+- 在 canvas 中，如果 `style` 属性设置了大小，则这个画布在网页上的最终显示将会进行拉伸变换。（但是一般是设置相同的）
+
+```html
+<canvas id="c" width="600" height="400" style="width: 200px; height: 200px;"></canvas>
+```
+
+![png](03.1.png)
+
+---
+
+- 之前使用 `ctx.fillRect()` 会生成自带填充的矩形，而使用 `ctx.strokeRect()` 则会以路径形式绘制矩形。
+  - `strokeRect(x1, y1, 矩形宽度，矩形高度)`
+    - `x1` 为矩形左上角的点到画布左上角 x 轴的距离
+    - `y1` 为矩形左上角的点到画布左上角 y 轴的距离
+
+
+```javascript
+// 3. 绘制图形
+// 3.2 路径绘制矩形 strokeRect(x1, y1, 矩形宽度，矩形高度)
+ctx.strokeRect(100, 200, 200, 100);
+```
+
+![png](03.2.png)
+
+---
+
+- 清除画布范围内的矩形：
+
+```javascript
+ctx.clearRect(0, 0, c1.clientWidth, c1.clientHeight);
+```
+
+---
+
+- 使用 `setInterval() `来完成清除的动画。（感觉语法有点像 DOTween）
+
+- [setInterval() - Web API 接口参考 | MDN (mozilla.org)](https://developer.mozilla.org/zh-CN/docs/Web/API/setInterval)
+
+```javascript
+ctx.strokeRect(100, 200, 200, 100);
+ctx.fillRect(200, 150, 200, 100);
+let height = 0;
+let t1 = setInterval(() => {
+    height++;
+    ctx.clearRect(0, 0, c1.clientWidth, height);
+    if (height > c1.clientHeight)
+    {
+        clearInterval(t1);
+    }
+}, 10);
+```
+
+---
+
+- 定义矩形，但不绘制：
+
+```javascript
+ctx.rect(100, 200, 300, 300);
+```
+
+- 填充所定义的矩形：
+
+```javascript
+ctx.fill();
+```
+
+- 描边所定义的矩形：
+
+```javascript
+ctx.stroke();
+```
+
+---
+
+- `ctx.beginPath();` 和 `ctx.closePath();` 分别表示提笔和抬笔操作，这样绘制的时候不会覆盖之前定义的图形。（有种 Windows 程序设计的味道）
+
+```javascript
+ctx.beginPath();
+ctx.rect(200, 150, 200, 100);
+ctx.stroke();
+ctx.closePath();
+
+ctx.beginPath();
+ctx.rect(100, 200, 200, 100);
+ctx.fill();
+ctx.closePath();
+```
+
+## 04-canvas绘制圆弧与笑脸
+
+-  arc 是绘制圆弧的方法。
+- ctx.arc(圆心x, 圆心y, 半径, 开始的角度, 结束的角度, 逆时针（true）还是顺时针（false）);
+
+```javascript
+ctx.arc(300, 200, 50, 0, Math.PI / 4);
+ctx.stroke();
+```
+
+- 使用圆弧工具绘制一个笑脸，记得要分别使用 `ctx.beginPath();` 和 `ctx.closePath();` 提笔和抬笔，不然路径会相连。
+
+```javascript
+// 绘制一张脸
+ctx.beginPath();
+ctx.arc(75, 75, 50, 0, Math.PI * 2);
+ctx.stroke();
+ctx.closePath();
+// 绘制嘴巴
+ctx.beginPath();
+ctx.arc(75, 75, 35, 0, Math.PI);
+ctx.stroke();
+ctx.closePath();
+// 绘制嘴巴
+ctx.beginPath();
+ctx.arc(60, 65, 5, 0, Math.PI * 2);
+ctx.stroke();
+ctx.closePath();       
+// 绘制右眼
+ctx.beginPath();
+ctx.arc(90, 65, 5, 0, Math.PI * 2);
+ctx.stroke();
+ctx.closePath();
+```
+
+---
+
+- 上述方法代码太繁琐，改用 `moveTo` 来移动点。
+
+```javascript
+ctx.beginPath();
+// 绘制一张脸
+ctx.arc(75, 75, 50, 0, Math.PI * 2);
+ctx.moveTo(110, 75);
+// 绘制嘴巴
+ctx.arc(75, 75, 35, 0, Math.PI);
+ctx.moveTo(65, 65);
+// 绘制嘴巴
+ctx.arc(60, 65, 5, 0, Math.PI * 2);
+ctx.moveTo(95, 65);
+// 绘制右眼
+ctx.arc(90, 65, 5, 0, Math.PI * 2);
+ctx.stroke();
+ctx.closePath();
+```
+
+---
+
+- 最终效果：
+
+<div style="text-align: center;">
+<canvas id="c4" width="600" height="400"></a></canvas>
+<script>
+    var c4 = document.getElementById('c4')
+    var ctx = c4.getContext('2d');
+    ctx.beginPath();
+    // 绘制一张脸
+    ctx.arc(75, 75, 50, 0, Math.PI * 2);
+    ctx.moveTo(110, 75);
+    // 绘制嘴巴
+    ctx.arc(75, 75, 35, 0, Math.PI);
+    ctx.moveTo(65, 65);
+    // 绘制嘴巴
+    ctx.arc(60, 65, 5, 0, Math.PI * 2);
+    ctx.moveTo(95, 65);
+    // 绘制右眼
+    ctx.arc(90, 65, 5, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.closePath();
+</script>
+</div>
+
+## 05-绘制折线线段
+
+```javascript
+ctx.moveTo(300, 200);
+ctx.lineTo(350, 250);
+```
+
+- 将画笔移动到 `(300, 200)`，然后划线至 `(350, 250)`。
+
+---
+
+- 范例：
+
+```javascript
+ctx.beginPath();
+ctx.moveTo(300, 200);
+ctx.lineTo(350, 250);
+ctx.lineTo(350, 200);
+ctx.lineTo(300, 200);
+ctx.stroke();
+ctx.closePath();
+
+ctx.beginPath();
+ctx.moveTo(200, 100);
+ctx.lineTo(250, 150);
+ctx.lineTo(250, 100);
+ctx.lineTo(200, 100);
+ctx.fill();
+ctx.closePath();
+```
+
+- 最终效果：
+
+<div style="text-align: center;">
+<canvas id="c5" width="600" height="400"></a></canvas>
+<script>
+    var c5 = document.getElementById('c5')
+    var ctx = c5.getContext('2d');
+    ctx.beginPath();
+    ctx.moveTo(300, 200);
+    ctx.lineTo(350, 250);
+    ctx.lineTo(350, 200);
+    ctx.lineTo(300, 200);
+    ctx.stroke();
+    ctx.closePath();
+    ctx.beginPath();
+    ctx.moveTo(200, 100);
+    ctx.lineTo(250, 150);
+    ctx.lineTo(250, 100);
+    ctx.lineTo(200, 100);
+    ctx.fill();
+    ctx.closePath();
+</script>
+</div>
+
+## 06-actTo 绘制圆弧方式
+
+- actTo，用 3 个点控制一段圆弧。
+
+![png](06.1.png)
+
+```javascript
+ctx.beginPath();
+// 第 1 个点
+ctx.moveTo(300, 200);
+// 第 2 个点和第 3 个点，以及圆弧的半径
+ctx.arcTo(300, 250, 250, 250, 50);
+ctx.stroke();
+ctx.closePath();
+```
+
+![png](06.2.png)
+
+## 07-二次贝塞尔曲线实现聊天气泡框
+
+- [曲线篇: 贝塞尔曲线 - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/136647181)
+
+---
+
+- 使用 `ctx.quadraticCurveTo()` 可以绘制二次贝塞尔曲线。
+  - [HTML canvas quadraticCurveTo() 方法 (w3school.com.cn)](https://www.w3school.com.cn/tags/canvas_quadraticcurveto.asp)
+
+
+![png](07.1.png)
+
+- 开始点：moveTo(`20`,`20`)
+- 控制点：quadraticCurveTo(`20`,`100`,200,20)
+- 结束点：quadraticCurveTo(20,100,`200`,`20`)
+
+---
+
+- 使用二次贝塞尔曲线画一个聊天气泡框：
+
+```javascript
+ctx.beginPath();
+ctx.moveTo(200, 300);
+ctx.quadraticCurveTo(150, 300, 150, 200);
+ctx.quadraticCurveTo(150, 100, 300, 100);
+ctx.quadraticCurveTo(450, 100, 450, 200);
+ctx.quadraticCurveTo(450, 300, 250, 300);
+ctx.quadraticCurveTo(250, 350, 150, 350);
+ctx.quadraticCurveTo(200, 350, 200, 300);
+ctx.stroke();
+ctx.closePath();
+```
+
+![png](07.2.png) 
+
+## 08-三次贝塞尔曲线实现献给朋友的爱心
+
+- `ctx.bezierCurveTo(控制点 1, 控制点 2, 终点)` 函数。
+
+- [HTML canvas bezierCurveTo() 方法 (w3school.com.cn)](https://www.w3school.com.cn/tags/canvas_beziercurveto.asp)
+
+---
+
+- 代码：
+
+```javascript
+ctx.beginPath();
+ctx.moveTo(300, 200);
+ctx.bezierCurveTo(350, 150, 400, 200, 300, 250);
+ctx.bezierCurveTo(200, 200, 250, 150, 300, 200);
+ctx.stroke();
+ctx.closePath();
+```
+
+![png](08.png)
+
+## 09-封装路径Path2d
+
+- 将之前所画的心形封装成一个路径：
+
+```javascript
+var heartPath = new Path2D();
+heartPath.moveTo(300, 200);
+heartPath.bezierCurveTo(350, 150, 400, 200, 300, 250);
+heartPath.bezierCurveTo(200, 200, 250, 150, 300, 200);
+ctx.stroke(heartPath);
+```
+
+- 或是使用 svg 字符串创建一个路径：
+
+```javascript
+var polyline = new Path2D("M10 10 h 80 v 80 h -80 z");
+ctx.stroke(polyline);
+```
+
+- 最终效果：
+
+<div style="text-align: center;">
+<canvas id="c9" width="600" height="400"></a></canvas>
+<script>
+    var c9 = document.getElementById('c9')
+    var ctx = c9.getContext('2d');
+    var heartPath = new Path2D();
+    heartPath.moveTo(300, 200);
+    heartPath.bezierCurveTo(350, 150, 400, 200, 300, 250);
+    heartPath.bezierCurveTo(200, 200, 250, 150, 300, 200);
+    ctx.stroke(heartPath);
+    var polyline = new Path2D("M10 10 h 80 v 80 h -80 z");
+    ctx.stroke(polyline);
+</script>
+</div>
+
+
+## 10-颜色样式控制
+
+- `ctx.strokeStyle = ""` 和 `ctx.fillStyle = ""` 分别设置描边和填充样式。
+  - `”red“ `预设颜色。
+  - `"#ff00ff"` 16 进制颜色。
+  - `rgb(255, 0, 0)` RGB 颜色。
+  - `rgba(200, 200, 255)` RGBA 颜色。
+- `ctx.globalAlpha = 0.5;` 设置全局透明度。
+
+---
+
+- 演示效果：
+
+<div style="text-align: center;">
+<canvas id="c10" width="600" height="400"></a></canvas>
+<script>
+    var c10 = document.getElementById('c10');
+    var ctx = c10.getContext('2d');// 设置全局的透明度
+    ctx.globalAlpha = 0.5;
+    // 起点
+    var heartPath = new Path2D();
+    heartPath.moveTo(300, 200);// 2 个控制点、1 个终点
+    heartPath.bezierCurveTo(350, 150, 400, 200, 300, 250);
+    heartPath.bezierCurveTo(200, 200, 250, 150, 300, 200);
+    ctx.strokeStyle = "red"
+    ctx.stroke(heartPath);
+    var chatPath = new Path2D();
+    chatPath.moveTo(200, 300);
+    chatPath.quadraticCurveTo(150, 300, 150, 200);
+    chatPath.quadraticCurveTo(150, 100, 300, 100);
+    chatPath.quadraticCurveTo(450, 100, 450, 200);
+    chatPath.quadraticCurveTo(450, 300, 250, 300);
+    chatPath.quadraticCurveTo(250, 350, 150, 350);
+    chatPath.quadraticCurveTo(200, 350, 200, 300);
+    ctx.strokeStyle = "#ff00ff";
+    ctx.stroke(chatPath);
+    ctx.fillStyle = "rgba(255,200,200,0.3)";
+    ctx.fill(heartPath);
+    // 创建一条折线
+    var polyline = new Path2D("M10 10h 80 v 80h -80 z");ctx.strokeStyle = "rgba(0,0,255)";ctx.stroke(polyline);
+    ctx.fillStyle = "rgba(200,200,255,1)";
+    ctx.fillRect(280, 180, 40, 40);
+</script>
+</div>
+
+## 11-线型渐变和径向渐变
+
+- [HTML canvas createLinearGradient() 方法 (w3school.com.cn)](https://www.w3school.com.cn/tags/canvas_createlineargradient.asp)
+
+- `context.createLinearGradient(x0,y0,x1,y1);`
+
+---
+
+- 线性渐变：
+
+```javascript
+let lineGradient = ctx.createLinearGradient(100, 200, 400, 500);
+lineGradient.addColorStop(0, "red");
+lineGradient.addColorStop(0.3, "#ffcccc");
+lineGradient.addColorStop(1, "blue");
+ctx.fillStyle = lineGradient;
+ctx.fillRect(100, 200, 300, 300);
+```
+
+![png](11.1.png)
+
+---
+
+- 线性渐变动画：
+
+```javascript
+let index = 0;
+
+function render()
+{
+    ctx.clearRect(0, 0, 600, 400);
+    index += 0.01;
+    if (index > 1)
+    {
+        index = 0;
+    }
+    let linearGradient = ctx.createLinearGradient(100, 200, 400, 500);
+    linearGradient.addColorStop(0, "red");
+    linearGradient.addColorStop(index, "#ffcccc");
+    linearGradient.addColorStop(1, "blue");
+    ctx.fillStyle = linearGradient;
+    ctx.fillRect(100, 200, 300, 300);
+    requestAnimationFrame(render);
+}
+
+requestAnimationFrame(render);
+```
+
+<div style="text-align: center;">
+<canvas id="c11_2" width="600" height="400"></a></canvas>
+<script>
+    var c11_2 = document.getElementById('c11_2');
+    var ctx11_2 = c11_2.getContext('2d');// 设置全局的透明度
+    let index = 0;
+    function render()
+    {
+        ctx11_2.clearRect(0, 0, 600, 400);
+        index += 0.01;
+        if (index > 1)
+        {
+            index = 0;
+        }
+        let linearGradient = ctx.createLinearGradient(100, 200, 400, 500);
+        linearGradient.addColorStop(0, "red");
+        linearGradient.addColorStop(index, "#ffcccc");
+        linearGradient.addColorStop(1, "blue");
+        ctx11_2.fillStyle = linearGradient;
+        ctx11_2.fillRect(100, 200, 300, 300);
+        requestAnimationFrame(render);
+    }
+    requestAnimationFrame(render);
+</script>
+</div>
+
+---
+
+- 径向渐变：
+
+  - [HTML canvas createRadialGradient() 方法 (w3school.com.cn)](https://www.w3school.com.cn/tags/canvas_createradialgradient.asp)
+
+  - `context.createRadialGradient(x0,y0,r0,x1,y1,r1);`
+
+
+```javascript
+let radiaGradient = ctx.createRadialGradient(300, 200, 0, 300, 200, 100);
+radiaGradient.addColorStop(0, "red");
+radiaGradient.addColorStop(0.3, "#ffcccc");
+radiaGradient.addColorStop(1, "blue");
+ctx.fillStyle = radiaGradient;
+
+ctx.fillRect(0, 0, 600, 400);
+```
+
+![png](11.3.png)
+
+---
+
+- 径向渐变画个球：
+
+```javascript
+let radiaGradient = ctx.createRadialGradient(250, 150, 10, 300, 200, 100);
+radiaGradient.addColorStop(0, "#ffcccc");
+radiaGradient.addColorStop(1, "red");
+ctx.fillStyle = radiaGradient;
+
+ctx.arc(300, 200, 100, 0, Math.PI * 2);
+ctx.fill();
+```
+
+![png](11.4.png)
+
+## 12-圆锥渐变特效
+
+- [CanvasRenderingContext2D: createConicGradient() method - Web APIs | MDN (mozilla.org)](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/createConicGradient)
+
+  圆锥渐变，用的比较少。
+
+```javascript
+// 圆锥渐变 createConicGradient(角度, 位置 x, 位置 y)
+let coneGradient = ctx.createConicGradient(Math.PI / 4, 300, 200);
+coneGradient.addColorStop(0, "red");
+coneGradient.addColorStop(0.5, "yellow");
+coneGradient.addColorStop(1, "blue");
+ctx.fillStyle = coneGradient;
+ctx.fillRect(0, 0, 600, 400);
+```
+
+<div style="text-align: center;">
+<canvas id="c12" width="600" height="400"></canvas>
+<script>
+    var c12 = document.getElementById('c12')
+    var ctx = c12.getContext('2d');
+    // 圆锥渐变 createConicGradient(角度, 位置 x, 位置 y)
+    let coneGradient = ctx.createConicGradient(Math.PI / 4, 300, 200);
+    coneGradient.addColorStop(0, "red");
+    coneGradient.addColorStop(0.5, "yellow");
+    coneGradient.addColorStop(1, "blue");
+    ctx.fillStyle = coneGradient;
+    ctx.fillRect(0, 0, 600, 400);
+</script>
+</div>
+
+## 13-pattern 印章填充样式
+
+- `createPattern(图片对象，重复方式);`
+  - 图片对象（可以是 image 对象，也可以是 canvas 对象）
+  - 重复方式 repeat, no-repeat, repeat-x, repeat-y
+
+```javascript
+var img = new Image();
+img.src = "./imgs/money.png"
+
+img.onload = function(){
+    // 创建图案对象 createPattern(图片对象，重复方式)
+    var pattern = ctx.createPattern(img, "repeat");
+    ctx.fillStyle = pattern;
+    ctx.fillRect(0, 0, 600, 400);
+}
+```
+
+## 14-线段和虚线样式设置
+
+```javascript
+var c = document.getElementById('c')
+var ctx = c.getContext('2d');
+
+ctx.moveTo(200, 150);
+ctx.lineTo(300, 200);
+ctx.lineTo(400, 150);
+// 设置线条样式，默认 1px
+ctx.lineWidth = 40;
+// 设置线条端点样式，butt 平齐，round 半圆，正方形: square
+ctx.lineCap = "square";
+// 设置 2 个线段连接处的样式，mitter 外侧相连的角，round 角被磨圆了。
+ctx.lineJoin = "round";
+ctx.stroke();
+```
+
+![png](14.1.png)
+
+---
+
+```javascript
+var c = document.getElementById('c')
+var ctx = c.getContext('2d');
+
+ctx.moveTo(290, 150);
+ctx.lineTo(300, 200);
+ctx.lineTo(310, 150);
+// 设置线条样式，默认 1px
+ctx.lineWidth = 40;
+// 设置线条端点样式，butt 平齐，round 半圆，正方形: square
+ctx.lineCap = "square";
+// 设置 2 个线段连接处的样式，mitter 外侧相连的角，round 角被磨圆了。
+ctx.lineJoin = "mitter";
+// 对斜截面进行限制
+ctx.miterLimit = 5;
+ctx.stroke();
+```
+
+---
+
+![png](14.2.png)
+
+```javascript
+var c = document.getElementById('c')
+var ctx = c.getContext('2d');
+
+ctx.moveTo(150, 150);
+ctx.lineTo(300, 200);
+ctx.lineTo(450, 150);
+// 设置线条样式，默认 1px
+ctx.lineWidth = 2;
+// 设置线条端点样式，butt 平齐，round 半圆，正方形: square
+ctx.lineCap = "square";
+// 设置 2 个线段连接处的样式，mitter 外侧相连的角，round 角被磨圆了。
+ctx.lineJoin = "mitter";
+// 对斜截面进行限制
+ctx.miterLimit = 5;
+// 设置虚线
+ctx.setLineDash([40, 20]);
+ctx.lineDashOffset = 10;
+ctx.stroke();
+```
+
+- `ctx.setLineDash([40, 20])` 方法会设置线条的虚线样式，其中数组中的数字表示虚线和实线的长度（单位为像素）。在本例中，[40, 20] 表示先绘制长度为 40 的实线，再跳过长度为 20 的空白，然后重复这个过程。因此，这段代码将绘制一个由实线和空白组成的虚线。
+
+- `ctx.lineDashOffset = 10` 则是设置虚线的偏移量。这个属性可以改变虚线起始点的位置。
+
+![png](14.3.png)
+
+---
+
+```javascript
+var c = document.getElementById('c')
+var ctx = c.getContext('2d');
+let index = 0;
+
+function render(){
+    ctx.clearRect(0, 0, 600, 400);
+    index++;
+    if (index > 40) {
+        index = 0;
+    }
+    ctx.moveTo(150, 150);
+    ctx.lineTo(300, 200);
+    ctx.lineTo(450, 150);
+    // 设置线条样式，默认 1px
+    ctx.lineWidth = 2;
+    // 设置线条端点样式，butt 平齐，round 半圆，正方形: square
+    ctx.lineCap = "square";
+    // 设置 2 个线段连接处的样式，mitter 外侧相连的角，round 角被磨圆了。
+    ctx.lineJoin = "mitter";
+    // 对斜截面进行限制
+    ctx.miterLimit = 5;
+    // 设置虚线
+    ctx.setLineDash([40, 20]);
+    ctx.lineDashOffset = index;
+    ctx.stroke();
+    requestAnimationFrame(render);
+}
+render();
+```
+
+<div style="text-align: center;">
+<canvas id="c14" width="600" height="400"></canvas>
+</div>
+
+<script>
+    var c14 = document.getElementById('c14')
+    var ctx14 = c14.getContext('2d');
+    let index14 = 0;
+    function render(){
+        ctx14.clearRect(0, 0, 600, 400);
+        index++;
+        if (index > 40) {
+            index14 = 0;
+        }
+        ctx14.moveTo(150, 150);
+        ctx14.lineTo(300, 200);
+        ctx14.lineTo(450, 150);
+        // 设置线条样式，默认 1px
+        ctx14.lineWidth = 2;
+        // 设置线条端点样式，butt 平齐，round 半圆，正方形: square
+        ctx14.lineCap = "square";
+        // 设置 2 个线段连接处的样式，mitter 外侧相连的角，round 角被磨圆了。
+        ctx14.lineJoin = "mitter";
+        // 对斜截面进行限制
+        ctx14.miterLimit = 5;
+        // 设置虚线
+        ctx14.setLineDash([40, 20]);
+        ctx14.lineDashOffset = index;
+        ctx14.stroke();
+        requestAnimationFrame(render);
+    }
+    render();
+</script>
+
+## 15-canvas 阴影设置
+
+- 核心代码：
+
+```javascript
+// 设置阴影
+ctx.shadowOffsetX = 10;
+ctx.shadowOffsetY = 10;
+ctx.shadowBlur = 5;
+ctx.shadowColor = "rgba(255, 100, 100, 1)";
+```
+
+- 完整代码：
+
+```javascript
+// 1. 找到画布
+var c = document.getElementById('c');
+// 2. 获取画笔，上下文对象
+var ctx = c.getContext('2d');// 设置全局的透明度
+
+// 设置阴影
+ctx.shadowOffsetX = 10;
+ctx.shadowOffsetY = 10;
+ctx.shadowBlur = 5;
+ctx.shadowColor = "rgba(255, 100, 100, 1)";
+
+ctx.globalAlpha = 0.5;
+// 起点
+var heartPath = new Path2D();
+heartPath.moveTo(300, 200);// 2个控制点、1个终点
+heartPath.bezierCurveTo(350, 150, 400, 200, 300, 250);
+heartPath.bezierCurveTo(200, 200, 250, 150, 300, 200);
+ctx.strokeStyle = "red"
+ctx.stroke(heartPath);
+
+var chatPath = new Path2D();
+chatPath.moveTo(200, 300);
+chatPath.quadraticCurveTo(150, 300, 150, 200);
+chatPath.quadraticCurveTo(150, 100, 300, 100);
+chatPath.quadraticCurveTo(450, 100, 450, 200);
+chatPath.quadraticCurveTo(450, 300, 250, 300);
+chatPath.quadraticCurveTo(250, 350, 150, 350);
+chatPath.quadraticCurveTo(200, 350, 200, 300);
+ctx.strokeStyle = "#ff00ff";
+
+ctx.stroke(chatPath);
+ctx.fillStyle = "rgba(255,200,200,0.3)";
+ctx.fill(heartPath);
+// 创建一条折线
+var polyline = new Path2D("M10 10 h 80 v 80 h -80 z");
+ctx.strokeStyle = "rgba(0,0,255)";
+
+ctx.stroke(polyline);
+```
+
+![png](15.png)
+
+## 16-canvas 绘制图片的三种模式
+
+```javascript
+// 1. 找到画布
+var c = document.getElementById('c');
+// 2. 获取画笔，上下文对象
+var ctx = c.getContext('2d');// 设置全局的透明度
+
+// 获取图片
+let img = new Image();
+img.src = "./imgs/girl.webp";
+img.onload = function (){
+    // 第一种方式绘制，（图片对象，水平位置，垂直位置）
+    // ctx.drawImage(img, 0, 0);
+    // 第二种方式绘制，能够缩放图片（图片对象，水平位置，垂直位置，缩放到对应宽度，缩放到对应高度）
+    ctx.drawImage(img, 0, 0, 600, 400);
+    // 第三种方式绘制，能够裁剪图片，img 参数后面的四个参数分别为源图片上面你要裁剪的起点位置和矩形的宽高，后面四个参数分别为画布的位置和要渲染的矩形的宽高
+    ctx.drawImage(img, 640, 0, 1280, 720, 0, 0, 600, 400);
+}
+```
+
+## 17-canvas 绘制动态视频并添加水印
+
+```html
+<video src="./imgs/mov_bbb.mp4" controls></video>
+```
+
+- `<video>` 组件可以在网页中显示视频。
+
+---
+
+可以把视频里的帧放入 canvas 中，还可以在视频上叠加水印。
+
+```html
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <canvas id="c" width="600" height="400"></canvas>
+    <video style="display: none;" src="./imgs/mov_bbb.mp4" controls></video>
+    <button id="btn">播放 / 暂停</button>
+    <script>
+        // 1. 找到画布
+        var c = document.getElementById('c');
+        // 2. 获取画笔，上下文对象
+        var ctx = c.getContext('2d');// 设置全局的透明度
+
+        // 获取视频对象
+        var video = document.querySelector("video");
+
+        // 获取按钮
+        let btn = document.querySelector("#btn");
+        btn.onclick = function(){
+            video.play();
+            render();
+        }
+
+        // logo 图片对象
+        let img = new Image();
+        img.src = "./imgs/logo.png";
+
+        function render(){
+            ctx.drawImage(video, 0, 0, 600, 400);
+            ctx.drawImage(img, 400, 350, 200, 50);
+            requestAnimationFrame(render);
+        }
+    </script>
+</body>
+```
+
+<div style="text-align: center;"><canvas id="c17" width="600" height="400"></canvas></div>
+<video style="display: none;" src="./imgs/mov_bbb.mp4" controls></video>
+<div style="text-align: center;"><button id="btn">播放 / 暂停</button></div>
+<script>
+    // 1. 找到画布
+    var c17 = document.getElementById('c17');
+    // 2. 获取画笔，上下文对象
+    var ctx17 = c17.getContext('2d');// 设置全局的透明度
+    // 获取视频对象
+    var video = document.querySelector("video");
+    // 获取按钮
+    let btn = document.querySelector("#btn");
+    btn.onclick = function(){
+        video.play();
+        render();
+    }
+    // logo 图片对象
+    let img = new Image();
+    img.src = "./imgs/logo.png";
+    function render(){
+        ctx17.drawImage(video, 0, 0, 600, 400);
+        ctx17.drawImage(img, 400, 350, 200, 50);
+        requestAnimationFrame(render);
+    }
+</script>
+
+## 18-文字绘制与对齐
+
+- 绘制文字颜色
+
+```javascript
+ctx.strokeStyle = "#f00";
+```
+
+- 设置文字大小与字体
+
+```javascript
+ctx.font = "100px Microsoft YaHei";
+```
+
+- 填充渲染文字
+  - `fillText(文本, 文本的起点 x 坐标, 文本的起点 y 坐标, 绘制文字的最大宽度)`
+
+```javascript
+ctx.fillText("你好", 300, 200);
+```
+
+- 文本对齐选项 `textAlign, start（默认）, end, left, right, center`
+
+```javascript
+ctx.textAlign = "center";
+```
+
+- 文本基线对齐，`textBaseline, top, bottom, alphabetic`
+
+```javascript
+ctx.textBaseline = "middle";
+```
+
+- 文本的方向
+
+```javascript
+ctx.direction = "rtl";
+```
+
+- 预测量文本宽度
+
+```javascript
+let text = ctx.measureText("你好！");
+console.log(text);
+```
+
+- 绘制文本边框
+
+```javascript
+ctx.strokeText("你好!", 300, 200);
+```
+
+- 完整代码
+
+```javascript
+// 1. 找到画布
+var c = document.getElementById('c');
+// 2. 获取画笔，上下文对象
+var ctx = c.getContext('2d');// 设置全局的透明度
+// 文字，大小 / 字体
+ctx.strokeStyle = "#f00";
+ctx.font = "100px Microsoft YaHei";
+// 填充渲染文字
+// fillText(文本, 文本的起点 x 坐标, 文本的起点 y 坐标, 绘制文字的最大宽度)
+// ctx.fillText("你好", 300, 200);
+// 文本对齐选项 textAlign, start（默认）, end, left, right, center
+ctx.textAlign = "center";
+// 文本基线对齐，textBaseline, top, bottom, alphabetic
+ctx.textBaseline = "middle";
+// 文本的方向
+ctx.direction = "rtl";
+// 预测量文本宽度
+let text = ctx.measureText("你好！");
+console.log(text);
+ctx.strokeText("你好!", 300, 200);
+ctx.arc(300, 200, 5, 0, 2 * Math.PI);
+ctx.fill();
+```
+
+![png](18.png)
+
+## 19-位移\_缩放\_旋转变换
+
+- `ctx.translate(100, 100);`
+  - 让坐标系原点向左和向下移动 100px。
+- `ctx.rotate(Math.PI / 6);`
+  - 逆时针旋转坐标系 30°
+- `ctx.scale(5, 2);`
+  - 让坐标系分别沿 x 轴和 y 轴缩放 5 倍和 2 倍。
+
+---
+
+- 完整代码：
+
+```javascript
+// 1. 找到画布
+var c = document.getElementById('c');
+// 2. 获取画笔，上下文对象
+var ctx = c.getContext('2d');// 设置全局的透明度
+// 3. 绘制图形
+// 3.1 绘制图形 fillRect(位置 x, 位置 y, 宽度, 高度)
+ctx.translate(100, 100);
+// scale 拉伸坐标系
+ctx.rotate(Math.PI / 6);
+ctx.scale(5, 2);
+ctx.fillRect(0, 0, 50, 50);
+ctx.translate(100, 100);
+ctx.fillRect(0, 0, 50, 50);
+```
+
+![png](19.png)
+
+## 20-transform 使用矩阵完成图像变换操作
+
+- `transform(a, b, c, d, e, f)`，直接对变形矩阵进行修改：
+  - $\begin{bmatrix} a & c & e \\ b & d & f \\ 0 & 0 & 1 \end{bmatrix}$
+
+```javascript
+// 1. 找到画布
+var c = document.getElementById('c');
+// 2. 获取画笔，上下文对象
+var ctx = c.getContext('2d');// 设置全局的透明度
+// 3. 绘制图形
+// transform 进行位移，水平坐标轴不变，1, 0, 竖直坐标轴不变 0, 1
+ctx.transform(1, 1, -1, 1, 50, 0);
+ctx.fillRect(0, 0, 500, 50);
+```
+
+![png](20.png)
+
+## 21-canvas 合成图像模式
+
+- [HTML canvas globalCompositeOperation 属性 (w3school.com.cn)](https://www.w3school.com.cn/tags/canvas_globalcompositeoperation.asp)
+
+```javascript
+// 1. 找到画布
+var c = document.getElementById('c');
+// 2. 获取画笔，上下文对象
+var ctx = c.getContext('2d');// 设置全局的透明度
+// 3. 绘制图形
+ctx.fillStyle = "#F00";
+ctx.fillRect(300, 200, 100, 100);
+ctx.globalCompositeOperation = "source-in"
+ctx.fillStyle = "#00F";
+ctx.fillRect(250, 150, 100, 100);
+```
+
+![png](21.png)
+
+## 22-合成图像实现刮刮卡
+
+```css
+#ggk{
+    width: 600px;
+    height: 400px;
+    font-size: 30px;
+    font-weight: 900;
+    text-align: center;
+    line-height: 400px;
+    overflow: hidden;
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+```
+
+```html
+<div id="ggk">谢谢惠顾</div>
+<canvas style="position: absolute; border: 1px solid #ccc; z-index: 2;" id="c" width="600" height="400"></canvas>
+```
+
+- 使用 `<canvas>` 盖住刮刮卡背后的文字。
+
+---
+
+```javascript
+// 1. 找到画布
+var c = document.getElementById('c');
+// 2. 获取画笔，上下文对象
+var ctx = c.getContext('2d');// 设置全局的透明度
+// 3. 绘制图形
+let img = new Image();
+img.src = "./imgs/m2.png";
+img.onload = function(){
+    ctx.drawImage(img, 0, 0, 600, 400);
+}
+var isDraw = false;
+c.onmousedown = function(){
+    isDraw = true;
+}
+c.onmouseup = function(){
+    isDraw = false;
+}
+c.onmousemove = function (e) {
+if (isDraw) {
+  var x = e.pageX;
+  var y = e.pageY;
+
+  ctx.globalCompositeOperation = "destination-out";
+
+  ctx.arc(x, y, 20, 0, 2 * Math.PI);
+  ctx.fill();
+}
+};
+
+let random = Math.random();
+if (random < 0.1) {
+    var ggkDiv = document.querySelector("#ggk");
+    ggkDiv.innerHTML = "恭喜您获得 IPHONE14 PRO 大奖！";
+}
+```
+
+- 通过按下鼠标并移动在鼠标的位置画圆实现刮刮卡的效果。
+
+- `ctx.globalCompositeOperation = "destination-out";` 将圆形和遮罩重叠的部分设为透明。
+
+---
+
+- 最终效果：
+
+<iframe title="22" style="margin: 10px 0;" src="./22.html" width="100%" height="450px">
+    <p>如果您看到此消息，则表示您的浏览器不支持 iframes。</p>
+</iframe>
+
+## 23-裁剪路径
+
+> ​	裁切路径和普通的 canvas 图形差不多，不同的是它的作用是遮罩，用来隐藏不需要的部分。所有在路径以外的部分都不会在canvas 上绘制出来。
+
+- `clip()` 将当前构建的路径转换为当前的裁剪路径。
+
+```javascript
+// 1. 找到画布
+var c = document.getElementById('c')
+// 2. 获取画笔，上下文对象
+var ctx = c.getContext('2d');// 设置全局的透明度
+// 起点
+var heartPath = new Path2D();
+heartPath.moveTo(300, 200);// 2个控制点、1个终点
+heartPath.bezierCurveTo(350, 150, 400, 200, 300, 250);
+heartPath.bezierCurveTo(200, 200, 250, 150, 300, 200);
+ctx.stroke(heartPath);
+var chatPath = new Path2D();
+chatPath.moveTo(200, 300);
+chatPath.quadraticCurveTo(150, 300, 150, 200);
+chatPath.quadraticCurveTo(150, 100, 300, 100);
+chatPath.quadraticCurveTo(450, 100, 450, 200);
+chatPath.quadraticCurveTo(450, 300, 250, 300);
+chatPath.quadraticCurveTo(250, 350, 150, 350);
+chatPath.quadraticCurveTo(200, 350, 200, 300);
+ctx.clip(chatPath);
+ctx.fill(heartPath);
+
+// 获取图片
+let img = new Image();
+img.src = "./imgs/girl.webp";
+img.onload = function (){
+    // 第一种方式绘制，（图片对象，水平位置，垂直位置）
+    // ctx.drawImage(img, 0, 0);
+    // 第二种方式绘制，能够缩放图片（图片对象，水平位置，垂直位置，缩放到对应宽度，缩放到对应高度）
+    ctx.drawImage(img, 0, 0, 600, 400);
+    // 第三种方式绘制，能够裁剪图片，img 参数后面的四个参数分别为源图片上面你要裁剪的起点位置和矩形的宽高，后面四个参数分别为画布的位置和要渲染的矩形的宽高
+    ctx.drawImage(img, 640, 0, 1280, 720, 0, 0, 600, 400);
+    // 给对话框描边
+    ctx.lineWidth = 20;
+    ctx.stroke(chatPath);
+}
+```
+
+![png](23.png)
+
+## 24-状态的保存和恢复
+
+- `save()` 将当前状态压入一个栈中。
+- `restore()` 从栈中取出一个状态并应用之。
+
+```javascript
+// 1. 找到画布
+var c = document.getElementById('c');
+// 2. 获取画笔，上下文对象
+var ctx = c.getContext('2d');// 设置全局的透明度
+// 3. 绘制图形
+ctx.fillStyle = "red";
+ctx.fillRect(0, 0, 100, 100);
+ctx.save();
+
+ctx.fillStyle = "blue";
+ctx.fillRect(100, 100, 100, 100);
+ctx.save();
+
+ctx.fillStyle = "yellow";
+ctx.fillRect(200, 200, 100, 100);
+ctx.save();
+
+ctx.fillStyle = "green";
+ctx.fillRect(300, 300, 100, 100);
+ctx.save();
+
+ctx.restore();
+ctx.fillRect(400, 400, 100, 100);
+
+ctx.restore();
+ctx.fillRect(500, 500, 100, 100);
+
+ctx.restore();
+ctx.fillRect(600, 600, 100, 100);
+
+ctx.restore();
+ctx.fillRect(700, 700, 100, 100);
+```
+
+![png](24.png)
+
+## 25-像素操作
+
+- [HTML canvas getImageData() 方法 (w3school.com.cn)](https://www.w3school.com.cn/tags/canvas_getimagedata.asp) `getImageData()` 直接获取 Canvas 中某个区域里的像素值（RGBA 形式）。
+- 如果使用 `getImageData()` 出现了跨域问题，应使用 Live Server 解决之。
+
+![png](25.1.png)
+
+- 然后你可以操作这些像素，再用 `putImageData()` 将这些像素画回画布中。
+  - [HTML canvas putImageData() 方法 (w3school.com.cn)](https://www.w3school.com.cn/tags/canvas_putimagedata.asp)
+
+- 完整代码：
+
+```javascript
+// 1. 找到画布
+var c = document.getElementById('c');
+// 2. 获取画笔，上下文对象
+var ctx = c.getContext('2d');// 设置全局的透明度
+
+// 获取图片
+let img = new Image();
+img.src = "imgs/girl.webp";
+img.onload = function (){
+    ctx.drawImage(img, 0, 0, 600, 400);
+
+    let imageData = ctx.getImageData(0, 0, 600, 400);
+    console.log(imageData);
+    // 循环修改数据
+    for (let i = 0; i < imageData.data.length; i+= 4)
+    {
+        let gray = imageData.data[i] * 0.3 + imageData.data[i + 1] * 0.59 + imageData.data[i + 2] * 0.11;
+        imageData.data[i] = gray;
+        imageData.data[i + 1] = gray;
+        imageData.data[i + 2] = gray;
+        imageData.data[i + 3] = 255;
+    }
+    ctx.putImageData(imageData, 0, 0, 0, 0, 300, 400);
+}
+```
+
+
+
+![png](25.2.png)
+
+## 26-高级封装绘制元素和实现元素交互
+
+- 这节大概是讲怎么应用面向对象的思想吧……
+
+---
+
+- Javascript 创建一个 `Heart` 类，并设计 `constructor()` 构造函数，使用 `draw()` 绘制图案。
+
+```javascript
+// 1. 找到画布
+var c = document.getElementById('c');
+// 2. 获取画笔，上下文对象
+var ctx = c.getContext('2d');// 设置全局的透明度
+
+class Heart{
+    constructor(x, y){
+        this.x = x;
+        this.y = y;
+        this.heartPath = new Path2D();
+        this.heartPath.moveTo(this.x, this.y);
+        this.heartPath.bezierCurveTo(
+            this.x + 50,
+            this.y - 50,
+            this.x + 100,
+            this.y,
+            this.x,
+            this.y + 50
+        );
+        this.heartPath.bezierCurveTo(
+            this.x - 100,
+            this.y,
+            this.x - 50,
+            this.y - 50,
+            this.x,
+            this.y
+        );
+    }
+    draw(){
+        ctx.save();
+        ctx.fillStyle = "red";
+        ctx.fill(this.heartPath);
+        ctx.restore();
+    }
+}
+let heart = new Heart(100, 100);
+heart.draw();
+```
+
+- 设计一下 `onmousemove()` 让用户在鼠标移向图案的时候，图案变色：
+
+```javascript
+// 1. 找到画布
+var c = document.getElementById('c');
+// 2. 获取画笔，上下文对象
+var ctx = c.getContext('2d');// 设置全局的透明度
+
+class Heart{
+    constructor(x, y){
+        this.x = x;
+        this.y = y;
+        this.color = "red";
+        this.heartPath = new Path2D();
+        this.heartPath.moveTo(this.x, this.y);
+        this.heartPath.bezierCurveTo(
+            this.x + 50,
+            this.y - 50,
+            this.x + 100,
+            this.y,
+            this.x,
+            this.y + 50
+        );
+        this.heartPath.bezierCurveTo(
+            this.x - 100,
+            this.y,
+            this.x - 50,
+            this.y - 50,
+            this.x,
+            this.y
+        );
+        c.onmousemove = (e) => {
+            let x = e.offsetX;
+            let y = e.offsetY;
+            let isIn = ctx.isPointInPath(this.heartPath, x, y);
+            if (isIn)
+            {
+                this.color = "blue";
+            }else{
+                this.color = "red";
+            }
+        }
+    }
+    draw(){
+        ctx.save();
+        ctx.fillStyle = this.color;
+        ctx.fill(this.heartPath);
+        ctx.restore();
+    }
+}
+let heart = new Heart(100, 100);
+function render(){
+    ctx.clearRect(0, 0, c.width, c.height);
+    heart.draw();
+    requestAnimationFrame(render);
+}
+render();
+```
+
+更牛逼的写法……emmm 学不来。
+
+> - 创建一个 `Heart` 对象，并注册了其 `onHover` 和 `onLeave` 事件，当鼠标悬停在心形图形上时，颜色变为蓝色；当鼠标离开时，颜色变回红色。
+>
+> - 创建一个 `render` 函数，使用 `requestAnimationFrame` 方法定期重新绘制心形图形，从而实现动画效果。
+
+```javascript
+var ctx = c1.getContext("2d");
+
+class Heart {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.color = "red";
+        this.isIn = false;
+        this.eventMapList = {
+            hover: [],
+            leave: [],
+        };
+
+        c1.onmousemove = (e) => {
+            let x = e.offsetX;
+            let y = e.offsetY;
+            this.isIn = ctx.isPointInPath(this.heartPath, x, y);
+            if (this.isIn) {
+                this.eventMapList.hover.forEach((item) => {
+                    item();
+                });
+            } else {
+                this.eventMapList.leave.forEach((item) => {
+                    item();
+                });
+            }
+        };
+    }
+    onHover(fn) {
+        this.eventMapList.hover.push(fn);
+    }
+    onLeave(fn) {
+        this.eventMapList.leave.push(fn);
+    }
+    setPosition(x, y) {
+        this.x = x;
+        this.y = y;
+    }
+    draw() {
+        this.heartPath = new Path2D();
+        // 起点
+        this.heartPath.moveTo(this.x, this.y);
+        // 2 个控制点、1 个终点
+        this.heartPath.bezierCurveTo(
+            this.x + 50,
+            this.y - 50,
+            this.x + 100,
+            this.y,
+            this.x,
+            this.y + 50
+        );
+        this.heartPath.bezierCurveTo(
+            this.x - 100,
+            this.y,
+            this.x - 50,
+            this.y - 50,
+            this.x,
+            this.y
+        );
+        ctx.save();
+        ctx.fillStyle = this.color;
+        ctx.fill(this.heartPath);
+
+        ctx.restore();
+    }
+}
+let heart = new Heart(100, 100);
+heart.onHover(() => {
+    heart.color = "blue";
+});
+heart.onLeave(() => {
+    heart.color = "red";
+});
+function render() {
+    ctx.clearRect(0, 0, c1.width, c1.height);
+    heart.draw();
+    requestAnimationFrame(render);
+}
+render();
+```
+
+<iframe title="26" style="margin: 10px 0;" src="./26.html" width="100%" height="450px">
+    <p>如果您看到此消息，则表示您的浏览器不支持 iframes。</p>
+</iframe>
+
+## 27-canvas 实现在线画板
+
+- 设置若干按钮：
+
+  - `boldBtn` 粗画笔
+
+    - 调整模式为画笔模式 `source-over`
+    - 将画笔粗细设为 `20`
+    - 设置按钮显示状态
+  
+    ```javascript
+    boldBtn.onclick = function () {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.lineWidth = 20;
+        boldBtn.classList.add('active');
+        thinBtn.classList.remove('active');
+        clearBtn.classList.remove('active');
+    }
+    ```
+
+  - `thinBtn` 细画笔
+
+    - 调整模式为画笔模式 `source-over`
+
+    - 将画笔粗细设为 `1`
+    - 设置按钮显示状态
+  
+    ```javascript
+    thinBtn.onclick = function () {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.lineWidth = 1;
+        thinBtn.classList.add('active');
+        boldBtn.classList.remove('active');
+        clearBtn.classList.remove('active');
+    }
+    ```
+  
+  - `saveBtn` 保存图像
+  
+    - 把当前画布下载并保存
+  
+    ```javascript
+    saveBtn.onclick = function () {
+            var urlData = canvas.toDataURL();
+            var downloadA = document.createElement('a');
+            downloadA.setAttribute('download', '酷炫签名');
+            downloadA.href = urlData;
+            downloadA.click();
+        }
+    ```
+  
+  - `color` 调色
+  
+    - 设置画笔颜色
+  
+    ```javascript
+    inputColor.onchange = function () {
+            ctx.strokeStyle = inputColor.value;
+    }
+    ```
+  
+  - `clearBtn` 橡皮擦
+  
+    - 调整模式为擦除模式 `destination-out`
+    - 将画笔粗细设为 `30`
+    - 设置按钮显示状态
+  
+    ```javascript
+    clearBtn.onclick = function () {
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.lineWidth = 30;
+            clearBtn.classList.add('active');
+            thinBtn.classList.remove('active');
+            boldBtn.classList.remove('active');
+    }
+    ```
+  
+  - `nullBtn` 清空画布
+  
+    ```javascript
+    nullBtn.onclick = function () {
+            ctx.clearRect(0, 0, 800, 600);
+    }
+    ```
+
+```html
+<canvas id="c" width="600" height="400">
+    当前浏览器不支持 canvas，请下载最新的浏览器
+    <a href="https://www.google.cn/intl/zh-CN/chrome/">立即下载</a>
+</canvas>
+<hr>
+<button id="boldBtn" type="button">粗线条</button>
+<button id="thinBtn" class="active" type="button">细线条</button>
+<button id="saveBtn" type="button">保存签名</button>
+<input type="color" name="" id="color" value="" />
+<button id="clearBtn">橡皮擦</button>
+<button id="nullBtn">清空画布</button>
+
+<script>
+    // 1. 找到画布
+    var canvas = document.getElementById("c");
+
+    // 判断是否有 getContext
+    if (!canvas.getContext) {
+        console.log("当前浏览器不支持 canvas，请下载最新的浏览器");
+    }
+    // 2. 获取画笔，上下文对象
+    var ctx = canvas.getContext("2d");
+
+    var boldBtn = document.querySelector('#boldBtn');
+    var thinBtn = document.querySelector('#thinBtn');
+    var inputColor = document.querySelector('#color');
+    // 保存签名
+    var saveBtn = document.querySelector('#saveBtn');
+    // 橡皮擦按钮
+    var clearBtn = document.querySelector('#clearBtn');
+    // 清空画布
+    var nullBtn = document.querySelector('#nullBtn');
+    // 设置允许绘制的变量
+    var isDraw = false;
+
+    canvas.onmousedown = function () {
+        isDraw = true;
+        ctx.beginPath();
+        var x = event.pageX - canvas.offsetLeft;
+        var y = event.pageY - canvas.offsetTop;
+        ctx.moveTo(x, y);
+    }
+
+    canvas.onmouseleave = function () {
+        isDraw = false;
+        ctx.closePath();
+    }
+
+    canvas.onmouseup = function () {
+        isDraw = false;
+        ctx.closePath();
+    }
+
+    canvas.onmousemove = function () {
+        if (isDraw) {
+            var x = event.pageX - canvas.offsetLeft;
+            var y = event.pageY - canvas.offsetTop;
+            ctx.lineTo(x, y);
+            ctx.stroke();
+        }
+    }
+
+    boldBtn.onclick = function () {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.lineWidth = 20;
+        boldBtn.classList.add('active');
+        thinBtn.classList.remove('active');
+        clearBtn.classList.remove('active');
+    }
+
+    thinBtn.onclick = function () {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.lineWidth = 1;
+        thinBtn.classList.add('active');
+        boldBtn.classList.remove('active');
+        clearBtn.classList.remove('active');
+    }
+
+    clearBtn.onclick = function () {
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.lineWidth = 30;
+        clearBtn.classList.add('active');
+        thinBtn.classList.remove('active');
+        boldBtn.classList.remove('active');
+    }
+
+    nullBtn.onclick = function () {
+        ctx.clearRect(0, 0, 800, 600);
+    }
+
+    saveBtn.onclick = function () {
+        var urlData = canvas.toDataURL();
+        var downloadA = document.createElement('a');
+        downloadA.setAttribute('download', '酷炫签名');
+        downloadA.href = urlData;
+        downloadA.click();
+    }
+
+    inputColor.onchange = function () {
+        ctx.strokeStyle = inputColor.value;
+    }
+</script>
+```
+
+<iframe title="27" style="margin: 10px 0;" src="./27.html" width="100%" height="500px">
+    <p>如果您看到此消息，则表示您的浏览器不支持 iframes。</p>
+</iframe>
+
+## 28-canvas 绘制动态时钟
+
+- `var time = new Date();` 获取当前时间
+
+- `render()` 下每秒重绘：
+  - 绘制表盘
+    - 时针刻度
+    - 分针刻度
+  - 绘制指针
+    - 时针
+    - 分针
+    - 秒针
+
+```javascript
+var c = document.querySelector("#c");
+var ctx = c.getContext("2d");
+
+function render() {
+    ctx.clearRect(0, 0, 800, 600);
+    // 存档，保存当前坐标位置和上下文对象的状态
+    ctx.save();
+    ctx.translate(400, 300);
+    ctx.rotate(-Math.PI / 2);
+
+    ctx.save();
+    for (var i = 0; i < 12; i++) {
+        // 绘制小时的刻度
+        ctx.beginPath();
+        ctx.moveTo(170, 0);
+        ctx.lineTo(190, 0);
+        ctx.lineWidth = 8;
+        ctx.strokeStyle = "gray";
+        ctx.stroke();
+        ctx.closePath();
+        ctx.rotate((2 * Math.PI) / 12);
+    }
+
+    ctx.restore();
+    ctx.save();
+    for (var i = 0; i < 60; i++) {
+        // 绘制小时的刻度
+        ctx.beginPath();
+        ctx.moveTo(180, 0);
+        ctx.lineTo(190, 0);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "gray";
+        ctx.stroke();
+        ctx.closePath();
+        ctx.rotate((2 * Math.PI) / 60);
+    }
+    ctx.restore();
+    ctx.save();
+
+    // 获取当前时间
+    var time = new Date();
+    var hour = time.getHours();
+    var min = time.getMinutes();
+    var sec = time.getSeconds();
+    hour = hour >= 12 ? hour - 12 : hour;
+
+    // 绘制秒针
+    ctx.rotate(((2 * Math.PI) / 60) * sec);
+    ctx.beginPath();
+    ctx.moveTo(-30, 0);
+    ctx.lineTo(190, 0);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "red";
+    ctx.stroke();
+    ctx.closePath();
+    ctx.restore();
+    ctx.save();
+
+    // 绘制分针
+    ctx.rotate(
+        ((2 * Math.PI) / 60) * min + ((2 * Math.PI) / 60 / 60) * sec
+    );
+    ctx.beginPath();
+    ctx.moveTo(-20, 0);
+    ctx.lineTo(130, 0);
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = "#888";
+    ctx.stroke();
+    ctx.closePath();
+    ctx.restore();
+    ctx.save();
+
+    // 绘制时钟
+    ctx.rotate(
+        ((2 * Math.PI) / 12) * hour +
+        ((2 * Math.PI) / 12 / 60) * min +
+        ((2 * Math.PI) / 12 / 60 / 60) * sec
+    );
+    ctx.beginPath();
+    ctx.moveTo(-15, 0);
+    ctx.lineTo(110, 0);
+    ctx.lineWidth = 8;
+    ctx.strokeStyle = "#333";
+    ctx.stroke();
+    ctx.closePath();
+    ctx.restore();
+    ctx.restore();
+    requestAnimationFrame(render);
+}
+
+render();
+```
+
+<iframe title="28" style="margin: 10px 0;" src="./28.html" width="100%" height="600px">
+    <p>如果您看到此消息，则表示您的浏览器不支持 iframes。</p>
+</iframe>
+
+​	当前时间是：<b id="currentTime"></b>
+
+<script>
+function updateTime() {
+  var currentTime = new Date();
+  var hours = currentTime.getHours().toString().padStart(2, '0');
+  var minutes = currentTime.getMinutes().toString().padStart(2, '0');
+  var seconds = currentTime.getSeconds().toString().padStart(2, '0');
+
+  var timeString = hours + ":" + minutes + ":" + seconds;
+  document.getElementById("currentTime").innerHTML = timeString;
+}
+setInterval(updateTime, 1000);
+</script>

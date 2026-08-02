@@ -1,0 +1,1421 @@
+---
+title: Web-RUNOOB-AngularJS
+date: Fri Dec 13 2024 14:05:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - JavaScript
+  - RUNOOB
+categories: 学习
+description: Superheroic JavaScript MVW Framework.
+---
+
+
+# 资源
+
+- [AngularJS — Superheroic JavaScript MVW Framework](https://angularjs.org/)
+- [AngularJS 教程 | 菜鸟教程](https://www.runoob.com/angularjs/angularjs-tutorial.html)
+
+# AngularJS 教程
+
+## 简介
+
+### 一个 JavaScript 框架
+
+​	引入它！
+
+```html
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+```
+
+### 扩展了 HTML
+
+> [!Note]
+>
+> AngularJS 通过 **ng-directives** 扩展了 HTML。
+>
+> **`ng-app`** 指令定义一个 AngularJS 应用程序。
+>
+> **`ng-model`** 指令把元素值（比如输入域的值）绑定到应用程序。
+>
+> **`ng-bind`** 指令把应用程序数据绑定到 HTML 视图。
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="angular.min.js"></script>
+</head>
+<body>
+ 
+<div ng-app="">
+    <p>名字 : <input type="text" ng-model="name"></p>
+    <h1>Hello {{name}}</h1>
+    <p ng-bind="name"></p>
+</div>
+ 
+</body>
+</html>
+```
+
+![webp](01.webp)
+
+> [!Note]
+>
+> 当网页加载完毕，AngularJS 自动开启。
+>
+> **`ng-app`** 指令告诉 AngularJS，`<div>` 元素是 AngularJS **应用程序** 的"所有者"。
+>
+> **`ng-model`** 指令把输入域的值绑定到应用程序变量 **`name`**。
+>
+> **`ng-bind`** 指令把应用程序变量 `name` 绑定到某个段落的 `innerHTML`。
+
+### 指令
+
+```html
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <script src="angular.min.js"></script>
+</head>
+
+<body>
+	<div data-ng-app="" data-ng-init="firstName='John'">
+		<p>姓名为 <span data-ng-bind="firstName"></span></p>
+ 	</div>
+</body>
+
+</html>
+```
+
+> [!Note]
+>
+> ​	正如您所看到的，AngularJS 指令是以 **`ng`** 作为前缀的 HTML 属性。
+>
+> ​	**`ng-init`** 指令初始化 AngularJS 应用程序变量。
+
+### 表达式
+
+> [!Note]
+>
+> - 写在双大括号内：**`{{ expression }}`**。
+>
+> - 把数据绑定到 HTML，这与 **ng-bind** 指令有异曲同工之妙。
+>
+> - 在书写的位置"输出"数据。
+>
+> - 很像 **JavaScript 表达式**：它们可以包含文字、运算符和变量。
+>
+> - 实例 `{{ 5 + 5 }}` 或 `{{ firstName + " " + lastName }}`
+
+​	这部分跟 Vue 很像……
+
+```html
+<div ng-app="">
+     <p>我的第一个表达式： {{ 5 + 5 }}</p>
+</div>
+```
+
+### 应用
+
+> [!Note]
+>
+> AngularJS **模块（Module）** 定义了 AngularJS 应用。
+>
+> AngularJS **控制器（Controller）** 用于控制 AngularJS 应用。
+>
+> **`ng-app`** 指令指明了应用，**`ng-controller`** 指明了控制器。
+
+```html
+<div ng-app="myApp" ng-controller="myCtrl">
+    名： <input type="text" ng-model="firstName"><br>
+    姓： <input type="text" ng-model="lastName"><br>
+    姓名：{{ firstName + " " + lastName }}
+</div>
+
+<script>
+    // 定义应用
+    var app = angular.module('myApp', []);
+    // 控制应用
+    app.controller('myCtrl', function($scope) {
+        $scope.firstName = "John";
+        $scope.lastName = "Doe";
+    });
+</script>
+```
+
+![webp](02.webp)
+
+## 表达式
+
+​	跟 Vue 一样。
+
+## 指令
+
+### 重复 HTML 元素
+
+> [!Note]
+>
+> ​	**`ng-repeat`** 指令会重复一个 HTML 元素：
+
+```html
+<div ng-app="" ng-init="names=['Jani','Hege','Kai']">
+    <p>使用 ng-repeat 来循环数组</p>
+    <ul>
+        <li ng-repeat="x in names">
+            {{ x }}
+        </li>
+    </ul>
+</div>
+```
+
+![webp](03.webp)
+
+​	**`ng-repeat`** 指令用在一个对象数组上：
+
+```html
+<div ng-app="" ng-init="names=[
+{name:'Jani',country:'Norway'},
+{name:'Hege',country:'Sweden'},
+{name:'Kai',country:'Denmark'}]">
+
+    <p>循环对象：</p>
+    <ul>
+        <li ng-repeat="x    in names">
+            {{ x.name + ', ' + x.country }}
+        </li>
+    </ul>
+
+</div>
+```
+
+![webp](04.webp)
+
+### 创建自定义的指令
+
+> [!Note]
+>
+> 使用 **`.directive`** 函数来添加自定义的指令。
+>
+> 要调用自定义指令，HTML 元素上需要添加自定义指令名。
+>
+> 使用驼峰法来命名一个指令， **`runoobDirective`**, 但在使用它时需要以 **-** 分割, **`runoob-directive`**:
+
+```html
+<body ng-app="myApp">
+    <my-directive></my-directive>
+    <script>
+        var app = angular.module('myApp', []);
+        app.directive('myDirective', function () {
+            return {
+                template: '<h1>Hello World!</h1>'
+            };
+        });
+    </script>
+</body>
+```
+
+![webp](05.webp)
+
+​	多种使用指令的方式，显示的效果相同：
+
+```html
+<body ng-app="myApp">
+    <my-directive></my-directive>
+    <div my-directive></div>
+    <div class="my-directive"></div>
+    <!-- directive: my-directive -->
+    <script>
+        var app = angular.module('myApp', []);
+        app.directive('myDirective', function () {
+            return {
+                template: '<h1>Hello World!</h1>'
+            };
+        });
+    </script>
+</body>
+```
+
+> [!Note]
+>
+> ​	通过添加 **`restrict`** 属性，并设置值为 `"A"`，来设置指令只能通过属性的方式来调用：
+>
+> ```javascript
+> var app = angular.module("myApp", []);app.directive("runoobDirective", 
+> 	function() {    return {        
+> 	restrict : "A",        
+> 	template : "<h1>自定义指令!</h1>"    };
+> 	});
+> ```
+>
+> **`restrict`** 值可以是以下几种:
+>
+> - `E` 作为元素名使用
+>
+> - `A` 作为属性使用
+>
+> - `C` 作为类名使用
+>
+> - `M` 作为注释使用
+>
+>   **restrict** 默认值为 `EA`, 即可以通过元素名和属性名来调用指令。
+
+## 模型
+
+### ng-model 指令
+
+> [!Note]
+>
+> ​	`ng-model` 指令可以将输入域的值与 AngularJS 创建的变量绑定。
+
+### 验证用户输入
+
+```html
+<body ng-app="myApp">
+    <form ng-app="" name="myForm"> Email:
+        <input type="email" name="myAddress" ng-model="text">
+        <span ng-show="myForm.myAddress.$error.email">不是一个合法的邮箱地址</span>
+    </form>
+
+    <script>
+        var app = angular.module('myApp', []);
+        app.controller('myCtrl', function ($scope) {
+            $scope.name = "John Doe";
+        });
+    </script>
+</body>
+```
+
+​	感觉不是很智能……
+
+![webp](06.webp)
+
+### 应用状态
+
+```html
+<form ng-app="" name="myForm" ng-init="myText = 'test@runoob.com'">
+    Email:
+    <input type="email" name="myAddress" ng-model="myText" required>
+    <p>编辑邮箱地址，查看状态的改变。</p>
+    <h1>状态</h1>
+    <p>Valid: {{myForm.myAddress.$valid}} (如果输入的值是合法的则为 true)。</p>
+    <p>Dirty: {{myForm.myAddress.$dirty}} (如果值改变则为 true)。</p>
+    <p>Touched: {{myForm.myAddress.$touched}} (如果通过触屏点击则为 true)。</p>
+</form>
+```
+
+![webp](07.webp)
+
+### CSS 类
+
+> [!Note]
+>
+> ​	`ng-model` 指令基于它们的状态为 HTML 元素提供了 CSS 类：
+
+```html
+<style>
+    input.ng-invalid {
+        background-color: lightblue;
+    }
+</style>
+
+<body>
+
+    <form ng-app="" name="myForm">
+        输入你的名字:
+        <input name="myAddress" ng-model="text" required>
+    </form>
+</body>
+```
+
+![webp](07.webp)
+
+> [!Note]
+>
+> `ng-model` 指令根据表单域的状态添加/移除以下类：
+>
+> - ng-empty
+> - ng-not-empty
+> - ng-touched
+> - ng-untouched
+> - ng-valid
+> - ng-invalid
+> - ng-dirty
+> - ng-pending
+> - ng-pristine
+
+## Scope（作用域）
+
+### 如何使用 Scope
+
+```html
+<div ng-app="myApp" ng-controller="myCtrl">
+    <h1>{{carname}}</h1>
+</div>
+<script>
+    var app = angular.module('myApp',
+        []); app.controller('myCtrl', function ($scope) {
+            $scope.carname
+            = "Volvo";
+        });
+</script>
+```
+
+> [!Note]
+>
+> ​	当在控制器中添加 **`$scope`** 对象时，视图 (HTML) 可以获取了这些属性。
+>
+> ​	视图中，你不需要添加 **`$scope`** 前缀, 只需要添加属性名即可，如： **`{{carname}}`**。
+
+### Scope 概述
+
+AngularJS 应用组成如下：
+
+- `View`（视图），即 HTML。
+- `Model`（模型），当前视图中可用的数据。
+- `Controller`（控制器），即 JavaScript 函数，可以添加或修改属性。
+
+​	`scope` 是模型。
+
+​	`scope` 是一个 JavaScript 对象，带有属性和方法，这些属性和方法可以在视图和控制器中使用。
+
+```html
+<div ng-app="myApp" ng-controller="myCtrl">
+    <input ng-model="name">
+    <h1>{{greeting}}</h1>
+    <button ng-click='sayHello()'>点我</button>
+</div>
+
+<script>var app = angular.module('myApp', []);
+    app.controller('myCtrl', function ($scope) {
+        $scope.name = "Runoob";
+        $scope.sayHello = function () {
+            $scope.greeting = 'Hello ' + $scope.name + '!';
+        };
+    });
+</script>
+```
+
+![webp](09.webp)
+
+### 根作用域
+
+```html
+<div ng-app="myApp" ng-controller="myCtrl">
+    <h1>{{lastname}} 家族成员:</h1>
+    <ul>
+        <li ng-repeat="x in names">{{x}}
+            {{lastname}}</li>
+    </ul>
+</div>
+<script>
+    var app = angular.module('myApp',
+        []); app.controller('myCtrl', function ($scope, $rootScope) {
+            $scope.names
+            = ["Emil", "Tobias", "Linus"];
+            $rootScope.lastname = "Refsnes";
+        });
+</script>
+```
+
+> [!Note]
+>
+> ​	所有的应用都有一个 **`$rootScope`**，它可以作用在 **`ng-app`** 指令包含的所有 HTML 元素中。
+>
+> ​	**`$rootScope`** 可==作用于整个应用中==。是各个 `controller` 中 `scope` 的桥梁。用 `rootscope` 定义的值，可以在各个 `controller` 中使用。
+
+## 控制器
+
+> [!Note]
+>
+> ​	AngularJS 应用程序被控制器控制。
+>
+> ​	**`ng-controller`** 指令定义了应用程序控制器。
+>
+> ​	控制器是 **JavaScript 对象**，由标准的 JavaScript **对象的构造函数** 创建。
+
+### 控制器方法
+
+​	控制器也可以有方法（变量和函数）：
+
+```html
+<div ng-app="myApp" ng-controller="personCtrl">
+    名: <input type="text" ng-model="firstName"><br>
+    姓: <input type="text" ng-model="lastName"><br>
+    <br>
+    姓名: {{fullName()}}
+</div>
+<script>var app = angular.module('myApp', []); app.controller('personCtrl',
+        function ($scope) {
+            $scope.firstName = "John"; $scope.lastName
+                = "Doe"; $scope.fullName = function () {
+                    return $scope.firstName + " " + $scope.lastName;
+                }
+        });
+</script>
+```
+
+![webp](10.webp)
+
+### 外部文件中的控制器
+
+​	在大型的应用程序中，通常是把控制器存储在外部文件中。
+
+​	只需要把 `<script>` 标签中的代码复制到名为 [personController.js](https://www.runoob.com/try/demo_source/personController.js) 的外部文件中即可：
+
+## 过滤器
+
+​	过滤器可以使用一个管道字符（|）添加到表达式和指令中。
+
+​	（感觉不是很好用……Vue3 中直接被移除了）
+
+| 过滤器      | 描述                     |
+| :---------- | :----------------------- |
+| `currency`  | 格式化数字为货币格式。   |
+| `filter`    | 从数组项中选择一个子集。 |
+| `lowercase` | 格式化字符串为小写。     |
+| `orderBy`   | 根据某个表达式排列数组。 |
+| `uppercase` | 格式化字符串为大写。     |
+
+### 表达式中添加过滤器
+
+> [!Note]
+>
+> ​	过滤器可以通过一个管道字符（|）和一个过滤器添加到表达式中。
+>
+> ​	（下面的两个实例，我们将使用前面章节中提到的 person 控制器）
+>
+> ​	**`uppercase`** 过滤器将字符串格式化为大写：
+
+```html
+<div ng-app="myApp" ng-controller="personCtrl">
+<p>姓名为 {{ lastName | uppercase }}</p>
+</div>
+```
+
+### 向指令添加过滤器
+
+> [!Note]
+>
+> ​	过滤器可以通过一个管道字符（|）和一个过滤器添加到指令中。
+>
+> ​	**`orderBy`** 过滤器根据表达式排列数组：
+
+```html
+<div ng-app="myApp" ng-controller="namesCtrl">
+    <ul>
+        <li ng-repeat="x in names | orderBy:'country'">
+            {{ x.name + ', ' + x.country }} </li>
+    </ul>
+</div>
+<script>
+    angular.module('myApp', []).controller('namesCtrl', function ($scope) {
+        $scope.names = [
+            { name: 'Jani', country: 'Norway' },
+            { name: 'Hege', country: 'Sweden' },
+            { name: 'Kai', country: 'Denmark' }
+        ];
+    });
+</script>
+```
+
+![webp](11.webp)
+
+### 自定义过滤器
+
+```html
+<div ng-app="myApp" ng-controller="myCtrl">
+    <h1>{{msg | reverse}}</h1>
+    <h1>{{msg}}</h1>
+</div>
+<script>
+    var app = angular.module('myApp', []);
+    app.controller('myCtrl', function ($scope) {
+        $scope.msg = "Runoob";
+    });
+    app.filter('reverse', function () { //可以注入依赖
+        return function (text) {
+            return text.split("").reverse().join("");
+        }
+    });
+</script>
+```
+
+![webp](12.webp)
+
+## 服务
+
+> [!Note]
+>
+> ​	在 AngularJS 中，服务是一个函数或对象，可在你的 AngularJS 应用中使用。
+>
+> ​	AngularJS 内建了 30 多个服务。
+>
+> ​	有个 **`$location`** 服务，它可以返回当前页面的 URL 地址。
+
+```html
+<div ng-app="myApp" ng-controller="customersCtrl">
+    <h1>{{myUrl}}</h1>
+</div>
+<script>
+    var app = angular.module('myApp', []); app.controller('customersCtrl',
+        function ($scope, $location) {
+            $scope.myUrl = $location.absUrl();
+        });
+</script>
+```
+
+![webp](13.webp)
+
+|                                           | window.location                                          | $location.service                                      |
+| :---------------------------------------- | :------------------------------------------------------- | ------------------------------------------------------ |
+| 目的                                      | 允许对当前浏览器位置进行读写操作                         | 允许对当前浏览器位置进行读写操作                       |
+| API                                       | 暴露一个能被读写的对象                                   | 暴露 jquery 风格的读写器                               |
+| 是否在 AngularJS 应用生命周期中和应用整合 | 否                                                       | 可获取到应用生命周期内的每一个阶段，并且和 $watch 整合 |
+| 是否和 HTML5 API 的无缝整合               | 否                                                       | 是（对低级浏览器优雅降级）                             |
+| 和应用的上下文是否相关                    | 否，`window.location.path` 返回 `"/docroot/actual/path"` | 是，`$location.path()` 返回 `"/actual/path"`           |
+
+​	创建使用自定义的的服务 **hexafy** 将一个数字转换为 16 进制数：
+
+```html
+<div ng-app="myApp" ng-controller="myCtrl">
+    <h1>{{hex(324)}}</h1>
+</div>
+<script>
+    var app = angular.module('myApp', []);
+
+    // 定义一个工厂服务来提供十六进制转换功能
+    app.factory('hexafy', function() {
+        return {
+            myFunc: function (num) {
+                return num.toString(16);
+            }
+        };
+    });
+
+    app.controller('myCtrl', function ($scope, hexafy) {
+        // 定义一个可以接受参数的函数
+        $scope.hex = function (num) {
+            return hexafy.myFunc(num);
+        };
+    });
+</script>
+```
+
+![webp](14.webp)
+
+## Http
+
+> [!Note]
+>
+> ​	**`$http`** 是 AngularJS 中的一个核心服务，用于读取远程服务器的数据。
+
+{% tabs Tabs_Http %}
+
+<!-- tab index.html -->
+
+```html
+<div ng-app="myApp" ng-controller="myCtrl">
+    <h1>{{ names }}</h1>
+</div>
+<script>
+    var app = angular.module('myApp', []);
+
+    app.controller('myCtrl', function ($scope, $http) {
+        $http({
+            method: 'GET',
+            url: 'sites.json'
+        }).then(function successCallback(response) {
+            console.log(response.data.sites);
+            $scope.names = response.data.sites;
+        }, function errorCallback(response) {
+            // 请求失败执行代码
+            console.error(response);
+        });
+
+    });
+</script>
+```
+
+<!-- endtab -->
+
+<!-- tab sites.json -->
+
+```json
+{
+    "sites": [
+        {
+            "Name": "菜鸟教程",
+            "Url": "www.runoob.com",
+            "Country": "CN"
+        },
+        {
+            "Name": "Google",
+            "Url": "www.google.com",
+            "Country": "USA"
+        },
+        {
+            "Name": "Facebook",
+            "Url": "www.facebook.com",
+            "Country": "USA"
+        },
+        {
+            "Name": "微博",
+            "Url": "www.weibo.com",
+            "Country": "CN"
+        }
+    ]
+}
+```
+
+<!-- endtab -->
+
+{% endtabs %}
+
+## Select
+
+### 使用 ng-options 创建选择框
+
+```html
+<div ng-app="myApp" ng-controller="myCtrl">
+    <select ng-init="selectedName = names[0]" ng-model="selectedName" ng-options="x for x in names"></select>
+    <p>You selected: {{selectedName}}</p>
+</div>
+
+<script>
+    var app = angular.module('myApp', []);
+    app.controller('myCtrl', function ($scope) {
+        $scope.names = ["Google", "Runoob", "Taobao"];
+    });
+</script>
+```
+
+![webp](15.webp)
+
+​	使用 `ng-options` 选择的是一个对象。
+
+### 使用 ng-repeat 创建选择框
+
+```html
+<div ng-app="myApp" ng-controller="myCtrl">
+    <select ng-model="selectedSite" ng-options="x.site for x in sites"></select>
+    <h1>你选择的是: {{selectedSite.site}}</h1>
+    <p>网址为: {{selectedSite.url}}</p>
+</div>
+
+<script>
+    var app = angular.module('myApp', []);
+    app.controller('myCtrl', function ($scope) {
+        $scope.sites = [
+            { site: "Google", url: "http://www.google.com" },
+            { site: "Runoob", url: "http://www.runoob.com" },
+            { site: "Taobao", url: "http://www.taobao.com" }
+        ];
+    });
+</script>
+```
+
+![webp](16.webp)
+
+## 表格
+
+### 在表格中显示数据
+
+{% tabs Tabs_table %}
+
+<!-- tab index.html -->
+
+```html
+<style>
+    td {
+        border: 1px solid black;
+    }
+</style>
+
+<div ng-app="myApp" ng-controller="customersCtrl">
+    <table>
+        <tr ng-repeat="x in names">
+            <td>{{ x.Name }}</td>
+            <td>{{ x.Country }}</td>
+        </tr>
+    </table>
+
+</div>
+
+<script>
+    var app = angular.module('myApp', []);
+    app.controller('customersCtrl', function ($scope, $http) {
+        $http.get("Customers_JSON.json")
+            .then(function (result) {
+                console.log(result.data.records);
+                $scope.names = result.data.records;
+            });
+    });
+</script>
+```
+
+<!-- endtab -->
+
+<!-- tab Customers_JSON.json -->
+
+```json
+{
+"records":[
+{"Name":"Alfreds Futterkiste","City":"Berlin","Country":"Germany"},
+{"Name":"Ana Trujillo Emparedados y helados","City":"México D.F.","Country":"Mexico"},
+{"Name":"Antonio Moreno Taquería","City":"México D.F.","Country":"Mexico"},
+{"Name":"Around the Horn","City":"London","Country":"UK"},
+{"Name":"B's Beverages","City":"London","Country":"UK"},
+{"Name":"Berglunds snabbköp","City":"Luleå","Country":"Sweden"},
+{"Name":"Blauer See Delikatessen","City":"Mannheim","Country":"Germany"},
+{"Name":"Blondel père et fils","City":"Strasbourg","Country":"France"},
+{"Name":"Bólido Comidas preparadas","City":"Madrid","Country":"Spain"},
+{"Name":"Bon app'","City":"Marseille","Country":"France"},
+{"Name":"Bottom-Dollar Marketse","City":"Tsawassen","Country":"Canada"},
+{"Name":"Cactus Comidas para llevar","City":"Buenos Aires","Country":"Argentina"},
+{"Name":"Centro comercial Moctezuma","City":"México D.F.","Country":"Mexico"},
+{"Name":"Chop-suey Chinese","City":"Bern","Country":"Switzerland"},
+{"Name":"Comércio Mineiro","City":"São Paulo","Country":"Brazil"}
+]
+}
+```
+
+<!-- endtab -->
+
+{% endtabs %}
+
+![webp](17.webp)
+
+### 使用 orderBy 过滤器
+
+​	排序显示，可以使用 **`orderBy`** 过滤器： 
+
+```html
+<table>
+    <tr ng-repeat="x in names | orderBy : 'Country'">
+        <td>{{ x.Name }}</td>
+        <td>{{ x.Country }}</td>
+    </tr>
+</table>
+```
+
+![webp](18.webp)
+
+## SQL
+
+{% tabs SQL %}
+
+<!-- tab index.html -->
+
+```html
+<div ng-app="myApp" ng-controller="customersCtrl">
+
+    <table>
+        <tr ng-repeat="x in names">
+            <td>{{ x.Name }}</td>
+            <td>{{ x.Country }}</td>
+        </tr>
+    </table>
+
+</div>
+
+<script>
+    var app = angular.module('myApp', []);
+    app.controller('customersCtrl', function ($scope, $http) {
+        $http.get("Customers_SQL.aspx")
+            .then(function (response) { $scope.names = response.data.records; })
+            .catch(function (error) { console.error('Error fetching data:', error); });
+    });
+</script>
+```
+
+<!-- endtab -->
+
+<!-- tab Customers_SQL.aspx -->
+
+```c#
+{"records":[
+{
+"Name" : "Alfreds Futterkiste",
+"City" : "Berlin",
+"Country" : "Germany"
+},
+{
+"Name" : "Berglunds snabbköp",
+"City" : "Luleå",
+"Country" : "Sweden"
+},
+{
+"Name" : "Centro comercial Moctezuma",
+"City" : "México D.F.",
+"Country" : "Mexico"
+},
+{
+"Name" : "Ernst Handel",
+"City" : "Graz",
+"Country" : "Austria"
+},
+{
+"Name" : "FISSA Fabrica Inter. Salchichas S.A.",
+"City" : "Madrid",
+"Country" : "Spain"
+},
+{
+"Name" : "Galería del gastrónomo",
+"City" : "Barcelona",
+"Country" : "Spain"
+},
+{
+"Name" : "Island Trading",
+"City" : "Cowes",
+"Country" : "UK"
+},
+{
+"Name" : "Königlich Essen",
+"City" : "Brandenburg",
+"Country" : "Germany"
+},
+{
+"Name" : "Laughing Bacchus Wine Cellars",
+"City" : "Vancouver",
+"Country" : "Canada"
+},
+{
+"Name" : "Magazzini Alimentari Riuniti",
+"City" : "Bergamo",
+"Country" : "Italy"
+},
+{
+"Name" : "North/South",
+"City" : "London",
+"Country" : "UK"
+},
+{
+"Name" : "Paris spécialités",
+"City" : "Paris",
+"Country" : "France"
+},
+{
+"Name" : "Rattlesnake Canyon Grocery",
+"City" : "Albuquerque",
+"Country" : "USA"
+},
+{
+"Name" : "Simons bistro",
+"City" : "København",
+"Country" : "Denmark"
+},
+{
+"Name" : "The Big Cheese",
+"City" : "Portland",
+"Country" : "USA"
+},
+{
+"Name" : "Vaffeljernet",
+"City" : "Århus",
+"Country" : "Denmark"
+},
+{
+"Name" : "Wolski Zajazd",
+"City" : "Warszawa",
+"Country" : "Poland"
+}
+]}
+```
+
+<!-- endtab -->
+
+{% endtabs %}
+
+## HTML DOM
+
+- **`ng-disabled`** 指令直接绑定应用程序数据到 HTML 的 disabled 属性。
+
+  ```html
+  <div ng-app="" ng-init="mySwitch=true">
+      <p><button ng-disabled="mySwitch">点我!</button></p>
+      <p><input type="checkbox" ng-model="mySwitch">按钮</p>
+      <p>{{ mySwitch }}</p>
+  </div>
+  ```
+
+- **`ng-show`** 指令隐藏或显示一个 HTML 元素。
+
+  ```html
+  <div ng-app="">
+      <p ng-show="true">我是可见的。</p>
+  	<p ng-show="false">我是不可见的。</p>
+  </div>
+  ```
+
+- **`ng-hide`** 指令用于隐藏或显示 HTML 元素。
+
+  ```html
+  <div ng-app="">
+      <p ng-hide="true">我是不可见的。</p>
+  	<p ng-hide="false">我是可见的。</p>
+  </div>
+  ```
+
+## 事件
+
+- **`ng-click`** 指令定义了 AngularJS 点击事件。
+
+```html
+<div ng-app="myApp" ng-controller="myCtrl">
+    <button ng-click="count = count + 1">点我！</button>
+    <p>{{ count }}</p>
+</div>
+
+<script>
+    var app = angular.module('myApp', []);
+    app.controller('myCtrl', function ($scope) {
+        $scope.count = 0;
+    });
+</script>
+```
+
+![webp](19.webp)
+
+## 模块
+
+- 通过 AngularJS 的 **`angular.module`** 函数来创建模块：
+
+  ```html
+  <div ng-app="myApp">...</div>
+  <script>
+  	var app = angular.module("myApp", []);
+  </script>
+  ```
+
+## 表单
+
+```html
+<div ng-app="myApp" ng-controller="formCtrl">
+    <form novalidate>
+        First Name:<br>
+        <input type="text" ng-model="user.firstName"><br>
+        Last Name:<br>
+        <input type="text" ng-model="user.lastName">
+        <br><br>
+        <button ng-click="reset()">RESET</button>
+    </form>
+    <p>form = {{user}}</p>
+    <p>master = {{master}}</p>
+</div>
+
+<script>
+    var app = angular.module('myApp', []);
+    app.controller('formCtrl', function ($scope) {
+        $scope.master = { firstName: "John", lastName: "Doe" };
+        $scope.reset = function () {
+            $scope.user = angular.copy($scope.master);
+        };
+        $scope.reset();
+    });
+</script>
+```
+
+![webp](20.webp)
+
+## 输入验证
+
+```html
+<h2>Validation Example</h2>
+
+<form ng-app="myApp" ng-controller="validateCtrl" name="myForm" novalidate>
+
+    <p>用户名:<br>
+        <input type="text" name="user" ng-model="user" required>
+        <span style="color:red" ng-show="myForm.user.$dirty && myForm.user.$invalid">
+            <span ng-show="myForm.user.$error.required">用户名是必须的。</span>
+        </span>
+    </p>
+
+    <p>邮箱:<br>
+        <input type="email" name="email" ng-model="email" required>
+        <span style="color:red" ng-show="myForm.email.$dirty && myForm.email.$invalid">
+            <span ng-show="myForm.email.$error.required">邮箱是必须的。</span>
+            <span ng-show="myForm.email.$error.email">非法的邮箱。</span>
+        </span>
+    </p>
+
+    <p>
+        <input type="submit" ng-disabled="myForm.user.$dirty && myForm.user.$invalid ||
+  myForm.email.$dirty && myForm.email.$invalid">
+    </p>
+
+</form>
+
+<script>
+    var app = angular.module('myApp', []);
+    app.controller('validateCtrl', function ($scope) {
+        $scope.user = 'John Doe';
+        $scope.email = 'john.doe@gmail.com';
+    });
+</script>
+```
+
+![webp](21.webp)
+
+## API
+
+​	要用的时候自己查吧……
+
+## Bootstrap
+
+​	推荐引入 bootstrap。
+
+## 包含
+
+> [!Note]
+>
+> ​	在 AngularJS 中，你可以在 HTML 中包含 HTML 文件（但是好像只能包含一个）。
+
+{% tabs include %}
+
+<!-- tab index.html -->
+
+```html
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <script src="angular.min.js"></script>
+</head>
+
+<body>
+    <div ng-app="myApp" ng-controller="sitesCtrl">
+        <div ng-include="'sites.htm'"></div>
+    </div>
+
+    <script>
+        var app = angular.module('myApp', []);
+        app.controller('sitesCtrl', function ($scope) {
+            $scope.names = [
+                {Name: "Google", Url: "https://www.google.com"},
+                {Name: "Facebook", Url: "https://www.facebook.com"}
+            ];
+        });
+    </script>
+</body>
+
+</html>
+```
+
+<!-- endtab -->
+
+<!-- tab sites.htm -->
+
+```html
+<table>
+    <tr ng-repeat="x in names">
+        <td>{{ x.Name }}</td>
+        <td>{{ x.Url }}</td>
+    </tr>
+</table>
+```
+
+<!-- endtab -->
+
+{% endtabs %}
+
+## 动画
+
+- [angular-animate - Libraries - cdnjs - The #1 free and open source CDN built to make life easier for developers](https://cdnjs.com/libraries/angular-animate) 从这里下载 `angular-animate.min.js`！
+
+```html
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <script src="angular.min.js"></script>
+    <script src="angular-animate.min.js"></script>
+    <style>
+        div {
+            transition: all linear 0.5s;
+            background-color: lightblue;
+            height: 100px;
+            width: 100%;
+            position: relative;
+            top: 0;
+            left: 0;
+        }
+
+        .ng-hide {
+            height: 0;
+            width: 0;
+            background-color: transparent;
+            top: -200px;
+            left: 200px;
+        }
+    </style>
+</head>
+
+<body ng-app="ngAnimate">隐藏 DIV: <input type="checkbox" ng-model="myCheck">
+    <div ng-hide="myCheck"></div>
+    <script>
+        var app = angular.module('myApp', ['ngAnimate']);
+    </script>
+</body>
+
+</html>
+```
+
+![webp](22.webp)
+
+## 依赖注入
+
+> [!Note]
+>
+> ​	依赖注入（Dependency Injection，简称 DI）是一种软件设计模式，在这种模式下，一个或更多的依赖（或服务）被注入（或者通过引用传递）到一个独立的对象（或客户端）中，然后成为了该客户端状态的一部分。
+>
+> ​	该模式分离了客户端依赖本身行为的创建，这使得程序设计变得松耦合，并遵循了依赖反转和单一职责原则。与服务定位器模式形成直接对比的是，它允许客户端了解客户端如何使用该系统找到依赖。
+>
+> ---
+>
+> ​	AngularJS 的依赖注入机制允许你在模块中定义和管理可复用的组件。以下是五种核心的依赖注入组件的简要解释：
+>
+> **1. value**
+>
+> - **作用**：定义一个简单的值（例如字符串、对象、数组、数字），可以在整个应用中注入和共享。
+>
+> - 特点：
+>
+>   - 用于存储静态数据。
+>   - 可在 `config` 阶段之后使用，但无法在 `config` 方法中使用。
+>
+> - 示例：
+>
+>   ```javascript
+>   app.value('appName', 'My AngularJS App');
+>   app.controller('MyController', function(appName) {
+>       console.log(appName); // 输出: My AngularJS App
+>   });
+>   ```
+>
+> ------
+>
+> **2. factory**
+>
+> - **作用**：定义一个工厂函数，该函数返回一个对象或方法。每次注入时，AngularJS 会调用该工厂函数来创建实例。
+>
+> - 特点：
+>
+>   - 可以动态生成数据或逻辑。
+>   - 适用于需要复杂初始化逻辑的场景。
+>
+> - 示例：
+>
+>   ```javascript
+>   app.factory('MathService', function() {
+>       return {
+>           add: function(a, b) {
+>               return a + b;
+>           }
+>       };
+>   });
+>   app.controller('MyController', function(MathService) {
+>       console.log(MathService.add(2, 3)); // 输出: 5
+>   });
+>   ```
+>
+> ------
+>
+> **3. service**
+>
+> - **作用**：定义一个构造函数，AngularJS 使用 `new` 操作符实例化它。
+>
+> - 特点：
+>
+>   - 使用构造函数模式。
+>   - 提供的对象是单例的，可以包含状态和方法。
+>   - 适合定义包含方法和属性的业务逻辑。
+>
+> - 示例：
+>
+>   ```javascript
+>   app.service('UserService', function() {
+>       this.getUser = function() {
+>           return { name: 'John', age: 30 };
+>       };
+>   });
+>   app.controller('MyController', function(UserService) {
+>       console.log(UserService.getUser()); // 输出: { name: 'John', age: 30 }
+>   });
+>   ```
+>
+> ------
+>
+> **4. provider**
+>
+> - **作用**：提供一种高度可配置的服务。它允许在 `config` 阶段配置服务实例的行为。
+>
+> - 特点：
+>
+>   - 是唯一可以在 `config` 阶段使用的组件。
+>   - 提供了一个 `.$get()` 方法，定义如何生成服务。
+>
+> - 示例：
+>
+>   ```javascript
+>   app.provider('GreetingService', function() {
+>       let greeting = 'Hello';
+>       this.setGreeting = function(newGreeting) {
+>           greeting = newGreeting;
+>       };
+>       this.$get = function() {
+>           return {
+>               sayHello: function(name) {
+>                   return greeting + ', ' + name + '!';
+>               }
+>           };
+>       };
+>   });
+>   
+>   app.config(function(GreetingServiceProvider) {
+>       GreetingServiceProvider.setGreeting('Hi');
+>   });
+>   
+>   app.controller('MyController', function(GreetingService) {
+>       console.log(GreetingService.sayHello('John')); // 输出: Hi, John!
+>   });
+>   ```
+>
+> ------
+>
+> **5. constant**
+>
+> - **作用**：定义一个不可变的值，通常用于应用程序的全局配置。
+>
+> - 特点：
+>
+>   - 可以在 `config` 阶段使用。
+>   - 定义的值是只读的。
+>
+> - 示例：
+>
+>   ```javascript
+>   app.constant('API_URL', 'https://api.example.com');
+>   app.config(function(API_URL) {
+>       console.log(API_URL); // 输出: https://api.example.com
+>   });
+>   app.controller('MyController', function(API_URL) {
+>       console.log(API_URL); // 输出: https://api.example.com
+>   });
+>   ```
+>
+> ------
+>
+> **总结**
+>
+> | **组件**     | **注入时的内容**     | **能否在 config 使用** | **适用场景**           |
+> | ------------ | -------------------- | ---------------------- | ---------------------- |
+> | **value**    | 直接提供的值         | 否                     | 简单数据共享           |
+> | **factory**  | 工厂函数返回的对象   | 否                     | 动态生成逻辑或数据     |
+> | **service**  | 实例化的构造函数对象 | 否                     | 封装复杂逻辑或业务方法 |
+> | **provider** | 配置好的服务实例     | 是                     | 高度可配置服务         |
+> | **constant** | 不可变的全局常量     | 是                     | 配置全局不可变值       |
+>
+> ​	根据需要选择合适的依赖注入机制，可以更好地组织和管理应用程序代码。
+
+```html
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <script src="angular.min.js"></script>
+</head>
+
+<body>
+    <h2>AngularJS 简单应用</h2>
+
+    <div ng-app="mainApp" ng-controller="CalcController">
+        <p>输入一个数字: <input type="number" ng-model="number" /></p>
+        <button ng-click="square()">X<sup>2</sup></button>
+        <p>结果: {{result}}</p>
+    </div>
+    <script>
+        var mainApp = angular.module("mainApp", []);
+        mainApp.value("defaultInput", 5);
+
+        mainApp.factory('MathService', function () {
+            var factory = {};
+
+            factory.multiply = function (a, b) {
+                return a * b;
+            }
+            return factory;
+        });
+
+        mainApp.service('CalcService', function (MathService) {
+            this.square = function (a) {
+                return MathService.multiply(a, a);
+            }
+        });
+
+        mainApp.controller('CalcController', function ($scope, CalcService, defaultInput) {
+            $scope.number = defaultInput;
+            $scope.result = CalcService.square($scope.number);
+
+            $scope.square = function () {
+                $scope.result = CalcService.square($scope.number);
+            }
+        });
+
+    </script>
+</body>
+
+</html>
+```
+
+![webp](23.webp)
+
+## 路由
+
+> [!Note]
+>
+> ​	在单页 Web 应用中 AngularJS 通过 **`#! +` 标记** 实现。
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>AngularJS 路由实例 - 菜鸟教程</title>
+<script src="https://cdn.bootcss.com/angular.js/1.7.0/angular.min.js"></script>
+<script src="https://cdn.bootcss.com/angular.js/1.7.0/angular-route.min.js"></script>
+</head>
+<body ng-app='routingDemoApp'>
+ 
+    <h2>AngularJS 路由应用</h2>
+    <ul>
+        <li><a href="#!/">首页</a></li>
+        <li><a href="#!/computers">电脑</a></li>
+        <li><a href="#!/printers">打印机</a></li>
+        <li><a href="#!/blabla">其他</a></li>
+    </ul>
+     
+    <div ng-view></div>
+    <script>
+        angular.module('routingDemoApp',['ngRoute'])
+        .config(['$routeProvider', function($routeProvider){
+            $routeProvider
+            .when('/',{template:'这是首页页面'})
+            .when('/computers',{template:'这是电脑分类页面'})
+            .when('/printers',{template:'这是打印机页面'})
+            .otherwise({redirectTo:'/'});
+        }]);
+    </script>
+</body>
+</html>
+```
+
+![webp](24.webp)
+
+
+

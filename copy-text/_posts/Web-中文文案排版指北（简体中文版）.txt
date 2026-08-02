@@ -1,0 +1,151 @@
+---
+title: Web-中文文案排版指北（简体中文版）
+date: Sun Oct 20 2024 14:32:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - 排版
+categories: 学习
+description: 中文字符与英文字符间的空格问题。
+---
+
+
+# 参考
+
+- [mzlogin/chinese-copywriting-guidelines: Chinese Copywriting Guidelines：中文文案排版指北（简体中文版）](https://github.com/mzlogin/chinese-copywriting-guidelines)
+
+- [配置网页，全自动加入中英文之间空格，优化页面排版 - 夏末阁](https://blog.sumblog.cn/archives/Chinese-English-Spacing.html)
+
+# 正文
+
+> ​	关于中英文之间的空格问题，已经争议良久，一部分人认为：中英文之间需要加空格，这是书面语的语法问题，就像是英文句子中，两个英文单词之间需要加空格一样。当然，也有人认为中文和英文之间不需要增加额外的空格，空格是为了增加区分度，而中文和英文本身就有自然的区分。**中文和英文之间的间距，应该交给排版工具完成，作者不应该增加额外的干预。**
+
+​	尽管我目前有在中英文之间加空格的习惯，但是总有疏忽的时候，对于从其他地方拷贝过来的文本还要手动修正格式真是太麻烦了！于是乎，我决定使用 python 遍历我的 `.md` 文章实现如下的**排版规则**！
+
+> 1. 中英文之间需要增加空格
+> 2. 中文与数字之间需要增加空格
+> 3. 中文与数字之间需要增加空格
+> 4. 数字与单位之间无需增加空格
+> 5. 全角标点与其他字符之间不加空格
+
+{% tabs law %}
+
+<!-- tab 应用单个文件 -->
+
+```python
+import re
+
+def fix_spacing_rules(line):
+    # 1. 中英文之间需要增加空格
+    line = re.sub(r'([\u4e00-\u9fff])([a-zA-Z])', r'\1 \2', line)
+    line = re.sub(r'([a-zA-Z])([\u4e00-\u9fff])', r'\1 \2', line)
+
+    # 2. 中文与数字之间需要增加空格
+    line = re.sub(r'([\u4e00-\u9fff])([0-9])', r'\1 \2', line)
+    line = re.sub(r'([0-9])([\u4e00-\u9fff])', r'\1 \2', line)
+
+    # 4. 数字与单位之间无需增加空格
+    units = ['%', '°C', 'km', 'm', 'kg', 'g', 'cm', 'mm', 'L', 'ml', 'h', 'min', 's']
+    for unit in units:
+        line = re.sub(r'([0-9])\s+({})'.format(unit), r'\1\2', line)
+
+    # 5. 全角标点与其他字符之间不加空格
+    line = re.sub(r'([\u3000-\u303F\uFF00-\uFFEF])\s+', r'\1', line)
+    line = re.sub(r'\s+([\u3000-\u303F\uFF00-\uFFEF])', r'\1', line)
+
+    return line
+
+def process_md_file(file_path):
+    # 读取单个 .md 文件
+    with open(file_path, 'r', encoding='utf-8') as file:
+        lines = file.readlines()
+
+    updated_lines = []
+    inside_yaml_header = False
+
+    for line in lines:
+        # 跳过 YAML 头文件部分（即以 "---" 包围的部分）
+        if line.strip() == "---":
+            inside_yaml_header = not inside_yaml_header
+            updated_lines.append(line)
+        elif inside_yaml_header:
+            # 如果在 YAML 头文件部分，原样添加
+            updated_lines.append(line)
+        else:
+            # 处理正文内容，保留行尾的换行符
+            updated_lines.append(fix_spacing_rules(line.rstrip()) + line[len(line.rstrip()):])
+
+    # 写回文件（如果内容有更新）
+    if lines != updated_lines:
+        with open(file_path, 'w', encoding='utf-8') as file:
+            file.writelines(updated_lines)
+        print(f"Processed: {file_path}")
+
+# 指定你要处理的 .md 文件路径
+file_path = "your_file_path_here.md"
+process_md_file(file_path)
+```
+
+<!-- endtab -->
+
+<!-- tab 遍历所有文件 -->
+
+```python
+import os
+import re
+
+def fix_spacing_rules(line):
+    # 1. 中英文之间需要增加空格
+    line = re.sub(r'([\u4e00-\u9fff])([a-zA-Z])', r'\1 \2', line)
+    line = re.sub(r'([a-zA-Z])([\u4e00-\u9fff])', r'\1 \2', line)
+
+    # 2. 中文与数字之间需要增加空格
+    line = re.sub(r'([\u4e00-\u9fff])([0-9])', r'\1 \2', line)
+    line = re.sub(r'([0-9])([\u4e00-\u9fff])', r'\1 \2', line)
+
+    # 4. 数字与单位之间无需增加空格
+    units = ['%', '°C', 'km', 'm', 'kg', 'g', 'cm', 'mm', 'L', 'ml', 'h', 'min', 's']
+    for unit in units:
+        line = re.sub(r'([0-9])\s+({})'.format(unit), r'\1\2', line)
+
+    # 5. 全角标点与其他字符之间不加空格
+    line = re.sub(r'([\u3000-\u303F\uFF00-\uFFEF])\s+', r'\1', line)
+    line = re.sub(r'\s+([\u3000-\u303F\uFF00-\uFFEF])', r'\1', line)
+
+    return line
+
+def process_md_files(directory):
+    # 遍历文件夹中的所有 .md 文件
+    for filename in os.listdir(directory):
+        if filename.endswith(".md"):
+            file_path = os.path.join(directory, filename)
+            with open(file_path, 'r', encoding='utf-8') as file:
+                lines = file.readlines()
+
+            updated_lines = []
+            inside_yaml_header = False
+
+            for line in lines:
+                # 跳过 YAML 头文件部分（即以 "---" 包围的部分）
+                if line.strip() == "---":
+                    inside_yaml_header = not inside_yaml_header
+                    updated_lines.append(line)
+                elif inside_yaml_header:
+                    # 如果在 YAML 头文件部分，原样添加
+                    updated_lines.append(line)
+                else:
+                    # 处理正文内容，保留行尾的换行符
+                    updated_lines.append(fix_spacing_rules(line.rstrip()) + line[len(line.rstrip()):])
+
+            # 如果内容有更新，则写回文件
+            if lines != updated_lines:
+                with open(file_path, 'w', encoding='utf-8') as file:
+                    file.writelines(updated_lines)
+                print(f"Processed: {filename}")
+
+# 指定你要遍历的文件夹路径
+directory_path = "your_directory_path_here"
+process_md_files(directory_path)
+```
+
+<!-- endtab -->
+
+{% endtabs %}

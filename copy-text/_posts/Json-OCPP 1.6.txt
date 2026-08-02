@@ -1,0 +1,407 @@
+---
+title: Json-OCPP 1.6
+date: Wed Oct 22 2025 10:27:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - Python
+  - Java
+  - EVC
+  - Json
+categories: 学习
+description: 学习充电桩充电协议！
+---
+
+
+# 资源
+
+- OCPP 文档：[ocpp/docs/v16/ocpp-1.6.pdf at master · mobilityhouse/ocpp](https://github.com/mobilityhouse/ocpp/blob/master/docs/v16/ocpp-1.6.pdf)
+
+- Steve：[steve-community/steve: SteVe - OCPP server implementation in Java](https://github.com/steve-community/steve)
+
+- Python OCPP：[mobilityhouse/ocpp: Python implementation of the Open Charge Point Protocol (OCPP).](https://github.com/mobilityhouse/ocpp)
+
+- MicroOcpp：[matth-x/MicroOcpp: OCPP 1.6 / 2.0.1 client for microcontrollers](https://github.com/matth-x/MicroOcpp)
+
+
+# 正文
+
+## OCPP 1.6J 介绍
+
+**OCPP（Open Charge Point Protocol）** 是一种用于 **电动汽车充电桩（Charge Point）** 与 **充电管理系统（Central System / CSMS）** 之间通信的开放协议。
+
+它定义了消息格式、通信流程、命令集，使不同厂家的设备能够互联互通。
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant CP as Charge Point（客户端）
+    participant CS as Central System（服务器）
+
+    Note over CP,CS: 🔌 启动阶段
+    CP->>CS: BootNotification<br/>（包含厂商、型号、序列号）
+    CS-->>CP: BootNotification.Conf<br/>（注册状态 + 心跳间隔）
+
+    loop 每隔心跳间隔
+        CP->>CS: Heartbeat<br/>（保持连接）
+        CS-->>CP: Heartbeat.Conf<br/>（返回当前时间）
+    end
+
+    Note over CP,CS: 🟢 准备充电
+    CP->>CS: StatusNotification<br/>（状态：Available）
+
+    Note over CP,CS: 💳 用户刷卡
+    CP->>CS: Authorize<br/>（发送RFID标签）
+    CS-->>CP: Authorize.Conf<br/>（返回授权状态）
+
+    Note over CP,CS: ⚡ 开始充电
+    CP->>CS: StartTransaction<br/>（connectorId、meterStart、idTag）
+    CS-->>CP: StartTransaction.Conf<br/>（transactionId）
+
+    loop 充电过程中
+        CP->>CS: MeterValues<br/>（电压、电流、功率等）
+        CP->>CS: StatusNotification<br/>（状态：Charging）
+    end
+
+    Note over CP,CS: 🟥 停止充电
+    CP->>CS: StopTransaction<br/>（transactionId、meterStop、timestamp）
+    CS-->>CP: StopTransaction.Conf<br/>（最终授权状态）
+
+    Note over CP,CS: 🧭 结束后状态
+    CP->>CS: StatusNotification<br/>（状态：Available）
+
+    Note over CS: 🧩 管理系统可随时下发命令
+    CS-->>CP: RemoteStartTransaction / RemoteStopTransaction / UpdateFirmware / TriggerMessage 等
+
+```
+
+典型的充电流程如下：
+
+> `BootNotification` 注册 → `StatusNotification` 报告可用 → `Authorize` 验证用户 → `StartTransaction` 开始充电 → `MeterValues` 上报数据 → `StopTransaction` 结束充电
+
+| 序号 | 方向                          | 请求（Req）                   | 响应（Conf）                       | 说明                                                         | 请求 JSON                                                    | 响应 JSON                                                    |
+| ---- | ----------------------------- | ----------------------------- | ---------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| 1    | Charge Point → Central System | Authorize                     | Authorize.conf                     | 校验用户标识（idTag），返回授权结果                          | `[2,"uid-Authorize-1","Authorize",{"idTag":"ABCD1234"}]`     | `[3,"uid-Authorize-1",{"idTagInfo":{"status":"Accepted","expiryDate":"2025-12-31T23:59:59Z","parentIdTag":"PARENT123"}}]` |
+| 2    | Charge Point → Central System | BootNotification              | BootNotification.conf              | 桩启动/重连时上报厂商、型号等，返回当前时间与心跳周期        | `[2,"uid-Boot-1","BootNotification",{"chargePointVendor":"VendorCo","chargePointModel":"ModelX","chargePointSerialNumber":"CP123456","firmwareVersion":"1.2.3","iccid":"898601234567890","imsi":"460011234567890","meterType":"ACMeter","meterSerialNumber":"MTR-001"}]` | `[3,"uid-Boot-1",{"status":"Accepted","currentTime":"2025-10-23T10:00:00Z","interval":300}]` |
+| 3    | Charge Point → Central System | DiagnosticsStatusNotification | DiagnosticsStatusNotification.conf | 上报诊断日志收集/上传进度状态                                | `[2,"uid-DiagStat-1","DiagnosticsStatusNotification",{"status":"Uploading"}]` | `[3,"uid-DiagStat-1",{}]`                                    |
+| 4    | Charge Point → Central System | FirmwareStatusNotification    | FirmwareStatusNotification.conf    | 上报固件下载/安装的进度与结果状态                            | `[2,"uid-FwStat-1","FirmwareStatusNotification",{"status":"Installed"}]` | `[3,"uid-FwStat-1",{}]`                                      |
+| 5    | Charge Point → Central System | Heartbeat                     | Heartbeat.conf                     | 周期心跳，上报存活并获取当前时间                             | `[2,"uid-HB-1","Heartbeat",{}]`                              | `[3,"uid-HB-1",{"currentTime":"2025-10-23T10:01:00Z"}]`      |
+| 6    | Charge Point → Central System | MeterValues                   | MeterValues.conf                   | 上送计量与遥测数据                                           | `[2,"uid-MV-1","MeterValues",{"connectorId":1,"transactionId":12345,"meterValue":[{"timestamp":"2025-10-23T10:02:00Z","sampledValue":[{"value":"12.34","context":"Sample.Periodic","format":"Raw","measurand":"Energy.Active.Import.Register","location":"Outlet","unit":"Wh"}]}]}]` | `[3,"uid-MV-1",{}]`                                          |
+| 7    | Charge Point → Central System | StartTransaction              | StartTransaction.conf              | 通知开始充电（含 connectorId、idTag、meterStart、时间等）    | `[2,"uid-StartTx-1","StartTransaction",{"connectorId":1,"idTag":"ABCD1234","meterStart":1000,"timestamp":"2025-10-23T10:03:00Z","reservationId":42}]` | `[3,"uid-StartTx-1",{"transactionId":12345,"idTagInfo":{"status":"Accepted","expiryDate":"2025-12-31T23:59:59Z"}}]` |
+| 8    | Charge Point → Central System | StatusNotification            | StatusNotification.conf            | 上报插座/整机状态变化                                        | `[2,"uid-Stat-1","StatusNotification",{"connectorId":1,"status":"Charging","errorCode":"NoError","timestamp":"2025-10-23T10:04:00Z","info":"Normal","vendorId":"VendorCo","vendorErrorCode":"0"}]` | `[3,"uid-Stat-1",{}]`                                        |
+| 9    | Charge Point → Central System | StopTransaction               | StopTransaction.conf               | 通知结束充电（含 meterStop、结束原因等）                     | `[2,"uid-StopTx-1","StopTransaction",{"transactionId":12345,"meterStop":1250,"timestamp":"2025-10-23T11:03:00Z","reason":"Remote","idTag":"ABCD1234"}]` | `[3,"uid-StopTx-1",{"idTagInfo":{"status":"Accepted"}}]`     |
+| 10   | 双向                          | DataTransfer                  | DataTransfer.conf                  | 厂商自定义扩展消息通道（VendorId、MessageId、自定义数据）    | `[2,"uid-DT-CP2CS-1","DataTransfer",{"vendorId":"Acme","messageId":"CustomPing","data":{"payload":"hello"}}]` | `[3,"uid-DT-CP2CS-1",{"status":"Accepted","data":{"payload":"pong"}}]` |
+| 11   | Central System → Charge Point | CancelReservation             | CancelReservation.conf             | 取消指定预约                                                 | `[2,"uid-CancelRes-1","CancelReservation",{"reservationId":42}]` | `[3,"uid-CancelRes-1",{"status":"Accepted"}]`                |
+| 12   | Central System → Charge Point | ChangeAvailability            | ChangeAvailability.conf            | 更改设备/插座可用性（Operative/Inoperative）                 | `[2,"uid-ChangeAvail-1","ChangeAvailability",{"connectorId":1,"type":"Inoperative"}]` | `[3,"uid-ChangeAvail-1",{"status":"Scheduled"}]`             |
+| 13   | Central System → Charge Point | ChangeConfiguration           | ChangeConfiguration.conf           | 设置单个配置键值                                             | `[2,"uid-ChangeCfg-1","ChangeConfiguration",{"key":"HeartbeatInterval","value":"300"}]` | `[3,"uid-ChangeCfg-1",{"status":"Accepted"}]`                |
+| 14   | Central System → Charge Point | ClearCache                    | ClearCache.conf                    | 清空本地授权缓存                                             | `[2,"uid-ClearCache-1","ClearCache",{}]`                     | `[3,"uid-ClearCache-1",{"status":"Accepted"}]`               |
+| 15   | Central System → Charge Point | ClearChargingProfile          | ClearChargingProfile.conf          | 按条件清除已下发的充电曲线                                   | `[2,"uid-ClearCP-1","ClearChargingProfile",{"connectorId":1,"chargingProfilePurpose":"TxProfile"}]` | `[3,"uid-ClearCP-1",{"status":"Accepted"}]`                  |
+| 16   | Central System → Charge Point | DataTransfer                  | DataTransfer.conf                  | 厂商自定义扩展消息通道（服务器发起）                         | `[2,"uid-DT-CS2CP-1","DataTransfer",{"vendorId":"Acme","messageId":"CustomQuery","data":{"ask":"status"}}]` | `[3,"uid-DT-CS2CP-1",{"status":"Accepted","data":{"status":"ok"}}]` |
+| 17   | Central System → Charge Point | GetCompositeSchedule          | GetCompositeSchedule.conf          | 请求合成调度功率曲线                                         | `[2,"uid-GetCompSch-1","GetCompositeSchedule",{"connectorId":1,"duration":3600,"chargingRateUnit":"W"}]` | `[3,"uid-GetCompSch-1",{"status":"Accepted","connectorId":1,"scheduleStart":"2025-10-23T10:30:00Z","chargingSchedule":{"duration":3600,"chargingRateUnit":"W","chargingSchedulePeriod":[{"startPeriod":0,"limit":7000},{"startPeriod":1800,"limit":3500}]}}]` |
+| 18   | Central System → Charge Point | GetConfiguration              | GetConfiguration.conf              | 查询一个或多个配置键及其值/可写性                            | `[2,"uid-GetCfg-1","GetConfiguration",{"key":["HeartbeatInterval","MeterValuesSampleInterval","NonExistingKey"]}]` | `[3,"uid-GetCfg-1",{"configurationKey":[{"key":"HeartbeatInterval","readonly":false,"value":"300"},{"key":"MeterValuesSampleInterval","readonly":true,"value":"60"}],"unknownKey":["NonExistingKey"]}]` |
+| 19   | Central System → Charge Point | GetDiagnostics                | GetDiagnostics.conf                | 请求采集并上传诊断日志，返回日志文件名                       | `[2,"uid-GetDiag-1","GetDiagnostics",{"location":"http://example.com/diag/","retries":4,"retryInterval":60,"startTime":"2025-10-23T00:00:00Z","stopTime":"2025-10-23T23:59:59Z"}]` | `[3,"uid-GetDiag-1",{"fileName":"diag_20251023.log"}]`       |
+| 20   | Central System → Charge Point | GetLocalListVersion           | GetLocalListVersion.conf           | 查询本地白名单版本号                                         | `[2,"uid-GetLLV-1","GetLocalListVersion",{}]`                | `[3,"uid-GetLLV-1",{"listVersion":12}]`                      |
+| 21   | Central System → Charge Point | RemoteStartTransaction        | RemoteStartTransaction.conf        | 远程启动充电                                                 | `[2,"uid-RemoteStart-1","RemoteStartTransaction",{"connectorId":1,"idTag":"ABCD1234","chargingProfile":{"chargingProfileId":10,"stackLevel":0,"chargingProfilePurpose":"TxProfile","chargingProfileKind":"Relative","chargingSchedule":{"chargingRateUnit":"W","chargingSchedulePeriod":[{"startPeriod":0,"limit":7000},{"startPeriod":1800,"limit":3500}]}}}]` | `[3,"uid-RemoteStart-1",{"status":"Accepted"}]`              |
+| 22   | Central System → Charge Point | RemoteStopTransaction         | RemoteStopTransaction.conf         | 远程停止指定交易                                             | `[2,"uid-RemoteStop-1","RemoteStopTransaction",{"transactionId":12345}]` | `[3,"uid-RemoteStop-1",{"status":"Accepted"}]`               |
+| 23   | Central System → Charge Point | ReserveNow                    | ReserveNow.conf                    | 预约指定插座给某个 idTag                                     | `[2,"uid-Reserve-1","ReserveNow",{"connectorId":1,"expiryDate":"2025-10-23T12:00:00Z","idTag":"ABCD1234","parentIdTag":"PARENT123","reservationId":42}]` | `[3,"uid-Reserve-1",{"status":"Accepted"}]`                  |
+| 24   | Central System → Charge Point | Reset                         | Reset.conf                         | 软/硬复位充电桩                                              | `[2,"uid-Reset-1","Reset",{"type":"Hard"}]`                  | `[3,"uid-Reset-1",{"status":"Accepted"}]`                    |
+| 25   | Central System → Charge Point | SendLocalList                 | SendLocalList.conf                 | 下发/替换/差分更新本地白名单                                 | `[2,"uid-SendLL-1","SendLocalList",{"listVersion":13,"updateType":"Differential","localAuthorizationList":[{"idTag":"ABCD1234","idTagInfo":{"status":"Accepted","expiryDate":"2025-12-31T23:59:59Z","parentIdTag":"PARENT123"}},{"idTag":"EFGH5678","idTagInfo":{"status":"Blocked"}}]}]` | `[3,"uid-SendLL-1",{"status":"Accepted"}]`                   |
+| 26   | Central System → Charge Point | SetChargingProfile            | SetChargingProfile.conf            | 下发充电曲线（功率/电流/能量限制及时间片）                   | `[2,"uid-SetCP-1","SetChargingProfile",{"connectorId":1,"csChargingProfiles":{"chargingProfileId":10,"stackLevel":0,"chargingProfilePurpose":"TxProfile","chargingProfileKind":"Relative","transactionId":12345,"chargingSchedule":{"chargingRateUnit":"W","duration":3600,"chargingSchedulePeriod":[{"startPeriod":0,"limit":7000},{"startPeriod":1800,"limit":3500}]}}}]` | `[3,"uid-SetCP-1",{"status":"Accepted"}]`                    |
+| 27   | Central System → Charge Point | TriggerMessage                | TriggerMessage.conf                | 触发桩主动发送某类消息（如 Heartbeat、StatusNotification 等） | `[2,"uid-Trigger-1","TriggerMessage",{"requestedMessage":"Heartbeat","connectorId":1}]` | `[3,"uid-Trigger-1",{"status":"Accepted"}]`                  |
+| 28   | Central System → Charge Point | UnlockConnector               | UnlockConnector.conf               | 远程解锁插座/电缆                                            | `[2,"uid-Unlock-1","UnlockConnector",{"connectorId":1}]`     | `[3,"uid-Unlock-1",{"status":"Unlocked"}]`                   |
+| 29   | Central System → Charge Point | UpdateFirmware                | UpdateFirmware.conf                | 下发固件更新任务（URL、计划时间等）                          | `[2,"uid-UpdateFW-1","UpdateFirmware",{"location":"http://example.com/fw.bin","retrieveDate":"2025-10-23T10:05:00Z","retries":3,"retryInterval":60}]` | `[3,"uid-UpdateFW-1",{}]`                                    |
+
+## Steve 服务端
+
+### 快速部署
+
+​	Steve 基于 Java、MySQL（XMAPP） 和 Maven。安装之。
+
+​	Docker 的操作了老半天，没成功😅。老老实实手动配置。
+
+建立数据库：
+
+```mysql
+CREATE DATABASE stevedb CHARACTER SET utf8 COLLATE utf8_unicode_ci;  
+CREATE USER 'steve'@'localhost' IDENTIFIED BY 'changeme';  
+GRANT ALL PRIVILEGES ON stevedb.* TO 'steve'@'localhost';
+```
+
+设置 MySQL 时区与 Java 一致：
+
+```sql
+USE stevedb;
+SET GLOBAL time_zone = '+00:00';
+SET time_zone = '+00:00';
+```
+
+上述语句执行后，确保下述查询语句返回结果为 `+00:00`：
+
+```sql
+SELECT @@global.time_zone, @@session.time_zone;
+```
+
+![webp](01.webp)
+
+从 [Release steve-3.8.0 · steve-community/steve](https://github.com/steve-community/steve/releases/tag/steve-3.8.0) 处获取 Release。在此工作目录下：
+
+如果要让 Steve 在局域网都能访问，找到工作目录中的 `main.properties`，修改参数：
+
+```
+server.host = 0.0.0.0
+```
+
+Maven 构建：
+
+```shell
+mvnw.cmd clean package
+```
+
+成功后会在 `target/` 目录生成 `steve.jar`。运行之（算了，见招拆招吧）：
+
+```shell
+java -jar target/steve.jar
+```
+
+访问 http://localhost:8080/steve/manager/：输入默认密码：
+
+- `Name`: `admin`
+- `Password`: `1234`
+
+![webp](02.webp)
+
+### 注册充电桩
+
+- 导航到 **Data Management** >> **Charge Points** >> **Add**
+
+- 输入 `ChargeBox ID`: `CP01`
+
+![webp](03.webp)
+
+快速测试 Websocket 连接：
+
+```shell
+npm install -g wscat
+wscat -c ws://localhost:8080/steve/websocket/CentralSystemService/CP01 --subprotocol ocpp1.6
+```
+
+### 注册 OCPP Tags
+
+- 导航到 **Data Management** >> **OCPP Tags**
+- 输入 `ID Tag`: `04A1B2C3D4E5F6`
+
+![webp](04.webp)
+
+## Python 客户端
+
+使用 uv 构建一个客户端项目：
+
+```shell
+uv init
+uv add websockets
+uv add ocpp
+```
+
+然后来一段客户端代码：
+
+```python
+import asyncio
+import logging
+import websockets
+from datetime import datetime, timezone
+from ocpp.v16 import ChargePoint as cp
+from ocpp.v16 import call, call_result
+from ocpp.v16.enums import Action, RemoteStartStopStatus
+from ocpp.routing import on
+
+logging.basicConfig(level=logging.INFO)
+
+
+class ChargePoint(cp):
+    def __init__(self, id, connection):
+        super().__init__(id, connection)
+        self.transaction_id = None
+        self._running = True  # 控制心跳循环
+
+    @on(Action.remote_start_transaction)
+    async def on_remote_start_transaction(self, id_tag, connector_id=None, **kwargs):
+        print(f"收到远程启动命令: id_tag={id_tag}")
+        await self.start_transaction(id_tag, connector_id or 1)
+        return call_result.RemoteStartTransaction(
+            status=RemoteStartStopStatus.accepted
+        )
+
+    async def send_boot_notification(self):
+        request = call.BootNotification(
+            charge_point_model="PythonClient",
+            charge_point_vendor="GPT-Lab"
+        )
+        response = await self.call(request)
+        print(f"BootNotification response: {response}")
+        return response
+
+    async def send_heartbeat_periodically(self, interval=60):
+        while self._running:
+            try:
+                request = call.Heartbeat()
+                response = await self.call(request)
+                print(f"Heartbeat at {response.current_time}")
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                print(f"Heartbeat error: {e}")
+            await asyncio.sleep(interval)
+
+    async def authorize(self, id_tag):
+        request = call.Authorize(id_tag=id_tag)
+        response = await self.call(request)
+        print(f"Authorize response: {response}")
+        return response
+
+    async def start_transaction(self, id_tag, connector_id=1):
+        request = call.StartTransaction(
+            connector_id=connector_id,
+            id_tag=id_tag,
+            meter_start=0,
+            timestamp=datetime.now(timezone.utc).isoformat()
+        )
+        response = await self.call(request)
+        self.transaction_id = response.transaction_id
+        print(f"StartTransaction response: transaction_id={self.transaction_id}")
+        return response
+
+    async def stop_transaction(self, meter_stop=100):
+        if not self.transaction_id:
+            print("没有活动的充电事务")
+            return
+
+        request = call.StopTransaction(
+            meter_stop=meter_stop,
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            transaction_id=self.transaction_id
+        )
+        response = await self.call(request)
+        print(f"StopTransaction response: {response}")
+        self.transaction_id = None
+        return response
+
+    async def user_input_loop(self):
+        print("\n可用命令:")
+        print("1. authorize <id_tag> - 授权")
+        print("2. start <id_tag> [connector_id] - 开始充电")
+        print("3. stop [meter_stop] - 停止充电")
+        print("4. quit - 退出")
+
+        while True:
+            try:
+                user_input = await asyncio.get_event_loop().run_in_executor(
+                    None, input, "\n请输入命令: "
+                )
+                parts = user_input.strip().split()
+                if not parts:
+                    continue
+
+                command = parts[0].lower()
+
+                if command == "authorize":
+                    if len(parts) < 2:
+                        print("用法: authorize <id_tag>")
+                        continue
+                    id_tag = parts[1]
+                    await self.authorize(id_tag)
+
+                elif command == "start":
+                    if len(parts) < 2:
+                        print("用法: start <id_tag> [connector_id]")
+                        continue
+                    id_tag = parts[1]
+                    connector_id = int(parts[2]) if len(parts) > 2 else 1
+                    await self.start_transaction(id_tag, connector_id)
+
+                elif command == "stop":
+                    meter_stop = int(parts[1]) if len(parts) > 1 else 100
+                    await self.stop_transaction(meter_stop)
+
+                elif command == "quit":
+                    print("退出程序...")
+                    self._running = False
+                    break
+
+                else:
+                    print(f"未知命令: {command}")
+
+            except Exception as e:
+                print(f"错误: {e}")
+
+
+async def main():
+    url = "ws://localhost:8080/steve/websocket/CentralSystemService/CP01"
+    async with websockets.connect(url, subprotocols=["ocpp1.6"]) as ws:
+        cp_client = ChargePoint("CP01", ws)
+
+        heartbeat_task = asyncio.create_task(cp_client.send_heartbeat_periodically(30))
+        start_task = asyncio.create_task(cp_client.start())
+        boot_task = asyncio.create_task(cp_client.send_boot_notification())
+        user_input_task = asyncio.create_task(cp_client.user_input_loop())
+
+        # 等待用户退出
+        await user_input_task
+
+        # 停止其他任务
+        for task in [heartbeat_task, start_task, boot_task]:
+            task.cancel()
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+```
+
+运行后，会先开始注册（BootNotification）：
+
+```json
+INFO:ocpp:CP01: send [2,"722f481d-b370-45b5-b79a-531a817fd664","BootNotification",{"chargePointModel":"PythonClient","chargePointVendor":"GPT-Lab"}]
+Heartbeat at 2025-10-22T02:09:38.152Z
+INFO:ocpp:CP01: receive message [3,"722f481d-b370-45b5-b79a-531a817fd664",{"status":"Accepted","currentTime":"2025-10-22T02:09:38.170Z","interval":14400}]
+BootNotification response: BootNotification(current_time='2025-10-22T02:09:38.170Z', interval=14400, status='Accepted')
+```
+
+![webp](05.webp)
+
+```
+可用命令:
+1. authorize <id_tag> - 授权
+2. start <id_tag> [connector_id] - 开始充电
+3. stop [meter_stop] - 停止充电
+4. quit - 退出
+```
+
+输入授权指令 `authorize 04A1B2C3D4E5F6`：
+
+```json
+INFO:ocpp:CP01: send [2,"80c82dba-f675-4c44-be26-6f13be9ed2fb","Authorize",{"idTag":"04A1B2C3D4E5F6"}]
+INFO:ocpp:CP01: receive message [3,"80c82dba-f675-4c44-be26-6f13be9ed2fb",{"idTagInfo":{"status":"Accepted","expiryDate":"2025-10-22T03:06:32.251Z"}}]
+Authorize response: Authorize(id_tag_info={'status': 'Accepted', 'expiry_date': '2025-10-22T03:06:32.251Z'})
+```
+
+输入开始充电指令 `start 04A1B2C3D4E5F6 1`：
+
+```json
+INFO:ocpp:CP01: send [2,"781eb407-6aa7-4932-9efb-be89904be691","StartTransaction",{"connectorId":1,"idTag":"04A1B2C3D4E5F6","meterStart":0,"timestamp":"2025-10-22T02:09:40.259971+00:00"}]
+INFO:ocpp:CP01: receive message [3,"781eb407-6aa7-4932-9efb-be89904be691",{"transactionId":3,"idTagInfo":{"status":"Accepted","expiryDate":"2025-10-22T03:09:40.310Z"}}]
+StartTransaction response: transaction_id=3
+```
+
+![webp](06.webp)
+
+输入停止充电指令 `stop`：
+
+```json
+INFO:ocpp:CP01: send [2,"e1af87c7-3e9b-4a99-9580-ceb401e4592f","StopTransaction",{"meterStop":100,"timestamp":"2025-10-22T02:26:33.954835+00:00","transactionId":5}]
+INFO:ocpp:CP01: receive message [3,"e1af87c7-3e9b-4a99-9580-ceb401e4592f",{}]
+StopTransaction response: StopTransaction(id_tag_info=None)
+```
+
+![webp](07.webp)

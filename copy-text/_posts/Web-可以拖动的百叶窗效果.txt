@@ -1,0 +1,254 @@
+---
+title: Web-可以拖动的百叶窗效果
+date: Sun Dec 17 2023 19:31:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - 前端
+categories: 学习
+description: 伟哥牛逼！
+---
+
+
+# 前言
+
+​	使用 JavaScript 实现的效果，不知道该怎么描述，给它命名为”可以拖动的百叶窗吧！“。
+
+# 代码
+
+## CSS
+
+​	`slider.css` 用于存放样式：
+
+```css
+.slider {
+    box-sizing: border-box;
+    position: relative;
+    width: 80%;
+    padding-bottom: 56.25%;
+    height: 0;
+    margin: 0 auto;
+    overflow: hidden;
+    margin-top: 1em;
+    margin-bottom: 1em;
+}
+.slider a {
+    display: block;
+    height: 100%;
+    object-fit: cover;
+    position: absolute;
+    width: 100%;
+    z-index: 1;
+}
+.mask {
+    position: absolute;
+    left: 49.5%; /* 初始化在中间 */
+    top: 0;
+    width: 1%; /* 滑块宽度 */
+    height: 100%;
+    background: rgba(0, 0, 0, 0.66); /* 半透明滑块 */
+    cursor: ew-resize;
+    z-index: 2;
+}
+
+.slider .left-image {
+    clip-path: inset(0 50% 0 0); /* 初始剪裁右半部分 */
+    max-width: 100%;
+    display: block;
+    margin: 0;
+}
+
+.slider .right-image {
+    clip-path: inset(0 0 0 50%); /* 初始剪裁左半部分 */
+    max-width: 100%;
+    display: block;
+    margin: 0;
+}
+```
+
+## JavaScript
+
+​	`slider.js` 用于实现滑块的逻辑，把它封装起来：
+
+```javascript
+class ImageSlider {
+    constructor(mask, leftImage, rightImage, widthPercent) {
+        this.mask = mask;
+        this.leftImage = leftImage;
+        this.rightImage = rightImage;
+        this.isDragging = false;
+
+        this.mask.style.left = (widthPercent - 0.5) + '%';
+        this.leftImage.style.clipPath = 'inset(0 ' + (100 - widthPercent) + '% 0 0)';
+        this.rightImage.style.clipPath = 'inset(0 0 0 ' + widthPercent + '%)';
+
+        // 添加触摸事件监听器
+        this.mask.addEventListener('touchstart', (e) => {
+            this.isDragging = true;
+            e.preventDefault(); // 阻止默认事件（如滚动）
+        });
+        document.addEventListener('touchend', () => {
+            this.isDragging = false;
+        });
+        document.addEventListener('touchmove', (e) => {
+            if (this.isDragging) {
+                this.touchDrag(e);
+            }
+        });
+
+        // 添加鼠标事件监听器
+        this.mask.addEventListener('mousedown', (e) => {
+            this.isDragging = true;
+            e.preventDefault(); // 阻止默认事件（如选择文本）
+        });
+        document.addEventListener('mouseup', () => {
+            this.isDragging = false;
+        });
+        document.addEventListener('mousemove', (e) => {
+            if (this.isDragging) {
+                this.drag(e);
+            }
+        });
+    }
+
+    // 触摸拖动事件处理函数
+    touchDrag(e) {
+        var rect = this.mask.parentNode.getBoundingClientRect();
+        var x = e.touches[0].clientX - rect.left; // 获取触摸点相对于容器的位置
+        var widthPercent = (x / rect.width) * 100;
+        widthPercent = Math.min(Math.max(widthPercent, 0.5), 99.5);
+        this.mask.style.left = (widthPercent - 0.5) + '%';
+        this.leftImage.style.clipPath = 'inset(0 ' + (100 - widthPercent) + '% 0 0)';
+        this.rightImage.style.clipPath = 'inset(0 0 0 ' + widthPercent + '%)';
+    }
+
+    // 鼠标拖动事件处理函数
+    drag(e) {
+        var rect = this.mask.parentNode.getBoundingClientRect();
+        var x = e.clientX - rect.left; // 获取鼠标相对于容器的位置
+        var widthPercent = (x / rect.width) * 100;
+        widthPercent = Math.min(Math.max(widthPercent, 0.5), 99.5);
+        this.mask.style.left = (widthPercent - 0.5) + '%';
+        this.leftImage.style.clipPath = 'inset(0 ' + (100 - widthPercent) + '% 0 0)';
+        this.rightImage.style.clipPath = 'inset(0 0 0 ' + widthPercent + '%)';
+    }
+}
+
+function createImageSlider(sliderId, widthPercent=50) {
+    const slider = document.getElementById(sliderId);
+    const mask = slider.querySelector('.mask');
+    const leftImage = slider.querySelector('.left-image');
+    const rightImage = slider.querySelector('.right-image');
+    return new ImageSlider(mask, leftImage, rightImage, widthPercent);
+}
+```
+
+## Html
+
+​	导入 css 和 js：
+
+```html
+<link rel="stylesheet" type="text/css" href="./slider.css">
+<script src="./slider.js"></script>
+```
+
+​	使用这个效果：
+
+```html
+
+<div class="slider" id="slider1">
+    <img class="left-image" src="left_1.jpg" alt="jpg" />
+    <img class="right-image" src="right_1.jpg" alt="jpg" />
+    <div class="mask"></div>
+</div>
+
+<script>createImageSlider('slider1', 67.5);</script>
+
+...
+
+<div class="slider" id="slidern">
+    <img class="left-image" src="left_n.jpg" alt="jpg" />
+    <img class="right-image" src="right_n.jpg" alt="jpg" />
+    <div class="mask"></div>
+</div>
+
+<script>createImageSlider('slidern', 48.5);</script>
+
+```
+
+## 演示
+
+​	拿出珍藏私货！
+
+---
+
+<div class="slider" id="slider1">
+    <img class="left-image" src="left_1.jpg" alt="jpg" />
+    <img class="right-image" src="right_1.jpg" alt="jpg" />
+    <div class="mask"></div>
+</div>
+
+<script>createImageSlider('slider1', 59.4);</script>
+
+<div class="slider" id="slider2">
+    <img class="left-image" src="left_2.jpg" alt="jpg" />
+    <img class="right-image" src="right_2.jpg" alt="jpg" />
+    <div class="mask"></div>
+</div>
+
+<script>createImageSlider('slider2', 44.7);</script>
+
+<div class="slider" id="slider3">
+    <img class="left-image" src="left_3.jpg" alt="jpg" />
+    <img class="right-image" src="right_3.jpg" alt="jpg" />
+    <div class="mask"></div>
+</div>
+
+<script>createImageSlider('slider3', 34.6);</script>
+
+<div class="slider" id="slider4">
+    <img class="left-image" src="left_4.jpg" alt="jpg" />
+    <img class="right-image" src="right_4.jpg" alt="jpg" />
+    <div class="mask"></div>
+</div>
+
+<script>createImageSlider('slider4', 50);</script>
+
+<div class="slider" id="slider5">
+    <img class="left-image" src="left_5.jpg" alt="jpg" />
+    <img class="right-image" src="right_5.jpg" alt="jpg" />
+    <div class="mask"></div>
+</div>
+
+<script>createImageSlider('slider5', 54.8);</script>
+
+<div class="slider" id="slider6">
+    <img class="left-image" src="left_6.jpg" alt="jpg" />
+    <img class="right-image" src="right_6.jpg" alt="jpg" />
+    <div class="mask"></div>
+</div>
+
+<script>createImageSlider('slider6', 49.8);</script>
+
+<div class="slider" id="slider7">
+    <img class="left-image" src="left_7.jpg" alt="jpg" />
+    <img class="right-image" src="right_7.jpg" alt="jpg" />
+    <div class="mask"></div>
+</div>
+
+<script>createImageSlider('slider7', 56.7);</script>
+
+<div class="slider" id="slider8">
+    <img class="left-image" src="left_8.jpg" alt="jpg" />
+    <img class="right-image" src="right_8.jpg" alt="jpg" />
+    <div class="mask"></div>
+</div>
+
+<script>createImageSlider('slider8', 66.8);</script>
+
+<div class="slider" id="slider9">
+    <img class="left-image" src="left_9.jpg" alt="jpg" />
+    <img class="right-image" src="right_9.jpg" alt="jpg" />
+    <div class="mask"></div>
+</div>
+
+<script>createImageSlider('slider9', 52.3);</script>
+

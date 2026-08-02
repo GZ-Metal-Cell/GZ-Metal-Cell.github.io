@@ -1,0 +1,158 @@
+---
+title: Js-使用 AI 进行可视化图片排版
+date: Tue May 27 2025 10:08:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - JavaScript
+  - TypeScript
+categories: 学习
+description: 用代码写代码！
+---
+
+
+# 代码
+
+​	如 [CSS-position: absolute | Zi-Zi's Journey](/posts/CSS-position-absolute/) 这篇文章所述，一切复杂的位置布局都可以使用 `position: absolute;` 来解决！只要提供的数值准确。
+
+​	然而，要获得准确的数值，靠写代码是费劲的，要是能有一个可视化的工具就好了！又然而，市面上好像没有一个让我满意的工具，于是我们可以通过在 Adobe illustrator 中执行我们的神奇脚本来实现这个功能！
+
+```jsx
+var doc = app.activeDocument
+var layer = doc.layers.getByName('图层 1')
+
+var outputHTML = ''
+var artboard = doc.artboards[doc.artboards.getActiveArtboardIndex()]
+var rect = artboard.artboardRect
+var width = rect[2] - rect[0]
+var height = rect[1] - rect[3]
+var maxY = 0
+
+for (var i = layer.pageItems.length - 1; i >= 0; i--) {
+  var item = layer.pageItems[i]
+  var pos = item.position
+  if (maxY < -pos[1] + item.height) {
+    maxY = -pos[1] + item.height
+  }
+}
+
+outputHTML +=
+  '<div style="margin: 0 auto; width: 100%; aspect-ratio:' +
+  (width / maxY).toFixed(4) +
+  '; position: relative;">\n'
+
+function getOriginalSizeIgnoreScale(rotatedWidth, rotatedHeight, angleDegrees) {
+  var angle = (angleDegrees * Math.PI) / 180
+  var c = Math.abs(Math.cos(angle))
+  var s = Math.abs(Math.sin(angle))
+
+  var det = c * c - s * s
+  if (Math.abs(det) < 1e-10) {
+    throw new Error('旋转角度导致矩阵不可逆！')
+  }
+
+  var W = (c * rotatedWidth - s * rotatedHeight) / det
+  var H = (-s * rotatedWidth + c * rotatedHeight) / det
+
+  return {
+    width: Math.abs(W),
+    height: Math.abs(H),
+  }
+}
+
+for (var i = layer.pageItems.length - 1; i >= 0; i--) {
+  var item = layer.pageItems[i]
+  var pos = item.position
+  var angle =
+    Math.atan2(item.matrix.mValueB, item.matrix.mValueA) * (180 / Math.PI)
+
+  var originalSize = getOriginalSizeIgnoreScale(item.width, item.height, angle)
+  var originalX = pos[0] + item.width / 2 - originalSize.width / 2
+  var originalY = -pos[1] + item.height / 2 - originalSize.height / 2
+
+  outputHTML +=
+    '    <div style="position: absolute; left: ' +
+    ((originalX / width) * 100).toFixed(2) +
+    '%; '
+  outputHTML += ' top: ' + ((originalY / maxY) * 100).toFixed(2) + '%;'
+  outputHTML +=
+    ' width: ' + ((originalSize.width / width) * 100).toFixed(2) + '%;'
+  if (Math.abs(angle) > 0.01) {
+    outputHTML += ' transform: rotateZ(' + angle.toFixed(2) + 'deg);'
+  }
+  // outputHTML += ' box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.5);'
+  outputHTML += '">\n'
+  outputHTML +=
+    '        <img no-figcaption style="margin: 0; width: 100%; max-height: none;" alt="' +
+    (item.name || item.file.name.split('.')[1]) +
+    '" src="' +
+    item.file.name +
+    '"/>\n'
+  outputHTML += '    </div>\n'
+}
+
+outputHTML += '</div>\n'
+
+// 保存到桌面
+var file = new File(Folder.desktop + '/outputHTML.txt')
+file.encoding = 'UTF-8'
+file.open('w')
+file.write(outputHTML)
+file.close()
+
+alert('HTML 信息已写入文件：\n' + file.fsName)
+```
+
+# 示例
+
+​	在 Adobe illustrator 中创建一个画布（为了便于计算，宽度设成 `1000 px`）：
+
+![webp](01.webp)
+
+​	随意排版图片（不要对图片进行非等比拉伸，没有写这个逻辑）：
+
+![webp](02.webp)
+
+​	加载神奇脚本！
+
+![webp](03.webp)
+
+​	得到下面的 HTML 代码：
+
+```html
+<div style="margin: 0 auto; width: 100%; aspect-ratio:3.1695; position: relative;">
+    <div style="position: absolute; left: 2.77%; top: 9.55%; width: 18.00%; transform: rotateZ(-11.48deg);">
+        <img no-figcaption style="margin: 0; width: 100%; max-height: none;" alt="webp" src="Spade10.webp"/>
+    </div>
+    <div style="position: absolute; left: 22.48%; top: 3.08%; width: 18.00%; transform: rotateZ(6.75deg);">
+        <img no-figcaption style="margin: 0; width: 100%; max-height: none;" alt="webp" src="SpadeJ.webp"/>
+    </div>
+    <div style="position: absolute; left: 40.55%; top: 9.55%; width: 18.00%; transform: rotateZ(-16.64deg);">
+        <img no-figcaption style="margin: 0; width: 100%; max-height: none;" alt="webp" src="SpadeQ.webp"/>
+    </div>
+    <div style="position: absolute; left: 61.59%; top: 9.55%; width: 18.00%; transform: rotateZ(13.18deg);">
+        <img no-figcaption style="margin: 0; width: 100%; max-height: none;" alt="webp" src="SpadeK.webp"/>
+    </div>
+    <div style="position: absolute; left: 77.39%; top: 12.63%; width: 18.00%; transform: rotateZ(-22.83deg);">
+        <img no-figcaption style="margin: 0; width: 100%; max-height: none;" alt="webp" src="SpadeA.webp"/>
+    </div>
+</div>
+```
+
+​	渲染出来，皇家同花顺！
+
+<div style="margin: 0 auto; width: 100%; aspect-ratio:3.1695; position: relative;">
+    <div style="position: absolute; left: 2.77%; top: 9.55%; width: 18.00%; transform: rotateZ(-11.48deg);">
+        <img no-figcaption style="margin: 0; width: 100%; max-height: none;" alt="webp" src="Spade10.webp"/>
+    </div>
+    <div style="position: absolute; left: 22.48%; top: 3.08%; width: 18.00%; transform: rotateZ(6.75deg);">
+        <img no-figcaption style="margin: 0; width: 100%; max-height: none;" alt="webp" src="SpadeJ.webp"/>
+    </div>
+    <div style="position: absolute; left: 40.55%; top: 9.55%; width: 18.00%; transform: rotateZ(-16.64deg);">
+        <img no-figcaption style="margin: 0; width: 100%; max-height: none;" alt="webp" src="SpadeQ.webp"/>
+    </div>
+    <div style="position: absolute; left: 61.59%; top: 9.55%; width: 18.00%; transform: rotateZ(13.18deg);">
+        <img no-figcaption style="margin: 0; width: 100%; max-height: none;" alt="webp" src="SpadeK.webp"/>
+    </div>
+    <div style="position: absolute; left: 77.39%; top: 12.63%; width: 18.00%; transform: rotateZ(-22.83deg);">
+        <img no-figcaption style="margin: 0; width: 100%; max-height: none;" alt="webp" src="SpadeA.webp"/>
+    </div>
+</div>

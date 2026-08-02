@@ -1,0 +1,2223 @@
+---
+title: FullStack-THE COMPLETE DEVELOPER Master the Full Stack with TypeScript, React, Next.js, MongoDB, and Docker (Part II)
+date: Tue Jul 07 2026 08:08:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - TypeScript
+  - React
+  - Next.js
+  - MongoDB
+  - Docker
+  - THE COMPLETE DEVELOPER Master
+categories: 学习
+description: Learn to be a full stack developer!
+---
+
+
+# 资源
+
+- [The Complete Developer: Master the Full Stack With TypeScript, React, Next.js, MongoDB, and Docker | Martin Krause | download on Z-Library](https://zh.z-library.sk/book/27732072/15705b/the-complete-developer-master-the-full-stack-with-typescript-react-nextjs-mongodb-and-docker.html)
+- [Downloads](https://www.usemodernfullstack.dev/downloads)
+
+> [!Note]
+>
+> You can download the complete source code for the Food Finder application at http://www.usemodernfullstack.dev/downloads/food-finder and a ZIP file with only the required assets from http://www.usemodernfullstack.dev/downloads/assets.
+
+# 正文
+
+## 11 SETTING UP THE DOCKER ENVIRONMENT
+
+​	Part II 将创建一个**美食搜索应用（The Food Finder Application）**。
+
+技术栈：
+
+- 后端：
+    - Next.js
+    - Mongoose
+    - MongoDB
+- API 层：
+    - GraphQL
+- 前端：
+    - React
+    - Next.js
+- 授权流程：
+    - next-auth 的 OAuth 授权流程
+- 自动化测试
+    - Jest
+
+**使用 Docker 构建本地环境**
+
+​	在项目中构建如下的文件形式：
+
+```
+The Food Finder
+│
+├── code
+│
+├── .docker
+│   └── foodfinder-backend
+│       └── seed-mongodb.js
+│
+└── docker-compose.yml
+```
+
+​	其中，`seed-mongodb.js` 从  http://www.usemodernfullstack.dev/downloads/food-finder 处获得。这个文件用于在 MongoDB 中填充一些数据。
+
+​	之后修改 `docker-compose.yml`，用于定义一个 MongoDB 容器，在第一次启动时自动创建 foodfinder 数据库并导入测试数据：
+
+```yaml
+version: "3.0"
+
+services:
+    backend:
+        container_name: foodfinder-backend
+        image: mongo:latest
+        restart: always
+        environment:
+            DB_NAME: foodfinder
+            MONGO_INITDB_DATABASE: foodfinder
+        ports:
+            - 27017:27017
+        volumes:
+            - "./.docker/foodfinder-backend/seed-mongodb.js:/docker-entrypoint-initdb.d/seed-mongodb.js"
+            - mongodb_data_container:/data/db
+
+volumes:
+    mongodb_data_container:
+```
+
+​	然后执行命令 `docker compose up` 创建并启动整个应用所需要的 Docker 服务。
+
+​	这让 MongoDB 开始监听 27017 端口。
+
+![webp](11.1.webp)
+
+​	接下来构造前端环境，修改 `docker-compose.yml`：
+
+```yaml
+version: "3.0"
+
+services:
+    application:
+        container_name: foodfinder-application
+        image: node:lts-alpine
+        ports:
+            - "3000:3000"
+        volumes:
+            - ./code:/home/node/code
+        working_dir: /home/node/code/
+        depends_on:
+            - backend
+        environment:
+            - HOST=0.0.0.0
+            - CHOKIDAR_USEPOLLING=true
+            - CHOKIDAR_INTERVAL=100
+        tty: true
+    backend:
+        container_name: foodfinder-backend
+        image: mongo:latest
+        restart: always
+        environment:
+            DB_NAME: foodfinder
+            MONGO_INITDB_DATABASE: foodfinder
+        ports:
+            - 27017:27017
+        volumes:
+            - "./.docker/foodfinder-backend/seed-mongodb.js:/docker-entrypoint-initdb.d/seed-mongodb.js"
+            - mongodb_data_container:/data/db
+
+volumes:
+    mongodb_data_container:
+```
+
+​	重新启动 Docker 服务，另起一个命令行：
+
+```shell
+docker exec -it foodfinder-application sh
+```
+
+​	进入容器 `foodfinder-application`，创建 next-app，命名为 `foodfinder-application`：
+
+```shell
+npx create-next-app
+```
+
+![webp](11.2.webp)
+
+​	等待完事后，目录应该是：
+
+```
+The Food Finder
+│
+└── code
+    └── foodfinder-application
+        ├── package.json
+        ├── app
+        ├── public
+        └── ...
+```
+
+​	可以在容器中通过下面命令启动 app：
+
+```shell
+cd foodfinder-application
+npm run dev
+```
+
+![webp](11.3.webp)
+
+​	接下来修改 `docker-compose.yml`，让使用 `docker compose up` 命令后可以直接启动 app，不需要手动输入上面的命令：
+
+```yaml
+version: "3.0"
+
+services:
+    application:
+        container_name: foodfinder-application
+        image: node:lts-alpine
+        ports:
+            - "3000:3000"
+        volumes:
+            - ./code:/home/node/code
+        working_dir: /home/node/code/foodfinder-application
+        depends_on:
+            - backend
+        environment:
+            - HOST=0.0.0.0
+            - CHOKIDAR_USEPOLLING=true
+            - CHOKIDAR_INTERVAL=100
+        tty: true
+        command: "npm run dev"
+    backend:
+        container_name: foodfinder-backend
+        image: mongo:latest
+        restart: always
+        environment:
+            DB_NAME: foodfinder
+            MONGO_INITDB_DATABASE: foodfinder
+        ports:
+            - 27017:27017
+        volumes:
+            - "./.docker/foodfinder-backend/seed-mongodb.js:/docker-entrypoint-initdb.d/seed-mongodb.js"
+            - mongodb_data_container:/data/db
+
+volumes:
+    mongodb_data_container:
+
+```
+
+​	重启 Docker 服务：
+
+![webp](11.4.webp)
+
+## 12 BUILDING THE MIDDLEWARE
+
+​	这章将要构建位于 Next.js 中，负责连接前端和 MongoDB 的后端代码。
+
+```
+浏览器
+    │
+    ▼
+Next.js
+├── Frontend（React 页面）
+└── Middleware（后端逻辑）
+        │
+        ▼
+Mongoose
+        │
+        ▼
+MongoDB（backend 容器）
+```
+
+​	这一章的目标是：
+
+1. 安装 Mongoose
+2. 连接 MongoDB
+3. 定义 Mongoose Model（数据模型）
+
+​	因为先前已在 `docker-compose.yml` 中映射好了 Windows 文件夹与 Docker 容器文件夹的位置，因此只要在 Windows 中修改文件（文件夹 `foodfinder-application` 下）也能同步修改 Docker 中的文件。
+
+​	修改 `tsconfig.json`，添加 `baseUrl` 对相对路径的定义：
+
+```json {16}
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "incremental": true,
+    "baseUrl": ".",
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts",
+    "**/*.mts"
+  ],
+  "exclude": ["node_modules"]
+}
+
+```
+
+​	接下来安装中间件 `Mongoose`：
+
+```shell
+docker exec -it foodfinder-application npm install mongoose
+```
+
+​	创建 `.env.local`：
+
+```
+MONGO_URI=mongodb://backend:27017/foodfinder
+```
+
+​	创建 `code/foodfinder-application/middleware/db-connect.ts`，将所有与数据库、中间层相关的代码放在这里。关键是定义了函数 `dbConnect()`：
+
+```typescript {16}
+import mongoose, {ConnectOptions} from "mongoose";
+
+const MONGO_URI = process.env.MONGO_URI || " ";
+
+if (!MONGO_URI.length) {
+    throw new Error(
+        "Please define the MONGO_URI environment variable (.env.local)"
+    );
+}
+let cached = global.mongoose;
+
+if (!cached) {
+    cached = global.mongoose = {conn: null, promise: null};
+}
+
+async function dbConnect(): Promise<any> {
+
+    if (cached.conn) {
+        return cached.conn;
+    }
+
+    if (!cached.promise) {
+
+        const opts: ConnectOptions = {
+            bufferCommands: false,
+            maxIdleTimeMS: 10000,
+            serverSelectionTimeoutMS: 10000,
+            socketTimeoutMS: 20000,
+        };
+
+        cached.promise = mongoose
+            .connect(MONGO_URI, opts)
+            .then((mongoose) => mongoose)
+            .catch((err) => {
+                throw new Error(String(err));
+            });
+    }
+
+    try {
+        cached.conn = await cached.promise;
+    } catch (err) {
+        throw new Error(String(err));
+    }
+
+    return cached.conn;
+}
+
+export default dbConnect;
+```
+
+​	创建 `code/custom.d.ts`，用于声明 `global.mongoose` 的类型，消除 TypeScript 的报错：
+
+```typescript
+import mongoose from "mongoose";
+
+declare global {
+    var mongoose: mongoose;
+}
+
+export {};
+```
+
+​	创建 `mongoose/locations` 文件夹。`mongoose` 文件夹用于存放所有与 Mongoose 相关的通用文件；`locations` 文件夹将包含所有特定于位置模型的文件。
+
+​	创建 `mongoose/locations/schema.ts` 用于定义**模式 (Schema)** 以描述数据库文档的结构：
+
+```typescript
+import {Schema, InferSchemaType} from "mongoose";
+
+export const LocationSchema: Schema = new Schema<LocationType>({
+    address: {
+        type: "String",
+        required: true,
+    },
+    street: {
+        type: "String",
+        required: true,
+    },
+    zipcode: {
+        type: "String",
+        required: true,
+    },
+    borough: {
+        type: "String",
+        required: true,
+    },
+    cuisine: {
+        type: "String",
+        required: true,
+    },
+    grade: {
+        type: "String",
+        required: true,
+    },
+    name: {
+        type: "String",
+        required: true,
+    },
+    on_wishlist: {
+        type: ["String"],
+        required: true,
+    },
+    location_id: {
+        type: "String",
+        required: true,
+    },
+});
+
+export declare type LocationType = InferSchemaType<typeof LocationSchema>;
+```
+
+​	创建 `mongoose/location/model.ts`，用于创建 Mongoose 模型并将其连接到数据库：
+
+```typescript
+import mongoose, {model} from "mongoose";
+import {LocationSchema, LocationType} from "mongoose/locations/schema";
+
+export default mongoose.models.locations ||
+    model<LocationType>("locations", LocationSchema);
+```
+
+​	创建 `pages/api/test-middleware.ts` 用于验证数据库是否能连接：
+
+```typescript
+import type {NextApiRequest, NextApiResponse} from "next";
+
+import dbConnect from "middleware/db-connect";
+import Locations from "mongoose/locations/model";
+
+export default async function handler(
+    req: NextApiRequest, res: NextApiResponse<any>
+) {
+    await dbConnect();
+    const locations = await Locations.find({});
+    res.status(200).json(locations);
+}
+```
+
+​	访问 http://localhost:3000/api/test-middleware：
+
+![webp](12.1.webp)
+
+​	创建 `mongoose/location/custom.d.ts`，在 `GraphQL` 和 `Mongoose` 之间套一层 `Service`。提前定义了两个与查询条件对应的 TypeScript 类型：
+
+- `FilterLocationType`：表示按 `location_id` 查询。
+- `FilterWishlistType`：表示按 `on_wishlist`（使用 MongoDB 的 `$in` 操作符）查询。
+
+ ```typescript
+ export declare type FilterLocationType = {
+     location_id: string | string[];
+ };
+ 
+ export declare type FilterWishlistType = {
+     on_wishlist: {
+         $in: string[];
+     };
+ };
+ ```
+
+​	创建 `mongoose/location/services.ts`，用于封装所有 Location 相关的数据库操作：
+
+```typescript
+import Locations from "mongoose/locations/model";
+import {
+    FilterWishlistType,
+    FilterLocationType,
+} from "mongoose/locations/custom";
+import { LocationType } from "mongoose/locations/schema";
+import { QueryOptions } from "mongoose";
+
+async function findLocations(
+    filter: FilterLocationType | FilterWishlistType | {}
+): Promise<LocationType[] | []> {
+    try {
+        let result: Array<LocationType | undefined> = await Locations.find(
+            filter
+        );
+        return result as LocationType[];
+    } catch (err) {
+        console.log(err);
+    }
+    return [];
+}
+
+export async function findAllLocations(): Promise<LocationType[] | []> {
+    let filter = {};
+    return await findLocations(filter);
+}
+
+export async function findLocationsById(
+    location_ids: string[]
+): Promise<LocationType[] | []> {
+    let filter = { location_id: { $in: location_ids } };
+    return await findLocations(filter);
+}
+
+export async function onUserWishlist(
+    user_id: string
+): Promise<LocationType[] | []> {
+    let filter: FilterWishlistType = {
+        on_wishlist: {
+            $in: [user_id],
+        },
+    };
+    return await findLocations(filter);
+}
+
+export async function updateWishlist(
+    location_id: string,
+    user_id: string,
+    action: string
+): Promise<LocationType | null | {}> {
+    let filter = { location_id: location_id };
+    let options: QueryOptions = { upsert: true, returnDocument: "after" };
+    let update = {};
+
+    switch (action) {
+        case "add":
+            update = { $push: { on_wishlist: user_id } };
+            break;
+        case "remove":
+            update = { $pull: { on_wishlist: user_id } };
+            break;
+    }
+
+    try {
+        let result: LocationType | null = await Locations.findOneAndUpdate(
+            filter,
+            update,
+            options
+        );
+        return result;
+    } catch (err) {
+        console.log(err);
+    }
+    return {};
+}
+```
+
+​	修改 `pages/api/test-middleware.ts`，改用 Services 查询数据库：
+
+```typescript
+import type {NextApiRequest, NextApiResponse} from "next";
+import dbConnect from "middleware/db-connect";
+
+import {findAllLocations} from "mongoose/locations/services";
+
+export default async function handler(
+    req: NextApiRequest,
+    res: NextApiResponse<any>
+) {
+    await dbConnect();
+    const locations = await findAllLocations();
+    res.status(200).json(locations);
+}
+```
+
+​	重新访问 http://localhost:3000/api/test-middleware 看看 Service 是否运行成功。
+
+## 13 BUILDING THE GRAPHQL API
+
+​	这章**在已有的 Mongoose Service 之上，增加 GraphQL API 层**。
+
+```
+Next.js Frontend
+        |
+        ▼
+   GraphQL API
+        |
+        ▼
+   Location Service
+        |
+        ▼
+   Mongoose Model
+        |
+        ▼
+   MongoDB
+```
+
+​	进入 Docker 容器安装 graphql 的相关依赖项：
+
+```shell
+docker exec -it foodfinder-application sh
+npm install @apollo/server graphql graphql-tag @as-integrations/next
+```
+
+![webp](13.1.webp)
+
+​	接下来创建 GraphQL Schema，拆分成三个文件：
+
+```
+foodfinder-application
+│
+└── graphql
+    └── locations
+        ├── custom.gql.ts
+        ├── queries.gql.ts
+        └── mutations.gql.ts
+```
+
+- `custom.gql.ts` 用于自定义类型：
+
+    ```typescript
+    export default `
+        directive @cacheControl(maxAge: Int) on FIELD_DEFINITION | OBJECT
+        type Location @cacheControl(maxAge: 86400) {
+            address: String
+            street: String
+            zipcode: String
+            borough: String
+            cuisine: String
+            grade: String
+            name: String
+            on_wishlist: [String] @cacheControl(maxAge: 60)
+            location_id: String
+        }
+    `;
+    ```
+
+- `queries.gql.ts` 用于查询接口：
+
+    ```typescript
+    export default `
+        allLocations: [Location]!
+        locationsById(location_ids: [String]!): [Location]!
+        onUserWishlist(user_id: String!): [Location]!
+    `;
+    ```
+
+- `mutations.gql.ts` 用于修改接口：
+
+    ```typescript
+    export default `
+        addWishlist(location_id: String!, user_id: String!): Location!
+        removeWishlist(location_id: String!, user_id: String!): Location!
+    `;
+    ```
+
+​	最后创建 `graphql/schema.ts` 将类型定义合并到最终模式中。
+
+```typescript
+import gql from "graphql-tag";
+
+import locationTypeDefsCustom from "graphql/locations/custom.gql";
+import locationTypeDefsQueries from "graphql/locations/queries.gql";
+import locationTypeDefsMutations from "graphql/locations/mutations.gql";
+
+export const typeDefs = gql`
+
+    ${locationTypeDefsCustom}
+
+    type Query {
+        ${locationTypeDefsQueries}
+    }
+
+    type Mutation {
+        ${locationTypeDefsMutations}
+    }
+`;
+```
+
+​	接下来创建 `Resolver` 实现 GraphQL API 的函数。
+
+- `graphql/locations/queries.ts`：
+
+    ```typescript
+    import {
+        findAllLocations,
+        findLocationsById,
+        onUserWishlist,
+    } from "mongoose/locations/services";
+    
+    export const locationQueries = {
+        allLocations: async (_: any) => {
+            return await findAllLocations();
+        },
+        locationsById: async (_: any, param: {location_ids: string[]}) => {
+            return await findLocationsById(param.location_ids);
+        },
+        onUserWishlist: async (_: any, param: {user_id: string}) => {
+            return await onUserWishlist(param.user_id);
+        },
+    };
+    ```
+
+- `graphql/locations/mutations.ts`：
+
+    ```typescript
+    import {updateWishlist} from "mongoose/locations/services";
+    
+    interface UpdateWishlistInterface {
+        user_id: string;
+        location_id: string;
+    }
+    
+    export const locationMutations = {
+        removeWishlist: async (
+            _: any,
+            param: UpdateWishlistInterface,
+            context: {}
+        ) => {
+            return await updateWishlist(param.location_id, param.user_id,
+                "remove"
+            );
+        },
+        addWishlist: async (_: any, param: UpdateWishlistInterface, context: {}) => {
+            return await updateWishlist(param.location_id, param.user_id, "add");
+        },
+    };
+    ```
+
+- `graphql/resolvers.ts`：
+
+    ```typescript
+    import {locationQueries} from "graphql/locations/queries";
+    import {locationMutations} from "graphql/locations/mutations";
+    
+    export const resolvers = {
+        Query: {
+            ...locationQueries,
+        },
+        Mutation: {
+            ...locationMutations,
+        },
+    };
+    ```
+
+​	现在，有了 schema 和解析器对象，我们就可以创建 API 端点并实例化 Apollo 服务器了。创建 `pages/api/graphql.ts`：
+
+```typescript
+import {ApolloServer, BaseContext} from "@apollo/server";
+import {startServerAndCreateNextHandler} from "@as-integrations/next";
+
+import {resolvers} from "graphql/resolvers";
+import {typeDefs} from "graphql/schema";
+import dbConnect from "middleware/db-connect";
+
+import {NextApiHandler, NextApiRequest, NextApiResponse} from "next";
+
+const server = new ApolloServer<BaseContext>({
+    resolvers,
+    typeDefs,
+});
+
+const handler = startServerAndCreateNextHandler(server, {
+    context: async () => {
+        const token = {};
+        return {token};
+    },
+});
+
+const allowCors =
+    (fn: NextApiHandler) =>
+    async (req: NextApiRequest, res: NextApiResponse) => {
+        res.setHeader("Allow", "POST");
+        res.setHeader("Access-Control-Allow-Origin", "*");
+        res.setHeader("Access-Control-Allow-Methods", "POST");
+        res.setHeader("Access-Control-Allow-Headers", "*");
+        res.setHeader("Access-Control-Allow-Credentials", "true");
+
+        if (req.method === "OPTIONS") {
+            res.status(200).end();
+        }
+return await fn(req, res);
+    };
+
+const connectDB =
+    (fn: NextApiHandler) =>
+    async (req: NextApiRequest, res: NextApiResponse) => {
+        await dbConnect();
+        return await fn(req, res);
+    };
+
+export default connectDB(allowCors(handler));
+```
+
+​	清空浏览器缓存或进入隐私模式，打开 http://localhost:3000/api/graphql 执行查询：
+
+```
+query {
+  locationsById(
+    location_ids: ["56018"]
+  ) {
+    name
+    address
+    location_id
+  }
+}
+```
+
+![webp](13.2.webp)
+
+## 14 BUILDING THE FRONTEND
+
+​	本章设计前端页面。前端由三个页面构成：
+
+- 首页 `/`：用于显示所有餐厅（Location）；
+- Location Detail 页面 `/location/:location_id`：用于显示餐厅详情；
+- Wishlist 页面 `/wishlist/:user_id`：用于显示某个用户收藏过的餐厅。
+
+| 页面     | 数据变化 | 渲染方式                     |
+| -------- | -------- | ---------------------------- |
+| 首页     | 很少变化 | SSG (Static Site Generation) |
+| Location | 经常变化 | SSR (Server Side Rendering)  |
+| Wishlist | 用户相关 | SSR                          |
+
+​	页面由若干组件构成。创建 `components/locations-list-item/index.module.css`：
+
+```css
+.root {
+    background-color: #fff;
+    border-radius: 5px;
+    color: #1d1f21;
+    cursor: pointer;
+    list-style: none;
+    margin: 0.5rem 0;
+    padding: 0.5rem;
+    transition: background-color 0.25s ease-in, color 0.25s ease-in;
+    will-change: background-color, color;
+}
+
+.root:hover {
+    background-color: rgba(0, 118, 255, 0.9);
+    color: #fff;
+}
+
+.root h2 {
+    margin: 0;
+    padding: 0;
+}
+
+.root small {
+    font-weight: 300;
+    padding: 0 1rem;
+}
+```
+
+​	创建 `components/locations-list-item/index.tsx`：
+
+```tsx
+import Link from "next/link";
+import styles from "./index.module.css";
+import { LocationType } from "mongoose/locations/schema";
+
+interface PropsInterface {
+    location: LocationType;
+}
+
+const LocationsListItem = (props: PropsInterface): JSX.Element => {
+    const location = props.location;
+    return (
+        <>
+            {location && (
+                <li className={styles.root}>
+                    <Link href={`/location/${location.location_id}`}>
+                        <h2>
+                            {location.name}
+                            <small className={styles.details}>
+                                {location.cuisine} in {location.borough}
+                            </small>
+                        </h2>
+                    </Link>
+                </li>
+            )}
+        </>
+    );
+};
+
+export default LocationsListItem;
+```
+
+​	创建 `components/locations-list/index.module.css`：
+
+```css
+.root {
+    margin: 0;
+    padding: 0;
+}
+```
+
+​	创建 `components/locations-list/index.tsx`：
+
+```tsx
+import LocationsListItem from "components/locations-list-item";
+import styles from "./index.module.css";
+import {LocationType} from "mongoose/locations/schema";
+
+interface PropsInterface {
+    locations: LocationType[];
+}
+
+const LocationsList = (props: PropsInterface): JSX.Element => {
+    return (
+        <ul className={styles.root}>
+            {props.locations.map((location) => {
+                return (
+                    <LocationsListItem
+                        location={location}
+                        key={location.location_id}
+                    />
+                );
+            })}
+        </ul>
+    );
+};
+
+export default LocationsList;
+```
+
+​	创建 `styles/globals.css`：
+
+```css
+html,
+body {
+    font-family: -apple-system, Segoe UI, Roboto, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+h1 {
+    font-size: 3rem;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+```
+
+​	创建 `pages/index.tsx`：
+
+```tsx
+import Head from "next/head";
+import type {GetStaticProps, InferGetStaticPropsType, NextPage} from "next";
+
+import LocationsList from "components/locations-list";
+import dbConnect from "middleware/db-connect";
+import {findAllLocations} from "mongoose/locations/services";
+import {LocationType} from "mongoose/locations/schema";
+
+const Home: NextPage = (
+    props: InferGetStaticPropsType<typeof getStaticProps>
+) => {
+
+  const locations: LocationType[] = JSON.parse(props.data?.locations);
+    let title = `The Food Finder - Home`;
+
+    return (
+        <div>
+            <Head>
+                <title>{title}</title>
+                <meta name="description" content="The Food Finder - Home" />
+            </Head>
+
+            <h1>Welcome to the Food Finder!</h1>
+            <LocationsList locations={locations} />
+        </div>
+    );
+};
+
+export const getStaticProps: GetStaticProps = async () => {
+    let locations: LocationType[] | [];
+    try {
+        await dbConnect();
+      locations = await findAllLocations();
+    } catch (err: any) {
+        return {notFound: true};
+    }
+  return {
+        props: {
+            data: {locations: JSON.stringify(locations)},
+        },
+    };
+};
+
+export default Home;
+```
+
+​	移除 `app` 文件夹，访问 http://localhost:3000/ 查看网页效果，看到前端已经成功获取了数据库的数据：
+
+![webp](14.1.webp)
+
+​	接下来美化首页。创建 `components/header/logo/index.module.css`：
+
+```css
+.root {
+    display: inline-block;
+    height: 35px;
+    position: relative;
+    width: 119px;
+}
+
+@media (min-width: 600px) {
+    .root {
+        height: 50px;
+        width: 169px;
+    }
+}
+```
+
+​	创建 `components/header/logo/index.tsx`（`/public/assets/logo.svg` 可从网址处下载）：
+
+```tsx
+import Image from "next/image";
+import Link from "next/link";
+import styles from "./index.module.css";
+
+const Logo = (): JSX.Element => {
+    return (
+        <Link href="/" passHref className={styles.root}>
+            <Image
+                src="/assets/logo.svg"
+                alt="Logo: Food Finder"
+                sizes="100vw"
+                fill
+                priority
+            />
+        </Link>
+    );
+};
+
+export default Logo;
+```
+
+​	创建 `components/header/index.module.css`：
+
+```css
+.root {
+    background: white;
+    border-bottom: 1px solid #eaeaea;
+    padding: 1rem 0;
+    position: sticky;
+    top: 0;
+    width: 100%;
+    z-index: 1;
+}
+```
+
+​	创建 `components/header/index.tsx`：
+
+```tsx
+import styles from "./index.module.css";
+import Logo from "components/header/logo";
+
+const Header = (): JSX.Element => {
+    return (
+        <header className={styles.root}>
+            <div className="layout-grid">
+                <Logo />
+            </div>
+        </header>
+    );
+};
+
+export default Header;
+```
+
+​	创建 `styles/layout.css`：
+
+```css
+.layout-grid {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    margin: 0 auto;
+    max-width: 800px;
+    padding: 0 1rem;
+    width: 100%;
+}
+
+@media (min-width: 600px) {
+    .layout-grid {
+        flex-direction: row;
+        padding: 0 2rem;
+    }
+}
+```
+
+​	创建 `components/layout/index.tsx`：
+
+```tsx
+import Header from "components/header";
+
+interface PropsInterface {
+    children: React.ReactNode;
+}
+
+const Layout = (props: PropsInterface): JSX.Element => {
+    return (
+        <>
+            <Header />
+            <main className="layout-grid">
+                {props.children}
+            </main>
+        </>
+    );
+};
+export default Layout;
+```
+
+​	创建 `pages/_app.tsx`，让所有的页面都必须按照 `Layout` 设定的布局：
+
+```tsx
+import "../styles/globals.css";
+import "../styles/layout.css";
+import type {AppProps} from "next/app";
+import Layout from "components/layout";
+
+export default function App({Component, pageProps}: AppProps) {
+    return (
+        <Layout>
+            <Component {...pageProps} />
+        </Layout>
+    );
+}
+```
+
+​	重新访问 http://localhost:3000/：
+
+![webp](14.2.webp)
+
+​	接下来设计 **Location Details Page**。创建 `components/locations-details/index.module.css`：
+
+```css
+.root {
+    margin: 0 0 2rem 0;
+    padding: 0;
+}
+.root li {
+    list-style: none;
+    margin: 0 0 0.5rem 0;
+}
+```
+
+​	创建 `components/locations-details/index.tsx`：
+
+```tsx
+import {LocationType} from "mongoose/locations/schema";
+import styles from "./index.module.css";
+
+interface PropsInterface {
+    location: LocationType;
+}
+
+const LocationDetail = (props: PropsInterface): JSX.Element => {
+let location = props.location;
+    return (
+        <div>
+            {location && (
+                <ul className={styles.root}>
+                    <li>
+                        <b>Address: </b>
+                        {location.address}
+                    </li>
+                    <li>
+                        <b>Zipcode: </b>
+                        {location.zipcode}
+                    </li>
+                    <li>
+                        <b>Borough: </b>
+                        {location.borough}
+                    </li>
+                    <li>
+                        <b>Cuisine: </b>
+                        {location.cuisine}
+                    </li>
+                    <li>
+                        <b>Grade: </b>
+                        {location.grade}
+                    </li>
+                </ul>
+            )}
+        </div>
+    );
+};
+export default LocationDetail;
+```
+
+​	创建 `pages/location/[locationId].tsx`：
+
+```tsx
+import Head from "next/head";
+import type {
+    GetServerSideProps,
+    GetServerSidePropsContext,
+    InferGetServerSidePropsType,
+    PreviewData,
+    NextPage,
+} from "next";
+import LocationDetail from "components/locations-details";
+import dbConnect from "middleware/db-connect";
+import { findLocationsById } from "mongoose/locations/services";
+import { LocationType } from "mongoose/locations/schema";
+import { ParsedUrlQuery } from "querystring";
+
+const Location: NextPage = (
+    props: InferGetServerSidePropsType<typeof getServerSideProps>
+) => {
+    let location: LocationType = JSON.parse(props.data?.location);
+    let title = `The Food Finder - Details for ${location?.name}`;
+    return (
+        <div>
+            <Head>
+                <title>{title}</title>
+                <meta
+                    name="description"
+                    content={`The Food Finder. 
+                        Details for ${location?.name}`}
+                />
+            </Head>
+            <h1>{location?.name}</h1>
+            <LocationDetail location={location} />
+        </div>
+    );
+};
+
+export const getServerSideProps: GetServerSideProps = async (
+    context: GetServerSidePropsContext<ParsedUrlQuery, PreviewData>
+) => {
+    let locations: LocationType[] | [];
+    let { locationId } = context.query;
+    try {
+        await dbConnect();
+        locations = await findLocationsById([locationId as string]);
+        if (!locations.length) {
+            throw new Error(`Locations ${locationId} not found`);
+        }
+    } catch (err: any) {
+        return {
+            notFound: true,
+        };
+    }
+    return {
+        props: { data: { location: JSON.stringify(locations.pop()) } },
+    };
+};
+
+export default Location;
+```
+
+​	删除 `.next` 缓存重启 Docker，访问看看 http://localhost:3000/location/75445：
+
+![webp](14.3.webp)
+
+## 15 ADDING OAUTH
+
+​	这节将：
+
+- 添加 OAuth 身份验证让其允许 Github 账户登录
+- 愿望清单页面
+- 保护 GraphQL mutation 避免未认证用户的访问
+
+​	先从 [Developer applications](https://github.com/settings/developers) 创建一个 OAuth 应用：
+
+- `Application name`: `Food Finder`
+- `Homepage URL`: `http://localhost:3000/`
+- `Authorization callback URL`: `http://localhost:3000/api/auth/callback/github`
+
+![webp](15.1.webp)
+
+​	获取 Client ID 及 Client secret：
+
+![webp](15.2.webp)
+
+​	更新 `.env.local`：
+
+```ini
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=4b9e7f1c3a8d2e6f5b0c1d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3（随机的字符串）
+MONGO_URI=mongodb://backend:27017/foodfinder
+GITHUB_CLIENT_ID=在此处添加您的客户端 ID
+GITHUB_CLIENT_SECRET=在此处添加您的客户端密钥
+```
+
+​	更新 `docker-compose.yml` 传递环境变量：
+
+```yaml {19-22}
+version: "3.0"
+
+services:
+    application:
+        container_name: foodfinder-application
+        image: node:lts-alpine
+        ports:
+            - "3000:3000"
+        volumes:
+            - ./code:/home/node/code
+        working_dir: /home/node/code/foodfinder-application
+        depends_on:
+            - backend
+        environment:
+            - HOST=0.0.0.0
+            - CHOKIDAR_USEPOLLING=true
+            - CHOKIDAR_INTERVAL=100
+            - NEXTAUTH_URL=http://localhost:3000
+            - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-4b9e7f1c3a8d2e6f5b0c1d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3}
+            - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
+            - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
+            - MONGO_URI=${MONGO_URI:-mongodb://backend:27017/foodfinder}
+        tty: true
+        command: "npm run dev"
+    backend:
+        container_name: foodfinder-backend
+        image: mongo:latest
+        restart: always
+        environment:
+            DB_NAME: foodfinder
+            MONGO_INITDB_DATABASE: foodfinder
+        ports:
+            - 27017:27017
+        volumes:
+            - "./.docker/foodfinder-backend/seed-mongodb.js:/docker-entrypoint-initdb.d/seed-mongodb.js"
+            - mongodb_data_container:/data/db
+
+volumes:
+    mongodb_data_container:
+
+```
+
+​	安装 OAuth SDK for next-auth：
+
+```shell
+docker exec -it foodfinder-application sh
+npm install next-auth
+```
+
+​	为在注册 OAuth 应用时提供给 GitHub 的授权回调 URL 开发 `api/auth` 路由。创建 `pages/api/auth/[...nextauth].ts`：
+
+```typescript
+import GithubProvider from "next-auth/providers/github";
+import NextAuth from "next-auth";
+import { createHash } from "crypto";
+
+const createUserId = (base: string): string => {
+    return createHash("sha256").update(base).digest("hex");
+};
+
+export default NextAuth({
+    secret: process.env.NEXTAUTH_SECRET,
+    providers: [
+        GithubProvider({
+            clientId: process.env.GITHUB_CLIENT_ID || "",
+            clientSecret: process.env.GITHUB_CLIENT_SECRET || "",
+            authorization: {
+                params: {
+                    scope: "read:user user:email",
+                },
+            },
+        }),
+    ],
+    callbacks: {
+        async signIn({ user, account, profile }) {
+            if (account?.provider === "github") {
+                return !!profile?.email || !!user?.email;
+            }
+            return true;
+        },
+        async jwt({ token, account, profile }) {
+            if (account?.provider === "github" && profile?.email) {
+                token.email = profile.email;
+            }
+            if (token?.email && !token.fdlst_private_userId) {
+                token.fdlst_private_userId = createUserId(token.email);
+            }
+            return token;
+        },
+        async session({ session }) {
+            if (
+                session?.user?.email &&
+                !session?.user.fdlst_private_userId
+            ) {
+                session.user.fdlst_private_userId = createUserId(
+                    session?.user?.email
+                );
+            }
+            return session;
+        },
+    },
+});
+```
+
+​	这里访问用户对象的属性 `fdlst_private_userId`，因此需要更新 `customs.d.ts`：
+
+```typescript
+import mongoose from "mongoose";
+import {DefaultSession} from "next-auth";
+
+declare global {
+    var mongoose: mongoose;
+}
+
+declare module "next-auth" {
+    interface Session {
+        user: {
+            fdlst_private_userId: string;
+        } & DefaultSession["user"];
+    }
+}
+```
+
+​	设置好回调 URL 后，应确保用户会话在所有 Next.js 页面和 React 组件之间共享。调整 `pages/_app.tsx`：
+
+```tsx
+import "../styles/globals.css";
+import "../styles/layout.css";
+import type { AppProps } from "next/app";
+import Layout from "components/layout";
+import { SessionProvider } from "next-auth/react";
+
+export default function App({
+    Component, pageProps: { session, ...pageProps } }: AppProps) {
+    return (
+        <SessionProvider session={session}>
+            <Layout>
+                <Component {...pageProps} />
+            </Layout>
+        </SessionProvider>
+    );
+}
+```
+
+​	接下来设计登录按钮。创建 `components/button/index.module.css`：
+
+```css
+.root {
+    align-items: center;
+    border-radius: 5px;
+    color: #1d1f21;
+    cursor: pointer;
+    display: inline-flex;
+    font-weight: 500;
+    height: 35px;
+    letter-spacing: 0;
+    margin: 0;
+    overflow: hidden;
+    place-content: flex-start;
+    position: relative;
+    white-space: nowrap;
+}
+
+.root > a,
+.root > span {
+    padding: 0 1rem;
+    white-space: nowrap;
+}
+
+.root {
+    transition: border-color 0.25s ease-in, background-color 0.25s ease-in,
+        color 0.25s ease-in;
+    will-change: border-color, background-color, color;
+}
+
+.root.default,
+.root.default:link,
+.root.default:visited {
+    background-color: transparent;
+    border: 1px solid transparent;
+    color: #1d1f21;
+}
+
+.root.default:hover,
+.root.default:active {
+    background-color: transparent;
+    border: 1px solid #dbd8e3;
+    color: #1d1f21;
+}
+
+.root.blue,
+.root.blue:link,
+.root.blue:visited {
+    background-color: rgba(0, 118, 255, 0.9);
+    border: 1px solid rgba(0, 118, 255, 0.9);
+    color: #fff;
+    text-decoration: none;
+}
+
+.root.blue:hover,
+.root.blue:active {
+    background-color: transparent;
+    border: 1px solid #1d1f21;
+    color: #1d1f21;
+    text-decoration: none;
+}
+
+.root.outline,
+.root.outline:link,
+.root.outline:visited {
+    background-color: transparent;
+    border: 1px solid #dbd8e3;
+    color: #1d1f21;
+    text-decoration: none;
+}
+
+.root.outline:hover,
+.root.outline:active {
+    background-color: transparent;
+    border: 1px solid rgba(0, 118, 255, 0.9);
+    color: rgba(0, 118, 255, 0.9);
+    text-decoration: none;
+}
+
+.root.disabled,
+.root.disabled:link,
+.root.disabled:visited {
+    background-color: transparent;
+    border: 1px solid #dbd8e3;
+    color: #dbd8e3;
+    text-decoration: none;
+}
+
+.root.disabled:hover,
+.root.disabled:active {
+    background-color: transparent;
+    border: 1px solid #dbd8e3;
+    color: #dbd8e3;
+    text-decoration: none;
+}
+```
+
+​	创建 `components/button/index.tsx`：
+
+```tsx
+import React from "react";
+import styles from "./index.module.css";
+
+interface PropsInterface {
+    disabled?: boolean;
+    children?: React.ReactNode;
+    variant?: "blue" | "outline";
+    clickHandler?: () => any;
+}
+
+const Button = (props: PropsInterface): JSX.Element => {
+    const { children, variant, disabled, clickHandler } = props;
+    const renderContent = (children: React.ReactNode) => {
+        if (disabled) {
+            return (
+                <span className={styles.span}>
+                    {children}
+                </span>
+            );
+        } else {
+            return (
+                <span className={styles.span} onClick={clickHandler}>
+                    {children}
+                </span>
+            );
+        }
+    };
+
+    return (
+        <div
+            className={[
+                styles.root,
+                disabled ? styles.disabled : " ",
+                styles[variant || "default"],
+            ].join(" ")}
+        >
+            {renderContent(children)}
+        </div>
+    );
+};
+
+export default Button;
+```
+
+​	创建 `components/header/auth-element/index.module.css`：
+
+```css
+.root {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    margin: 0;
+    padding: 1rem 0;
+    width: auto;
+}
+
+.root>* {
+    margin: 0 0 0 2rem;
+}
+
+.name {
+    margin: 1rem 0 0 0;
+}
+
+@media (min-width: 600px) {
+    .name {
+        margin: 0 0 0 1rem;
+    }
+}
+```
+
+​	创建 `components/header/auth-element/index.tsx`：
+
+```tsx
+import Link from "next/link";
+import { signIn, signOut, useSession } from "next-auth/react";
+import Button from "components/button";
+import styles from "./index.module.css";
+
+const AuthElement = (): JSX.Element => {
+    const { data: session, status } = useSession();
+    return (
+        <>
+            {status === "authenticated" && (
+                <span className={styles.name}>
+                    Hi <b>{session?.user?.name}</b>
+                </span>
+            )}
+
+            <nav className={styles.root}>
+                {status === "authenticated" && (
+                    <>
+                        <Button variant="outline">
+                            <Link
+                                href={`/list/${session?.user.fdlst_private_userId}`}
+                            >
+                                Your wish list
+                            </Link>
+                        </Button>
+                        <Button variant="blue" clickHandler={() => signOut()}>
+                            Sign out
+                        </Button>
+                    </>
+                )}
+                {status == "unauthenticated" && (
+                    <>
+                        <Button variant="blue" clickHandler={() => signIn()}>
+                            Sign in
+                        </Button>
+                    </>
+                )}
+            </nav>
+        </>
+    );
+};
+export default AuthElement;
+```
+
+​	将 `<AuthElement/>`加入 `<header>`，修改 `components/header/index.tsx`：
+
+```tsx 
+import styles from "./index.module.css";
+import Logo from "components/header/logo";
+import AuthElement from "components/header/auth-element";
+const Header = (): JSX.Element => {
+    return (
+        <header className={styles.root}>
+            <div className="layout-grid">
+                <Logo />
+                <AuthElement />
+            </div>
+        </header>
+    );
+};
+
+export default Header;
+```
+
+​	重启服务器，查看 http://localhost:3000/ 里出现的 `Sign in` 按钮：
+
+![webp](15.3.webp)
+
+​	点击 `Sign in` 按钮并登录：
+
+![webp](15.4.webp)
+
+​	登陆完成：
+
+![webp](15.5.webp)
+
+​	接下来创建 **The Wish List Next.js Page**，创建 `pages/list/[userId].tsx`：
+
+```tsx
+import Head from "next/head";
+import type {
+    GetServerSideProps,
+    GetServerSidePropsContext,
+    InferGetServerSidePropsType,
+    PreviewData,
+    NextPage,
+} from "next";
+import LocationDetail from "components/locations-details";
+import dbConnect from "middleware/db-connect";
+import { findLocationsById } from "mongoose/locations/services";
+import { LocationType } from "mongoose/locations/schema";
+import { ParsedUrlQuery } from "querystring";
+
+const Location: NextPage = (
+    props: InferGetServerSidePropsType<typeof getServerSideProps>
+) => {
+    let location: LocationType = JSON.parse(props.data?.location);
+    let title = `The Food Finder - Details for ${location?.name}`;
+    return (
+        <div>
+            <Head>
+                <title>{title}</title>
+                <meta
+                    name="description"
+                    content={`The Food Finder. 
+                        Details for ${location?.name}`}
+                />
+            </Head>
+            <h1>{location?.name}</h1>
+            <LocationDetail location={location} />
+        </div>
+    );
+};
+
+export const getServerSideProps: GetServerSideProps = async (
+    context: GetServerSidePropsContext<ParsedUrlQuery, PreviewData>
+) => {
+    let locations: LocationType[] | [];
+    let { locationId } = context.query;
+    try {
+        await dbConnect();
+        locations = await findLocationsById([locationId as string]);
+        if (!locations.length) {
+            throw new Error(`Locations ${locationId} not found`);
+        }
+    } catch (err: any) {
+        return {
+            notFound: true,
+        };
+    }
+    return {
+        props: { data: { location: JSON.stringify(locations.pop()) } },
+    };
+};
+
+export default Location;
+```
+
+​	修改 `components/location-details/index.tsx`：
+
+```tsx
+import {LocationType} from "mongoose/locations/schema";
+import styles from "./index.module.css";
+
+import {useSession} from "next-auth/react";
+import {useEffect, useState} from "react";
+import Button from "components/button";
+
+interface PropsInterface {
+    location: LocationType;
+}
+
+interface WishlistInterface {
+    locationId: string;
+    userId: string;
+}
+
+const LocationDetail = (props: PropsInterface): JSX.Element => {
+    let location: LocationType = props.location;
+
+    const {data: session} = useSession();
+    const [onWishlist, setOnWishlist] = useState<Boolean>(false);
+    const [loading, setLoading] = useState<Boolean>(false);
+
+    useEffect(() => {
+        let userId = session?.user.fdlst_private_userId;
+        setOnWishlist(
+            userId && location.on_wishlist.includes(userId) ? true : false
+        );
+    }, [session]);
+
+    const wishlistAction = (props: WishlistInterface) => {
+
+        const {locationId, userId} = props;
+
+        if (loading) {return false;}
+        setLoading(true);
+
+        let action = !onWishlist ? "addWishlist" : "removeWishlist";
+
+        fetch("/api/graphql", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                query: `mutation wishlist {
+                    ${action}(
+                        location_id: "${locationId}",
+                        user_id: "${userId}"
+                    ) {
+                        on_wishlist
+                    }
+                }`,
+            }),
+        })
+        .then((result) => {
+            if (result.status === 200) {
+setOnWishlist(action === "addWishlist" ? true : false);
+            }
+        })
+        .finally(() => {
+            setLoading(false);
+        });
+    };
+
+    return (
+        <div>
+            {location && (
+                <ul className={styles.root}>
+                    <li>
+                        <b>Address: </b>
+                        {location.address}
+                    </li>
+                    <li>
+                        <b>Zipcode: </b>
+                        {location.zipcode}
+                    </li>
+                    <li>
+                        <b>Borough: </b>
+                        {location.borough}
+                    </li>
+                    <li>
+                        <b>Cuisine: </b>
+                        {location.cuisine}
+                    </li>
+                    <li>
+                        <b>Grade: </b>
+                        {location.grade}
+</li>
+                </ul>
+            )}
+
+            {session?.user.fdlst_private_userId && (
+                <Button
+                    variant={!onWishlist ? "outline" : "blue"}
+                    disabled={loading ? true : false}
+                    clickHandler={() =>
+                        wishlistAction({
+                            locationId: session?.user.fdlst_private_userId,
+                            userId: session?.user?.userId,
+                        })
+                    }
+                >
+                    {onWishlist && <>Remove from your Wishlist</>}
+                    {!onWishlist && <>Add to your Wishlist</>}
+                </Button>
+            )}
+
+        </div>
+    );
+};
+export default LocationDetail;
+```
+
+​	接下来设计**保护 GraphQL API**：
+
+- 查询语句应该公开可用；
+- Mutations 操作应该只有登录用户才能访问；
+- 登录用户应该只能为 `on_wishlist` 属性添加或删除自己的用户 ID。
+
+​	目前尝试查询其他人的 `on_wishlist`：
+
+```shell
+curl.exe -v -X POST -H "Content-Type: application/json" -d "{\"query\":\"mutation wishlist {removeWishlist(location_id: \\\"12340\\\", user_id: \\\"exampleid\\\") {on_wishlist}}\"}" http://localhost:3000/api/graphql
+```
+
+​	直接返回 `200` 响应：
+
+```
+Note: Unnecessary use of -X or --request, POST is already inferred.
+* Host localhost:3000 was resolved.
+* IPv6: ::1
+* IPv4: 127.0.0.1
+*   Trying [::1]:3000...
+* Established connection to localhost (::1 port 3000) from ::1 port 53934
+* using HTTP/1.x
+> POST /api/graphql HTTP/1.1
+> Host: localhost:3000
+> User-Agent: curl/8.19.0
+> Accept: */*
+> Content-Type: application/json
+> Content-Length: 108
+>
+* upload completely sent off: 108 bytes
+< HTTP/1.1 200 OK
+< Allow: POST
+< Access-Control-Allow-Origin: *
+< Access-Control-Allow-Methods: POST
+< Access-Control-Allow-Headers: *
+< Access-Control-Allow-Credentials: true
+< cache-control: max-age=60, public
+< content-type: application/json; charset=utf-8
+< ETag: "caciqh6cbj1b"
+< Content-Length: 47
+< Vary: Accept-Encoding
+< Date: Wed, 08 Jul 2026 01:29:20 GMT
+< Connection: keep-alive
+< Keep-Alive: timeout=5
+<
+{"data":{"removeWishlist":{"on_wishlist":[]}}}
+* Connection #0 to host localhost:3000 left intact
+```
+
+​	添加 `middleware/auth-guards.ts`：
+
+```typescript
+import {GraphQLError} from "graphql/error";
+import {JWT} from "next-auth/jwt";
+
+interface paramInterface {
+    user_id: string;
+    location_id: string;
+}
+interface contextInterface {
+    token: JWT;
+}
+export const authGuard = (
+    param: paramInterface,
+    context: contextInterface
+): boolean | Error => {
+
+if (!context || !context.token || !context.token.fdlst_private_userId) {
+        return new GraphQLError("User is not authenticated", {
+            extensions: {
+                http: {status: 500},
+                code: "UNAUTHENTICATED",
+            },
+        });
+    }
+
+if (context?.token?.fdlst_private_userId !== param.user_id) {
+        return new GraphQLError("User is not authorized", {
+            extensions: {
+                http: {status: 500},
+                code: "UNAUTHORIZED",
+            },
+        });
+    }
+    return true;
+};
+```
+
+​	修改 `pages/api/graphql.ts`：
+
+```typescript
+import {ApolloServer, BaseContext} from "@apollo/server";
+import {startServerAndCreateNextHandler} from "@as-integrations/next";
+
+import {resolvers} from "graphql/resolvers";
+import {typeDefs} from "graphql/schema";
+import dbConnect from "middleware/db-connect";
+
+import {NextApiHandler, NextApiRequest, NextApiResponse} from "next";
+
+import {getToken} from "next-auth/jwt";
+
+const server = new ApolloServer<BaseContext>({
+    resolvers,
+    typeDefs,
+});
+
+const handler = startServerAndCreateNextHandler(server, {
+    context: async (req: NextApiRequest) => {
+        const token = await getToken({req});
+        return {token};
+    },
+});
+
+const allowCors =
+    (fn: NextApiHandler) =>
+    async (req: NextApiRequest, res: NextApiResponse) => {
+        res.setHeader("Allow", "POST");
+        res.setHeader("Access-Control-Allow-Origin", "*");
+        res.setHeader("Access-Control-Allow-Methods", "POST");
+        res.setHeader("Access-Control-Allow-Headers", "*");
+        res.setHeader("Access-Control-Allow-Credentials", "true");
+
+        if (req.method === "OPTIONS") {
+            res.status(200).end();
+        }
+        return await fn(req, res);
+    };
+
+const connectDB =
+    (fn: NextApiHandler) =>
+    async (req: NextApiRequest, res: NextApiResponse) => {
+        await dbConnect();
+        return await fn(req, res);
+    };
+
+export default connectDB(allowCors(handler));
+```
+
+​	修改 `graphql/locations/mutations.ts` 用于添加 `authGuard`：
+
+```typescript
+import {updateWishlist} from "mongoose/locations/services";
+import {authGuard} from "middleware/auth-guards";
+import {JWT} from "next-auth/jwt";
+
+interface UpdateWishlistInterface {
+    user_id: string;
+    location_id: string;
+}
+
+interface contextInterface {
+    token: JWT;
+}
+
+export const locationMutations = {
+    removeWishlist: async (
+        _: any,
+        param: UpdateWishlistInterface,
+        context: contextInterface
+) => {
+
+        const guard = authGuard(param, context);
+        if (guard !== true) {return guard;}
+
+        return await updateWishlist(param.location_id, param.user_id, "remove");
+    },
+
+    addWishlist: async (
+        _: any,
+        param: UpdateWishlistInterface,
+        context: contextInterface
+    ) => {
+
+        const guard = authGuard(param, context);
+        if (guard !== true) {return guard;}
+
+        return await updateWishlist(param.location_id, param.user_id, "add");
+    },
+};
+```
+
+​	重新发送 curl 请求，被拦截：
+
+```
+Note: Unnecessary use of -X or --request, POST is already inferred.
+* Host localhost:3000 was resolved.
+* IPv6: ::1
+* IPv4: 127.0.0.1
+*   Trying [::1]:3000...
+* Established connection to localhost (::1 port 3000) from ::1 port 63272
+* using HTTP/1.x
+> POST /api/graphql HTTP/1.1
+> Host: localhost:3000
+> User-Agent: curl/8.19.0
+> Accept: */*
+> Content-Type: application/json
+> Content-Length: 108
+>
+* upload completely sent off: 108 bytes
+< HTTP/1.1 500 Internal Server Error
+< Allow: POST
+< Access-Control-Allow-Origin: *
+< Access-Control-Allow-Methods: POST
+< Access-Control-Allow-Headers: *
+< Access-Control-Allow-Credentials: true
+< cache-control: no-store
+< content-type: application/json; charset=utf-8
+< ETag: "1674jmi3iu41v9"
+< Content-Length: 2421
+< Vary: Accept-Encoding
+< Date: Wed, 08 Jul 2026 01:51:44 GMT
+< Connection: keep-alive
+< Keep-Alive: timeout=5
+<
+{"errors":[{"message":"User is not authenticated","locations":[{"line":1,"column":20}],"path":["removeWishlist"],"extensions":{"code":"UNAUTHENTICATED","stacktrace":["GraphQLError: User is not authenticated","    at authGuard (/home/node/code/foodfinder-application/.next/dev/server/chunks/[root-of-the-server]__0z06-td._.js:189:16)","    at Object.removeWishlist (/home/node/code/foodfinder-application/.next/dev/server/chunks/[root-of-the-server]__0z06-td._.js:224:158)","    at field.resolve (file:///home/node/code/foodfinder-application/node_modules/@apollo/server/dist/esm/utils/schemaInstrumentation.js:36:28)","    at executeField (/home/node/code/foodfinder-application/node_modules/graphql/execution/execute.js:733:20)","    at /home/node/code/foodfinder-application/node_modules/graphql/execution/execute.js:614:22","    at promiseReduce (/home/node/code/foodfinder-application/node_modules/graphql/jsutils/promiseReduce.js:25:9)","    at executeFieldsSerially (/home/node/code/foodfinder-application/node_modules/graphql/execution/execute.js:610:43)","    at executeOperation (/home/node/code/foodfinder-application/node_modules/graphql/execution/execute.js:582:14)","    at execute (/home/node/code/foodfinder-application/node_modules/graphql/execution/execute.js:309:20)","    at executeIncrementally (file:///home/node/code/foodfinder-application/node_modules/@apollo/server/dist/esm/incrementalDeliveryPolyfill.js:36:12)","    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)","    at async execute (file:///home/node/code/foodfinder-application/node_modules/@apollo/server/dist/esm/requestPipeline.js:242:37)","    at async processGraphQLRequest (file:///home/node/code/foodfinder-application/node_modules/@apollo/server/dist/esm/requestPipeline.js:163:32)","    at async internalExecuteOperation (file:///home/node/code/foodfinder-application/node_modules/@apollo/server/dist/esm/ApolloServer.js:635:16)","    at async runHttpQuery (file:///home/node/code/foodfinder-application/node_modules/@apollo/server/dist/esm/runHttpQuery.js:138:29)","    at async runPotentiallyBatchedHttpQuery (file:///home/node/code/foodfinder-application/node_modules/@apollo/server/dist/esm/httpBatching.js:34:16)","    at async ApolloServer.executeHTTPGraphQLRequest (file:///home/node/code/foodfinder-application/node_modules/@apollo/server/dist/esm/ApolloServer.js:545:20)"]}}],"data":null}
+* Connection #0 to host localhost:3000 left intact
+```
+
+## 16 RUNNING AUTOMATED TESTS IN DOCKER
+
+​	安装 Jest 测试框架：
+
+```shell
+docker exec -it foodfinder-application sh
+npm install --save-dev jest jest-environment-jsdom @testing-library/react @test
+ing-library/jest-dom
+```
+
+​	创建 `jest.config.js`：
+
+```javascript
+const nextJest = require("next/jest");
+
+const createJestConfig = nextJest({
+    dir: "./",
+});
+
+const customJestConfig = {
+    moduleDirectories: ["node_modules", "<rootDir>/"],
+    testEnvironment: "jest-environment-jsdom",
+};
+
+module.exports = createJestConfig(customJestConfig);
+```
+
+​	为了能够使用 npm 执行测试，添加 Jest 相关的定义在 `package.json`：
+
+```json {7-8}
+...
+"scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "test": "jest ",
+    "testWatch": "jest --watchAll"
+  },
+...
+```
+
+​	修改 `docker-compose.yml` 以设置 Docker：
+
+```yaml {38-50}
+version: "3.0"
+
+services:
+    application:
+        container_name: foodfinder-application
+        image: node:lts-alpine
+        ports:
+            - "3000:3000"
+        volumes:
+            - ./code:/home/node/code
+        working_dir: /home/node/code/foodfinder-application
+        depends_on:
+            - backend
+        environment:
+            - HOST=0.0.0.0
+            - CHOKIDAR_USEPOLLING=true
+            - CHOKIDAR_INTERVAL=100
+            - NEXTAUTH_URL=http://localhost:3000
+            - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-4b9e7f1c3a8d2e6f5b0c1d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3}
+            - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
+            - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
+            - MONGO_URI=${MONGO_URI:-mongodb://backend:27017/foodfinder}
+        tty: true
+        command: "npm run dev"
+    backend:
+        container_name: foodfinder-backend
+        image: mongo:latest
+        restart: always
+        environment:
+            DB_NAME: foodfinder
+            MONGO_INITDB_DATABASE: foodfinder
+        ports:
+            - 27017:27017
+        volumes:
+            - "./.docker/foodfinder-backend/seed-mongodb.js:/docker-entrypoint-initdb.d/seed-mongodb.js"
+            - mongodb_data_container:/data/db
+
+    jest:
+        container_name: foodfinder-jest
+        image: node:lts-alpine
+        working_dir: /home/node/code/foodfinder-application
+        volumes:
+            - ./code:/home/node/code
+        depends_on:
+            - backend
+            - application
+        environment:
+            - NODE_ENV=test
+        tty: true
+        command: "npm run testWatch"
+
+volumes:
+    mongodb_data_container:
+
+```
+
+​	在 `foodfinder-application` 下创建 `__tests__/header.snapshot.test.tsx`，用于：
+
+| 情况            | 模拟                       | 检查                    |
+| --------------- | -------------------------- | ----------------------- |
+| 未登录          | `status:"unauthenticated"` | Header 是否显示登录状态 |
+| 已登录          | `status:"authenticated"`   | Header 是否显示用户信息 |
+| 未来修改 Header | snapshot 对比              | 防止 UI 意外变化        |
+
+```tsx
+import {act, render} from "@testing-library/react";
+import {useSession} from "next-auth/react";
+import Header from "components/header";
+
+jest.mock("next-auth/react");
+describe("The Header component", () => {
+    it("renders unchanged when logged out", async () => {
+        (useSession as jest.Mock).mockReturnValueOnce({
+data: {user: {}},
+            status: "unauthenticated",
+        });
+        let container: HTMLElement | undefined = undefined;
+        await act(async () => {
+            container = render(<Header />).container;
+        });
+        expect(container).toMatchSnapshot();
+    });
+
+    it("renders unchanged when logged in", async () => {
+        (useSession as jest.Mock).mockReturnValueOnce({
+            data: {
+                user: {
+                    name: "test user",
+                    fdlst_private_userId: "rndmusr",
+                },
+            },
+            status: "authenticated",
+        });
+        let container: HTMLElement | undefined = undefined;
+        await act(async () => {
+            container = render(<Header />).container;
+        });
+        expect(container).toMatchSnapshot();
+    });
+});
+```
+
+​	重启服务，获取测试结果：
+
+![webp](16.1.webp)
+
+> [!Tip]
+>
+> ​	恭喜！您已成功使用 TypeScript、React、Next.js、Mongoose 和 MongoDB 创建了您的第一个全栈应用程序。您使用了 Docker 对应用程序进行容器化，并使用 Jest 对其进行了测试。通过本书及其练习所获得的知识，您已为成为一名全栈开发人员奠定了基础。

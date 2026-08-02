@@ -1,0 +1,768 @@
+---
+title: Software-Blender & Python (21-30)
+date: Thu Jun 01 2023 20:51:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - Blender
+  - Python
+categories: 学习
+description: 用 Python 编写 Blender 的插件。学习自 Youtube 博主 Darkfall。
+---
+
+
+# 课程
+
+## How to Generate Random Numbers
+
+教你怎么用随机数：
+
+Python Console 下：
+
+- `import random` 导入随机数模块
+
+- `random.uniform(0, 1)` 生成一个 0-1 的随机浮点数，服从均匀分布
+
+- `random.choice(range(0，10))` 生成一个 0-10（不包含 10）的随机整数，服从均匀分布
+
+Blender 下 print() 的输出可以在 `Window`-`Toggle System Console` 里显示。
+
+![png](21_1.png)
+
+将随机数用在插件中的示例：
+
+```python
+import bpy
+import random
+from bpy.types import Panel, Operator, PropertyGroup
+from bpy.props import FloatProperty, PointerProperty, IntProperty
+ 
+ 
+class MyProperties(PropertyGroup):
+    random_number : IntProperty(name='Random Number', default=0)
+    text_list = ['A', 'B', 'C']
+    icon_list = ['GHOST_DISABLED', 'MATERIAL', 'PINNED']
+    
+ 
+class ADDONNAME_PT_main_panel(Panel):
+    bl_label = "Main Panel"
+    bl_idname = "ADDONNAME_PT_main_panel"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = "New Tab"
+ 
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+        mytool = scene.my_tool
+        
+        layout.label(text=mytool.text_list[mytool.random_number])
+        layout.label(icon=mytool.icon_list[mytool.random_number])
+        layout.prop(mytool, "random_number")
+        layout.operator("addonname.myop_operator")
+ 
+ 
+class ADDONNAME_OT_my_op(Operator):
+    bl_label = "Generate Random Number"
+    bl_idname = "addonname.myop_operator"
+        
+    def execute(self, context):
+        scene = context.scene
+        mytool = scene.my_tool
+        
+        x = random.choice(range(0, 3))
+        mytool.random_number = x
+        print(x)
+            
+        return {'FINISHED'}
+ 
+ 
+classes = [MyProperties, ADDONNAME_PT_main_panel, ADDONNAME_OT_my_op]
+
+ 
+def register():
+    for cls in classes:
+        bpy.utils.register_class(cls)    
+    bpy.types.Scene.my_tool = PointerProperty(type=MyProperties)
+ 
+ 
+def unregister():
+    for cls in classes:
+        bpy.utils.unregister_class(cls)
+        del bpy.types.Scene.my_tool
+ 
+ 
+if __name__ == "__main__":
+    register()
+```
+
+开跑，按下 `Generate Random Number`，就会生成一个随机数，并导致面板标题和图标的变化。
+
+![png](21_2.png)
+
+## Add-on Creation - Insta-Mist
+
+比起原先的代码，加了一些节点存在性检查：
+
+```python
+comp_node = tree.nodes.get('Composite')
+if comp_node is None:
+    comp_node = tree.nodes.new('CompositorNodeComposite')
+    comp_node.name = 'Composite'
+```
+
+```python
+render_layer_node = tree.nodes.get('Render Layers')
+if render_layer_node is None:
+    render_layer_node = tree.nodes.new('CompositorNodeRLayers')
+    render_layer_node.name = 'Render Layers'
+```
+
+```python
+mix1 = tree.nodes.get('Mix')
+if mix1 is not None:
+    tree.nodes.remove(mix1)
+
+mix2 = tree.nodes.get('Mix.001')
+if mix2 is not None:
+    tree.nodes.remove(mix2)
+
+cr = tree.nodes.get('ColorRamp')
+if cr is not None:
+    tree.nodes.remove(cr)
+```
+
+---
+
+> 这段代码是一个基于 Blender 的插件，用于在 3D 视图中添加雾效果。主要包含三个类 INSTAMIST_PT_main_panel、INSTAMIST_PT_sub_panel 和 INSTAMIST_OT_add_mist。
+>
+> 其中 INSTAMIST_PT_main_panel 是主面板类，包含一个按钮“Add Mist”，点击按钮会触发 INSTAMIST_OT_add_mist 类的 execute 方法来开启或关闭雾效果。
+>
+> INSTAMIST_PT_sub_panel 是子面板类，当且仅当场景的视图层使用了 pass_mist 属性才会显示面板，其中包括了 start、depth 和 falloff 这三个属性来控制雾的起始位置、深度和衰减程度。
+>
+> 最后 INSTAMIST_OT_add_mist 是操作员类，通过 execute 方法来根据当前状态开启或关闭雾效果，并对节点树进行相应的操作。如果开启雾效果，则会调用 mist_comp_action 方法来添加新的节点，否则会移除原有的节点。
+
+```python
+bl_info = {
+    "name": "INSTAMIST",
+    "author": "Darkfall",
+    "version": (1, 0),
+    "blender": (2, 90, 1),
+    "location": "View3D > N > INSTA-MIST",
+    "description": "Adds Mist to your scene along with arranging the compositor",
+    "warning": "",
+    "doc_url": "",
+    "category": "Add Mist",
+}
+ 
+ 
+import bpy
+from bpy.types import Panel, Operator
+ 
+ 
+def mist_comp_action(context):
+    tree = context.scene.node_tree
+    
+    comp_node = tree.nodes.get('Composite')
+    if comp_node is None:
+        comp_node = tree.nodes.new('CompositorNodeComposite')
+        comp_node.name = 'Composite'
+    comp_node.location = (700, 0)
+    
+    viewer_node = tree.nodes.new('CompositorNodeViewer')
+    viewer_node.location = (700, 200)
+    
+    render_layer_node = tree.nodes.get('Render Layers')
+    if render_layer_node is None:
+        render_layer_node = tree.nodes.new('CompositorNodeRLayers')
+        render_layer_node.name = 'Render Layers'
+    render_layer_node.location = (-200, 0)
+    
+    mix_node = tree.nodes.new('CompositorNodeMixRGB')
+    mix_node.location = (500, 0)
+    mix_node.blend_type = 'ADD'
+    mix_node.use_clamp = True
+    
+    mix2_node = tree.nodes.new('CompositorNodeMixRGB')
+    mix2_node.location = (300, 0)
+    mix2_node.blend_type = 'MULTIPLY'
+    mix2_node.use_clamp = True
+    
+    cr_node = tree.nodes.new('CompositorNodeValToRGB')
+    cr_node.location = (0, 0)
+    cr_node.color_ramp.elements[0].color = (0.2, 0.2, 0.2, 1)
+    cr_node.color_ramp.elements.new(position= 0.27)
+    
+    link = tree.links.new
+    
+    link(mix_node.outputs[0], viewer_node.inputs[0])
+    link(mix_node.outputs[0], comp_node.inputs[0])
+    link(mix2_node.outputs[0], mix_node.inputs[1])
+    link(cr_node.outputs[0], mix2_node.inputs[1])
+    link(render_layer_node.outputs[0], mix_node.inputs[2])
+    link(render_layer_node.outputs[3], cr_node.inputs[0])
+    return {'FINISHED'}
+ 
+ 
+ 
+class INSTAMIST_PT_main_panel(Panel):
+    bl_label = "INSTA-MIST"
+    bl_idname = "INSTAMIST_PT_main_panel"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = "INSTA-MIST"
+ 
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+        
+ 
+        layout.operator("instamist.add_mist_operator")
+ 
+ 
+class INSTAMIST_PT_sub_panel(Panel):
+    bl_label = "INSTA-MIST Options"
+    bl_idname = "INSTAMIST_PT_sub_panel"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = "INSTA-MIST"
+    bl_parent_id = 'INSTAMIST_PT_main_panel'
+    
+    @classmethod
+    def poll(cls, context):
+        return (context.scene.view_layers["ViewLayer"].use_pass_mist == True
+)
+ 
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+        world = scene.world.mist_settings
+        
+        layout.prop(world, "start")
+        layout.prop(world, "depth")
+        layout.prop(world, "falloff")
+ 
+ 
+class INSTAMIST_OT_add_mist(Operator):
+    bl_label = "Enable/Disable Mist"
+    bl_idname = "instamist.add_mist_operator"
+    
+    
+    
+    def execute(self, context):
+        scene = context.scene
+        camera = bpy.data.cameras['Camera']
+        vl = scene.view_layers["ViewLayer"]
+        tree = scene.node_tree
+        
+        if vl.use_pass_mist == False:
+            vl.use_pass_mist = True
+            camera.show_mist = True
+            if scene.use_nodes == False:
+                scene.use_nodes = True
+            mist_comp_action(context)    
+            
+        elif vl.use_pass_mist == True:
+            vl.use_pass_mist = False
+            camera.show_mist = False
+            
+            mix1 = tree.nodes.get('Mix')
+            if mix1 is not None:
+                tree.nodes.remove(mix1)
+
+            mix2 = tree.nodes.get('Mix.001')
+            if mix2 is not None:
+                tree.nodes.remove(mix2)
+
+            cr = tree.nodes.get('ColorRamp')
+            if cr is not None:
+                tree.nodes.remove(cr)
+            
+            comp_node = tree.nodes.get('Composite')
+            viewer_node = tree.nodes.get('Viewer')
+            render_layer_node = tree.nodes.get('Render Layers')
+            
+            tree.links.new(render_layer_node.outputs[0], comp_node.inputs[0])
+            tree.links.new(render_layer_node.outputs[0], viewer_node.inputs[0])
+        return {'FINISHED'}
+    
+ 
+classes = [INSTAMIST_PT_main_panel, INSTAMIST_OT_add_mist, INSTAMIST_PT_sub_panel]
+ 
+ 
+ 
+def register():
+    for cls in classes:
+        bpy.utils.register_class(cls)
+        
+ 
+def unregister():
+    for cls in classes:
+        bpy.utils.unregister_class(cls)
+ 
+ 
+if __name__ == "__main__":
+    register()
+```
+
+开跑！按下 `Enable/Disable Mist` 后，会在 `Compositor` 生成/删除节点，以 开启/关闭 雾效果。
+
+![png](22_1.png)
+
+按下 F12 就可以看到渲染后的效果：
+
+![png](22_2.png)
+
+## Lists - Create, Append and Remove
+
+- [Darkfall : Blender Python Tutorial: Lists - Create, Append and Remove (darkfallblender.blogspot.com)](https://darkfallblender.blogspot.com/2020/11/blender-python-tutorial-lists-create.html)
+
+教你怎么用 python 里的 list：
+
+- `list.append()` 追加一个元素
+- `list.remove()` 删除一个元素
+- `list.extend()` 追加多个元素
+- `list.clear()` 清空列表
+
+```python
+import bpy
+from bpy.types import Panel, Operator, PropertyGroup
+from bpy.props import EnumProperty, PointerProperty, StringProperty
+ 
+ 
+class MyProperties(PropertyGroup):
+    
+    my_enum : EnumProperty(
+        name= "Enumerator / Dropdown",
+        description= "sample text",
+        items= [('OP1', "Append", ""),
+                ('OP2', "Remove", "")
+        ]
+    )
+    
+    new_item : StringProperty()
+    my_list = []
+ 
+class ADDONNAME_PT_main_panel(Panel):
+    bl_label = "Main Panel"
+    bl_idname = "ADDONNAME_PT_main_panel"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = "New Tab"
+ 
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+        mytool = scene.my_tool
+        
+        
+        layout.prop(mytool, "my_enum", expand=True)
+        layout.prop(mytool, 'new_item')
+        layout.operator("addonname.myop_operator")
+ 
+ 
+ 
+ 
+ 
+class ADDONNAME_OT_my_op(Operator):
+    bl_label = "Submit"
+    bl_idname = "addonname.myop_operator"
+    
+    def execute(self, context):
+        scene = context.scene
+        mytool = scene.my_tool
+        list = mytool.my_list
+        enum = mytool.my_enum
+        new_item = mytool.new_item
+        
+        a = 'alpha'
+        b = 'beta'
+        
+        if enum == 'OP1':
+            if a and b not in list:
+                list.extend((a, b))
+            if new_item != '':
+                if new_item not in list:
+                    list.append(new_item)
+        else:
+            list.clear()
+        print(list)
+        
+        return {'FINISHED'}
+    
+ 
+ 
+ 
+classes = [MyProperties, ADDONNAME_PT_main_panel, ADDONNAME_OT_my_op]
+  
+ 
+def register():
+    for cls in classes:
+        bpy.utils.register_class(cls)
+        
+    bpy.types.Scene.my_tool = PointerProperty(type= MyProperties)
+ 
+def unregister():
+    for cls in classes:
+        bpy.utils.unregister_class(cls)
+    del bpy.types.Scene.my_tool
+ 
+ 
+ 
+if __name__ == "__main__":
+    register()
+```
+
+![png](23_1.png)
+
+## How to Display Info Messages
+
+- [Darkfall : Blender Python Tutorial: How to Display Info/ Error Messages to the User [learn python for beginners] (darkfallblender.blogspot.com)](https://darkfallblender.blogspot.com/2020/12/blender-python-tutorial-how-to-display.html)
+
+介绍了一些可以将消息输出至 `Info` 的语句：
+
+- `self.report({'INFO'}, "This is a Custom Message")`
+- `self.report({'WARNING'}, "This is a Custom Message")`
+- `self.report({'ERROR'}, "This is a Custom Message")`
+
+## Why is it not Working? : Episode 1
+
+教你怎么调试错误。
+
+## How to make a Random Word Generator
+
+- [Darkfall : Blender Python Tutorial: How to Create a Random Word Generator [Learn Python for beginners] (darkfallblender.blogspot.com)](https://darkfallblender.blogspot.com/2021/01/blender-python-tutorial-how-to-create.html)
+
+写了一个随机单词生成器：
+
+```python
+bl_info = {
+    "name": "Random Word Generator",
+    "author": "Darkfall",
+    "version": (1, 0),
+    "blender": (2, 90, 1),
+    "location": "View3D > N > Random Word Gen Tab",
+    "description": "Generates a Random Phrase",
+    "warning": "",
+    "doc_url": "",
+    "category": "Add Words",
+}
+ 
+import bpy
+from bpy.types import Panel, Operator, PropertyGroup
+from bpy.props import IntProperty, PointerProperty, BoolProperty
+from random import randint
+ 
+
+class RandomWordGenProperties(PropertyGroup):
+    
+    list_a = ["A", "Dr", "Mr", "Mrs", "Our", "The"]
+    
+    list_b = ["Adorable", "Adventurous", "Agressive", "Agreeable", "Angry", "Annoyed", "Annoying", "Anxious", "Arrogant", "Attractive", "Average", "Awful", "Bad", "Beautiful", "Better", "Bewildered", "Bloody", "Blushing", "Bored", "Brainy", "Brave", "Breakable", "Bright", "Broken", "Bronze", "Busy", "Calm", "Careful", "Cautious", "Charming", "Cheerful", "Clean", "Clear", "Clever", "Cloudy", "Clumsy", "Colorful", "Comfortable", "Condemned", "Confused", "Cooperative", "Courageous", "Crazy", "Creepy", "Crowded", "Cruel", "Curious", "Cute", "Dangerous", "Dark", "Dead", "Defeated", "Defiant", "Delightful", "Depressed", "Determained", "Different", "Difficult", "Disgusted", "Doubtful", "Dull", "Eager", "Easy", "Elated", "Elegant", "Embarrassed", "Enchanting", "Encouraging", "Energetic", "Enthusiastic", "Envious", "Evil", "Excited", "Expensive", "Exuberant", "Faithful", "Famous", "Fancy", "Fantastic", "Fierce", "Filthy", "Fine", "Foolish", "Fragile", "Frail", "Frantic", "Friendly", "Frightened", "Frozen", "Funny", "Gentle", "Gifted", "Glamorous", "Gleaming", "Glorious", "Good", "Gold", "Golden", "Gorgeous", "Graceful", "Greiving", "Grotesque", "Grumpy", "Handsome", "Happy", "Healthy", "Helpful", "Helpless", "Hilarious", "Horrible", "Hungry", "Hurt", "Important", "Impossible", "Industrial", "Inexpensive", "Innocent", "Inquisitive", "Itchy", "Jelous", "Jolly", "Joyous", "Kind", "Lazy", "Light", "Lively", "Lonely", "Long", "Lovely", "Lucky", "Magnificent", "Misty", "Modern", "Motionless", "Muddy", "Mushy", "Mysterious", "Nasty", "Naughty", "Nervous", "Never-ending", "Nice", "Obedient", "Obnoxious", "Odd", "Old", "Old-fashoined", "Open", "Outrageous", "Outstanding", "Perfect", "Plain", "Pleasant", "Poised", "Poor", "Powerful", "Precious", "Proud", "Putrid", "Puzzled", "Quaint", "Real", "Relieved", "Repulsive", "Rich", "Righteous", "Rival", "Rusty", "Secret", "Scary", "Silver", "Silvery", "Selfish", "Shiny", "Shy", "Silly", "Sleepy", "Smiling", "Sore", "Sparkling", "Splendid", "Spotless", "Stalking", "Steady", "Strange", "Stranger", "Stupid", "Subtle", "Successful", "Super", "Talented", "Tame", "Tender", "Tense", "Terrible", "Thankful", "Thoughful", "Thoughtless", "Tired", "Tough", "Troubled", "Ugliest", "Ugly", "Unsightly", "Unusual", "Upset", "Uptight", "Vast", "Victorious", "Wandering", "Weary", "Wicked", "Wild", "Witty", "Worried", "Wrong", "Zelous"]
+    
+    list_c = ["Actor", "Anchor", "Antagonist", "Apple", "Angel", "Angle", "Army", "Astronaut", "Ball", "Balloon", "Beach", "Bear", "Beast", "Book", "Brain", "Cake", "Castle", "Coast", "Colony", "Complex", "Conundrum", "Core", "Crowd", "Dancer", "Detective", "Detector", "Devil", "Director", "Diver", "Driver", "Express", "Factory", "Family", "Forest", "Future", "Gamer", "Garden", "Hacker", "Hangman", "History", "House", "Idea", "Island", "Jail", "Jester", "Joker", "King", "Knight", "Lake", "Lighthouse", "Matrix", "Mind", "Monument", "Moon", "Mountain", "Navy", "Nail", "Night", "Office", "Officer", "Operator", "Page", "Park", "Path", "Pickle", "Pizza", "Place", "Planet", "Player", "Picture", "Price", "Prince", "Princess", "Prison", "Program", "Programmer", "Protagonist", "Queen", "Razor", "Rifle", "Ring", "Reptile", "Road", "River", "Science", "Situation", "Society", "Soldier", "Sound", "Steed", "Story", "Surface", "Tavern", "Tower", "Traveler", "Tree", "Undead", "Unicorn", "Vampire", "Warrior", "Wizard", "World", "Wolf", "Zombie"]
+    
+    number_1 : IntProperty(default= 0)
+    number_2 : IntProperty(default= 0)
+    number_3 : IntProperty(default= 0)
+
+    number_4 : IntProperty(default= 1)
+    
+    word_count : IntProperty(default= 3, min= 1, max= 3, description= "Select How Many Words to be Generated")
+    
+    wc_bool : BoolProperty(default= False, description= "Selecting this Option will randomize the Word Count")
+    
+    
+class RANDOMWORDGEN_PT_main_panel(Panel):
+    bl_label = "Random Word Generator"
+    bl_idname = "RANDOMWORDGEN_PT_main_panel"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = "Random Word Gen"
+ 
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+        mytool = scene.my_tool
+        
+        wc = mytool.word_count
+        r_wc = mytool.wc_bool
+  
+        if r_wc == False:
+            layout.prop(mytool, "word_count", text= "Word Count")
+            row = layout.row()
+        
+            if wc >= 1:
+                row.label(text= mytool.list_a[mytool.number_1])
+            if wc >= 2:
+                row.label(text= mytool.list_b[mytool.number_2])
+            if wc >= 3:
+                row.label(text= mytool.list_c[mytool.number_3])
+        else: 
+            row = layout.row()
+            if mytool.number_4 >= 1:
+                row.label(text= mytool.list_a[mytool.number_1])
+            if mytool.number_4 >= 2:
+                row.label(text= mytool.list_b[mytool.number_2])
+            if mytool.number_4 >= 3:
+                row.label(text= mytool.list_c[mytool.number_3])
+        layout.prop(mytool, "wc_bool", text= "Randomize Word Count")        
+                            
+        layout.operator("randomwordgen.myop_operator")
+ 
+
+class RANDOMWORDGEN_OT_my_op(Operator):
+    bl_label = "Generate Random Words"
+    bl_idname = "randomwordgen.myop_operator"
+    
+    
+    def execute(self, context):
+        scene = context.scene
+        mytool = scene.my_tool
+        
+        a = 0
+        
+        b2 = len(mytool.list_a)
+        b = b2 - 1
+        
+        c2 = len(mytool.list_b)
+        c = c2 - 1
+        
+        d2 = len(mytool.list_c)
+        d = d2 - 1
+        
+        e = 1
+        f = 3
+        
+        r1 = randint(a, b)
+        r2 = randint(a, c)
+        r3 = randint(a, d)
+        
+        r4 = randint(e, f)
+        
+        mytool.number_1 = r1
+        mytool.number_2 = r2
+        mytool.number_3 = r3
+        
+        mytool.number_4 = r4
+        
+        return {'FINISHED'}
+
+ 
+classes = [RandomWordGenProperties, RANDOMWORDGEN_PT_main_panel, RANDOMWORDGEN_OT_my_op]
+ 
+ 
+def register():
+    for cls in classes:
+        bpy.utils.register_class(cls)
+        
+    bpy.types.Scene.my_tool = PointerProperty(type= RandomWordGenProperties)
+
+
+def unregister():
+    for cls in classes:
+        bpy.utils.unregister_class(cls)
+    del bpy.types.Scene.my_tool
+ 
+ 
+if __name__ == "__main__":
+    register()
+```
+
+点击 `Generate Random Words` 就可以从单词库中生成一堆单词！
+
+![png](26_1.png)
+
+## Application Timers
+
+> 这段代码是一个简单的 Blender Python 脚本，用于创建 10 个位置不同的立方体。该脚本使用了 Blender 的定时器功能，以便在指定时间间隔内反复调用函数 "run_10_times()"。
+>
+> 首先，使用 import bpy 导入必要的 Blender Python 模块。
+>
+> 然后，创建了全局变量 counter 和 loc, 分别用于追踪立方体数量和立方体位置。
+>
+> 接下来定义函数 run_10_times(), 它会在启动定时器后被调用。该函数使用 bpy.ops.mesh.primitive_cube_add() 命令在场景中添加一个立方体。该命令需要一个位置参数，它将使用 loc 变量中的值来确定立方体的垂直位置。然后，counter 变量增加 1，loc 变量增加 2（以确保每个立方体都有不同的位置）。
+>
+> 函数还打印出当前计数器值。
+>
+> 如果 counter 变量的值达到 10，函数返回 None，以便停止定时器。否则，它将返回 0.5，以便等待一段时间（0.5s）后再次调用该函数。
+>
+> 最后，通过 bpy.app.timers.register() 函数注册函数 run_10_times()，以便在 Blender 中启动定时器。该函数将在 Blender 界面中点击 "Run Script" 按钮后执行。
+>
+> 总之，该脚本使用 Blender Python 的定时器功能，创建 10 个位置不同的立方体，每个立方体之间延迟一定时间。
+
+```python
+import bpy
+
+counter = 0
+loc = 0
+
+
+def run_10_times():
+    global loc
+    bpy.ops.mesh.primitive_cube_add(location=(0, loc, 0))
+    global counter
+    counter += 1
+    loc += 2
+    print(counter)
+    if counter == 10:
+        return None
+    return 0.5
+
+
+bpy.app.timers.register(run_10_times)
+```
+
+![png](27_1.png)
+
+## Why is it not Working? : Episode 2
+
+> 这段代码是一个 Blender 插件的示例，定义了一个面板和一个操作符。该插件提供了一些功能来添加粒子系统到选择的对象中。
+>
+> 首先，导入必要的模块，包括 bpy 和 Panel、Operator 类型。
+>
+> 接下来定义了一个面板类 ADDONNAME_PT_main_panel，并从 Panel 类继承。在这个类中设置了一些属性，例如名称、区域类型和分类等。draw() 方法用于绘制面板中的内容，在这里使用 layout 属性创建了三个控件，包括两个用于设置粒子系统参数的属性和一个用于执行操作的按钮。
+>
+> 然后定义了一个操作符 ADDONNAME_OT_my_op，并从 Operator 类继承。在这个类中设置了一些属性，例如名称和 ID 名称等。execute() 方法是操作符的核心部分，它将在用户按下按钮时被调用。在这里，它使用 bpy.ops.object.particle_system_add() 命令向选定的对象中添加了一个粒子系统。
+>
+> 最后，将 ADDONNAME_PT_main_panel 和 ADDONNAME_OT_my_op 类添加到 classes 列表中，并使用 bpy.utils.register_class() 函数注册这些类。同样，使用 unregister() 函数在插件不再需要时注销这些类。
+>
+> 如果这个脚本是直接运行的，那么它将调用 register() 方法并注册这些类。如果该脚本作为其他插件的一部分被导入，则 register() 方法不会被调用。
+
+```python
+import bpy
+from bpy.types import Panel, Operator
+ 
+
+class ADDONNAME_PT_main_panel(Panel):
+    bl_label = "Main Panel"
+    bl_idname = "ADDONNAME_PT_main_panel"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = "New Tab"
+ 
+ 
+    def draw(self, context):
+        layout = self.layout
+        
+        p_data = bpy.data.particles["ParticleSettings"]
+        
+        layout.prop(p_data, "count")
+        layout.prop(p_data, "use_rotations")
+        if p_data.use_rotations == True:
+            layout.prop(p_data, "rotation_factor_random")
+        layout.operator("addonname.myop_operator")
+
+
+class ADDONNAME_OT_my_op(Operator):
+    bl_label = "Add Particle System"
+    bl_idname = "addonname.myop_operator"
+    """Add a Particle System to your Selected Object"""
+    
+
+    def execute(self, context):
+        scene = context.scene
+        obj = context.object
+        bpy.ops.object.particle_system_add()    
+        return {'FINISHED'}
+    
+
+classes = [ADDONNAME_PT_main_panel, ADDONNAME_OT_my_op]
+ 
+
+def register():
+    for cls in classes:
+        bpy.utils.register_class(cls)
+        
+ 
+def unregister():
+    for cls in classes:
+        bpy.utils.unregister_class(cls)
+
+ 
+if __name__ == "__main__":
+    register()
+```
+
+## The REDO Operator
+
+> 这段代码是 Blender 插件的示例，定义了一个面板和一个操作符。该插件提供一个按钮，点击后会在当前场景中添加一个立方体。
+>
+> 首先导入必要的模块，包括 bpy 和 Panel、Operator 类型。
+>
+> 然后定义了一个面板类 ADDONNAME_PT_main_panel，并从 Panel 类继承。在这个类中设置了一些属性，例如名称、区域类型和分类等。draw() 方法用于绘制面板中的内容，在这里使用 layout 属性创建了一个控件，即一个按钮，并使用 layout.operator() 函数将其添加到面板中。
+>
+> 接着定义了一个操作符 ADDONNAME_OT_my_op，并从 Operator 类继承。在这个类中设置了一些属性，例如名称和 ID 名称等。bl_options 属性指定了操作符的行为，包括注册和撤销。loc 属性是一个 FloatVectorProperty，表示要添加的立方体的位置。
+>
+> execute() 方法是操作符的核心部分，它将在用户按下按钮时被调用。在这里，它使用 bpy.ops.mesh.primitive_cube_add() 命令向当前场景中添加了一个立方体，位置由 self.loc 属性决定。
+>
+> 最后，将 ADDONNAME_PT_main_panel 和 ADDONNAME_OT_my_op 类添加到 classes 列表中，并使用 bpy.utils.register_class() 函数注册这些类。同样，使用 unregister() 函数在插件不再需要时注销这些类。
+>
+> 如果这个脚本是直接运行的，那么它将调用 register() 方法并注册这些类。如果该脚本作为其他插件的一部分被导入，则 register() 方法不会被调用。
+
+- `bl_options = {'REGISTER', 'UNDO'}`
+
+  - bl_options 是一个操作符的属性，用于指定该操作符的行为。它是一个包含字符串的集合，可以指定以下选项：
+
+    - REGISTER：表示将该操作作为已注册的操作来显示，即将其添加到撤销历史记录中。如果未启用此选项，则执行该操作不会被记录在撤销历史记录中。
+    - UNDO：表示该操作可被撤销。如果未启用此选项，则在执行该操作后无法撤消该操作。
+
+    在代码示例中，bl_options 属性被设置为 {'REGISTER', 'UNDO'}，表示该操作符应被注册并可以被撤销。这样一来，当用户单击添加的按钮时，该操作的执行将被记录在撤销历史记录中，并且用户可以随时撤消该操作。
+
+- 在 Blender 中，可以使用 Ctrl + Z 快捷键或 Edit 菜单中的 Undo 命令来撤消先前执行的操作。如果你想一次性撤销多个操作，可以多次按下 Ctrl + Z 或多次选择 Undo 命令。
+
+  如果你想恢复先前撤消的操作，可以使用 Ctrl + Shift + Z 快捷键或 Edit 菜单中的 Redo 命令来重做操作。同样，你可以多次按下 Ctrl + Shift + Z 或多次选择 Redo 命令以重复多个操作。
+
+```python
+import bpy
+from bpy.types import Panel, Operator
+
+
+class ADDONNAME_PT_main_panel(Panel):
+    bl_label = "Main Panel"
+    bl_idname = "ADDONNAME_PT_main_panel"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = "New Tab"
+
+    
+    def draw(self, context):
+        layout = self.layout
+ 
+        layout.operator("addonname.myop_operator")
+
+ 
+class ADDONNAME_OT_my_op(Operator):
+    bl_label = "Button"
+    bl_idname = "addonname.myop_operator"
+    bl_options = {'REGISTER', 'UNDO'}
+    
+    loc : bpy.props.FloatVectorProperty()
+    
+    def execute(self, context):
+        bpy.ops.mesh.primitive_cube_add(location=self.loc)
+        return {'FINISHED'}
+ 
+ 
+classes = [ADDONNAME_PT_main_panel, ADDONNAME_OT_my_op]
+ 
+ 
+def register():
+    for cls in classes:
+        bpy.utils.register_class(cls)
+        
+ 
+def unregister():
+    for cls in classes:
+        bpy.utils.unregister_class(cls)
+ 
+
+if __name__ == "__main__":
+    register()
+```
+
+开跑！按下 Button 按钮后，将会生成一个正方体，同时出现一个 Dialogbox 用于控制正方体的位置。这个操作可以用 Ctrl+Z 来撤销。
+
+![png](29_1.png)
+
+## API Changes and where to Find them?
+
+说 Blender 更新到 3.0 了，一些 API 发生了变化，可以从 [Reference/Release Notes/3.0/Python API - Blender Developer Wiki](https://wiki.blender.org/wiki/Reference/Release_Notes/3.0/Python_API) 里查看，其实现在也可以 chatGPT。

@@ -1,0 +1,160 @@
+---
+title: Hexo-给博客提提速！
+date: Wed Jan 10 2024 19:41:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - Hexo
+  - HTML
+categories: 学习
+description: promefire😭你太强了😭
+---
+
+
+# 正文
+
+## 换域名
+
+> ​	github.io 这个域名在冀大校园网会直接被墙（估计是 DNS 污染？），换个域名让冀大校园网里也能访问！
+
+- [学生认证域名专享低至 1 元 (aliyun.com)](https://cn.aliyun.com/page-source/domain/activity/markets/aliyun/wanwang/1yuan-students?from_alibabacloud=) 阿里云学生认证后，可以一块钱买一年的域名，真是太棒了！
+
+![webp](01.webp)
+
+​	买一个域名：`gz-metal-cell.top`。
+
+​	要实名认证才可以使用！进去操作一番，直到审核通过域名可以解析为止。
+
+![webp](02.webp)
+
+​	设置主机记录：
+
+![webp](03.webp)
+
+​	<font color="#136ec2"><b>pro 神</b></font>这么说道：
+
+> Github Page 提供了`Custom domain` 服务，
+>
+> 在`username.github.io` 仓库下 `setting` ->  `Pages` ->`Custom domain`  填入域名`blog.promefire.top`。保存后会在根目录生成`CNAME` 文件，里面保存域名配置信息
+
+![webp](04.webp)
+
+​	等待 `DNS check successful`，顺便把 `Enforce HTTPS` 也开了。
+
+​	仓库根目录就会创建一个 `CNAME` 文件，内容即为 `blog.gz-metal-cell.top`，这个文件在本地 `source/` 下也转存一份，不然每次推送这个 `CNAME` 又会没了……
+
+![webp](05.webp)
+
+​	现在，访问 https://gz-metal-cell.github.io 会自动跳转至 https://blog.gz-metal-cell.top/，就可以绕开冀大的防火墙了，真是太棒了！
+
+## 图片懒加载
+
+- [Troy-Yang/hexo-lazyload-image: lazyload image plugin for Hexo. (github.com)](https://github.com/Troy-Yang/hexo-lazyload-image)
+
+​	<font color="#136ec2"><b>pro 神</b></font>这么说道：
+
+> ​	懒加载又称延迟加载。开启后，当图片或评论插件滚动到可见范围内才会加载，可以大幅提高打开网页的速度。
+>
+> 1.新增`hexo-lazyload-image`模块
+>
+> ```shell
+> npm install hexo-lazyload-image --save
+> ```
+>
+> 2.在主目录配置文件`_config.yml`增加配置
+>
+> ```yaml
+> # 图片懒加载
+> lazyload:
+>   enable: true
+>   onlypost: false  # optional
+>   loadingImg: /images/loading.webp  # optional eg ./images/loading.gif
+>   isSPA: false  # optional
+>   preloadRatio: 5  # optional, default is 1
+> ```
+
+​	从 [loading GIF 图片生成 loading GIF 图片 在线 loading 图片制作工具 intoGIF](https://www.intogif.com/loading/) 整一个 loading 的 gif，再 PS 调一调，再 [GIF 转 WEBP - 在线转换图像文件 (aconvert.com)](https://www.aconvert.com/cn/image/gif-to-webp/) 转成 webp 格式，看起来不错，只要 12 KB！
+
+![webp](loading.webp)
+
+​	进主题，把图标啥的小图片打上 `no-lazy` 标签，我们并不需要懒加载这些内容：
+
+```html
+<img no-lazy src="XXX" />
+```
+
+### 与 Masonry 冲突
+
+​	解决一下懒加载与 [Masonry · Layout (desandro.com)](https://masonry.desandro.com/layout) 布局的冲突，原本是这么处理的：
+
+```javascript
+// layout Masonry after each image loads
+$grid.imagesLoaded().progress(function() {
+    $grid.masonry();
+});
+```
+
+​	改成：
+
+```javascript
+window.imageLazyLoadSetting = {
+    onImageLoaded: function() {
+    $grid.masonry();
+    }
+};
+```
+
+​	这样懒加载就能与瀑布流插件 `Masonry` 所兼容！
+
+### 与 fancybox 冲突
+
+​	这个插件的原理是把 `img` 的 `src` 改成 `data-original`，因此需要修改创建 fancybox 的逻辑：
+
+```javascript
+$('#article img').each(function () {
+    if ($(this).parent().hasClass('fancybox')) return;
+    if ($(this).hasClass('no-fancybox')) return;
+    var alt = this.alt;
+    $(this).wrap(
+        '<a ' +
+            'class="fancybox"' +
+            'href="' + ($(this).attr('data-original') == null ? this.src : $(this).attr('data-original')) +
+            '"data-caption="' + alt + '"' +
+            'data-fancybox="gallery"' +
+            'data-thumb='+ ($(this).attr('data-original') == null ? this.src :$(this).attr('data-original')) + '>' +
+        '</a>');
+});
+```
+
+
+## 其他工具
+
+- [ITDOG - 在线 ping_在线 tcping_网站测速_HTTP 测速_API 测速_路由追踪_在线 MTR_DNS 查询_ITDOG-云邦畅想](https://www.itdog.cn/)
+
+​	ChatGPT 这么说道：
+
+> 要使用 Python 将 PNG 文件转换为 WebP 格式，你可以使用 Pillow 库。请确保你已经安装了 Pillow 库。
+>
+> 以下是一个简单的示例代码：
+>
+> ```python
+> from PIL import Image
+> 
+> def convert_png_to_webp(input_path, output_path):
+>     # 打开 PNG 文件
+>     image = Image.open(input_path)
+> 
+>     # 将 PNG 文件转换为 WebP 格式
+>     image.save(output_path, "webp")
+> 
+> # 调用函数进行转换
+> convert_png_to_webp("input.png", "output.webp")
+> ```
+>
+> 在上面的代码中，`convert_png_to_webp` 函数接受输入路径（PNG 文件）和输出路径（WebP 文件），并将 PNG 文件转换为 WebP 格式。
+>
+> 请注意，使用 WebP 格式需要安装 libwebp 库。如果你在使用 Pillow 之前没有安装 libwebp 库，你可能会遇到错误。你可以根据你的操作系统和 Python 版本选择合适的安装方法。
+
+​	<font color="#136ec2"><b>pro 神</b></font>这么说道：
+
+> - 网站性能分析工具：[PageSpeed Insights](https://pagespeed.web.dev/)
+> -  图片压缩：[TinyPNG – Compress WebP, PNG and JPEG images intelligently](https://tinypng.com/)
+

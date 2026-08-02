@@ -1,0 +1,305 @@
+---
+title: ML-李宏毅-Lecture 3-Image as input
+date: Wed Jan 25 2023 14:08:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - 李宏毅
+categories: 学习
+description: 李宏毅《机器学习2022》课程学习笔记。
+---
+
+
+# Preparation
+
+## 【機器學習 2021】卷積神經網路 -Convolutional Neural Networks- CNN-
+
+![png](P1.1.png)
+
+​	Image Classification: 给一些图像（所有图像被划分成同样的大小）经过 Model 得出预测结果 $y'$，与实际值 $\hat y$ 之间的交叉熵损失函数为损失函数。
+
+![png](P1.2.png)
+
+​	一张 $100\times 100$ 的彩色图像是一个 3-D tensor，拥有 3 个通道。
+
+![png](P1.3.png)
+
+​	如果简单地使用全连接层进行训练，则会有非常多的参数，容易导致过拟合。
+
+### Observation 1
+
+![png](P1.4.png)
+
+​	卷积的解释 1：假设一张鸟类的图，把它分成一些关键的部分作为判别依据。
+
+![png](P1.5.png)
+
+​	人类似乎也是通过观察图片的一些特点来进行图像分类！
+
+![png](P1.6.png)
+
+​	把图片分成许多 pattern，神经网络中的一个神经元不必看到整个图像信息。
+
+![png](P1.7.png)
+
+​	每个神经元只能看到一定的 Receptive field，Receptive field 中的 3-D tensor 乘上 weights 然后加上 bias，最后进行激活函数。
+
+![png](P1.8.png)
+
+每个 receptive field 被设有多个神经元。
+
+- receptive field 的大小叫做 **kernel size**
+- 相邻的 receptive field 的间距叫做 **stride**，不同的 receptive field 可能会有重叠（一般都会有）
+- receptive field 超出图像的边缘叫做 **padding**，会有不同的处理方式，如全部取 0，设为平均值等
+
+所有的 receptive fields 覆盖整幅图像。
+
+### Observation 2
+
+![png](P1.9.png)
+
+​	如不同张图片，鸟的喙（patterns）出现在两张图片不同 regions 中。
+
+​	每个 receptive field 都需要一个喙探测器吗？
+
+![png](P1.10.png)
+
+​		即使是同一个参数的神经元，由于 receptive field 中的值不同，经过神经元输出后输出值仍然不同。
+
+![png](P1.11.png)
+
+​	每个 receptive field 被设有很多神经元。
+
+​	每个 receptive field 的每个神经元被设有一样的参数。(filter 1, filter 2, filter 3, filter 4, ...)
+
+### Convolutional Layer
+
+![png](P1.12.png)
+
+参数共享 属于 Receptive Field 属于 全连接层。将 Receptive Field 和 Parameter Sharing 结合就是卷积层。
+
+- 有些图案比整个图像小得多
+
+- 相同的图案出现在不同的区域
+
+![png](P1.13.png)
+
+卷积层中每个神经元就是一个 filter，每个 filter 用于探测一个小的 pattern。
+
+![png](P1.14.png)
+
+​		经过卷积操作后会得到一定大小，“通道”数 = Filter 个数的“图像”，被称为“Feature Map”
+
+![png](P1.15.png)
+
+​	经过 64 个 filter 后的卷积层，就会得到有 64 个“通道”的“图像”
+
+![png](P1.16.png)
+
+​	经过卷积后的图像中的一个点就包含原始图像一个 receptive field 的某些图像特征。
+
+### Comparison of Two Stories
+
+![png](P1.17.png)
+
+![png](P1.18.png)
+
+​	一些卷积操作完还要加上一定的 bias 值。
+
+![png](P1.19.png)
+
+| 神经元角度                                  | 滤波器角度                   |
+| ------------------------------------------- | ---------------------------- |
+| 每个神经元只考虑一个 receptive field        | 有一组检测小图案的过滤器     |
+| 具有不同 receptive field 的神经元共享参数。| 每个过滤器对输入图像进行卷积 |
+
+### Observation 3
+
+![png](P1.20.png)
+
+​		对图像中的像素进行 Subsampling 子采样并不会改变图像描述的物体。
+
+![png](P1.21.png)
+
+​	池化操作——将卷积后的图像分成各个块，用一个值描述各个块。（如 Max Pooling，取各个块的最大值）
+
+![png](P1.22.png)
+
+​	卷积和池化往往交替进行，多个卷积后进行一次池化操作等。
+
+### The whole CNN
+
+![png](P1.23.png)
+
+​	完整的卷积神经网络：输入图像——多次卷积、池化——Flatten（将最后的矩阵转换成向量）——将所得向量作为输入进入全连接层——softmax——预测分类结果。
+
+### Application：Playing Go
+
+![png](P1.24.png)
+
+​	不只是图像处理方面用到卷积神经网络，Alpha Go 也用到了神经网络。把围棋棋盘当作一个 $19\times 19$ 的矩阵（图像），经过神经网络后得到下一个下出的点。
+
+​	在 Alpha Go 中，有 48 个 channels。
+
+![png](P1.25.png)
+
+- Alpha Go 第一层中对每个坐标，都会考虑周围 $5\times 5$ 范围的棋子分布情况（patterns）。
+
+- 同样的 patterns 可能会在棋盘不同位置中（regions）。
+
+![png](P1.26.png)
+
+论文中提到：
+
+- 把棋盘看作是 $19\times 19\times 48$ 大小的 Image
+- 第一层中卷积层中卷积核大小是 $5\times 5$，stride = $1$，一共有 $192$ 个 filters。
+- 激活函数使用了 ReLU
+- 第二层卷积层中卷积核大小是 $3\times 3$，stride = $1$，一共有 $192$ 个 filters。
+- 并没有用到 Pooling，Pooling 并不是在所有问题中都是好用的。
+
+![png](P1.27.png)
+
+​	卷积神经网络用在语音、文字处理等，其结构并不等同于用在图像上的卷积神经网络。
+
+![png](P1.28.png)
+
+​	卷积神经网络难以处理图像放大缩小、旋转等的问题，因此做影像辨识时往往需要 Data Augumentation。把训练集中的每张图片截出一小块放大缩小、旋转等。
+
+​	Special Transformer Layer 可以直接处理这种问题。
+
+# Class Material
+
+## 【機器學習 2022】為什麼用了驗證集 (validation set) 結果卻還是過擬合(overfitting)了呢？
+
+![png](C1.1.png)
+
+​	本节课主要探讨在使用验证集后模型依然出现过拟合现象的原因。
+
+![png](C1.2.png)
+
+​	假设你从训练集中 $\mathcal{D}_{train}$ 训练了 3 个模型 $\mathcal{H}_1,\mathcal{H}_2,\mathcal{H}_3$，从验证集 $\mathcal{D}_{val}$ 得到它们的损失函数值 $L_1,L_2,L_3$，你从中找到一个 $L$ 值最低的模型用到测试集上 $\mathcal{D}_{test}$。
+
+![png](C1.3.png)
+
+​	使用验证集以选择模型 = 训练 $\mathcal{D_{val}}$，你的模型是 $\mathcal{H}_{val}=\{h^*_1,h^*_2,h^*_3\}$。
+
+​	根据之前的公式：$P(\mathcal{D}_{train}\ is\ \mathbf{bad})\le|\mathcal{H}|\cdot2\exp(-2N\varepsilon^2)$ 得到 $P(\mathcal{D}_{val}\ is\ \mathbf{bad})\le|\mathcal{H}|\cdot2\exp(-2N_{val}\varepsilon^2)$。一般来说 $|\mathcal{H}|_{val}$ 不会很大，但当你的模型很复杂时，你依然会得到的较大的 $|\mathcal{H}_{val}|$ 从而得到的较大的 $P(\mathcal{D}_{val}\ is\ \mathbf{bad})$。
+
+## 【機器學習 2022】魚與熊掌可以兼得的深度學習
+
+![png](C2.1.png)
+
+​	之前论证了当 $\mathcal{H}$ 较大时会使得“理想”和”现实“差距较大。而 $\mathcal{H}$ 较小会出现“理想崩坏”。
+
+​	有没有办法使得 $\mathcal{H}$ 参数量较小的情况下仍然获得较小的 $L$ 值？![png](C2.2.png)
+
+​	回顾之前的课程，我们用折线 Piecewise Linear 来拟合目标函数的曲线。![png](C2.3.png)
+
+​	而 piecewise liear 可以看作是一个常数 constant 和多个 Hard Sigmoid 函数之和。![png](C2.4.png)
+
+ 我们可以用 Sigmoid 函数来模拟 Hard Sigmoid 函数。![png](C2.5.png) ![png](C2.6.png)
+
+​	我们也可以用 ReLU 函数来模拟 Hard Sigmoid 函数。![png](C2.7.png)
+
+​	既然只要神经元的个数够多就可以拟合任意函数，为什么要使用深度神经网络结构而不是宽度神经网络结构？![png](C2.8.png)
+
+​	2011 年这篇论文通过实验显示了当层数越多时，错误率越低。![png](C2.9.png)
+
+​	假设“胖矮”式神经网络与“高瘦” 式神经网络的参数量一致。![png](C2.10.png)
+
+​	通过实验显示深度神经网络总是比宽度神经网络错误率要低。![png](C2.11.png)
+
+​	Why we need deep？
+
+- 是的，一层隐藏层就可以表示任何函数。
+
+- 然而，使用深层架构更加有效。 
+
+![png](C2.12.png)
+
+​	使用逻辑电路来举例，假设有一组长度为 $d$ 的输入序列，要求当输入序列中 1 的个数为偶数时输出 1，否则输出 0。
+
+​	如果将异或门并联，则需要 $O(2^d)$ 个异或门，如果分层连接，则只需要 $O(d)$ 个异或门。![png](C2.13.png)
+
+​	在编写程序时也要求不要把所有代码全部放入 main 函数中，而是尽可能将各个功能分层设计。![png](C2.14.png)
+
+​	剪纸时将纸先折起来再剪比较有效率。![png](C2.15.png) ![png](C2.16.png) ![png](C2.17.png)
+
+​	拟合一个 $2^K$ 个片段的折线时，深度神经网络只需要 $2K$ 个神经元，$|\mathcal{H}|$更小，而宽度神经网络需要 $2^K$ 个神经元，$|\mathcal{H}|$ 更大。![png](C2.18.png)
+
+​	深度神经网络在处理复杂且有规律的函数（如图像、语音等）时效果比宽度神经网络更好。
+
+​	甚至在拟合 $y=x^2$ 这种函数时也比宽度神经网络效果更好。![png](C2.19.png)
+
+# Extra Material
+
+## Spatial Transformer Layer
+
+![png](E1.1.png)
+
+- [[1506.02025\] Spatial Transformer Networks (arxiv.org)](https://arxiv.org/abs/1506.02025)
+
+### Spatial Transformer Layer
+
+![png](E1.2.png)
+
+​	卷积神经网络并不能处理图像的缩放和旋转（可以处理平移），如果可以，则是事先在数据集中先做了这些图像变换在训练后得到的。
+
+​	Spatial Transformer Layer 就是处理问题而提出。可以将不同缩放和旋转的图片变换成 CNN 可识别的图片。不仅可以变换原图像，还可以变换 feature map。
+
+![png](E1.3.png)
+
+​	对于神经网络 NN，这个变化是通过输入 $a^{l-1}$ 和 $w^l$ 计算而成：$a^1_{nm}=\sum^3_{i=1}\sum^3_{j=1}w^l_{nm,ij}a^{l-1}_{ij}$。
+
+​	如上图所示，要求通过 Spatial Transformer Layer 将 Layer l-1 变换成 Layer l，这是一个平移变换 $a^l_{nm}=a^{l-1}_{(n-1)m}$。
+
+​	则将 $w$ 设定成：
+
+$$w^l_{nm,ij}=\left\{\begin{matrix}1&,\ if\ i=n-1,j=m\\0&,\ otherwise \end{matrix}\right.$$
+
+​	这样就可以达成平移的目的。换句话说，如果要对图像做缩放或旋转的话，只需要对 $w$ 做不同的设计就可以。
+
+![png](E1.4.png)
+
+​	只需要对 $w$ 做调整就可以达成平移（左）与旋转（右）的效果，要做到这种调整可以利用神经网络（NN）来控制。
+
+### Image Transformation
+
+![png](E1.5.png)
+
+- 把一个图像扩大两倍：$\begin{bmatrix}x'\\y'\end{bmatrix}=\begin{bmatrix}2&0\\0&2\end{bmatrix}\begin{bmatrix}x\\y\end{bmatrix}+\begin{bmatrix}0\\0\end{bmatrix}$
+- 把一个图像缩小到原来的 $\frac{1}{2}$ 并平移到右上角：$\begin{bmatrix}x'\\y'\end{bmatrix}=\begin{bmatrix}0.5&0\\0&0.5\end{bmatrix}\begin{bmatrix}x\\y\end{bmatrix}+\begin{bmatrix}0.5\\0.5\end{bmatrix}$
+
+![png](E1.6.png)
+
+​	逆时针旋转 $\theta$ 个角度：$\begin{bmatrix}x'\\y'\end{bmatrix}=\begin{bmatrix}\cos\theta&-\sin\theta\\\sin\theta&\cos\theta\end{bmatrix}\begin{bmatrix}x\\y\end{bmatrix}+\begin{bmatrix}0\\0\end{bmatrix}$
+
+![png](E1.7.png)
+
+​	只要 6 个参数就可以描述仿射 affline 变换（由一个线性变换接上一个平移）。
+
+![png](E1.8.png)
+
+​	最后求得的 $\begin{bmatrix}x'\\y'\end{bmatrix}$ 一般不会是整数，如果使用四舍五入的方法映射到最终的 Layer l 中不可取，因为这样就无法进行梯度下降方法对模型进行优化（梯度始终为 0）。
+
+### Interpolation
+
+![png](E1.9.png)
+
+​	使用插值法 Interpolation，我们不单纯的参考它跟距离最近的那个点 $a^{l-1}_{22}$，而是周围 4 个点的数值都参考。这样就可以使用梯度下降了。
+
+### 应用
+
+![png](E1.10.png)
+
+​	在卷积神经网络中的各个卷积层前引入 ST 层。
+
+![png](E1.11.png)
+
+​	无论 MNIST 数据集的手写体数字被怎样地仿射变换，ST 层都可以使得手写体数字变得“正常”。
+
+![png](E1.12.png)
+
+​	路牌数字识别中，使用 ST 层的 CNN 使得识别更有效。
+
+![png](E1.13.png)
+
+​	鸟类识别，将矩阵 $\begin{bmatrix}a&b\\c&d\end{bmatrix}\begin{bmatrix}e\\f\end{bmatrix}$ 中的 $b$ 和 $c$ 始终设为 0，ST 层就不会考虑图像旋转的因素。

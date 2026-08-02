@@ -1,0 +1,1425 @@
+---
+title: Paper-重读-Synthetic Data for Text Localisation in Natural Images
+date: Tue Sep 05 2023 14:39:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - 论文
+  - 数据集
+  - Python
+  - 代码复现
+categories: 学习
+description: 论文阅读。
+---
+
+
+# 资源
+
+- 原文：[[1604.06646v1] Synthetic Data for Text Localisation in Natural Images (arxiv.org)](https://arxiv.org/abs/1604.06646v1)
+
+- PaddleOCR：[[1604.06646v1] Synthetic Data for Text Localisation in Natural Images (arxiv.org)](https://arxiv.org/abs/1604.06646v1)
+
+- 代码：[ankush-me/SynthText: Code for generating synthetic text images as described in "Synthetic Data for Text Localisation in Natural Images", Ankush Gupta, Andrea Vedaldi, Andrew Zisserman, CVPR 2016. (github.com)](https://github.com/ankush-me/SynthText)
+
+# 原文
+
+## Abstract
+
+1. 提出了一个数据集合成引擎，以一种自然的方式将合成文本覆盖到现有的背景图像上，考虑到局部 3D 场景的几何形状。
+2. 一个新的全卷积回归网络 FRCN，解决文本检测问题。在 ICDAR 2013 上获得 84.2% 的 F-Score。
+
+## 1 Introduction
+
+1. 介绍了文本识别的意义，检测管道的性能成为文本识别的新瓶颈:在一个文本识别网络中，正确裁剪单词的识别准确率为 98%，而端到端文本识别 f 值仅为 69%。
+
+2. 提出了一种新的数据集合成引擎，生成的数据集称为 SynthText in the Wild。
+
+3. 还提出了一个文本检测模型，~~但是这玩意太老了估计现在不会用了~~。
+
+### 1.1 Related Work
+
+1. 介绍了基于 CNN 的目标检测
+2. 介绍了合成数据集
+3. 介绍了数据增强的方法
+
+## 2 Synthetic Text in the Wild
+
+我们提出的合成引擎：
+
+1. 真实
+2. 自动化
+3. 快速
+
+文本生成管道：
+
+1. 获取合适的文本和图像样本
+2. 根据局部颜色和纹理线索将图像分割成连续的区域
+3. 使用 CNN 获得密集的逐像素深度图
+
+4. 对每个相邻区域估计一个局部表面法线
+5. 根据区域的颜色选择文本和可选的轮廓的颜色
+6. 使用随机选择的字体渲染文本样本，并根据局部表面方向进行转换
+7. 使用泊松图像编辑将文本融入场景中
+
+![png](F3.png)
+
+<p style="color: var(--color-muted-foreground); font-size: var(--text-sm); line-height: var(--tw-leading, var(--text-sm--line-height)); text-align: center; margin-top: .375em !important;margin-bottom: .375em !important">（上，从左到右）：<br/>(1) 无文本实例的 RGB 输入图像。<br/>(2) 预测密集深度图（越暗的区域越近）。<br/>
+(3) 颜色和纹理 gPb-UCM 分段。<br/>(4) 过滤区域:对适合文本的区域随机上色;那些不合适的保留其原始图像像素。<br/>(下)：四个合成的场景文本图像，在单词级别具有轴对齐的边界框注释。</p>
+
+
+### 2.1. Text and Image Sources
+
+- 文本从 Newsgroups20 数据集中提取单词、行和段落。
+
+- 为了增加多样性，从谷歌图像搜索提取了 8000 张图像，人工检查丢弃包含文本的图像。
+
+### 2.2. Segmentation and Geometry Estimation
+
+![png](F4.png)
+
+<p style="color: var(--color-muted-foreground); font-size: var(--text-sm); line-height: var(--tw-leading, var(--text-sm--line-height)); text-align: center; margin-top: .375em !important;margin-bottom: .375em !important">局部颜色/纹理敏感的位置。<br/>(左)合成文本数据集的示例图像。请注意，文本被限制在街道上的台阶范围内。<br/>(右)相比之下，这张图片中的文本位置并没有考虑到局部区域的线索。</p>
+
+- 在真实图像中，文本往往包含在定义良好的区域(例如一个标志)。我们通过要求文本包含在以统一颜色和纹理为特征的区域中来近似此约束。将 gPb-UCM 轮廓层次的阈值设定为 0.11，从而获得区域。
+- 在自然图像中，文字往往被画在表面的顶部（例如一个标志或一个杯子）。为了在我们的合成数据中近似类似的效果，文本根据局部表面法线进行透视转换。首先使用 CNN 对上述分割的区域预测密集深度图，然后使用 RANSAC 对其拟合平面 facet，从而自动估计法线。
+- 将文本对齐到估计的区域方向，步骤如下:
+  - 首先，使用估计的平面法线将图像区域轮廓扭曲为正面平行视图;
+  - 然后，在前平行区域拟合一个矩形;
+  - 最后，文本与这个矩形的大边(“width”)对齐。
+  - 当在同一区域放置多个文本实例时，将检查文本蒙版是否相互碰撞，以避免将它们放在彼此的顶部
+- 并不是所有的分割区域都适合文本放置——区域不应该太小，有一个极端的长宽比，或者表面法线与观看方向正交;所有这些区域都在这个阶段进行过滤。此外，还过滤了纹理过多的区域，其中纹理的程度是通过 RGB 图像中的三阶导数的强度来衡量的。
+
+---
+
+- 使用 CNN 来估计深度的替代方法是使用 RGBD 图像数据集，这是一个容易出错的过程。我们更喜欢估计一个不完美的深度图，因为:
+
+  - 它基本上允许使用任何场景类型的背景图像，而不仅仅是那些可用的 RGBD 数据，
+
+  - 因为公开可用的 RGBD 数据集都具有很强的限制。
+
+### 2.3. Text Rendering and Image Composition
+
+- 一旦确定了文本的位置和方向，文本就会被分配一种颜色。文本的调色板是从 IIIT5K 单词数据集中裁剪的单词图像中学习的。每个裁剪的单词图像中的像素使用 K-means 划分为两组，产生颜色对，其中一种颜色近似前景（文本）颜色，另一种颜色近似背景。在渲染新文本时，选择背景颜色与目标图像区域最匹配的颜色对（在 Lab 色彩空间中使用 L2-norm），并使用相应的前景颜色来渲染文本。
+- 大约 20% 的文本实例被随机选择为具有边框。边界颜色被选择为与前景颜色相同，其值通道增加或减少，或者被选择为前景和背景颜色的平均值。
+
+- 为了保持合成文本图像中的光照梯度，我们使用泊松图像编辑将文本混合到基础图像上。
+
+## 3. A Fast Text Detection Network
+
+### 3.1. Architecture
+
+​	不看了。
+
+## 4. Evaluation
+
+### 4.1. Datasets
+
+- SynthText in the Wild
+- ICDAR Datasets
+- Street View Text
+
+### 4.2. Text Localisation Experiments
+
+​	好使。
+
+### 4.3. Synthetic Dataset Evaluation
+
+​	我们生成了三个复杂程度越来越高的合成训练数据集：
+
+1. 文本被放置在图像中的随机位置
+2. 限制于局部颜色和纹理边界
+3. 扭曲视角以匹配局部场景深度(同时也尊重如上(2)中的局部颜色和纹理边界)。
+
+​	数据集的所有其他方面都保持不变——例如文本词典、背景图像、颜色分布。
+
+### 4.4. End-to-End Text Spotting
+
+​	在文本识别领域的表现。
+
+### 4.5. Timings
+
+​	速度不错！
+
+## 5. Conclusion
+
+​	设计的模型在现有的数据集里不好使，但是在合成数据集的帮助下就很好使了。
+
+## A.Appendix
+
+### A.1. Variation in Fonts, Colors and Sizes
+
+![png](A1.png)
+
+​	下面的图片显示了同一文本 “vamos!” 的合成文本渲染。
+
+​	沿着行，文本呈现在大致相同的位置和相同的背景图像上，但字体、颜色和大小不同。
+
+### A.2. Poisson Editing vs. Alpha Blending
+
+![png](A2.png)
+
+​	简单 alpha 混合（下一行）和泊松编辑（上一行）的比较。
+
+​	泊松编辑保留局部照明梯度和纹理细节。
+
+### A.3. SynthText in the Wild
+
+![png](A3.png)
+
+​	这些图像显示了不同字体、颜色、大小的文本实例，带有边框和阴影，背景不同，并根据局部几何形状进行转换，并约束于颜色和文本的局部连续区域。GT 的 BBox 用红色标记。
+
+### A.4. ICDAR 2013 Detections
+
+![png](A4.png)
+
+​	ICDAR 2013 数据集上来自 “FCRNall + multi-flit”（上行）和来自 Jaderberg 等人（下行）的检测示例。精度，召回率和 F 测量值 (P / R / F) 显示在每个图像的顶部。
+
+### A.5. Street View Text (SVT) Detections
+
+![png](A5.png)
+
+​	在“FCRNall + multi-flit”街景文本 (SVT) 数据集上的检测示例（上一行）和来自 Jaderberg 等人的检测示例（下一行）。
+
+​	精度，召回率和 F 测量值 (P / R / F) 在每张图像的顶部表示:这两种方法在这些图像上的精度都为 1 （除了一个由于缺少地基真值注释的情况）。
+
+## 数据集解析
+
+​	从 [Synthetic Data for Text Localisation in Natural Images - Academic Torrents](https://academictorrents.com/details/2dba9518166cbd141534cbf381aa3e99a087e83c) 下载 `SynthText.zip`，解压之：
+
+![png](C1.png)
+
+​	其中每一个文件夹里包含一个场景，里面存放着若干图片，`gt.mat` 是这些图片的注释。
+
+​	关于 `gt.mat` 里的解析：[SynthText文本数据详细解析_synthtext数据集_Mr.Q的博客-CSDN博客](https://blog.csdn.net/jizhidexiaoming/article/details/130008864)
+
+​	使用 python 读取 `gt.mat` 文件：
+
+```python
+import scipy.io as sio
+
+# 读取MAT文件
+data = sio.loadmat(r'D:\dataset\SynthText\SynthText\gt.mat')
+```
+
+​	包含如下属性：
+
+- imnames：图片路径
+- txt：文本
+- wordBB：单词级标注框
+- charBB：字符级标注框
+
+```python
+len(data['imnames'][0]), len(data['txt'][0]), len(data['wordBB'][0]), len(data['charBB'][0])
+```
+```
+(858750, 858750, 858750, 858750)
+```
+
+数据集可视化：
+
+```python
+import cv2
+import os
+import matplotlib.pyplot as plt
+import numpy as np
+
+index = 92
+
+file_dir = r'D:/dataset/SynthText/SynthText/'
+
+image_path = os.path.join(file_dir, data['imnames'][0][index][0])
+
+image_origin = cv2.imread(image_path)
+image_bbox = image_origin.copy()
+image_cbox = image_origin.copy()
+height, width, _ = image_origin.shape
+
+
+txt = []
+for element in list(data['txt'][0][index]):
+    txt.extend(element.split())
+
+if isinstance(data['wordBB'][0][index][0][0], np.ndarray):
+    for i in range(len(data['wordBB'][0][index][0][0])):  # bbox
+        x =  [int(num) for num in data['wordBB'][0][index][0][:, i]]
+        y =  [int(num) for num in data['wordBB'][0][index][1][:, i]]
+        points = np.array([x, y], np.int32).T
+        transcriptions = txt[i]
+
+        cv2.polylines(image_bbox, [points], isClosed=True, color=(255, 0, 0), thickness=2)
+        for p in points:
+            cv2.circle(image_bbox, (p[0], p[1]), int(min(height, width) / 150), (0, 255, 255), -1)
+
+        cv2.putText(image_bbox, transcriptions, (x[0], y[0] - int(min(height, width) / 150)), cv2.FONT_HERSHEY_SIMPLEX,
+                    min(height, width) / 1000, (0, 255, 0), int(min(height, width) / 500))
+else:
+    x =  [int(num) for num in data['wordBB'][0][index][0]]
+    y =  [int(num) for num in data['wordBB'][0][index][1]]
+    points = np.array([x, y], np.int32).T
+    transcriptions = txt[0]
+
+    cv2.polylines(image_bbox, [points], isClosed=True, color=(255, 0, 0), thickness=2)
+    for p in points:
+        cv2.circle(image_bbox, (p[0], p[1]), int(min(height, width) / 150), (0, 255, 255), -1)
+
+    cv2.putText(image_bbox, transcriptions, (x[0], y[0] - int(min(height, width) / 150)), cv2.FONT_HERSHEY_SIMPLEX,
+                min(height, width) / 1000, (0, 255, 0), int(min(height, width) / 500))
+    
+if isinstance(data['charBB'][0][index][0][0], np.ndarray):
+    for i in range(len(data['charBB'][0][index][0][0])):  # cbox
+        x =  [int(num) for num in data['charBB'][0][index][0][:, i]]
+        y =  [int(num) for num in data['charBB'][0][index][1][:, i]]
+        points = np.array([x, y], np.int32).T
+
+        cv2.polylines(image_cbox, [points], isClosed=True, color=(255, 0, 0), thickness=2)
+        for p in points:
+            cv2.circle(image_cbox, (p[0], p[1]), int(min(height, width) / 150), (0, 255, 255), -1)
+else:
+    x =  [int(num) for num in data['charBB'][0][index][0]]
+    y =  [int(num) for num in data['charBB'][0][index][1]]
+    points = np.array([x, y], np.int32).T
+
+    cv2.polylines(image_cbox, [points], isClosed=True, color=(255, 0, 0), thickness=2)
+    for p in points:
+        cv2.circle(image_cbox, (p[0], p[1]), int(min(height, width) / 150), (0, 255, 255), -1)
+        
+fig, axes = plt.subplots(nrows=3, ncols=1, figsize=(32, 18))
+axes = axes.flatten()
+
+axes[0].imshow(cv2.cvtColor(image_origin, cv2.COLOR_BGR2RGB))
+axes[0].axis('off')
+axes[0].set_title('Origin: ' + data['imnames'][0][index][0])
+
+axes[1].imshow(cv2.cvtColor(image_bbox, cv2.COLOR_BGR2RGB))
+axes[1].axis('off')
+axes[1].set_title('bbox')
+
+axes[2].imshow(cv2.cvtColor(image_cbox, cv2.COLOR_BGR2RGB))
+axes[2].axis('off')
+axes[2].set_title('cbox')
+
+plt.tight_layout()
+plt.show()
+```
+
+![png](C2.png)
+
+## 转换成 MindOCR 可读的 TotalText 形式
+
+```python
+import cv2
+import os
+import matplotlib.pyplot as plt
+import numpy as np
+import shutil
+from tqdm import tqdm
+
+file_dir = r'D:/dataset/SynthText/SynthText/'
+save_image_dir = r'D:/dataset/SynthText/SynthText/images'
+save_label_dir = r'D:/dataset/SynthText/SynthText/Txts'
+
+for index in tqdm(range(858750)):
+    image_path = os.path.join(file_dir, data['imnames'][0][index][0])
+    shutil.copy(image_path, os.path.join(save_image_dir, 'img' + str(index) + '.jpg'))
+    
+    string = ""
+    txt = []
+    for element in list(data['txt'][0][index]):
+        txt.extend(element.split())
+
+    if isinstance(data['wordBB'][0][index][0][0], np.ndarray):
+        for i in range(len(data['wordBB'][0][index][0][0])):  # bbox
+            x =  [int(num) for num in data['wordBB'][0][index][0][:, i]]
+            y =  [int(num) for num in data['wordBB'][0][index][1][:, i]]
+            points = np.array([x, y], np.int32).T
+            transcriptions = txt[i]
+    else:
+        x =  [int(num) for num in data['wordBB'][0][index][0]]
+        y =  [int(num) for num in data['wordBB'][0][index][1]]
+        points = np.array([x, y], np.int32).T
+        transcriptions = txt[0]
+        
+    string += 'x: [['
+    string += ' '.join(map(str, x))
+    string += ']], y: [['
+    string += ' '.join(map(str, y))
+    string += "]], ornt: [u'h"
+    string += "'], transcriptions: [u'"
+    string += transcriptions
+    string += "']\n"
+    
+    with open(os.path.join(save_dir, "poly_gt_img" + str(index) + ".txt"), 'w', encoding='UTF-8') as file:
+        file.write(string)
+```
+
+## 代码
+
+​	从 [ankush-me/SynthText at python3 (github.com)](https://github.com/ankush-me/SynthText/tree/python3) 获取代码，在 Wsl2 下跑，装环境下见招拆招，总能跑的。
+
+​	生成图片：
+
+```shell
+python gen.py --viz
+```
+
+​	可视化结果：
+
+```python
+python visualize_results.py
+```
+
+
+
+![png](C3.png)
+
+```
+image name        :  hiking_125.jpg_0
+  ** no. of chars :  69
+  ** no. of words :  15
+  ** text         :  ['>>Potvin' 'someone\n wrong \ngetting' 'cloud' 'do with' 'Calgary\nfinal'
+ 'Re:' 'I have' 'a stud\nMorgan']
+```
+
+# 读代码（太多了，挑一点看吧）
+
+## gen.py
+
+```python
+import numpy as np
+import h5py  # 用于读写 HDF5 文件格式的数据
+import os, sys, traceback  # 用于进行文件和系统操作以及处理异常
+import os.path as osp  # 用于处理文件路径
+from synthgen import *  # 从 synthgen 模块导入所有内容。synthgen 模块包含了生成合成文本图像的相关函数和类
+from common import *  # 从 common 模块导入所有内容。common 模块包含了一些通用的函数和常量。
+import wget, tarfile  # 导入 wget 和 tarfile 模块，用于下载和解压文件。
+
+
+# Define some configuration variables:
+# 要用于生成的图像数量（-1表示使用所有可用的图像）。
+NUM_IMG = -1  # no. of images to use for generation (-1 to use all available):
+# 每张图像使用的实例数量。
+INSTANCE_PER_IMAGE = 1 # no. of times to use the same image
+# 每张图像的最大处理时间（单位：秒）。
+SECS_PER_IMG = 5  # max time per image in seconds
+
+# path to the data-file, containing image, depth and segmentation:
+DATA_PATH = 'data'  # 数据文件的路径
+DB_FNAME = osp.join(DATA_PATH,'dset.h5')  # 数据库文件的完整路径，由数据路径和数据库文件名组合而成。
+# url of the data (google-drive public file):
+DATA_URL = 'http://www.robots.ox.ac.uk/~ankush/data.tar.gz'  # 数据的下载链接。
+OUT_FILE = 'results/SynthText.h5'  # 输出结果的文件路径。
+
+def get_data():
+  """
+  Download the image,depth and segmentation data:
+  Returns, the h5 database.
+  """
+  # 检查存储数据的 h5 文件是否存在，如果不存在则执行数据下载和解压的操作。
+  if not osp.exists(DB_FNAME):
+    try:
+      # 打印提示信息，显示数据下载链接和文件大小。
+      colorprint(Color.BLUE,'\tdownloading data (56 M) from: '+DATA_URL,bold=True)
+      print()
+      sys.stdout.flush()
+      # 使用 wget.download() 函数下载数据文件，并指定下载得到的文件名为 "data.tar.gz"。
+      out_fname = 'data.tar.gz'
+      wget.download(DATA_URL,out=out_fname)
+      # 打开 tar 文件并解压文件内容。
+      tar = tarfile.open(out_fname)
+      tar.extractall()
+      # 关闭 tar 文件并删除压缩文件 "data.tar.gz"。
+      tar.close()
+      os.remove(out_fname)
+      # 打印提示信息，显示数据保存的路径。
+      colorprint(Color.BLUE,'\n\tdata saved at:'+DB_FNAME,bold=True)
+      sys.stdout.flush()
+    description: # 下载出现异常，则打印数据未找到的错误信息，并退出程序。
+      print (colorize(Color.RED,'Data not found and have problems downloading.',bold=True))
+      sys.stdout.flush()
+      sys.exit(-1)
+  # open the h5 file and return: 打开 h5 文件并以只读方式返回数据库对象。
+  return h5py.File(DB_FNAME,'r')
+
+
+def add_res_to_db(imgname,res,db):
+  """
+  将合成的文本图像实例及其相关元数据添加到数据集中。
+  Add the synthetically generated text image instance
+  and other metadata to the dataset.
+  :param imgname: 图像名称
+  :param res: 生成的合成文本图像实例
+  :param db: 数据库对象
+  """
+  ninstance = len(res)  # 计算生成的合成文本图像实例的数量
+  for i in range(ninstance):  # 遍历每个实例
+    # 首先创建一个数据集（dataset）并将合成图像存储在其中，数据集名称由图像名称和实例索引组成（dname）
+    dname = "%s_%d"%(imgname, i)
+    db['data'].create_dataset(dname,data=res[i]['img'])
+    # 将字符边界框（charBB）和单词边界框（wordBB）作为属性添加到数据集中
+    db['data'][dname].attrs['charBB'] = res[i]['charBB']
+    db['data'][dname].attrs['wordBB'] = res[i]['wordBB']        
+    # db['data'][dname].attrs['txt'] = res[i]['txt']
+    L = res[i]['txt']
+    L = [n.encode("ascii", "ignore") for n in L]
+    db['data'][dname].attrs['txt'] = L
+    # 返回更新后的数据库对象。
+
+
+def main(viz=False):
+  # open databases: 打开数据集
+  print (colorize(Color.BLUE,'getting data..',bold=True))
+  db = get_data()
+  print (colorize(Color.BLUE,'\t-> done',bold=True))
+
+  # open the output h5 file: 打开输出 HDF5 文件
+  out_db = h5py.File(OUT_FILE,'w')
+  out_db.create_group('/data')
+  print (colorize(Color.GREEN,'Storing the output in: '+OUT_FILE, bold=True))
+
+  # get the names of the image files in the dataset:
+  # 获取数据集中的图像名称列表
+  imnames = sorted(db['image'].keys())
+  N = len(imnames)
+  global NUM_IMG
+  if NUM_IMG < 0:  # -1 表示使用所有可用的图像
+    NUM_IMG = N
+  start_idx,end_idx = 0,min(NUM_IMG, N)  # 设置开始和结束索引
+
+  RV3 = RendererV3(DATA_PATH,max_time=SECS_PER_IMG)
+  for i in range(start_idx,end_idx):  # 循环遍历每个图像
+    imname = imnames[i]
+    try:
+      # get the image: 获取图像
+      img = Image.fromarray(db['image'][imname][:])
+      # get the pre-computed depth: 获取深度信息
+      # 这里有 2 个深度估计值（表示为 2 个“通道”），这里我们使用第二个（在某些情况下，使用另一个可能很有用）：
+      # there are 2 estimates of depth (represented as 2 "channels")
+      # here we are using the second one (in some cases it might be
+      # useful to use the other one):
+      depth = db['depth'][imname][:].T
+      depth = depth[:,:,1]
+      # get segmentation: 获取分割信息
+      seg = db['seg'][imname][:].astype('float32')
+      area = db['seg'][imname].attrs['area']
+      label = db['seg'][imname].attrs['label']
+
+      # re-size uniformly: 缩放到相同的大小
+      sz = depth.shape[:2][::-1]
+      img = np.array(img.resize(sz,Image.ANTIALIAS))
+      seg = np.array(Image.fromarray(seg).resize(sz,Image.NEAREST))
+ 
+      print (colorize(Color.RED,'%d of %d'%(i,end_idx-1), bold=True))
+      # 使用 RendererV3 生成器，将文本渲染到每个图像中，并将合成文本图像及其相关元数据添加到输出数据库中。
+      res = RV3.render_text(img,depth,seg,area,label,
+                            ninstance=INSTANCE_PER_IMAGE,viz=viz)
+      if len(res) > 0:
+        # non-empty : successful in placing text: 成功放置文字
+        add_res_to_db(imname,res,out_db)
+      # visualize the output:
+      if viz:  # 可视化输出结果
+        if 'q' in input(colorize(Color.RED,'continue? (enter to continue, q to exit): ',True)):
+          break
+    excerpt:
+      traceback.print_exc()
+      print (colorize(Color.GREEN,'>>>> CONTINUING....', bold=True))
+      continue
+  db.close()
+  out_db.close()
+
+
+if __name__=='__main__':
+  import argparse
+  parser = argparse.ArgumentParser(description='Genereate Synthetic Scene-Text Images')
+  parser.add_argument('--viz',action='store_true',dest='viz',default=False,help='flag for turning on visualizations')
+  args = parser.parse_args()
+  main(args.viz)
+```
+
+## synthgen.py
+
+> Main script for synthetic text rendering.
+
+```python
+from __future__ import division
+import copy
+import cv2
+import h5py
+from PIL import Image
+import numpy as np 
+#import mayavi.mlab as mym
+import matplotlib.pyplot as plt 
+import os.path as osp
+import scipy.ndimage as sim
+import scipy.spatial.distance as ssd
+import synth_utils as su
+import text_utils as tu
+from colorize3_poisson import Colorize
+from common import *
+import traceback, itertools
+```
+
+### class TextRegions()
+
+```python
+class TextRegions(object):
+    """
+    Get region from segmentation which are good for placing
+    text.
+    """
+    # 只有当区域的宽度大于等于 minWidth 并且高度大于等于 minHeight 才会被认为是可行的文本区域。
+    minWidth = 30 #px
+    minHeight = 30 #px
+    # 只有当区域的宽度与高度之比介于 minAspect 和 maxAspect 之间时，才会被认为是可行的文本区域
+    minAspect = 0.3 # w > 0.3*h
+    maxAspect = 7
+    # 只有当区域的像素数大于或等于 minArea 时，才会被认为是可行的文本区域
+    minArea = 100 # number of pix
+    # 只有当区域的像素数大于或等于 minArea 时，才会被认为是可行的文本区域
+    pArea = 0.60 # area_obj/area_minrect >= 0.6
+
+    # RANSAC planar fitting params:
+    # RANSAC 平面拟合的参数：
+    # 距离阈值。如果一个点到拟合平面的距离小于 dist_thresh，则该点被认为是内点。
+    dist_thresh = 0.10 # m
+    # 内点数量的最小值。如果拟合平面的内点数量小于 num_inlier，则拟合失败。
+    num_inlier = 90
+    # RANSAC 拟合的迭代次数。每一次迭代都会随机选择一些点进行平面拟合。
+    ransac_fit_trials = 100
+    # 平面法向量的最小 z 分量。如果平面法向量的 z 分量低于 min_z_projection，则该平面被认为是垂直于摄像机视角的，因此不能用作文本区域。
+    min_z_projection = 0.25
+    # 用于筛选旋转后的文本区域的最小宽度，只有当它大于 minW 时才会被保留。
+    minW = 20
+
+    @staticmethod
+    def filter_rectified(mask):
+        """
+        用于过滤旋转后的文本区域，只有当其宽度和高度都不小于 TextRegions.minW 时才会被保留。
+        接收一个二值化的图像作为输入，其中 "1" 表示区域内的像素点，"0" 则表示背景。
+        mask : 1 where "ON", 0 where "OFF"
+        """
+        # 计算出区域在垂直和水平方向上的投影，然后取其中位数。
+        wx = np.median(np.sum(mask,axis=0))
+        wy = np.median(np.sum(mask,axis=1))
+        # 如果两个中位数都大于等于 TextRegions.minW，则返回 True，否则返回 False。
+        return wx>TextRegions.minW and wy>TextRegions.minW
+
+    @staticmethod
+    def get_hw(pt,return_rot=False):
+        # 用于计算旋转矫正后的文本区域的宽度和高度
+        pt = pt.copy()
+        # 使用 unrotate2d 方法进行旋转校正。这个方法通过计算区域的主轴角度，然后将区域旋转回水平方向。
+        R = su.unrotate2d(pt)
+        # 计算区域坐标的中位数 mu，并将每个点减去中位数，以便将区域的中心移动到原点。
+        mu = np.median(pt,axis=0)
+        # 函数应用旋转矩阵 R，将区域进行旋转，并再次将中心移回原来的位置。
+        pt = (pt-mu[None,:]).dot(R.T) + mu[None,:]
+        # 计算旋转矫正后的区域的宽度和高度，分别等于区域坐标的最大值减去最小值。
+        h,w = np.max(pt,axis=0) - np.min(pt,axis=0)
+        if return_rot:
+            # 如果 return_rot 参数设置为 True，则函数还会返回旋转矩阵 R。
+            return h,w,R
+        return h,w
+ 
+    @staticmethod
+    def filter(seg,area,label):
+        """
+        Apply the filter.
+        The final list is ranked by area.
+        应用过滤器对文本区域进行筛选和排序。
+        :seg: 分割图像
+        :area: 区域面积
+        :label: 区域标签
+        """
+        # 根据 TextRegions.minArea 将小于最小面积阈值的区域排除，并更新 good 和 area 的值
+        good = label[area > TextRegions.minArea]
+        area = area[area > TextRegions.minArea]
+        filt,R = [],[]
+        for idx,i in enumerate(good):
+            # 对每个符合要求的区域进行处理。函数首先根据区域的标签 i 生成相应的二值掩膜 mask
+            mask = seg==i
+            # 使用 np.where 函数获取掩膜上非零像素的坐标，并将其保存到 xs 和 ys
+            xs,ys = np.where(mask)
+            # 将坐标转换为浮点型的数组 coords
+            coords = np.c_[xs,ys].astype('float32')
+            # 利用 cv2.minAreaRect 函数计算出最小外接矩形 rect
+            rect = cv2.minAreaRect(coords)          
+            #box = np.array(cv2.cv.BoxPoints(rect))
+            # 通过 cv2.boxPoints 函数从矩形中获取四个角点的坐标，保存在 box 中
+            box = np.array(cv2.boxPoints(rect))
+            # 调用 TextRegions.get_hw 方法获取旋转矫正后的区域的宽度 w、高度 h 和旋转矩阵 rot
+            h,w,rot = TextRegions.get_hw(box,return_rot=True)
+            # 依次判断以下条件：
+            # h > TextRegions.minHeight：区域高度是否大于最小高度阈值；
+            # w > TextRegions.minWidth：区域宽度是否大于最小宽度阈值；
+            # TextRegions.minAspect < w/h < TextRegions.maxAspect：区域宽高比是否在允许的范围内；
+            # area[idx]/w*h > TextRegions.pArea：经过旋转后的区域面积是否大于面积阈值
+            # 上述条件全部满足，则将标记为 True，否则标记为 False
+            f = (h > TextRegions.minHeight 
+                and w > TextRegions.minWidth
+                and TextRegions.minAspect < w/h < TextRegions.maxAspect
+                and area[idx]/w*h > TextRegions.pArea)
+            # 将结果保存到列表 filt 中
+            filt.append(f)
+            # 将旋转矩阵 rot 保存到列表 R 中
+            R.append(rot)
+
+        # filter bad regions:
+        # 根据 filt 的结果对不符合条件的区域进行过滤
+        filt = np.array(filt)
+        # 更新 area 和 R
+        area = area[filt]
+        R = [R[i] for i in range(len(R)) if filt[i]]
+
+        # sort the regions based on areas:
+        # 根据区域面积的降序对区域进行排序，并更新 good 和 R
+        aidx = np.argsort(-area)
+        good = good[filt][aidx]
+        R = [R[i] for i in aidx]
+        # 返回一个字典 filter_info，包含了筛选后的文本区域的标签、旋转矩阵和面积信息
+        filter_info = {'label':good, 'rot':R, 'area': area[aidx]}
+        return filter_info
+
+    @staticmethod
+    def sample_grid_neighbours(mask,nsample,step=3):
+        """
+        Given a HxW binary mask, sample 4 neighbours on the grid,
+        in the cardinal directions, STEP pixels away.
+        :mask: H * W 的二值掩膜
+        :nsample: 采样数量
+        :step: 采样间隔
+        """
+        if 2*step >= min(mask.shape[:2]):
+            return #None
+        # 通过 np.where 函数找到二值掩膜中非零像素的坐标，并将其保存在 y_m 和 x_m 中
+        y_m,x_m = np.where(mask)
+        # 创建一个和 mask 相同大小的全零矩阵 mask_idx，用于存储每个非零像素的索引
+        mask_idx = np.zeros_like(mask,'int32')
+        for i in range(len(y_m)):
+            mask_idx[y_m[i],x_m[i]] = i
+        # 根据给定的步长 step，分别计算出向 x 正方向和负方向、y 正方向和负方向的邻域像素坐标，并保存在 xp、xn、yp 和 yn 中
+        xp,xn = np.zeros_like(mask), np.zeros_like(mask)
+        yp,yn = np.zeros_like(mask), np.zeros_like(mask)
+        xp[:,:-2*step] = mask[:,2*step:]
+        xn[:,2*step:] = mask[:,:-2*step]
+        yp[:-2*step,:] = mask[2*step:,:]
+        yn[2*step:,:] = mask[:-2*step,:]
+        # 通过逻辑与运算 &，获取在四个方向上都存在的有效邻域像素，并保存在 valid 中
+        valid = mask&xp&xn&yp&yn
+
+        # 通过 np.where 函数找到 valid 中非零像素的坐标，并将其保存在 ys 和 xs 中
+        ys,xs = np.where(valid)
+        # 如果没有找到任何有效的像素，即 N == 0，则返回 None
+        N = len(ys)
+        if N==0: #no valid pixels in mask:
+            return #None
+        # 找到了有效的像素，函数会选择 nsample 个像素进行采样，其中 nsample 取值不超过 N
+        nsample = min(nsample,N)
+        # 调用 np.random.choice 函数在坐标索引 idx 中选取 nsample 个不重复的索引
+        idx = np.random.choice(N,nsample,replace=False)
+        # 根据选取的索引，生成邻域矩阵 sample_idx，其形状为 (1+4)x2xNsample（2 表示 y 和 x 坐标）
+        # generate neighborhood matrix:
+        # (1+4)x2xNsample (2 for y,x)
+        xs,ys = xs[idx],ys[idx]
+        s = step
+        X = np.transpose(np.c_[xs,xs+s,xs+s,xs-s,xs-s][:,:,None],(1,2,0))
+        Y = np.transpose(np.c_[ys,ys+s,ys-s,ys+s,ys-s][:,:,None],(1,2,0))
+        sample_idx = np.concatenate([Y,X],axis=1)
+        # 函数将邻域矩阵转换为邻域索引矩阵 mask_nn_idx,其形状为 5xNsample。
+        mask_nn_idx = np.zeros((5,sample_idx.shape[-1]),'int32')
+        # 对于每个选取的邻域像素，通过查找 mask_idx 对应位置的值，将相应的索引存储到 mask_nn_idx 中
+        for i in range(sample_idx.shape[-1]):
+            mask_nn_idx[:,i] = mask_idx[sample_idx[:,:,i][:,0],sample_idx[:,:,i][:,1]]
+        # 函数最终返回邻域索引矩阵 mask_nn_idx
+        return mask_nn_idx
+
+    @staticmethod
+    def filter_depth(xyz,seg,regions):
+        """
+        这段代码实现了根据给定的点云数据、分割结果和区域信息，对每个区域进行深度滤波的函数
+        :xyz: 点云坐标数据
+        :seg: 分割结果
+        :regions: 区域信息
+        """
+        # 创建了一个空字典 plane_info，用于保存满足条件的平面信息
+        plane_info = {'label':[],
+                      'coeff':[],
+                      'support':[],
+                      'rot':[],
+                      'area':[]}
+        for idx,l in enumerate(regions['label']):
+            # 对于 regions 中的每个区域，利用区域标签 l 和分割结果 seg，生成对应的二值掩膜 mask
+            mask = seg==l
+            # 调用 TextRegions.sample_grid_neighbours 函数，以 mask 为输入，使用 RANSAC 方法进行平面拟合，获取采样点集 pt_sample
+            pt_sample = TextRegions.sample_grid_neighbours(mask,TextRegions.ransac_fit_trials,step=3)
+            # 如果没有足够的点进行 RANSAC 拟合，则跳过该区域的处理
+            if pt_sample is None:
+                continue #not enough points for RANSAC
+            # get-depths
+            # 从点云数据 xyz 中筛选出属于当前区域的点坐标 pt
+            pt = xyz[mask]
+            # 调用 su.isplanar 函数，以点云数据 pt、采样点集 pt_sample，以及一些阈值参数为输入，进行平面检测。如果检测到平面，返回的 plane_model 中包含平面系数、支持点索引等信息。
+            plane_model = su.isplanar(pt, pt_sample,
+                                     TextRegions.dist_thresh,
+                                     TextRegions.num_inlier,
+                                     TextRegions.min_z_projection)
+            # 在平面检测结果存在且满足一些要求（例如深度阈值、内点数量等）的情况下，将平面信息存储到 plane_info 字典中的相应字段中。
+            if plane_model is not None:
+                plane_coeff = plane_model[0]
+                if np.abs(plane_coeff[2])>TextRegions.min_z_projection:
+                    plane_info['label'].append(l)
+                    plane_info['coeff'].append(plane_model[0])
+                    plane_info['support'].append(plane_model[1])
+                    plane_info['rot'].append(regions['rot'][idx])
+                    plane_info['area'].append(regions['area'][idx])
+
+        return plane_info
+
+    @staticmethod
+    def get_regions(xyz,seg,area,label):
+        """
+        根据给定的点云数据、分割结果、区域面积和区域标签，获取文本区域
+        :xyz: 点云坐标数据
+        :seg: 分割结果
+        :area: 区域面积
+        :label: 数据标签
+        """
+        # 函数调用 TextRegions.filter 函数，以分割结果 seg、区域面积 area 和区域标签 label 为输入，对分割结果进行筛选，获取文本区域的初始信息，保存在变量 regions 中
+        regions = TextRegions.filter(seg,area,label)
+        # fit plane to text-regions:
+        # 调用 TextRegions.filter_depth 函数，以点云数据 xyz、分割结果 seg 和文本区域信息 regions 为输入，对每个区域进行深度滤波，获取满足条件的平面信息，更新存储平面信息的 regions 变量
+        regions = TextRegions.filter_depth(xyz,seg,regions)
+        # 函数返回经过深度滤波后的文本区域信息 regions
+        return regions
+```
+
+## colorize3_poisson.py
+
+```python
+import cv2 as cv
+import numpy as np 
+import matplotlib.pyplot as plt 
+import scipy.interpolate as si
+import scipy.ndimage as scim 
+import scipy.ndimage.interpolation as sii
+import os
+import os.path as osp
+#import cPickle as cp
+import _pickle as cp
+#import Image
+from PIL import Image
+from poisson_reconstruct import blit_images
+import pickle
+```
+
+### sample_weighted()
+
+```python
+def sample_weighted(p_dict):
+    """
+    接收一个字典 p_dict，用于表示概率分布，其中键表示某个值，值表示对应的概率。函数首先获取概率分布中的键，并使用 np.random.choice 函数根据概率分布进行随机采样，返回所选的键
+    """
+    ps = p_dict.keys()
+    return ps[np.random.choice(len(ps),p=p_dict.values())]
+```
+
+### class Layer()
+
+```python
+class Layer(object):
+
+    def __init__(self,alpha,color):
+
+        # alpha for the whole image:
+        # 针对 alpha 参数，函数要求其维度为 2（二维矩阵）。然后获取 alpha 的形状，并保存在变量 [n, m] 中
+        assert alpha.ndim==2
+        self.alpha = alpha
+        [n,m] = alpha.shape[:2]
+        # 针对 color 参数，函数将其转换为 uint8 类型的数组。
+        color=np.atleast_1d(np.array(color)).astype('uint8')
+        # color for the image:
+        # 根据 color 的长度决定是灰度图还是彩色图，然后创建相应维度的颜色矩阵
+        # 如果 color 维度为 1，则表示整个图层都是固定颜色
+        if color.ndim==1: # constant color for whole layer
+            ncol = color.size
+            if ncol == 1 : #grayscale layer
+                self.color = color * np.ones((n,m,3),'uint8')
+            if ncol == 3 : 
+                self.color = np.ones((n,m,3),'uint8') * color[None,None,:]
+        # 如果 color 维度为 2，表示是灰度图，将其转换为三通道的颜色矩阵
+        elif color.ndim==2: # grayscale image
+            self.color = np.repeat(color[:,:,None],repeats=3,axis=2).copy().astype('uint8')
+        # 如果 color 维度为 3，表示是彩色图，直接保存为颜色矩阵
+        elif color.ndim==3: #rgb image
+            self.color = color.copy().astype('uint8')
+        # 如果以上情况都不满足，则抛出异常
+        else:
+            print (color.shape)
+            raise excerption("color datatype not understood")
+```
+
+### class FontColor()
+
+```python
+class FontColor(object):
+
+    def __init__(self, col_file):
+        """
+        这是一个构造函数，用于创建 FontColor 对象并初始化对象的属性
+        """
+        with open(col_file,'rb') as f:
+            """
+            使用 open() 函数打开名为 col_file 的文件，并将其指定为二进制模式读取（'rb'）
+            """
+            #self.colorsRGB = cp.load(f)
+            # 创建一个 _Unpickler 对象 u，用于反序列化从文件中读取的数据
+            u = pickle._Unpickler(f)
+            # 设置 Unpickler 的编码方式为 'latin1'，以确保正确解析文件中的数据
+            u.encoding = 'latin1'
+            # 调用 Unpickler 对象的 load() 方法，从文件中加载数据并将其存储在变量 p 中
+            p = u.load()
+            # 将加载的数据赋值给对象的属性 colorsRGB，该属性存储颜色数据
+            self.colorsRGB = p
+        # 计算颜色数据的行数，并将结果存储在对象的属性 ncol 中
+        self.ncol = self.colorsRGB.shape[0]
+
+        # convert color-means from RGB to LAB for better nearest neighbour
+        # computations:
+        # 从颜色数据中提取 RGB 通道的数据，并将其转换为 LAB 颜色空间
+        self.colorsLAB = np.r_[self.colorsRGB[:,0:3], self.colorsRGB[:,6:9]].astype('uint8')
+        # 使用 OpenCV 的 cvtColor() 函数将 RGB 颜色数据转换为 LAB 颜色空间，并调整维度以去除多余的维度
+        self.colorsLAB = np.squeeze(cv.cvtColor(self.colorsLAB[None,:,:],cv.COLOR_RGB2Lab))
+
+
+    def sample_normal(self, col_mean, col_std):
+        """
+        sample from a normal distribution centered around COL_MEAN 
+        with standard deviation = COL_STD.
+        这是一个用于从正态分布中采样颜色的方法。它接受两个参数，col_mean 和 col_std，分别表示正态分布的均值和标准差
+        """
+        # 使用 np.random.randn() 函数从标准正态分布中生成一个随机数，并乘以 col_std，再加上 col_mean，得到采样的颜色
+        col_sample = col_mean + col_std * np.random.randn()
+        # 使用 np.clip() 函数将采样的颜色限制在 0 到 255 之间，然后使用 astype() 函数将其转换为整数类型 (uint8) 并返回
+        return np.clip(col_sample, 0, 255).astype('uint8')
+
+    def sample_from_data(self, bg_mat):
+        """
+        bg_mat : this is a nxmx3 RGB image. 一个从数据集中采样颜色的方法。它接受一个参数bg_mat，表示一个RGB图像。
+        
+        returns a tuple : (RGB_foreground, RGB_background)
+        each of these is a 3-vector.
+        """
+        # 复制输入的背景图像，以备后续使用
+        bg_orig = bg_mat.copy()
+        # 使用 OpenCV 的 cvtColor() 函数将 RGB 图像转换为 LAB 颜色空间
+        bg_mat = cv.cvtColor(bg_mat, cv.COLOR_RGB2Lab)
+        # 将背景颜色矩阵重塑为一个二维数组，每一行代表一个像素点的颜色
+        bg_mat = np.reshape(bg_mat, (np.prod(bg_mat.shape[:2]),3))
+        # 计算背景颜色矩阵的均值，得到一组代表整个背景图像颜色的平均值
+        bg_mean = np.mean(bg_mat,axis=0)
+
+        # 计算每个颜色数据与背景颜色之间的欧氏距离，并存储在 norms 数组中
+        norms = np.linalg.norm(self.colorsLAB-bg_mean[None,:], axis=1)
+        # choose a random color amongst the top 3 closest matches:
+        #nn = np.random.choice(np.argsort(norms)[:3]) 
+        # 找到欧氏距离最小的颜色数据的索引，即与背景颜色最相近的颜色数据
+        nn = np.argmin(norms)
+
+        # nearest neighbour color:
+        # 获取与背景颜色最相近的颜色数据。
+        data_col = self.colorsRGB[np.mod(nn,self.ncol),:]
+
+        # 使用 sample_normal 方法从颜色数据的前半部分采样一个颜色作为前景颜色。
+        col1 = self.sample_normal(data_col[:3],data_col[3:6])
+        # 使用 sample_normal 方法从颜色数据的后半部分采样一个颜色作为背景颜色。
+        col2 = self.sample_normal(data_col[6:9],data_col[9:12])
+
+        # 判断最相近的颜色是否来自于数据集中已有的颜色。
+        if nn < self.ncol:
+            return (col2, col1)  # 返回(col2, col1)，即背景颜色在前，前景颜色在后。
+        else:
+            # need to swap to make the second color close to the input backgroun color
+            return (col1, col2)  # 前景颜色在前，背景颜色在后。
+
+    def mean_color(self, arr):
+        """
+        将输入图像转换为 HSV 颜色空间，并计算其所有像素点的平均颜色，最后将该颜色值转换回 RGB 空间并返回。
+        """
+        # 使用 OpenCV 的 cvtColor() 函数将 RGB 图像转换为 HSV 颜色空间。
+        col = cv.cvtColor(arr, cv.COLOR_RGB2HSV)
+        # 将颜色矩阵重新塑造为一个二维数组，每一行表示一个像素点的颜色。
+        col = np.reshape(col, (np.prod(col.shape[:2]),3))
+        # 计算颜色矩阵的均值，得到一组代表整个图像颜色的平均值，并将其转换为 8 位无符号整数(uint8)。
+        col = np.mean(col,axis=0).astype('uint8')
+        # 使用 OpenCV 的 cvtColor() 函数将 HSV 颜色空间中的颜色转换回 RGB 颜色空间，并将颜色数组压缩为一维数组，作为平均颜色的值返回。
+        return np.squeeze(cv.cvtColor(col[None,None,:],cv.COLOR_HSV2RGB))
+
+    def invert(self, rgb):
+        """
+        反色
+        """
+        rgb = 127 + rgb
+        return rgb
+
+    def complement(self, rgb_color):
+        """
+        返回与给定 RGB 颜色值（rgb_color）互补的颜色
+        return a color which is complementary to the RGB_COLOR.
+        """
+        # 使用 OpenCV 的 cvtColor() 函数将 RGB 颜色值转换为 HSV 颜色空间，并将颜色数组压缩为一维数组
+        col_hsv = np.squeeze(cv.cvtColor(rgb_color[None,None,:], cv.COLOR_RGB2HSV))
+        # 将HSV颜色值中的色调（Hue）加上128，实现颜色互补的效果。注意，这里的色调值需要进行取模操作，以确保它在0到255的范围内。
+        col_hsv[0] = col_hsv[0] + 128 #uint8 mods to 255
+        # 使用 OpenCV 的 cvtColor() 函数将修改后的 HSV 值转回 RGB 颜色空间，并将颜色数组压缩为一维数组。
+        col_comp = np.squeeze(cv.cvtColor(col_hsv[None,None,:],cv.COLOR_HSV2RGB))
+        # 返回互补颜色的 RGB 值
+        return col_comp
+
+    def triangle_color(self, col1, col2):
+        """
+        返回与给定两种 RGB 颜色值（col1和col2）相对应的颜色
+        计算相对颜色的方法，它接受两个表示 RGB 颜色值的参数 col1 和 col2
+        Returns a color which is "opposite" to both col1 and col2.
+        """
+        # 将输入的col1和col2转换为NumPy数组。
+        col1, col2 = np.array(col1), np.array(col2)
+        # 使用 OpenCV 的 cvtColor() 函数将 col1 从 RGB 颜色空间转换为 HSV 颜色空间，并将颜色数组压缩为一维数组。
+        col1 = np.squeeze(cv.cvtColor(col1[None,None,:], cv.COLOR_RGB2HSV))
+        # col2 也是
+        col2 = np.squeeze(cv.cvtColor(col2[None,None,:], cv.COLOR_RGB2HSV))
+        # 获取col1和col2的色调值（Hue）。
+        h1, h2 = col1[0], col2[0]
+        # 如果 h2 小于 h1，则交换它们的值，确保 h1 始终小于等于 h2。
+        if h2 < h1 : h1,h2 = h2,h1 #swap
+        # 计算 h2 和 h1 之间的差值。
+        dh = h2-h1
+        # 如果差值 dh 小于 127，则将 dh 设置为 255 减去 dh，实现相对颜色的计算。
+        if dh < 127: dh = 255-dh
+        # 将 col1 的色调值设置为 h1 加上 dh 的一半，以获得相对颜色的色调值
+        col1[0] = h1 + dh/2
+        # 使用 OpenCV 的 cvtColor() 函数将修改后的HSV值转回RGB颜色空间，并将颜色数组压缩为一维数组，并返回相对颜色的RGB值
+        return np.squeeze(cv.cvtColor(col1[None,None,:],cv.COLOR_HSV2RGB))
+
+    def change_value(self, col_rgb, v_std=50):
+        """
+        随机改变给定RGB颜色值（col_rgb）的亮度值。
+        这是一个改变颜色亮度的方法，它接受一个表示 RGB 颜色值的参数 col_rgb 和一个可选的标准差 v_std
+        """
+        # 使用 OpenCV 的 cvtColor() 函数将 col_rgb 从 RGB 颜色空间转换为 HSV 颜色空间，并将颜色数组压缩为一维数组。
+        col = np.squeeze(cv.cvtColor(col_rgb[None,None,:], cv.COLOR_RGB2HSV))
+        # 获取 col 的亮度值（Value）。
+        x = col[2]
+        # 生成一个从 0 到 1 均匀分布的值数组。
+        vs = np.linspace(0,1)
+        # 计算每个值与 x / 255.0 的差的绝对值，得到一个代表每个值与 x 的差异程度的数组。
+        ps = np.abs(vs - x/255.0)
+        # 将数组 ps 归一化，使其总和等于 1
+        ps /= np.sum(ps)
+        # 从 vs 数组中根据权重 ps 随机选择一个值，并添加一个服从正态分布的小的随机偏移（以标准差 0.1 * v_std 为基础），然后将其限制在 0 到 1 之间。
+        v_rand = np.clip(np.random.choice(vs,p=ps) + 0.1*np.random.randn(),0,1)
+        # 将 col 的亮度值设置为 255 乘以 v_rand，以获得新的亮度值
+        col[2] = 255*v_rand
+        return np.squeeze(cv.cvtColor(col[None,None,:],cv.COLOR_HSV2RGB))
+```
+
+### class Colorize()
+
+```python
+class Colorize(object):
+
+    def __init__(self, model_dir='data'):#, im_path):
+        # 类的初始化方法，接受一个可选参数 model_dir 作为输入。
+        # # get a list of background-images:
+        # imlist = [osp.join(im_path,f) for f in os.listdir(im_path)]
+        # self.bg_list = [p for p in imlist if osp.isfile(p)]
+
+        # 创建一个 FontColor 对象，并将颜色文件的路径作为参数传递给 FontColor 类的初始化方法。这个颜色文件的路径是通过将 model_dir 和 'models/colors_new.cp' 拼接而成的。
+        self.font_color = FontColor(col_file=osp.join(model_dir,'models/colors_new.cp'))
+
+        # probabilities of different text-effects:
+        # add bevel effect to text 添加文字凸起效果的概率
+        self.p_bevel = 0.05
+        # just keep the outline of the text 只保留文字轮廓的概率
+        self.p_outline = 0.05
+        # 添加文字投影的概率
+        self.p_drop_shadow = 0.15
+        # 添加文字边框的概率
+        self.p_border = 0.15
+        # add background-based bump-mapping
+        # 基于背景添加文字的凹凸映射效果的概率
+        self.p_displacement = 0.30
+        # use an image for coloring text 使用图像为文字上色的概率
+        self.p_texture = 0.0
+
+
+    def drop_shadow(self, alpha, theta, shift, size, op=0.80):
+        """
+        给输入的 alpha 图像添加投影效果，并返回带有投影效果的图像。投影的效果由参数 alpha、theta、shift、size 和 op 来控制。
+        alpha : alpha layer whose shadow need to be cast
+        theta : [0,2pi] -- the shadow direction
+        shift : shift in pixels of the shadow
+        size  : size of the GaussianBlur filter
+        op    : opacity of the shadow (multiplying factor)
+
+        @return : alpha of the shadow layer
+                  (it is assumed that the color is black/white)
+        """
+        if size%2==0:  # 如果 size 是偶数，将其减 1 以确保 size 是奇数
+            size -= 1
+            size = max(1,size)
+        # 使用 OpenCV 的 GaussianBlur 函数对输入的 alpha 图像进行高斯模糊，模糊核的大小为 (size, size)，标准差为 0。这样可以产生投影的模糊效果。
+        shadow = cv.GaussianBlur(alpha,(size,size),0)
+        # 根据投影的角度 theta 和平移距离 shift 计算投影在 x 和 y 方向上的偏移量。
+        [dx,dy] = shift * np.array([-np.sin(theta), np.cos(theta)])
+        # 使用 scipy 库中的 shift 函数对阴影图像进行平移操作，并乘以一个 opacity 因子 op。平移的偏移量由步骤 5 计算得到。此外，设置了平移模式为 'constant'，边界填充值为 0。
+        shadow = op*sii.shift(shadow, shift=[dx,dy],mode='constant',cval=0)
+        return shadow.astype('uint8')
+
+    def border(self, alpha, size, kernel_type='RECT'):
+        """
+        alpha : alpha layer of the text
+        size  : size of the kernel
+        kernel_type : one of [rect,ellipse,cross]
+
+        @return : alpha layer of the border (color to be added externally).
+        """
+        # 定义了 kernel_type 和对应的形态学操作类型。
+        kdict = {'RECT':cv.MORPH_RECT, 'ELLIPSE':cv.MORPH_ELLIPSE,
+                 'CROSS':cv.MORPH_CROSS}
+        # 使用 OpenCV 的 getStructuringElement 函数创建指定大小和形状的卷积核，以在 alpha 图像周围创建边框。这里的 kdict[kernel_type] 会返回 rect、ellipse 或 cross 中一个值，而 (size, size) 是指卷积核的大小。
+        kernel = cv.getStructuringElement(kdict[kernel_type],(size,size))
+        # 使用 OpenCV 的 dilate 函数对输入的 alpha 图像进行膨胀操作，以使边框变得更突出。这里的 iterations=1 表示只进行一次膨胀操作。最后，减去 alpha 层，得到新的 alpha 层。这样，在文本周围会出现黑色的边框。
+        border = cv.dilate(alpha,kernel,iterations=1) # - alpha
+        return border
+
+    def blend(self,cf,cb,mode='normal'):
+        """
+        在这个方法中，函数只返回了前景图像。这表明该函数还没有完成或者是开发者忘记编写具体的合成算法。
+        """
+        return cf
+
+    def merge_two(self,fore,back,blend_type=None):
+        """
+        merge two FOREground and BACKground layers.
+        ref: https://en.wikipedia.org/wiki/Alpha_compositing
+        ref: Chapter 7 (pg. 440 and pg. 444):
+             http://partners.adobe.com/public/developer/en/pdf/PDFReference.pdf
+        """
+        # 将前景图层的 alpha 通道值转换为范围在 0 到 1 之间的浮点数，表示不透明度
+        a_f = fore.alpha/255.0
+        # 将背景图层的 alpha 通道值转换为范围在 0 到 1 之间的浮点数，表示不透明度
+        a_b = back.alpha/255.0
+        # 获取前景图层的颜色通道值
+        c_f = fore.color
+        # 获取背景图层的颜色通道值
+        c_b = back.color
+        # 根据 Alpha 合成公式计算新的合成后的图像的 alpha 值
+        a_r = a_f + a_b - a_f*a_b
+        if blend_type != None:
+            # 使用之前提到的 blend() 方法将前景和背景的颜色进行合成，得到混合后的颜色
+            c_blend = self.blend(c_f, c_b, blend_type)
+            # 以混合后的颜色为基础，按照 Alpha 合成公式计算新的合成后的图像的颜色值
+            c_r = (   ((1-a_f)*a_b)[:,:,None] * c_b
+                    + ((1-a_b)*a_f)[:,:,None] * c_f
+                    + (a_f*a_b)[:,:,None] * c_blend   )
+        else:
+            # c_r 的计算只根据前景和背景的颜色以及各自的不透明度进行合成
+            c_r = (   ((1-a_f)*a_b)[:,:,None] * c_b
+                    + a_f[:,:,None]*c_f    )
+        # 返回一个新的图层对象，其中包含合成后的图像的 alpha 和颜色通道值
+        return Layer((255*a_r).astype('uint8'), c_r.astype('uint8'))
+
+    def merge_down(self, layers, blends=None):
+        """
+        将多个图层逐层合并成单个图层
+        layers  : [l1,l2,...ln] : a list of LAYER objects.
+                 l1 is on the top, ln is the bottom-most layer.
+        blend   : the type of blend to use. Should be n-1.
+                 use None for plain alpha blending.
+        Note    : (1) it assumes that all the layers are of the SAME SIZE.
+        @return : a single LAYER type object representing the merged-down image
+        """
+        nlayers = len(layers)  # 获取图层数量
+        if nlayers > 1:  # 检查是否有多个图层需要合并
+            [n,m] = layers[0].alpha.shape[:2]  # 获取第一个图层的尺寸
+            out_layer = layers[-1]  # 初始化输出图层为最底层的图层
+            # 从倒数第二个图层开始循环遍历，直到最顶层的图层
+            for i in range(-2,-nlayers-1,-1):
+                blend=None
+                if blends is not None:
+                    blend = blends[i+1]
+                    out_layer = self.merge_two(fore=layers[i], back=out_layer,blend_type=blend)
+            return out_layer
+        else:
+            return layers[0]
+
+    def resize_im(self, im, osize):
+        # 将输入的图像调整为指定的大小
+        return np.array(Image.fromarray(im).resize(osize[::-1], Image.BICUBIC))
+        
+    def occlude(self):
+        """
+        somehow add occlusion to text.
+        这个方法 occlude() 是一个占位方法，还未实现其具体功能。
+
+        根据注释中的描述，该方法的目的是向文本中添加遮挡效果。然而，在代码中该方法没有任何实现，只有一个空的 pass 语句。这意味着在当前的代码实现中，该方法没有具体的功能。
+
+        如果你希望实现该方法，你可以根据具体需求和设计思路，编写代码来实现添加遮挡效果的逻辑。例如，可以使用图像处理技术在文本区域上添加遮挡元素，或者通过修改文本的视觉特征来模拟遮挡效果。具体的实现方式取决于你的需求和想要实现的效果。
+        """
+        pass
+
+    def color_border(self, col_text, col_bg):
+        """
+        用于确定边框的颜色的选择逻辑
+        Decide on a color for the border:
+            - could be the same as text-color but lower/higher 'VALUE' component. 边框颜色与文本颜色相同，但是 'VALUE' 分量较低或较高
+            - could be the same as bg-color but lower/higher 'VALUE'. 边框颜色与背景颜色相同，但是 'VALUE' 分量较低或较高
+            - could be 'mid-way' color b/w text & bg colors. 边框颜色为文本颜色和背景颜色之间的中间颜色。
+        """
+        # 随机选择一个数字，范围是 0 到 2，用于决定使用哪种方式选择边框颜色
+        choice = np.random.choice(3)
+		# 将输入的文本颜色 col_text 转换为 HSV 格式，以便于处理颜色的亮度等特征
+        col_text = cv.cvtColor(col_text, cv.COLOR_RGB2HSV)
+        # 将 col_text 变形为一维数组，并计算其均值，得到颜色的平均值
+        col_text = np.reshape(col_text, (np.prod(col_text.shape[:2]),3))
+        col_text = np.mean(col_text,axis=0).astype('uint8')
+		# 通过线性插值，定义了一个从 0 到 1 的值序列，用于生成随机样本
+        vs = np.linspace(0,1)
+        def get_sample(x):
+            """
+            通过计算与目标值 x/255.0 的差距，选择一个随机样本，并在其上加入一定的随机扰动。返回取样结果乘以 255，得到一个颜色分量值。
+            """
+            ps = np.abs(vs - x/255.0)
+            ps /= np.sum(ps)
+            v_rand = np.clip(np.random.choice(vs,p=ps) + 0.1*np.random.randn(),0,1)
+            return 255*v_rand
+
+        # first choose a color, then inc/dec its VALUE:
+        # 根据选择的方式进行不同的处理
+        if choice==0:
+            # increase/decrease saturation:
+            # 增加或减少饱和度
+            col_text[0] = get_sample(col_text[0]) # saturation
+            col_text = np.squeeze(cv.cvtColor(col_text[None,None,:],cv.COLOR_HSV2RGB))
+        elif choice==1:
+            # get the complementary color to text:
+            # 获取文本颜色的互补色
+            col_text = np.squeeze(cv.cvtColor(col_text[None,None,:],cv.COLOR_HSV2RGB))
+            col_text = self.font_color.complement(col_text)
+        else:
+            # choose a mid-way color:
+            # 选择文本颜色和背景颜色的中间颜色
+            col_bg = cv.cvtColor(col_bg, cv.COLOR_RGB2HSV)
+            col_bg = np.reshape(col_bg, (np.prod(col_bg.shape[:2]),3))
+            col_bg = np.mean(col_bg,axis=0).astype('uint8')
+            col_bg = np.squeeze(cv.cvtColor(col_bg[None,None,:],cv.COLOR_HSV2RGB))
+            col_text = np.squeeze(cv.cvtColor(col_text[None,None,:],cv.COLOR_HSV2RGB))
+            col_text = self.font_color.triangle_color(col_text,col_bg)
+
+        # now change the VALUE channel:     
+        # 将处理后的颜色转换为 HSV 格式，并修改亮度通道的值。
+        col_text = np.squeeze(cv.cvtColor(col_text[None,None,:],cv.COLOR_RGB2HSV))
+        col_text[2] = get_sample(col_text[2]) # value
+        # 最后，将处理后的颜色转换为 RGB 格式，并返回结果
+        return np.squeeze(cv.cvtColor(col_text[None,None,:],cv.COLOR_HSV2RGB))
+
+    def color_text(self, text_arr, h, bg_arr):
+        """
+        用于确定文本的颜色。具体而言，该方法采用以下几种方式之一来选择文本的颜色
+        Decide on a color for the text:
+            - could be some other random image. 从其他随机图像中选择一个颜色作为文本的颜色
+            - could be a color based on the background. 根据背景选择一个颜色
+                this color is sampled from a dictionary built
+                from text-word images' colors. The VALUE channel
+                is randomized.
+                这个颜色是从建立在文本单词图像颜色上的字典中进行采样的。其中，颜色的亮度通道 (VALUE) 是随机化的
+
+            H : minimum height of a character
+        """
+        # 定义变量，用于存储背景色和文本颜色
+        bg_col,fg_col,i = 0,0,0
+        # 从文本单词图像颜色构建的字典中采样一个颜色作为文本颜色，并将结果分别赋值给 fg_col 和 bg_col
+        fg_col,bg_col = self.font_color.sample_from_data(bg_arr)
+        # 创建一个 Layer 对象，将 text_arr 作为透明度 (alpha) 通道，将 fg_col 作为颜色 (color) 通道，并返回该对象以及 fg_col 和 bg_col
+        return Layer(alpha=text_arr, color=fg_col), fg_col, bg_col
+
+
+    def process(self, text_arr, bg_arr, min_h):
+        """
+        用于将文本图层 text_arr 融合到背景图像 bg_arr 上
+        text_arr : one alpha mask : nxm, uint8
+        bg_arr   : background image: nxmx3, uint8
+        min_h    : height of the smallest character (px)
+
+        return text_arr blit onto bg_arr.
+        """
+        # decide on a color for the text:
+        # 调用 color_text 方法确定文本的颜色，并将结果的透明度通道 l_text、文本颜色 fg_col 和背景颜色 bg_col 分别赋值给变量
+        l_text, fg_col, bg_col = self.color_text(text_arr, min_h, bg_arr)
+        # 根据文本的透明度通道 l_text.alpha 构建一个新的图层 l_bg，其中颜色通道为 bg_col
+        bg_col = np.mean(np.mean(bg_arr,axis=0),axis=0)
+        l_bg = Layer(alpha=255*np.ones_like(text_arr,'uint8'),color=bg_col)
+        # 将 l_text 的透明度乘以一个随机化的权重，并将结果限制在 0.72 到 1.0 之间
+        l_text.alpha = l_text.alpha * np.clip(0.88 + 0.1*np.random.randn(), 0.72, 1.0)
+        layers = [l_text]
+        blends = []
+
+        # add border:
+        if np.random.rand() < self.p_border:
+            # 根据最小高度 min_h 确定边界的大小 bsz
+            if min_h <= 15 : bsz = 1
+            elif 15 < min_h < 30: bsz = 3
+            else: bsz = 5
+            border_a = self.border(l_text.alpha, size=bsz)
+            # 使用 border 方法创建一个边界图层 l_border，其中边界的透明度为 l_text.alpha，颜色为根据 l_text.color 和 l_bg.color 确定的边界颜色
+            l_border = Layer(border_a, self.color_border(l_text.color,l_bg.color))
+            # 将 l_border 加入 layers 列表，并将 'normal' 加入 blends 列表
+            layers.append(l_border)
+            blends.append('normal')
+
+        # add shadow:
+        # 如果随机数小于 p_drop_shadow（可能是一个阴影的概率）:
+        if np.random.rand() < self.p_drop_shadow:
+            # shadow gaussian size:
+            # 根据最小高度 min_h 确定阴影的大小 bsz
+            if min_h <= 15 : bsz = 1
+            elif 15 < min_h < 30: bsz = 3
+            else: bsz = 5
+
+            # shadow angle: 随机选择阴影的角度
+            theta = np.pi/4 * np.random.choice([1,3,5,7]) + 0.5*np.random.randn()
+
+            # shadow shift: 根据最小高度 min_h 确定阴影的偏移量 shift
+            if min_h <= 15 : shift = 2
+            elif 15 < min_h < 30: shift = 7+np.random.randn()
+            else: shift = 15 + 3*np.random.randn()
+
+            # opacity: 根据最小高度 min_h 确定阴影的不透明度 op
+            op = 0.50 + 0.1*np.random.randn()
+            # 使用 drop_shadow 方法创建一个阴影图层 l_shadow，其中阴影的透明度为 l_text.alpha，颜色为 0
+            shadow = self.drop_shadow(l_text.alpha, theta, shift, 3*bsz, op)
+            l_shadow = Layer(shadow, 0)
+            # 将 l_shadow 加入 layers 列表，并将 'normal' 加入 blends 列表
+            layers.append(l_shadow)
+            blends.append('normal')
+        
+        # 创建一个新的图层 l_bg，颜色通道为 bg_arr
+        l_bg = Layer(alpha=255*np.ones_like(text_arr,'uint8'), color=bg_col)
+        # 将 l_bg 加入 layers 列表，并将 'normal' 加入 blends 列表
+        layers.append(l_bg)
+        blends.append('normal')
+        # 将所有图层融合成一个图层
+        l_normal = self.merge_down(layers,blends)
+        # now do poisson image editing: 使用泊松图像编辑算法
+        l_bg = Layer(alpha=255*np.ones_like(text_arr,'uint8'), color=bg_arr)
+        l_out =  blit_images(l_normal.color,l_bg.color.copy())
+        
+        # plt.subplot(1,3,1)
+        # plt.imshow(l_normal.color)
+        # plt.subplot(1,3,2)
+        # plt.imshow(l_bg.color)
+        # plt.subplot(1,3,3)
+        # plt.imshow(l_out)
+        # plt.show()
+        
+        # 如果融合后的图像 l_out 为 None，则将最后一个图层 l_bg 替换为 l_bg，并返回最终融合后的图像颜色
+        if l_out is None:
+            # poisson recontruction produced
+            # imperceptible text. In this case,
+            # just do a normal blend:
+            layers[-1] = l_bg
+            return self.merge_down(layers,blends).color
+
+        return l_out
+
+
+    def check_perceptible(self, txt_mask, bg, txt_bg):
+        """
+        这是一个被弃用的方法 check_perceptible，它用于检查文本与背景图像合并后是否仍然可见。
+        --- DEPRECATED; USE GRADIENT CHECKING IN POISSON-RECONSTRUCT INSTEAD ---
+
+        checks if the text after merging with background
+        is still visible.
+        txt_mask (hxw) : binary image of text -- 255 where text is present
+                                                   0 elsewhere
+        bg (hxwx3) : original background image WITHOUT any text.
+        txt_bg (hxwx3) : image with text.
+        """
+        bgo,txto = bg.copy(), txt_bg.copy()
+        txt_mask = txt_mask.astype('bool')
+        bg = cv.cvtColor(bg.copy(), cv.COLOR_RGB2Lab)
+        txt_bg = cv.cvtColor(txt_bg.copy(), cv.COLOR_RGB2Lab)
+        bg_px = bg[txt_mask,:]
+        txt_px = txt_bg[txt_mask,:]
+        bg_px[:,0] *= 100.0/255.0 #rescale - L channel
+        txt_px[:,0] *= 100.0/255.0
+
+        diff = np.linalg.norm(bg_px-txt_px,ord=None,axis=1)
+        diff = np.percentile(diff,[10,30,50,70,90])
+        print ("color diff percentile :", diff)
+        return diff, (bgo,txto)
+
+    def color(self, bg_arr, text_arr, hs, place_order=None, pad=20):
+        """
+        将文本图像着色
+        Return colorized text image.
+
+        text_arr : list of (n x m) numpy text alpha mask (unit8).
+        hs : list of minimum heights (scalar) of characters in each text-array. 
+        text_loc : [row,column] : location of text in the canvas.
+        canvas_sz : size of canvas image.
+        
+        return : nxmx3 rgb colorized text-image.
+        """
+        # 复制输入的背景图像
+        bg_arr = bg_arr.copy()
+        # 如果背景图像是灰度图像（二维）或单通道图像（shape[2] == 1），则将其转换为三通道图像
+        if bg_arr.ndim == 2 or bg_arr.shape[2]==1: # grayscale image:
+            bg_arr = np.repeat(bg_arr[:,:,None], 3, 2)
+
+        # get the canvas size:
+        # 获取背景图像的尺寸
+        canvas_sz = np.array(bg_arr.shape[:2])
+
+        # initialize the placement order:
+        # 初始化放置文本的顺序
+        if place_order is None:
+            place_order = np.array(range(len(text_arr)))
+
+        rendered = []
+        # 对每个文本数组进行处理
+        for i in place_order[::-1]:
+            # get the "location" of the text in the image:
+            # this is the minimum x and y coordinates of text:
+            # 获取文本在图像中的位置。
+            loc = np.where(text_arr[i])
+            # 计算文本区域的最小点和最大点，并计算出文本区域的宽度和高度
+            lx, ly = np.min(loc[0]), np.min(loc[1])
+            mx, my = np.max(loc[0]), np.max(loc[1])
+            l = np.array([lx,ly])
+            m = np.array([mx,my])-l+1
+            text_patch = text_arr[i][l[0]:l[0]+m[0],l[1]:l[1]+m[1]]
+
+            # figure out padding:
+            ext = canvas_sz - (l+m)
+            num_pad = pad*np.ones(4,dtype='int32')
+            num_pad[:2] = np.minimum(num_pad[:2], l)
+            num_pad[2:] = np.minimum(num_pad[2:], ext)
+            text_patch = np.pad(text_patch, pad_width=((num_pad[0],num_pad[2]), (num_pad[1],num_pad[3])), mode='constant')
+            l -= num_pad[:2]
+
+            w,h = text_patch.shape
+            bg = bg_arr[l[0]:l[0]+w,l[1]:l[1]+h,:]
+
+            # 使用方法 process 对文本进行着色处理，返回着色后的文本图像
+            rdr0 = self.process(text_patch, bg, hs[i])
+            rendered.append(rdr0)
+
+            # 将着色后的文本图像放回到背景图像的相应位置
+            bg_arr[l[0]:l[0]+w,l[1]:l[1]+h,:] = rdr0#rendered[-1]
+
+			# 返回最终的背景图像
+            """
+            需要注意的是，当前代码中存在一个问题，即在 for 循环中的最后一行使用了 return，导致循环只执行一次。可能是由于代码缩进错误导致的。如果确实需要返回结果，则应将该行移动到 for 循环结束后再执行。
+            """
+            return bg_arr
+
+        return bg_arr
+```
+

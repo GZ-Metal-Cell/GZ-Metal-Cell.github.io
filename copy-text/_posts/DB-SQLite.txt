@@ -1,0 +1,477 @@
+---
+title: DB-SQLite
+date: Sat Sep 20 2025 09:00:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - 数据库
+categories: 学习
+description: SQLite is a C-language library that implements a small, fast, self-contained, high-reliability, full-featured, SQL database engine.
+---
+
+
+# 资源
+
+- [SQLite Home Page](https://www.sqlite.org/index.html)
+- [SQLite 教程 | 菜鸟教程](https://www.runoob.com/sqlite/sqlite-tutorial.html)
+
+# 正文
+
+## 导论
+
+### 一、什么是数据库
+
+**数据库（Database, DB）** 是按照一定的数据模型组织起来的、可长期存储的数据集合，用于支持高效的数据存储、查询和管理。
+
+- **核心功能**：
+  1. 存储数据
+  2. 查询数据
+  3. 修改数据
+  4. 管理数据安全和完整性
+
+### 二、数据库管理系统（DBMS）
+
+**数据库管理系统（Database Management System）** 是管理数据库的软件，用于操作、管理和维护数据。
+
+- **主要功能**：
+  - **数据定义**：创建、修改数据库结构（表、字段、索引等）
+  - **数据操作**：插入、更新、删除、查询数据
+  - **事务管理**：保证数据操作的 **ACID 特性**
+  - **并发控制**：多用户同时访问数据库时保持一致性
+  - **安全管理**：用户权限和访问控制
+  - **备份与恢复**：保证数据可靠性
+
+| 特性                      | 英文        | 含义                                                         | 举例                                                         |
+| ------------------------- | ----------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| **原子性（Atomicity）**   | Atomicity   | 事务是最小操作单元，要么全部成功，要么全部失败，不会只执行一部分 | 银行转账：从 A 账户扣 100 元并存入 B 账户，要么两步都成功，要么都不执行 |
+| **一致性（Consistency）** | Consistency | 事务执行前后，数据库必须处于合法状态，遵守约束和规则         | 用户表中 ID 唯一、余额 ≥ 0，事务执行后仍满足这些约束         |
+| **隔离性（Isolation）**   | Isolation   | 多个事务并发执行时互不干扰，事务之间的中间状态对其他事务不可见 | 两个人同时修改同一账户余额，事务 A 和事务 B 不会产生冲突     |
+| **持久性（Durability）**  | Durability  | 事务一旦提交，修改的数据永久保存在数据库，即使系统崩溃也不会丢失 | 转账成功提交后，数据库宕机再重启，资金仍然正确记录在账户上   |
+
+- **常见 DBMS**：
+  - 关系型数据库：MySQL、PostgreSQL、SQLite、Oracle
+  - NoSQL 数据库：MongoDB（文档型）、Redis（键值型）、Cassandra（列存储型）
+
+### 三、数据库类型
+
+1. **关系型数据库（RDBMS）**
+   - 数据以 **表格形式**组织（行和列）
+   - 每行代表一条记录，每列代表一个字段
+   - 以 **SQL** 查询为主
+   - 特点：结构化、支持事务、数据一致性高
+   - 示例：MySQL、PostgreSQL、SQLite、Oracle
+2. **非关系型数据库（NoSQL）**
+   - 数据以非表格形式存储，灵活多样
+   - 类型：
+     - 文档型：MongoDB（JSON 格式）
+     - 键值型：Redis、LevelDB
+     - 列存储型：Cassandra
+   - 特点：灵活、扩展性强、适合大数据、高并发
+
+### 四、数据库基础概念与术语
+
+| 术语                           | 解释                                           | 举例                              |
+| ------------------------------ | ---------------------------------------------- | --------------------------------- |
+| **表（Table）**                | 数据存储的基本结构，类似 Excel 表格            | 用户表、商品表                    |
+| **记录（Row / Tuple）**        | 表中的一行数据                                 | 用户：ID=1, Name=Alice            |
+| **字段（Column / Attribute）** | 表中的列，表示数据属性                         | ID、Name、Age                     |
+| **主键（Primary Key）**        | 唯一标识一条记录的字段                         | 用户表的 ID                       |
+| **外键（Foreign Key）**        | 指向其他表的主键，用于建立关系                 | 订单表中的 UserID                 |
+| **索引（Index）**              | 用于加速查询的结构                             | 用户姓名索引                      |
+| **视图（View）**               | 虚拟表，通过查询结果生成                       | 统计视图、报表视图                |
+| **事务（Transaction）**        | 一组操作的逻辑单元，要么全部成功，要么全部失败 | 转账操作                          |
+| **ACID**                       | 数据库事务特性：原子性、一致性、隔离性、持久性 | 保证银行账户操作正确              |
+| **约束（Constraint）**         | 限制数据合法性                                 | NOT NULL、UNIQUE、CHECK           |
+| **SQL**                        | 结构化查询语言，用于操作关系型数据库           | `SELECT * FROM user WHERE age>18` |
+
+### 五、数据库设计基础
+
+1. **数据建模**
+   - 根据业务需求，确定数据实体（表）和属性（字段）
+   - 用 **ER 图（Entity-Relationship）** 表示实体和关系
+2. **范式（Normalization）**
+   - 通过规范化减少冗余，提高数据一致性
+   - **1NF**：字段原子化
+     - ❌ 错误：`爱好 = 篮球,游泳`
+     - ✅ 正确：每条记录一行一值
+   - **2NF**：非主键字段完全依赖主键
+     - ❌ 错误：学生表里既存学生姓名（依赖学生 ID），又存课程名（依赖课程 ID）
+     - ✅ 正确：拆成学生表、课程表、选课表
+   - **3NF**：消除传递依赖
+     - ❌ 错误：学生表里存班级 ID 和班级名
+     - ✅ 正确：学生表只存班级 ID，班级名放到班级表
+3. **索引设计**
+   - 根据查询需求设计索引，提高查询效率
+   - 注意：索引虽然加快查询，但会增加写入成本
+
+### 六、数据库操作分类
+
+1. **数据定义语言（DDL）**
+   - 定义数据库结构
+   - `CREATE TABLE`、`ALTER TABLE`、`DROP TABLE`
+2. **数据操作语言（DML）**
+   - 对表中的数据进行操作
+   - `INSERT`、`UPDATE`、`DELETE`
+3. **数据查询语言（DQL）**
+   - 查询数据
+   - `SELECT` + 条件、排序、分组、聚合
+4. **数据控制语言（DCL）**
+   - 管理权限
+   - `GRANT`、`REVOKE`
+5. **事务控制语言（TCL）**
+   - 管理事务
+   - `BEGIN`、`COMMIT`、`ROLLBACK`
+
+### 七、总结
+
+- 数据库是 **数据存储和管理的核心工具**。
+- **关系型数据库**：结构化、事务安全、适合核心业务系统。
+- **NoSQL 数据库**：灵活、高扩展性、适合大数据和高并发场景。
+- 学习数据库基础概念需要理解 **表、记录、字段、主键、外键、索引、事务** 等核心概念。
+- 数据库设计和 SQL 操作是实际开发中最常用的技能。
+
+## 快速开始
+
+​	从 [SQLite Download Page](https://sqlite.org/download.html) 下载对应的安装包（[sqlite-dll-win-x64-3500400.zip](https://sqlite.org/2025/sqlite-dll-win-x64-3500400.zip)），然后解压到某个文件夹下，并设置环境变量。
+
+​	命令行下：
+
+```shell
+sqlite3
+```
+
+```
+SQLite version 3.45.3 2024-04-15 13:34:05 (UTF-16 console I/O)
+Enter ".help" for usage hints.
+Connected to a transient in-memory database.
+Use ".open FILENAME" to reopen on a persistent database.
+```
+
+​	下载官方示例数据库：https://github.com/lerocha/chinook-database/releases/download/v1.4.5/Chinook_Sqlite.sqlite
+
+​	操作一下：
+
+```shell
+sqlite3 Chinook_Sqlite.sqlite
+```
+
+​	**数据库探索：**
+
+```sqlite
+.tables                 -- 查看所有表
+.schema                 -- 查看所有表的建表语句
+.schema Artist          -- 查看 Artist 表结构
+.databases              -- 查看已连接的数据库
+```
+
+ 	**基础查询：**
+
+```sqlite
+SELECT * FROM Artist LIMIT 10;   -- 查看前10个艺术家
+SELECT * FROM Album LIMIT 10;    -- 查看前10张专辑
+SELECT * FROM Track LIMIT 10;    -- 查看前10首歌曲
+```
+
+​	**查询某位艺术家的所有专辑：**
+
+```sqlite
+SELECT Title FROM Album
+WHERE ArtistId = 1;
+```
+
+​	**统计每个艺术家的专辑数量：**
+
+```sqlite
+SELECT Artist.Name, COUNT(Album.AlbumId) AS AlbumCount
+FROM Artist
+JOIN Album ON Artist.ArtistId = Album.ArtistId
+GROUP BY Artist.Name
+ORDER BY AlbumCount DESC
+LIMIT 10;
+```
+
+​	**找出最贵的 5 首歌曲：**
+
+```sqlite
+SELECT Name, UnitPrice
+FROM Track
+ORDER BY UnitPrice DESC
+LIMIT 5;
+```
+
+​	**查看每张发票的总金额：**
+
+```sqlite
+SELECT InvoiceId, Total
+FROM Invoice
+ORDER BY Total DESC
+LIMIT 10;
+```
+
+​	**统计每位顾客买了多少张专辑（按金额排序）：**
+
+```sqlite
+SELECT Customer.FirstName, Customer.LastName, SUM(Invoice.Total) AS TotalSpent
+FROM Customer
+JOIN Invoice ON Customer.CustomerId = Invoice.CustomerId
+GROUP BY Customer.CustomerId
+ORDER BY TotalSpent DESC
+LIMIT 10;
+```
+
+​	**统计每个国家的顾客数量：**
+
+```sqlite
+SELECT Country, COUNT(*) AS CustomerCount
+FROM Customer
+GROUP BY Country
+ORDER BY CustomerCount DESC;
+```
+
+## 可视化
+
+- DB Browser for SQLite
+- SQLiteStudio
+- SQLite Viewer (VSCode 扩展)
+
+![webp](01.webp)
+
+## API
+
+### C
+
+​	从 [SQLite Download Page](https://sqlite.org/download.html) 下载 [sqlite-amalgamation-3500400.zip](https://sqlite.org/2025/sqlite-amalgamation-3500400.zip) 得到 `sqlite3.c` 和 `sqlite3.h`，放在项目目录下（或其它位置）。
+
+​	创建 `chinook_query.c`：
+
+```c
+// chinook_query.c
+#include <stdio.h>
+#include "sqlite3.h"
+
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
+int main(int argc, char **argv)
+{
+#ifdef _WIN32
+    SetConsoleOutputCP(CP_UTF8);
+#endif
+    const char *dbfile = (argc > 1) ? argv[1] : "Chinook_Sqlite.sqlite";
+    sqlite3 *db;
+    sqlite3_stmt *stmt;
+    int rc;
+
+    rc = sqlite3_open(dbfile, &db);
+    if (rc != SQLITE_OK)
+    {
+        fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db));
+        return 1;
+    }
+    printf("Opened database: %s\n\n", dbfile);
+
+    // 1. 查询前10个艺术家
+    const char *sql1 = "SELECT ArtistId, Name FROM Artist LIMIT 10;";
+    rc = sqlite3_prepare_v2(db, sql1, -1, &stmt, NULL);
+    if (rc != SQLITE_OK)
+    {
+        fprintf(stderr, "Failed to prepare statement: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return 1;
+    }
+    printf("--- 前10个艺术家 ---\n");
+    while ((rc = sqlite3_step(stmt)) == SQLITE_ROW)
+    {
+        int id = sqlite3_column_int(stmt, 0);
+        const unsigned char *name = sqlite3_column_text(stmt, 1);
+        printf("ArtistId=%d, Name=%s\n", id, name ? (const char *)name : "NULL");
+    }
+    sqlite3_finalize(stmt);
+
+    // 2. 每位艺术家的专辑数量
+    const char *sql2 =
+        "SELECT Artist.Name, COUNT(Album.AlbumId) AS AlbumCount "
+        "FROM Artist JOIN Album ON Artist.ArtistId = Album.ArtistId "
+        "GROUP BY Artist.ArtistId "
+        "ORDER BY AlbumCount DESC "
+        "LIMIT 10;";
+    rc = sqlite3_prepare_v2(db, sql2, -1, &stmt, NULL);
+    if (rc != SQLITE_OK)
+    {
+        fprintf(stderr, "Prepare failed: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return 1;
+    }
+    printf("\n--- 每位艺术家的专辑数量（前10） ---\n");
+    while ((rc = sqlite3_step(stmt)) == SQLITE_ROW)
+    {
+        const unsigned char *name = sqlite3_column_text(stmt, 0);
+        int count = sqlite3_column_int(stmt, 1);
+        printf("%s: %d\n", name ? (const char *)name : "NULL", count);
+    }
+    sqlite3_finalize(stmt);
+
+    sqlite3_close(db);
+    printf("\nClosed database.\n");
+    return 0;
+}
+```
+
+​	gcc 编译：
+
+```shell
+gcc -o chinook_query.exe chinook_query.c sqlite3.c -I .
+```
+
+​	启动：
+
+```shell
+.\chinook_query.exe
+```
+
+```
+Opened database: Chinook_Sqlite.sqlite
+
+--- 前10个艺术家 ---
+ArtistId=1, Name=AC/DC
+ArtistId=2, Name=Accept
+ArtistId=3, Name=Aerosmith
+ArtistId=4, Name=Alanis Morissette
+ArtistId=5, Name=Alice In Chains
+ArtistId=6, Name=Antônio Carlos Jobim
+ArtistId=7, Name=Apocalyptica
+ArtistId=8, Name=Audioslave
+ArtistId=9, Name=BackBeat
+ArtistId=10, Name=Billy Cobham
+
+--- 每位艺术家的专辑数量（前10） ---
+Iron Maiden: 21
+Led Zeppelin: 14
+Deep Purple: 11
+Metallica: 10
+U2: 10
+Ozzy Osbourne: 6
+Pearl Jam: 5
+Various Artists: 4
+Faith No More: 4
+Foo Fighters: 4
+
+Closed database.
+```
+
+### NodeJS
+
+​	安装环境：
+
+```shell
+npm init -y
+npm install better-sqlite3
+```
+
+| 特性       | 异步 (`sqlite3`)     | 同步 (`better-sqlite3`)    |
+| ---------- | -------------------- | -------------------------- |
+| 执行方式   | 非阻塞，回调/Promise | 阻塞，直接返回结果         |
+| 适用场景   | Web 服务器、高并发   | 脚本、一次性查询、数据分析 |
+| 代码复杂度 | 略高，需要回调/await | 简单直观                   |
+| 性能       | 高并发友好           | 单线程阻塞，不适合高并发   |
+
+​	创建 `query_chinook_sync.js`：
+
+```javascript
+// query_chinook_sync.js
+const Database = require('better-sqlite3');
+const path = require('path');
+
+const db = new Database(path.join(__dirname, 'Chinook_Sqlite.sqlite'), { readonly: true });
+
+// 前10个艺术家
+console.log('--- 前10个艺术家 ---');
+const artists = db.prepare('SELECT ArtistId, Name FROM Artist LIMIT 10').all();
+artists.forEach(a => console.log(`ArtistId=${a.ArtistId}, Name=${a.Name}`));
+
+// 每位艺术家的专辑数量（前10）
+console.log('\n--- 每位艺术家的专辑数量（前10） ---');
+const counts = db.prepare(`
+    SELECT Artist.Name, COUNT(Album.AlbumId) AS AlbumCount
+    FROM Artist
+    JOIN Album ON Artist.ArtistId = Album.ArtistId
+    GROUP BY Artist.ArtistId
+    ORDER BY AlbumCount DESC
+    LIMIT 10;
+`).all();
+counts.forEach(c => console.log(`${c.Name}: ${c.AlbumCount}`));
+
+db.close();
+```
+
+​	运行：
+
+```
+node query_chinook_sync.js
+```
+
+### Python
+
+​	创建 `query_chinook.py`：
+
+```python
+# query_chinook.py
+import sqlite3
+
+# 连接数据库（只读模式）
+conn = sqlite3.connect("Chinook_Sqlite.sqlite")
+conn.text_factory = str  # 保证 UTF-8 显示特殊字符
+cursor = conn.cursor()
+
+# 1. 前10个艺术家
+print('--- 前10个艺术家 ---')
+cursor.execute("SELECT ArtistId, Name FROM Artist LIMIT 10;")
+for row in cursor.fetchall():
+    print(f"ArtistId={row[0]}, Name={row[1]}")
+
+# 2. 每位艺术家的专辑数量（前10名）
+print('\n--- 每位艺术家的专辑数量（前10） ---')
+cursor.execute("""
+    SELECT Artist.Name, COUNT(Album.AlbumId) AS AlbumCount
+    FROM Artist
+    JOIN Album ON Artist.ArtistId = Album.ArtistId
+    GROUP BY Artist.ArtistId
+    ORDER BY AlbumCount DESC
+    LIMIT 10;
+""")
+for row in cursor.fetchall():
+    print(f"{row[0]}: {row[1]}")
+
+# 3. 最贵的5首歌曲及对应艺术家
+print('\n--- 最贵的5首歌曲及艺术家 ---')
+cursor.execute("""
+    SELECT Track.Name, Artist.Name AS Artist, Track.UnitPrice
+    FROM Track
+    JOIN Album ON Track.AlbumId = Album.AlbumId
+    JOIN Artist ON Album.ArtistId = Artist.ArtistId
+    ORDER BY Track.UnitPrice DESC
+    LIMIT 5;
+""")
+for row in cursor.fetchall():
+    print(f"{row[0]} - {row[1]}: ${row[2]:.2f}")
+
+# 4. 每个国家的顾客数量
+print('\n--- 每个国家的顾客数量 ---')
+cursor.execute("""
+    SELECT Country, COUNT(*) AS CustomerCount
+    FROM Customer
+    GROUP BY Country
+    ORDER BY CustomerCount DESC;
+""")
+for row in cursor.fetchall():
+    print(f"{row[0]}: {row[1]}")
+
+# 关闭连接
+conn.close()
+```
+
+​	启动：
+
+```shell
+python query_chinook.py
+```
+

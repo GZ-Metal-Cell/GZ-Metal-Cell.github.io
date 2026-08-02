@@ -1,0 +1,248 @@
+---
+title: Paper-Verisimilar Image Synthesis for Accurate Detection and Recognition of Texts in Scenes
+date: Fri Aug 25 2023 16:01:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - 论文
+  - 数据集
+  - 实验相关
+categories: 学习
+description: 论文阅读。
+---
+
+
+# 资源
+
+- Arxiv：[[1807.03021] Verisimilar Image Synthesis for Accurate Detection and Recognition of Texts in Scenes (arxiv.org)](https://arxiv.org/abs/1807.03021)
+
+- GitHub：[doem97/VISD-dataset: text detection dataset VISD: Verisimilar image synthesis for accurate detection and recognition of texts in scenes (github.com)](https://github.com/doem97/VISD-dataset)
+
+
+# 正文
+
+提出了一个新的合成数据集的方式（数据集简称 VISD），在实验中表明其好使。
+
+## 1 Introduction
+
+研究了三种方法来应对 DNN 训练中的图像注释挑战。
+
+- **几何变换**
+- **机器学习**（GAN 等）
+- **图像合成**
+
+创新点：
+
+- **语义连贯**：通过将文本嵌入背景图像中语义敏感区域的图像合成
+
+- **视觉显著性**：确定每个语义连贯区域内的嵌入位置
+
+- 设计了一个新颖的场景文本外观模型，通过**自适应学习**真实场景文本图像的特征来确定源文本的颜色和亮度。
+
+![jpg](F1.jpg)
+
+所提出的场景文本图像合成技术：
+
+- 如左侧框所示，给定要嵌入背景图像中的背景图像和源文本，首先确定语义图和显著性图，然后将其组合以识别语义上合理和适合的文本嵌入位置。
+- 根据背景图像中嵌入位置周围的颜色、亮度和上下文结构，进一步自适应地确定源文本的颜色、明亮度和方向。
+- 右侧框中的图片显示了通过所提出的技术合成的场景文本图像。
+
+## 2 Related Work
+
+- Image Synthesis
+- Scene Text Detection
+- Scene Text Recognition
+
+## 3 Scene Text Image Synthesis
+
+所提出的场景文本图像合成技术：
+
+- 从两种类型的输入开始，包括“Background Images”和“Source Texts”
+
+- 给定背景图像，可以通过组合它们的“Semantic Maps“和”Saliency Maps”来确定文本嵌入的区域
+  - “Semantic Maps” 可用作语义图像分割研究中的基本事实
+  - “Saliency Maps”可以使用现有的显著性模型来确定
+
+- 可以根据确定的文本嵌入区域的颜色和亮度自适应地估计源文本的颜色和强度
+- 最后，“合成图像”是通过将渲染文本放置在计算出的嵌入位置来生成的。
+
+### 3.1 Semantic Coherence
+
+- 语义连贯（SC）是指文本应该嵌入背景图像中语义敏感区域的目标。例如，文本应该放在栅栏板上，而不是天空或羊头上，因为在真实场景中很少看到文本。因此，SC 有助于创建语义上更敏感的前景-背景配对，这对于通过使用合成图像来学习/训练的视觉表示以及对象检测和识别模型非常重要。
+
+![jpg](F2.jpg)
+
+### 3.2 Saliency Guidance
+
+- 并非语义连贯的对象或图像区域内的每个位置都适合于场景文本嵌入。例如，更适合在黄色机器的表面上嵌入场景文本，而不是在两个相邻的表面上，需要某些机制来进一步确定语义相干对象或图像区域内的确切场景文本嵌入位置。
+
+- 我们利用人类视觉注意力和场景文本放置原理来确定场景文本的确切嵌入位置。为了吸引人类的注意力和眼球，场景文本通常被放置在同质区域周围，如路标，以创造良好的对比度和可见性。
+
+![jpg](F3.jpg)
+
+- 适合于文本嵌入的位置可以通过以下方式来确定：对所计算的显著性图进行阈值处理。在我们实现的系统中，使用了全局阈值，该阈值通过计算的显著性图的平均值简单地估计显著性指导有助于将文本嵌入语义敏感区域内的正确位置。显著性引导的使用进一步有助于提高合成图像的逼真度以及检测和识别模型的学习视觉表示。
+
+### 3.3 Adaptive Text Appearance
+
+- 将合成图像应用于训练场景文本检测和识别模型时，有效控制源文本和背景图像之间的对比度对于合成图像的有用性非常重要。
+
+- 设计了一种自适应对比技术，根据源文本在真实场景中的样子来控制源文本的颜色和亮度。其思想是搜索场景文本图像块（在现有数据集中的大量场景文本注释中容易获得），其背景具有与所确定的背景区域相似的颜色和亮度。然后可以通过参考搜索到的场景文本图像块内的文本像素的颜色和亮度来确定源文本的颜色和明亮度。
+
+- 对于每个文本注释，首先通过使用所研究的文本注释周围的背景区域来构建 HoG（定向梯度直方图）特征 $H_b$。注释框内文本像素的颜色和亮度的平均值和标准偏差也在 Lab 颜色空间中确定，用 $(\mu_L,\sigma_L)$、$(\mu_a, \sigma_a)$ 和 $(\mu_b, \sigma_b)$ 表示。因此，背景 HoG $H_b$ 和大量场景文本补丁的文本颜色和亮度统计 $(\mu_L, \sigma_L)$、$(\mu_a, \sigma_a)$ 和 $(\mu_b, \sigma_b)$ 形成了一个配对列表，如下所示：
+
+$$P=\left\{H_{b_1}:(\mu_{L_1}, \sigma_{L_1}, \mu_{a_1},\sigma_{b_1}),...H_{b_i}:(\mu_{L_i}, \sigma_{L_i}, \mu_{a_i}, \sigma_{a_i}, \mu_{b_i}),...\right\}$$
+
+$H_b$ 将用作注释场景文本图像补丁的索引，$(\mu_L,\sigma_L)$、$(\mu_a,\sigma_a)$ 和 $(\mu_b,\sigma_b)$ 将用作设置源文本的颜色和亮度的指南。对于下图所示的每个确定的背景补丁（适用于文本嵌入），可以提取其 HoG 特征 $H_s$，从而可以基于 $H_s$ 和 $H_b$ 之间的相似性来确定具有最相似背景的场景文本图像补丁。
+
+可以通过取相应的 $(\mu_L,\mu_a,\mu_b) $ 加上 $(\sigma_L, \sigma_a, \sigma_b)$ 周围的随机变化来确定源文本的颜色和亮度。
+
+![jpg](F4.jpg)
+
+## 4 Implementations
+
+### 4.1 Scene Text Detection
+
+用 EAST 做测试模型。
+
+### 4.2 Scene Text Recognition
+
+使用 CRNN 模型来训练所有场景文本识别模型。
+
+## 5 Experiments
+
+### 5.1 Datasets and Evaluation Metrics
+
+使用的评估数据集：
+
+- ICDAR 2013
+- ICDAR 2015
+- MSRA-TD500
+- IIIT5K
+- SVT
+
+### 5.2 Scene Text Detection
+
+![jpg](T2.jpg)
+
+这把消融实验和对比实验全放一起了。
+
+### 5.3 Scene Text Recognition
+
+![jpg](T3.jpg)
+
+## 6 Conclusions
+
+好使。未来研究方向：进一步改进源文本的外观。
+
+## 7 Acknowledgement
+
+项目资助。
+
+## 数据集可视化
+
+```python
+import cv2
+import os
+import matplotlib.pyplot as plt
+import numpy as np
+
+index = 987
+
+image_dir = r'D:\dataset\VISD\10K\image\\'
+label_dir = r'D:\dataset\VISD\10K\text\\'
+
+image_path = os.path.join(image_dir, '1image_' + str(index) + '.jpg')
+label_path = os.path.join(label_dir, '1image_' + str(index) + '.txt')
+
+image_origin = cv2.imread(image_path)
+image = image_origin.copy()
+height, width, _ = image.shape
+label_file = open(label_path, 'r')
+annotations = label_file.readlines()
+label_file.close()
+
+for annotation in annotations:
+    annotation_list = annotation.split(',')
+    x = [int(num) for num in [annotation_list[0], annotation_list[2], annotation_list[4], annotation_list[6]]]
+    y = [int(num) for num in [annotation_list[1], annotation_list[3], annotation_list[5], annotation_list[7]]]
+    points = np.array([x, y], np.int32).T
+    transcriptions = annotation_list[-1][:-1]
+    
+    cv2.polylines(image, [points], isClosed=True, color=(255, 0, 0), thickness=2)
+    for p in points:
+        cv2.circle(image, (p[0], p[1]), int(min(height, width) / 150), (0, 255, 255), -1)
+
+    cv2.putText(image, transcriptions, (x[0], y[0] - int(min(height, width) / 150)), cv2.FONT_HERSHEY_SIMPLEX,
+                min(height, width) / 1000, (0, 255, 0), int(min(height, width) / 500))
+    
+fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(16, 9))
+axes = axes.flatten()
+
+axes[0].imshow(cv2.cvtColor(image_origin, cv2.COLOR_BGR2RGB))
+axes[0].axis('off')
+axes[0].set_title('Origin')
+
+axes[1].imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+axes[1].axis('off')
+axes[1].set_title('Annotation')
+
+plt.tight_layout()
+plt.show()
+```
+
+![png](C1.png)
+
+## 转换成 MindOCR 可读取的格式
+
+```python
+import os
+import numpy as np
+
+image_dir = r'D:\dataset\VISD\10K\image\\'
+label_dir = r'D:\dataset\VISD\10K\text\\'
+save_dir = r'D:\dataset\VISD\10K\\'
+save_file = "train_det_gt.txt"
+
+string = ""
+
+for label_file in os.listdir(label_dir):
+    print('------', label_file, '------')
+    
+    index = int(label_file.split('_')[1].split('.')[0])
+    
+    image_file = label_file.split('.')[0] + '.jpg'
+    label_path = os.path.join(label_dir, label_file)
+
+    label_file = open(label_path, 'r')
+    annotations = label_file.readlines()
+    label_file.close()
+    
+    string += image_file
+    string += "\t["
+
+    for i, annotation in enumerate(annotations):
+        annotation_list = annotation.split(',')
+        x = [int(num) for num in [annotation_list[0], annotation_list[2], annotation_list[4], annotation_list[6]]]
+        y = [int(num) for num in [annotation_list[1], annotation_list[3], annotation_list[5], annotation_list[7]]]
+        points = np.array([x, y], np.int32).T
+        transcriptions = annotation_list[-1][:-1]
+
+        string += '{"transcription": "'
+        string += transcriptions
+        string += '", "points": ['
+        for j, point in enumerate(points):
+            string += "["
+            string += str(point[0])
+            string += ", "
+            string += str(point[1])
+            if j != len(points) - 1:
+                string += "], "
+            else:
+                string += "]]}"
+        if i != len(annotations) - 1:
+            string += ", "
+    string += ']\n'
+# print(string)
+
+with open(os.path.join(save_dir, save_file), 'w') as file:
+    file.write(string)
+```
+

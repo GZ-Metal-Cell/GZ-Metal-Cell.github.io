@@ -1,0 +1,325 @@
+---
+title: Server-中原人工智能计算中心（各种寄）
+date: Mon May 08 2023 14:30:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - Python
+  - Linux
+  - MindSpore
+categories: 学习
+description: 智算中心的踩坑记录。
+---
+
+
+# 前言
+
+为了白嫖这个资源：[中原人工智能计算中心云运营平台 (xckpjs.com)](https://uconsole.xckpjs.com/#/mgt/dashboard)，学！
+
+# 正文
+
+## 接服务器
+
+1. 登录：[中原人工智能计算中心云运营平台 (xckpjs.com)](https://uconsole.xckpjs.com/#/mgt/dashboard)
+
+![png](S1.png)
+
+2. `云资源`-`ModelArts 控制台`-`进入 HCS Online`
+
+![png](S2.png)
+
+3. `开发环境`-`Notebook`-`创建`
+
+![png](S3.png)
+
+4. 设置好`名称`，`自定义镜像`选择：`mindsprore-tensorflow-pytorch v1.3`
+
+![png](S4.png)
+
+5. `SSH 远程开发`要打开，`密钥对`自己新建一个，点`立即创建`
+
+![png](S5.png)
+
+6. 创建好后会自动下载一个私钥`KeyPair-9944.pem`，还要你妥善保管，存到一个记得住的文件夹里
+
+![png](S6.png)
+
+![png](S6_2.png)
+
+7. 回到创建 Notebook 的界面，`刷新`密钥对，`选择`刚刚创建的密钥对`KeyPair-9944.pem`，然后`立即创建`
+
+![png](S7.png)
+
+![png](S7_2.png)
+
+![png](S7_3.png)
+
+8. 等好了！
+
+![png](S8.png)
+
+9. 下载安装并打开 MobaXterm :https://en.softonic.com/download/moba/windows/post-download（这个网站好像要翻墙）
+
+![png](S9.png)
+
+10. `Session` - `SSH`，点击你创建的 Notebook 的名称查看详细信息
+
+![png](S10.png)
+
+11. 根据你创建的 Notebook 的参数 `ssh://ma-user@authoring-ssh.cncentral231 .xckpis.com:31374` 输入 `SSH settings` 中的参数：
+
+![png](S11.png)
+
+- Basic SSH settings
+  - `Remote host * `，输入`@authoring-ssh.cncentral231.xckpjs.com`
+  - `Specify uername` 打勾，输入 `ma-user`
+  - `端口号`，输入 `31374`
+- Advanced SSH settings
+  - `Use private key` 打勾，选择之前下载到的 `KeyPair-9944.pem`，然后 `OK`
+
+![png](S11_2.png)
+
+12. `login as` : `ma-user`，回车
+
+![png](S12.png)
+
+13. 吃饭，后面请教牛逼的<font color="#136ec2">**伟哥**</font>！
+
+![png](S13.png)
+
+14. 试一试：
+
+```python
+import torch_npu as torch
+
+torch.npu.is_available()
+```
+
+```
+True
+```
+
+## PyCharm
+
+### 配置
+
+1. 先整一个专业版的 PyCharm，谢谢小迷糊！
+
+![png](P1.png)
+
+2. 在 Pycharm 中随便打开一个项目（就你了，yolov5-5.0 [ultralytics/yolov5 at v5.0 (github.com)](https://github.com/ultralytics/yolov5/tree/v5.0)），`Tools`-`Deployment`-`Configuration`:
+
+![png](P2.png)
+
+3. 点击 `SSH configuration` 的 `...` 以设置 SSH configuration
+
+![png](P3.png)
+
+4. 根据你创建的 Notebook 的参数 `ssh://ma-user@authoring-ssh.cncentral231.xckpjs.com:30376`，设置参数：
+
+- `Host`: `authoring-ssh.cncentral231.xckpjs.com`
+- `Username`: `ma-user`
+- `Authentication type`: `Key Pair`
+- `Private key file`: 之前存的 `KeyPair-9944.pem` 的地址
+
+`Test Connection` 显示 `Successfully connected!` 即可。
+
+![png](P4.png)
+
+5. 在服务器中新建一个文件夹，用于存放项目文件，只有放在`work`文件夹里，下次再打开服务器时内容才不会丢失：
+
+> /home/ma-user/work 目录下的数据会保存，其余目录下内容会被清理。如果需要保存开发环境，可以通过保存镜像的方式保留开发环境设置。
+
+![png](P5.png)
+
+6. 服务器中新建一个新的虚拟环境：`yolov5`：
+
+```shell
+conda create -n yolov5 python=3.7
+source activate yolov5
+which python
+```
+
+linux 环境下的 `which python` 可以返回当前虚拟环境下的解释器位置：`~/.conda/envs/yolov5/bin/python`
+
+7. 设置解释器：Pycharm 下 File-Settings-Project: yolov5-5.0-Add Interpreter，选择 Existing 和对应的 SSH Server 地址：
+
+![png](P6.png)
+
+7. 设置好解释器和对应的服务器目录：
+
+![png](P7.png)
+
+8. 此时服务器里就会同步 yolov5 这个项目了，等待同步完成
+
+![png](P8.png)
+
+9. 在 `requirements.txt` 里，删除 `torch>=1.7.0` 和 `torchvision>=0.8.1` 这两行
+
+![png](P9.png)
+
+10. 在服务器中安装环境，这个服务器自带 1.8.1 版本的 pytorch，对应的是 0.9.1 的 torchvision，必须设定好版本，不然会寄：
+
+```shell
+cd /home/ma-user/work/yolov5-5.0/
+pip install -r requirements.txt
+pip install torchvision==0.9.1
+```
+
+11. 在自己的 Notebook 中选择 `更多`-`保存镜像`，以在下次启动服务器时，配置的环境不丢失。
+
+![png](P11.png)
+
+### 开跑（寄）
+
+12. 开跑 `detect.py`！喜提错误：<font color="red">ImportError: libGL.so.1: cannot open shared object file: No such file or directory</font>，使用命令`pip install opencv-python-headless`填之。
+
+13. 开跑 `detect.py`！喜提错误：<font color="red">cv2.error: OpenCV(4.7.0) /io/opencv/modules/highgui/src/window.cpp:1272: error: (-2:Unspecified error) The function is not implemented. Rebuild the library with Windows, GTK+ 2.x or Cocoa support. If you are on Ubuntu or Debian, install libgtk2.0-dev and pkg-config, then re-run cmake or configure script in function 'cvShowImage'</font>，问 ChatGPT，说`这个报错可能是由于 OpenCV 没有启用 GUI 支持导致的`，于是我把 `--view-img` 关了，能跑了，但是没有识别结果，giao！
+
+![png](P13.png)
+
+## 算法迁移文档
+
+### 迁移适配流程
+
+![png](T1.png)
+
+- 互联网查询
+- [昇腾论坛 (hiascend.com)](https://www.hiascend.com/forum/) 发帖或查看类似问题
+- gitee 仓提问：[ModelZoo 查询及提问链接 (yuque.com)](https://www.yuque.com/fanxiangyu-xamn0/sthma6/igg7ngxqq7ipil1c)
+
+- 寻找技术中心技术人员技术支撑
+
+### 昇腾平台是否已适配需求算法
+
+最新 modelzoo 地址以链接实时更新为准：[ModelZoo 查询及提问链接 (yuque.com)](https://www.yuque.com/fanxiangyu-xamn0/sthma6/igg7ngxqq7ipil1c)
+
+#### 一、模型适配于昇腾平台
+
+##### 1. 模型适配于 mindspore
+
+gitee 提问链接：[Issues · MindSpore/mindspore - Gitee.com](https://gitee.com/mindspore/mindspore/issues)
+
+1. MindSporeModelZoo 模型库 (模型适配于 mindspore)
+   - [models: Models of MindSpore (gitee.com)](https://gitee.com/mindspore/models)
+
+##### 2. 模型适配于 NPU
+
+gitee 提问链接：[Issues · Ascend/modelzoo - Gitee.com](https://gitee.com/ascend/modelzoo/issues)
+
+1. AscendModelZoo 模型库—gitee
+   - [modelzoo: Ascend ModelZoo (gitee.com)](https://gitee.com/ascend/modelzoo)
+
+2. AscendModelZoo 模型库—官网展示
+   - [ModelZoo-昇腾社区 (hiascend.com)](https://www.hiascend.com/software/modelzoo/models)
+
+3. Modelzoo-Pytorch 模型库 
+   - [Ascend/ModelZoo-PyTorch - Gitee.com](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch)
+
+4. Modelzoo-Tensorflow 模型库 
+   - [Ascend/ModelZoo-TensorFlow (gitee.com)](https://gitee.com/ascend/ModelZoo-TensorFlow)
+
+5. Modelzoo-yolo 系列 模型库
+   - [Ascend/modelzoo-GPL - Gitee.com](https://gitee.com/ascend/modelzoo-GPL/tree/master/built-in/PyTorch/Official/cv/object_detection)
+
+#### 二、模型未适配于昇腾平台
+
+1. 第三方框架迁移至 mindspore
+   - gitee 提问链接：[Issues · MindSpore/mindspore - Gitee.com](https://gitee.com/mindspore/mindspore/issues)
+
+2. pytorch 框架算法迁移至 npu
+   - gitee 提问链接：[Issues · Ascend/pytorch - Gitee.com](https://gitee.com/ascend/pytorch/issues)
+
+3. tensorflow 框架算法迁移至 npu
+   - gitee 提问链接：[Issues · Ascend/tensorflow - Gitee.com](https://gitee.com/ascend/tensorflow/issues)
+
+### 数据传输
+
+《notebook 服务器数据准备》：主要用于将测试脚本、数据集、第三方依赖包等传输到 notebook 服务器
+
+- 使用 linux 命令直接下载
+  - 通过 wget，git 等命令直接下载
+- 在本地已准备好的数据传输到 notebook 服务器
+  - 传辅较小的脚本数据或数据集时可直接通过 mobaxterm 直接上传
+  - 传输较大的文件（百 G 量级）时可通过 obs 传输（先从本地传输到 obs，再从 obs 传输到 notebook 服务器）
+
+### 迁移工具
+
+-《迁移工具-pytorch/tensorflow 框架算法迁移至 mindspore 框架》：[迁移工具-x2mindspore (yuque.com)](https://www.yuque.com/fanxiangyu-xamn0/sthma6/uibw9hf04t8ofoh0)
+-《迁移工具-pytorch 框架算法迁移至 Ascend》：[迁移工具-Pytorch Gpu2Ascend 脚本迁移工具 (yuque.com)](https://www.yuque.com/fanxiangyu-xamn0/sthma6/gudf93qc88g2t605)
+-《迁移工具-tensorflow 框架算法迁移至 Ascend》：[迁移工具-Pytorch Gpu2Ascend 脚本迁移工具 (yuque.com)](https://www.yuque.com/fanxiangyu-xamn0/sthma6/gudf93qc88g2t605)
+
+1. 创建 notebook 服务器并登录
+2. 命令行使用迁移工具分析脚本
+3. 输出
+   - 迁移后脚本
+   - 支持算子列表 `supported_api.csv`
+   - 不支持算子列表 `unsupported_api.csv`
+4. 按照不支持算子列表 `unsupported_api.csv` 建议进行修改
+
+### 参考资料汇总
+
+- 昇腾社区：[昇腾社区-官网丨昇腾万里 让智能无所不及 (hiascend.com)](https://www.hiascend.com/zh/)
+- mindspore 官网：[MindSpore 官网](https://www.mindspore.cn/)
+- 计算中心平台帮助文档：[帮助中心 (xckpjs.com)](https://docs.xckpjs.com/zh-cn/usermanual/modelarts/modelarts_01_0001_0.html)
+- pytorch 网络模型迁移和训练：[概述-PyTorch 网络模型迁移和训练-模型开发（PyTorch）-6.0.RC1-CANN 商用版-文档首页-昇腾社区 (hiascend.com)](https://www.hiascend.com/document/detail/zh/canncommercial/60RC1/modeldevpt/ptmigr/ptmigr_0001.html)
+- PyTorch 调试优化指南：[guide/modelzoo/pytorch_model/tutorials/PyTorch 训练调试优化和工具使用指南.md · Ascend/docs-openmind - Gitee.com](https://gitee.com/ascend/docs-openmind/blob/master/guide/modelzoo/pytorch_model/tutorials/PyTorch 训练调试优化和工具使用指南.md#21-性能优化)
+- tensorflow 网络模型迁移和训练：[前言-TensorFlow 1.15 网络模型迁移和训练-模型开发（TensorFlow）-6.0.RC1-CANN 商用版-文档首页-昇腾社区 (hiascend.com)](https://www.hiascend.com/document/detail/zh/canncommercial/60RC1/modeldev/tfmigr1/tfmigr1_000002.html)
+- mindspore 迁移指南：[MindSpore](https://www.mindspore.cn/docs/zh-CN/r1.9/migration_guide/overview.html)
+- mindspore 初学教程：[MindSpore](https://www.mindspore.cn/tutorials/zh-CN/r1.9/index.html)
+
+## 算法迁移实践（寄）
+
+1. 进入迁移工具所在目录并执行迁移命令
+
+```shell
+cd /usr/local/Ascend/ascend-toolkit/latest/tools/x2mindspore
+```
+
+2. 设置好待迁移的工程 `/home/ma-user/work/yolov5-5.0/` 和迁移后的目录位置 `/home/ma-user/work/yolov5-5.0-mindspore`
+
+![png](T2.png)
+
+3. 开跑！
+
+```shell
+./run_x2mindspore.sh -i /home/ma-user/work/yolov5-5.0/ -o /home/ma-user/work/yolov5-5.0-mindspore -f pytorch
+```
+
+喜提错误：<font color="red">ModuleNotFoundError: No module named 'libcst'</font>，堵它：`pip install libcst`
+
+4. 继续开跑！
+
+![png](T4.png)
+
+等等等……等到 `X2MindSpore run success, welcome to the next use.` 就可以 next use。
+
+5. 把迁移好的项目下载到本地：
+
+![png](T5.png)
+
+6. 设置完解释器，然后修修补补……
+
+要按照不支持算子列表 `unsupported_api.csv` 建议进行修改……emmmmm……要不以后还是用现成的吧。
+
+## 跑现成的框架（寄）
+
+教程：[Yolov5-PyTorch (hiascend.com)](https://www.hiascend.com/software/modelzoo/detail/17ac4ee6bfca48f6b8698752bd34bfad)
+
+就继续是你了，YOLOv5-6.0（说只有 6.0 以上版本才支持 NPU……）！
+
+1. 从 [built-in/PyTorch/Official/cv/object_detection/Yolov5_for_PyTorch_v6.0 · Ascend/modelzoo-GPL - 码云 - 开源中国 (gitee.com)](https://gitee.com/ascend/modelzoo-GPL/tree/master/built-in/PyTorch/Official/cv/object_detection/Yolov5_for_PyTorch_v6.0) 下载项目文件 `Yolov5_for_PyTorch_v6.0`：
+
+![png](R1.png)
+
+2. 设置解释器
+
+![png](R2.png)
+
+3. 开跑 `detect.py`！然后喜提错误：<font color="red">AttributeError: module 'torch.npu' has no attribute 'is_available'</font>，在`utils/torch_utils`中将`import torch`改成`import torch_npu as torch`
+
+啊啊啊啊啊后面什么乱七八糟的啊啊啊啊啊
+
+## 跑一个 Mindspore 支持的框架
+
+从 [models: Models of MindSpore (gitee.com)](https://gitee.com/mindspore/models) 里面找一个喜欢的，就决定是你了，EAST！[models: Models of MindSpore - Gitee.com](https://gitee.com/mindspore/models/tree/master/research/cv/east)
+
+居然没寄！见 下一篇 博客！

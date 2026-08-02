@@ -1,0 +1,565 @@
+---
+title: Web-Vue Router
+date: Tue Dec 24 2024 07:50:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - 前端
+  - Vue
+categories: 学习
+description: 学习自尚硅谷。
+---
+
+
+# 资源
+
+- [尚硅谷Vue2.0+Vue3.0全套教程丨vuejs从入门到精通_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1Zy4y1K7SH/)
+- [阿里云盘分享](https://www.aliyundrive.com/s/B8sDe5u56BU)
+
+# 正文
+
+## 117-路由的简介
+
+> [!Note]
+>
+> ​	Vue-router是 Vue 的一个插件库，专门用来实现 SPA（单页面应用）。
+>
+> **对 SPA 应用的理解**
+>
+> 1. 单页 Web 应用（single page web application，SPA）
+> 2. 整个应用只有**一个完整的页面**。
+> 3. 点击页面中的导航链接**不会刷新**页面，只会做页面的**局部更新**。
+> 4. 数据需要通过 ajax 请求获取。
+>
+>  **路由的理解**
+>
+> 1. 什么是路由？
+>    1. 一个路由就是一组映射关系（key-value）
+>    2. key 为路径，value 可能是 function 或 component
+> 2. 路由分类
+>    1. 后端路由
+>       1. 理解：value 是 function，用于**处理客户端提交的请求**。
+>       2. 工作过程：服务器接收到一个请求时，根据请求路径找到匹配的函数来处
+>          理请求，返回响应数据。
+>    2. 前端路由
+>       1. 理解：value 是 component，用于展示页面内容。
+>       2. 工作过程：当浏览器的路径改变时，对应的组件就会显示。
+
+![webp](117-1.webp)
+
+![webp](117-2.webp)
+
+​	对于 Vue2，使用如下命令进行安装：
+
+```shell
+npm install vue-router@3
+```
+
+## 118-路由基本使用
+
+<script>
+    const N118_1 = new CodeFileTreeNode('node118_1', false, '118/public/css/bootstrap.css');
+    const N118_2 = new CodeFileTreeNode('node118_2', false, '118/public/index.html');
+    const N118_3 = new CodeFileTreeNode('node118_3', true, 'css', [N118_1]);
+    const N118_4 = new CodeFileTreeNode('node118_4', true, 'public', [N118_2, N118_3]);
+    const N118_5 = new CodeFileTreeNode('node118_5', false, '118/src/components/About.vue');
+    const N118_6 = new CodeFileTreeNode('node118_6', false, '118/src/components/Home.vue');
+    const N118_7 = new CodeFileTreeNode('node118_7', true, 'components', [N118_5, N118_6]);
+    const N118_8 = new CodeFileTreeNode('node118_8', false, '118/src/App.vue');
+    const N118_9 = new CodeFileTreeNode('node118_9', false, '118/src/main.js');
+    const N118_10 = new CodeFileTreeNode('node118_10', true, 'src', [N118_7, N118_8, N118_9]);
+    const N118_11 = new CodeFileTreeNode('node118_11', false, '118/src/router/index.js');
+    const N118_12 = new CodeFileTreeNode('node118_12', true, 'router', [N118_11]);
+    const N118_13 = new CodeFileTreeNode('node118_13', true, 'src', [N118_7, N118_8, N118_9, N118_12]);
+    const N118_14 = new CodeFileTreeNode('node118_14', true, '', [N118_13, N118_4]);
+    new CodeFileTree('tree118', N118_14, N118_8).render();
+</script>
+
+​	进入调试页面如果出现的是 `http://localhost:8080/#/` 而不是 `http://localhost:8080/` 即为路由设置成功。
+
+![webp](118-1.webp)
+
+## 119-几个注意点
+
+> [!Note]
+>
+> 1. **路由组件**通常存放在 `pages` 文件夹，**一般组件**通常存放在 `components` 文件夹。
+> 2. 通过切换，“隐藏”了的路由组件，默认是被销毁掉的，需要的时候再去挂载。
+> 3. 每个组件都有自己的 `$route` 属性，里面存储着自己的路由信息。
+> 4. 整个应用只有一个 `router`，可以通过组件的 `$router` 属性获取到。
+
+## 120-多级（嵌套）路由
+
+<script>
+    const N120_1 = new CodeFileTreeNode('node120_1', false, '120/src/pages/About.vue');
+    const N120_2 = new CodeFileTreeNode('node120_2', false, '120/src/pages/Home.vue');
+    const N120_3 = new CodeFileTreeNode('node120_3', false, '120/src/pages/Message.vue');
+    const N120_4 = new CodeFileTreeNode('node120_4', false, '120/src/pages/News.vue');
+    const N120_5 = new CodeFileTreeNode('node120_5', true, 'pages', [N120_1, N120_2, N120_3, N120_4]);
+    const N120_6 = new CodeFileTreeNode('node120_6', false, '120/src/router/index.js');
+    const N120_7 = new CodeFileTreeNode('node120_7', true, 'router', [N120_6]);
+    const N120_8 = new CodeFileTreeNode('node120_8', false, '120/src/App.vue');
+    const N120_9 = new CodeFileTreeNode('node120_9', false, '120/src/main.js');
+    const N120_10 = new CodeFileTreeNode('node120_10', true, 'src', [N120_5, N120_6, N120_8, N120_9]);
+    new CodeFileTree('tree120', N120_10, N120_2).render();
+</script>
+
+![webp](120-1.webp)
+
+## 121-路由的 query 参数
+
+<script>
+    const N121_1 = new CodeFileTreeNode('node121_1', false, '121/src/pages/About.vue');
+    const N121_2 = new CodeFileTreeNode('node121_2', false, '121/src/pages/Home.vue');
+    const N121_3 = new CodeFileTreeNode('node121_3', false, '121/src/pages/Message.vue');
+    const N121_4 = new CodeFileTreeNode('node121_4', false, '121/src/pages/News.vue');
+    const N121_5 = new CodeFileTreeNode('node121_5', false, '121/src/pages/Detail.vue');
+    const N121_6 = new CodeFileTreeNode('node121_6', true, 'pages', [N121_1, N121_2, N121_3, N121_4, N121_5]);
+    const N121_7 = new CodeFileTreeNode('node121_7', false, '121/src/router/index.js');
+    const N121_8 = new CodeFileTreeNode('node121_8', true, 'router', [N121_7]);
+    const N121_9 = new CodeFileTreeNode('node121_9', false, '121/src/App.vue');
+    const N121_10 = new CodeFileTreeNode('node121_10', false, '121/src/main.js');
+    const N121_11 = new CodeFileTreeNode('node121_11', true, 'src', [N121_6, N121_8, N121_9, N121_10]);
+    new CodeFileTree('tree121', N121_11, N121_5).render();
+</script>
+
+![webp](121-1.webp)
+
+## 122 命名路由
+
+> [!Note]
+>
+> 1. 作用：可以简化路由的跳转。
+>
+> 2. 如何使用
+>
+>    1. 给路由命名：
+>
+>       ```json
+>       {
+>           path: "demo",
+>           component: Demo,
+>           children: [
+>               {
+>                   path: "test",
+>                   component: Test,
+>                   children: [
+>                       {
+>                           name: "Hello",  // 给路由命名
+>                           path: "welcome",
+>                           component: Hello,
+>                       }
+>                   ]
+>               }
+>           ]
+>       }
+>       ```
+>    
+>    2. 简化跳转：
+>    
+>       ```vue
+>       <!--简化前，需要写完整的路径 -->
+>       <router-link to="/demo/test/welcome">跳转</router-link>
+>       <!--简化后，直接通过名字跳转-->
+>       <router-link :to="{name:'hello’}">跳转</router-link>
+>       <!--简化写法配合传递参数-->
+>       <router-link
+>       	:to="{name:'hello',
+>                 query:{id:666,
+>                 title:'你好'}"
+>       >跳转</router-link>
+>       ```
+>
+
+## 123 路由的 params 参数
+
+​	修改路由的 `para`：
+
+```json
+children: [
+    {
+        name: 'detail',
+        path: 'detail/:id/:title',
+        component: Detail,
+    }
+]
+```
+
+​	切换路由时使用的属性改为 `params` 而不是 `query`：
+
+```vue
+<template>
+    <div>
+        <ul>
+            <li v-for="m in messageList" :key="m.id">
+                <router-link :to="{
+                    name: 'detail',
+                    params: {
+                        id: m.id,
+                        title: m.title
+                    }
+                }">{{ m.title }}</router-link>
+            </li>
+        </ul>
+        <hr>
+        <router-view></router-view>
+    </div>
+</template>
+```
+
+​	接收消息时使用 `params` 而不是 `query`：
+
+```vue
+<template>
+    <ul>
+        <li>
+            消息编号：{{$route.params.id}}
+        </li>
+        <li>
+            消息标题：{{$route.params.title}}
+        </li>
+    </ul>
+</template>
+```
+
+> [!Important]
+>
+> ​	特别注意：路由携带 `params` 参数时，若使用 `to` 的对象写法，则不能使用 `path` 配置项，必须使用 `name` 配置！
+
+## 124 路由的 props 配置
+
+> [!Note]
+>
+> ​	作用：让路由组件更方便的收到参数
+>
+> ```json
+> {
+>     name: "xiangging",
+> 	path: "detail/:id",
+> 	component: Detail,
+> 	// 第一种写法：props 值为对象，该对象中所有的 key-value 的组合最终都会通过 props 传给Detail组件
+>     // props: {a:980}
+> 	// 第二种写法：props 值为布尔值，布尔值为 true，则把路由收到的所有 params 参数通过 props 传给Detail 组件
+>     // props: true
+> 	//第三种写法：props 值为函数，该函数返回的对象中每一组 key-value 都会通过 props 传给 Detail 组件
+>     props(route){
+>         return{
+>             id:route.query.id,
+>             title:route.query.title
+>         }
+>     }
+> ```
+>
+> ​	接收参数：
+>
+> ```vue
+> <template>
+>     <ul>
+>         <li>
+>             消息编号：{{ id }}
+>         </li>
+>         <li>
+>             消息标题：{{ title }}
+>         </li>
+>     </ul>
+> </template>
+> 
+> <script>
+> /* eslint-disable vue/multi-word-component-names */
+> export default {
+>     name: 'Detail',
+>     props: {
+>         id: {
+>             type: String,
+>             required: true
+>         },
+>         title: {
+>             type: String,
+>             required: true
+>         }
+>     }
+> }
+> </script>
+> ```
+
+## 125 router-link 的 replace 属性
+
+> [!Note]
+>
+> 1. 作用：控制路由跳转时操作浏览器历史记录的模式
+> 2. 浏览器的历史记录有两种写入方式：分别为 `push` 和 `replace`，`push` 是**追加历史记录（追加栈）**，`replace` 是**替换当前记录（栈顶）**。路由跳转时候默认为 `push`
+> 3. 如何开启 `replace` 模式：`<router-linkreplace.......>News</router-link>`
+
+## 126 编程式路由导航
+
+> [!Note]
+>
+> ​	作用：不借助 `<router-link>` 实现路由跳转，让路由跳转更加灵活。
+
+​	`Message.vue`：
+
+```vue
+<template>
+    <div>
+        <ul>
+            <li v-for="m in messageList" :key="m.id">
+                <router-link :to="{
+                    name: 'detail',
+                    params: {
+                        id: m.id,
+                        title: m.title
+                    }
+                }">{{ m.title }}</router-link>
+                <button @click="pushShow(m)">push 查看</button>
+                <button @click="replaceShow(m)">replace 查看</button>
+            </li>
+        </ul>
+        <hr>
+        <router-view></router-view>
+    </div>
+</template>
+
+<script>
+/* eslint-disable vue/multi-word-component-names */
+export default {
+    name: 'Message',
+    data() {
+        return {
+            messageList: [
+                { id: '001', title: 'message001' },
+                { id: '002', title: 'message002' },
+                { id: '003', title: 'message003' }
+            ]
+        }
+    },
+    methods: {
+        pushShow(m) {
+            // 检查当前路由是否与目标路由相同
+            if (this.$route.name !== 'detail' || this.$route.params.id !== m.id) {
+                this.$router.push({
+                    name: 'detail',
+                    params: {
+                        id: m.id,
+                        title: m.title
+                    }
+                });
+            }
+        },
+        replaceShow(m) {
+            // 检查当前路由是否与目标路由相同
+            if (this.$route.name !== 'detail' || this.$route.params.id !== m.id) {
+                this.$router.replace({
+                    name: 'detail',
+                    params: {
+                        id: m.id,
+                        title: m.title
+                    }
+                });
+            }
+        }
+    }
+
+}
+</script>
+```
+
+​	`Banner.vue`：
+
+```vue
+<template>
+    <ul>
+        <li>
+            消息编号：{{ id }}
+        </li>
+        <li>
+            消息标题：{{ title }}
+        </li>
+    </ul>
+</template>
+
+<script>
+/* eslint-disable vue/multi-word-component-names */
+export default {
+    name: 'Detail',
+    props: {
+        id: {
+            type: String,
+            required: true
+        },
+        title: {
+            type: String,
+            required: true
+        }
+    }
+}
+</script>
+```
+
+![webp](126-1.webp)
+
+## 127 缓存路由组件
+
+> [!Note]
+>
+> ​	在切换路由时，原组件会被销毁，如果不想这么做，得使用缓存路由组件。
+>
+> ```vue
+> <keep-alive inclue="News">
+> 	<router-view></router-view>
+> </keep-alive>
+> ```
+>
+> ​	包含多个组件：
+>
+> ```vue
+> <keep-alive inclue="['News', 'Message']">
+> 	<router-view></router-view>
+> </keep-alive>
+> ```
+
+## 128 两个新的生命周期
+
+```javascript
+activated() {
+    console.log('News 组件被激活了')
+    this.timer = setInterval(() => {
+        console.log('@')
+        this.opacity -= 0.01
+        if(this.opacity <= 0) this.opacity = 1
+    }, 16)
+},
+deactived() {
+    console.log('News 组件失活了')
+    clearInterval(this.timer)
+}
+```
+
+> [!Note]
+>
+> 1. 作用：路由组件所独有的两个钩子，用于捕获路由组件的激活状态。
+> 2. 具体名字：
+>    1. `activated` 路由组件被激活时触发。
+>    2. `deactivated` 路由组件失活时触发。
+
+## 129 全局前置-路由守卫
+
+> [!Note]
+>
+> 1. 作用：对路由进行权限控制
+> 2. 分类：全局守卫、独享守卫、组件内守卫
+
+​	在路由将要跳转时，调用一个函数。
+
+​	`router/index.js`：
+
+```javascript
+...
+{
+    name: 'message',
+    path: 'message',
+    component: Message,
+    meta: {isAuth: true, title: "消息"}
+}
+...
+// 全局前置路由守卫--初始化的时候被调用、每次路由切换之前被调用
+router.beforeEach((to, from, next) => {
+	console.log(to, from)
+	if(!to.meta.isAuth || localstorage.getItem('school') === 'atguigu') {
+        next()
+    }
+})
+```
+
+## 130 全局前置-路由守卫
+
+​	在路由跳转完毕时，调用一个函数。
+
+```javascript
+router.afterEach((to, from) => {
+    document.title = to.meta.title || 'XXX'
+}) 
+```
+
+## 131 独享路由守卫
+
+​	 直接在定义路由时设置路由守卫：
+
+```javascript
+{
+    name: 'message',
+    path: 'message',
+    component: 'Message',
+    meta: {isAuth: true, title: '消息'},
+    beforeEnter: (to, from, next) => {
+        ...
+    }
+}
+```
+
+## 132 组件内路由守卫
+
+```javascript
+beforeRouteEnter(to,from, next) {
+    console.log('About--beforeRouteEnter', to, from)
+    if(to.meta.isAuth){
+        // 判断是否需要鉴权
+        if(localstorage.getItem('school')==='atguigu') {
+            next()
+        } else {
+            alert('学校名不对，无权限査看!')
+    } else {
+        next()
+    }
+},
+    
+// 通过路由规则，离开该组件时被调用
+beforeRouteLeave(to, from, next) {
+    console.log("About--beforeRouteLeave", to, from)
+    next()
+}
+```
+
+## 133 history 模式与 hash 模式
+
+> [!Note]
+>
+> **路由器的两种工作模式**
+>
+> 1. 对于一个 url 来说，什么是 hash 值？-- `#` 及其后面的内容就是 hash 值。
+> 2. hash 值不会包含在 HTTP 请求中，即：hash 值不会带给服务器。
+> 3. hash 模式：
+>    1. 地址中永远带着 `#` 号，不美观。
+>    2. 若以后将地址通过第三方手机 app 分享，若 app 校验严格，则地址会被标记为不合法。
+>    3. 兼容性较好。
+> 4. history 模式：
+>    1. 地址干净，美观
+>    2. 兼容性和 hash 模式相比略差。
+>    3. 应用部署上线时需要后端人员支持，解决刷新页面服务端 404 的问题（`connect-history-api-fallback`）。
+
+​	在定义路由器时可以选择是 history 模式还是 hash 模式：
+
+```javascript
+const router = new VueRouter({
+    mode: 'history',
+    ...
+})
+```
+
+## 134-135 element-ui
+
+> [!Note]
+>
+> **移动端常用 UI 组件库**
+>
+> 1. Vant https://youzan.github.io/vant
+>
+> 2. Cube Ul https://didi.github.io/cube-ui
+> 3. Mint Ul http://mint-ui.github.io
+>
+> **PC 端常用 UI 组件库**
+>
+> 1. Element Ul https://element.eleme.cn
+>
+> 2. lView Ul https://www.iviewui.come
+
+- [组件 | Element](https://element.eleme.cn/#/zh-CN/component/quickstart)
+
+​	看文档慢慢来吧。

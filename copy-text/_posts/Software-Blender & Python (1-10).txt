@@ -1,0 +1,1012 @@
+---
+title: Software-Blender & Python (1-10)
+date: Wed May 31 2023 08:15:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - Blender
+  - Python
+categories: 学习
+description: 用 Python 编写 Blender 的插件。学习自 Youtube 博主 Darkfall。
+---
+
+
+# 资源
+
+- [Blender Python - Scripting Series - YouTube](https://www.youtube.com/playlist?list=PLFtLHTf5bnym_wk4DcYIMq1DkjqB7kDb-)
+
+# 课程
+
+## An Introduction to Scripting
+
+- [Darkfall : VFX Nodes Addon (darkfallblender.blogspot.com)](https://darkfallblender.blogspot.com/p/blog-page_8.html)
+
+将视图改成如下图所示，拖动视图的右上角可以分离视图：
+
+![jpg](1_1.jpg)
+
+编写 python 代码：
+
+```python
+import bpy
+
+class TestPanel(bpy.types.Panel):
+    bl_label = "Test Panel"
+    bl_idname = "PT_TestPanel"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = 'My 1st Addona'
+    
+    def draw(self, context):
+        layout = self.layout
+        
+        row = layout.row()
+        row.label(text='Add an object', icon='CUBE')
+        row = layout.row()
+        row.operator('mesh.primitive_cube_add', icon='CUBE')
+        row.operator('mesh.primitive_uv_sphere_add', icon='SPHERE')
+        row = layout.row()
+        row.operator('object.text_add', icon='FILE_FONT')
+        
+
+def register():
+    bpy.utils.register_class(TestPanel)
+    
+def unregister():
+        bpy.utils.unsregister_class(TestPanel)
+        
+
+if __name__ == '__main__':
+    register()
+```
+
+> 这段 python 代码是在 Blender 中添加一个面板（Panel），面板的名称为“Test Panel”，在 3D 视窗中显示，属于 UI 面板类型，属于"My 1st Addona"类别。这个面板里面添加了三个按钮，分别为添加一个立方体、添加一个球体、添加一个文字。
+>
+> 具体解释如下：
+>
+> - 第一行导入了 blender 的 Python API，可以让我们在 Python 中使用 Blender 的功能。
+> - 接下来定义了一个名为 TestPanel 的类，该类继承自 bpy.types.Panel，用于创建面板。bl_label 表示显示的名称，bl_idname 是给面板加上一个独有的 ID，可以在其他地方调用它，bl_space_type 表示要显示在哪种编辑器空间中，这里是`VIEW_3D` 3D 视窗中显示，bl_region_type 表示要显示在哪个区域内，这里是'UI' 用户界面标签页。bl_category 表示在哪个类别下进行分组，这里将其放在“My 1st Addona”。
+> - 然后是 draw 函数，用于绘制面板上的组件。self.layout 是布局对象，代表整个面板的布局。通过 layout 对象的 row()函数，可以创建一行组件。在这个例子中，首先创建一行 label 文本，然后又创建两个 button，分别调用了`mesh.primitive_cube_add`添加立方体，`mesh.primitive_uv_sphere_add`添加球体，最后再创建一个添加文字的按钮。
+> - register()函数使用`bpy.utils.register_class()`方法将 TestPanel 类注册到 Blender 中，使其可用。
+> - unregister()函数使用`bpy.utils.unregister_class()`方法取消注册 TestPanel 类。
+> - 最后检查脚本是否在 Blender 内运行，如果是，则执行 register()函数。
+
+在 `3D Viewport` 视图下按 `n` 可以打开面板。
+
+![jpg](1_4.jpg)
+
+面板的图标名称可以通过`Edit`-`Preferences`-`Add-ons`-搜索`icon`-`Icon Viewer`的方式找到：
+
+![jpg](1_2.jpg)
+
+带创建物体的英文名称可以通过下图方式找到：
+
+![jpg](1_3.jpg)
+
+## Finishing the Object Adder Add-on
+
+继续完善之前写的插件：
+
+```python
+bl_info = {
+    'name': 'Object Adder',
+    'author': 'Darkfall',
+    'version': (1, 0),
+    'blender': (3, 51, 0),
+    'location': 'View3d > Tool',
+    'warning': '',
+    'wiki_url': '',
+    'category': 'Add Mesh',
+    
+}
+
+import bpy
+
+
+class TestPanel(bpy.types.Panel):
+    bl_label = "Test Panel"
+    bl_idname = "PT_TestPanel"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = 'My 1st Addona'
+    
+    def draw(self, context):
+        layout = self.layout
+        layout.scale_y = 1.4
+        
+        row = layout.row()
+        row.label(text='Add an object', icon='OBJECT_ORIGIN')
+        row = layout.row()
+        row.operator('mesh.primitive_cube_add', icon='CUBE')
+        row.operator('mesh.primitive_uv_sphere_add', icon='SPHERE')
+        row = layout.row()
+        row.operator('object.text_add', icon='FILE_FONT')
+        
+
+class PanelA(bpy.types.Panel):
+    bl_label = "Scale"
+    bl_idname = "PT_PanelA"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = 'My 1st Addona'
+    bl_parent_id = 'PT_TestPanel'
+    bl_options = {'DEFAULT_CLOSED'}
+    
+    def draw(self, context):
+        layout = self.layout
+        obj = context.object
+        
+        row = layout.row()
+        row.label(text='Select an option to scale your object.', icon='FONT_DATA')
+        row = layout.row()
+        row.operator('transform.resize')
+        row = layout.row()
+        layout.scale_y = 1.2
+
+        col = layout.column()
+        col.prop(obj, 'scale')
+        
+        
+class PanelB(bpy.types.Panel):
+    bl_label = "Specials"
+    bl_idname = "PT_PanelB"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = 'My 1st Addona'
+    bl_parent_id = 'PT_TestPanel'
+    bl_options = {'DEFAULT_CLOSED'}
+    
+    def draw(self, context):
+        layout = self.layout
+        
+        row = layout.row()
+        row.label(text='Select a Special Option', icon='COLOR_BLUE')
+        row = layout.row()
+        row.operator('object.shade_smooth', icon='MOD_SMOOTH', text='Set Smooth Shading')
+        row.operator('object.subdivision_set')
+        row = layout.row()
+        row.operator('object.modifier_add')
+
+
+def register():
+    bpy.utils.register_class(TestPanel)
+    bpy.utils.register_class(PanelA)
+    bpy.utils.register_class(PanelB)
+  
+    
+def unregister():
+    bpy.utils.unsregister_class(TestPanel)
+    bpy.utils.unregister_class(PanelA)
+    bpy.utils.register_class(PanelB)
+        
+
+if __name__ == '__main__':
+    register()
+```
+
+![jpg](2_1.jpg)
+
+也可以通过 `Edit`-`Preferences`-`Install...` 的方式安装其他人写好的插件：
+
+![jpg](2_2.jpg)
+
+## Preview: The Shader Library Add-on (Python Tutorial Result)
+
+## How to create an Addon (The Shader Library)
+
+教你怎么用 Python 写一个 Shader 插件：
+
+调整窗口布局，一个 Shader Editor，一个 3D Viewport，一个 Text Editor：
+
+![jpg](4_0.jpg)
+
+> 这段代码定义了一个名为"Shader Libraey"的 Blender 插件，该插件提供了一个名为"Diamond"的着色器，可以在 3D 视图的工具栏中的"Shader Library"选项卡中访问。当用户点击该选项卡时，将显示一个面板，其中包含一个"选择要添加的着色器"标签和一个"Diamond"按钮，当用户单击该按钮时，将创建一个着色器并应用于活动对象上。
+>
+> 具体而言，该代码文件首先定义了包含插件名称、作者、版本等信息的字典。接下来定义了一个面板类 ShaderMainPanel，它作为面板的主要控件，用于渲染用户界面。该面板包含一个文本标签和一个名为"shader.diamond_operator"的操作器，后者定义了所需的 Diamond 着色器。在操作器的 execute()函数中，创建一个新材质，激活其节点编辑模式，删除默认的 Principled BSDF 节点，然后创建和连接多个颜色为红、绿、蓝的玻璃节点，最后创建混合节点和连接多个节点以生成最终的 Diamond 着色器，将其分配给当前活动对象。
+>
+> 最后，定义了两个函数 register()和 unregister()，它们用于在 Blender 应用程序中注册和取消注册插件的类。
+
+```python
+bl_info = {
+    'name': 'Shader Libraey',
+    'author': 'Darkfall',
+    'version': (1, 0),
+    'blender': (3, 51, 0),
+    'location': 'View3d > Tool',
+    'warning': '',
+    'wiki_url': '',
+    'category': 'Add Shader',
+    
+}
+
+import bpy
+
+
+class ShaderMainPanel(bpy.types.Panel):
+    bl_label = "Shader Library"
+    bl_idname = "SHADER_PT_MAINPANEL"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = "Shader Library"
+
+    def draw(self, context):
+        layout = self.layout
+        
+        row = layout.row()
+        row.label(text='Select a Shader to be added.')
+        row.operator('shader.diamond_operator')
+
+
+# Create a Custom Operator for the Diamond Shader
+class SHADER_OT_DIAMOND(bpy.types.Operator):
+    bl_label = "Diamond"
+    bl_idname = "shader.diamond_operator"
+    
+    def execute(self, context):
+        # Creating a New Shader and calling it Diamond
+        material_diamond = bpy.data.materials.new(name="Diamond")
+        # Enabling Use Nodes
+        material_diamond.use_nodes = True
+        # Removing the Principled Node
+        material_diamond.node_tree.nodes.remove(material_diamond.node_tree.nodes.get('Principled BSDF'))
+        # Create a reference to the Material Output
+        material_output = material_diamond.node_tree.nodes.get('Material Output')
+        # Set location of node
+        material_output.location = (-400,0)
+        
+        # Adding Glass1 Node
+        glass1_node = material_diamond.node_tree.nodes.new('ShaderNodeBsdfGlass')
+        # Set location of node
+        glass1_node.location = (-600,0)
+        # Setting the Default Color
+        glass1_node.inputs[0].default_value = (1, 0, 0, 1)
+        # Setting the Default IOR Value
+        glass1_node.inputs[2].default_value = 1.446
+        
+        # Adding Glass2 Node
+        glass2_node = material_diamond.node_tree.nodes.new('ShaderNodeBsdfGlass')
+        # Set location of node
+        glass2_node.location = (-600, -150)
+        # Setting the Default Color
+        glass2_node.inputs[0].default_value = (0, 1, 0, 1)
+        # Setting the Default IOR Value
+        glass2_node.inputs[2].default_value = 1.450
+        
+        # Adding Glass3 Node
+        glass3_node = material_diamond.node_tree.nodes.new('ShaderNodeBsdfGlass')
+        # Set location of node
+        glass3_node.location = (-600, -300)
+        # Setting the Default Color
+        glass3_node.inputs[0].default_value = (0, 0, 1, 1)
+        # Setting the Default IOR Value
+        glass3_node.inputs[2].default_value = 1.450
+        
+        # Create the Add Shader Node and Reference it as 'Add1'
+        add1_node = material_diamond.node_tree.nodes.new('ShaderNodeAddShader')
+        # Setting the Location
+        add1_node.location = (-400,-50)
+        # Setting the Label
+        add1_node.label = "Add 1"
+        # Minimizes the Node
+        add1_node.hide = True
+        # Deselect the Node
+        add1_node.select = False
+        
+        # Create the Add Shader Node and Reference it as 'Add2'
+        add2_node = material_diamond.node_tree.nodes.new('ShaderNodeAddShader')
+        # Setting the Location
+        add2_node.location = (0,0)
+        # Setting the Label
+        add2_node.label = "Add 2"
+        # Minimizes the Node
+        add2_node.hide = True
+        # Deselect the Node
+        add2_node.select = False
+        
+        # Adding Glass4 Node
+        glass4_node = material_diamond.node_tree.nodes.new('ShaderNodeBsdfGlass')
+        # Set location of node
+        glass4_node.location = (-150, -150)
+        # Setting the Default Color
+        glass4_node.inputs[0].default_value = (1, 1, 1, 1)
+        # Setting the Default IOR Value
+        glass4_node.inputs[2].default_value = 1.450
+        # Deselect the Node
+        glass4_node.select = False
+        
+        # Create the Mix Shader Node and Reference it as 'Mix1'
+        mix1_node = material_diamond.node_tree.nodes.new('ShaderNodeMixShader')
+        # Setting the Location
+        mix1_node.location = (200,0)
+        # Deselect the Node
+        mix1_node.select = False
+        
+        # Creating Links between the Nodes
+        material_diamond.node_tree.links.new(glass1_node.outputs[0], add1_node.inputs[0])
+        material_diamond.node_tree.links.new(glass2_node.outputs[0], add1_node.inputs[1])
+        material_diamond.node_tree.links.new(add1_node.outputs[0], add2_node.inputs[0])
+        material_diamond.node_tree.links.new(glass3_node.outputs[0], add2_node.inputs[1])
+        material_diamond.node_tree.links.new(add2_node.outputs[0], mix1_node.inputs[1])
+        material_diamond.node_tree.links.new(glass4_node.outputs[0], mix1_node.inputs[2])
+        material_diamond.node_tree.links.new(mix1_node.outputs[0], material_output.inputs[0])
+        bpy.context.object.active_material = material_diamond
+        
+        return {'FINISHED'}
+
+
+def register():
+    bpy.utils.register_class(ShaderMainPanel)
+    bpy.utils.register_class(SHADER_OT_DIAMOND)
+    
+
+def unregister():
+    bpy.utils.unregister_class(ShaderMainPanel)
+    bpy.utils.unregister_class(SHADER_OT_DIAMOND)
+    
+
+if __name__ == '__main__':
+    register()
+```
+
+`Edit`-`Preferences`-`Add-ons`-搜索`extra`-`Add Mesh: Extra Objects`，这样 Blender 中就可以创建钻石形状的物体。
+
+![jpg](4_1.jpg)
+
+创建一个钻石形状的物体，运行代码，点击 `Diamond`，就给该物体添加了一个 Shader：
+
+![jpg](4_2.jpg)
+
+可以从 [Darkfall : Blender Python Tutorial: How to create an Add-on - The Shader Library [bpy] (darkfallblender.blogspot.com)](https://darkfallblender.blogspot.com/2020/01/blender-python-tutorial-how-to-create.html) 中的 [ShaderLibrary.py - Google Drive](https://drive.google.com/file/d/1HnbIASMeRfEkVkpP9WNA_XcOLZj6Iegt/view) 下载作者写的更复杂的 `ShaderLibrary.py`。
+
+## Add a keyframe & Modifier with Python [learn python for beginners]
+
+> 这段代码定义了一个名为"Hello World Panel"的 Blender 插件，该插件提供了一个名为"Neon"的着色器，可以在 3D 视图的工具栏中的"Name your New Tab"选项卡中访问。当用户点击该选项卡时，将显示一个面板，其中包含一个"Add Neon Shader"按钮，当用户单击该按钮时，将创建一个着色器并应用于活动对象上。
+>
+> 具体而言，该代码文件首先定义了一个名为 HelloWorldPanel 的面板类，该类作为面板的主要控件，用于渲染用户界面。该面板包含一个按钮，名为"shader.neon_operator"。在操作器的 execute()函数中，创建一个新材质，激活其节点编辑模式，删除默认的 Principled BSDF 节点，然后创建和连接多个颜色为蓝色、灰色的玻璃节点，最后创建混合节点和连接多个节点以生成最终的 Neon 着色器，将其分配给当前活动对象。
+>
+> 最后，定义了两个函数 register()和 unregister()，它们用于在 Blender 应用程序中注册和取消注册插件的类。
+
+```python
+import bpy
+
+
+class HelloWorldPanel(bpy.types.Panel):
+    """Creates a Panel in the Object properties window"""
+    bl_label = "Hello World Panel"
+    bl_idname = "OBJECT_PT_hello"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = "Name your New Tab"
+
+    def draw(self, context):
+        layout = self.layout
+
+        obj = context.object
+
+        row = layout.row()
+        row.operator('shader.neon_operator')
+        
+
+class SHADER_OT_NEON(bpy.types.Operator):
+    bl_label = 'Add Neon Shader'
+    bl_idname = 'shader.neon_operator'
+    
+    def execute(self, context):
+        cur_frame = bpy.context.scene.frame_current
+        
+        # Creating a New Shader and calling it Neon
+        material_neon = bpy.data.materials.new(name= "Neon")
+        # Enabling Use Nodes
+        material_neon.use_nodes = True
+        
+        tree = material_neon.node_tree
+        
+        # removing the Principled Node
+        material_neon.node_tree.nodes.remove(material_neon.node_tree.nodes.get('Principled BSDF'))
+        # Create a reference to the Material Output
+        material_output = material_neon.node_tree.nodes.get('Material Output')
+        # Set location of node
+        material_output.location = (400,0)
+        
+        # Adding Glass1 Node
+        emiss_node = material_neon.node_tree.nodes.new('ShaderNodeEmission')
+        # Set location of node
+        emiss_node.location = (200,0)
+        # Setting the Default Color
+        emiss_node.inputs[0].default_value = (0.59, 0.76, 1, 1)
+        # Setting the Default IOR Value
+        emiss_node.inputs[1].default_value = 2
+        emiss_node.inputs[1].keyframe_insert('default_value', frame=cur_frame)
+        
+        data_path = f'nodes["{emiss_node.name}"].inputs[1].default_value'
+        
+        fcurves = tree.animation_data.action.fcurves
+        fc = fcurves.find(data_path)
+        if fc:
+            new_mod = fc.modifiers.new('NOISE')
+            new_mod.strength = 10
+            new_mod.depth = 1
+        
+        material_neon.node_tree.links.new(emiss_node.outputs[0], material_output.inputs[0])
+        
+        return {'FINISHED'}
+
+def register():
+    bpy.utils.register_class(HelloWorldPanel)
+    bpy.utils.register_class(SHADER_OT_NEON)
+
+
+def unregister():
+    bpy.utils.unregister_class(HelloWorldPanel)
+    bpy.utils.unregister_class(SHADER_OT_NEON)
+
+
+if __name__ == "__main__":
+    register()
+
+```
+
+创建了一个 shader 和一个 modifiers，使得绑定的物体一闪一闪的。
+
+![jpg](5_1.jpg)
+
+## Create a popup dialog box
+
+定义了一个 `WM_OT_myOp` 类，提供了一个 dialog box 提示，原视频的 Blender 版本有点旧，替换了一些代码：
+
+```python
+class WM_OT_myOp(bpy.types.Operator):
+    """Open the Add Cube Dialog Box"""
+    bl_label = 'Add Cube Dialog Box'
+    bl_idname = 'wm.myop'
+    
+    # text = bpy.props.StringProperty(name='Enter Text', default='')
+    text: bpy.props.StringProperty(name='Enter Text', default='')
+    # scale = bpy.props.FloatVectorProperty(name='Scale', default=1)
+    scale: bpy.props.FloatVectorProperty(name='Scale', default=(1, 1, 1))
+    
+    def execute(self, context):
+        
+        t = self.text
+        s = self.scale
+        
+        bpy.ops.mesh.primitive_cube_add()
+        obj = bpy.context.object
+        obj.name = t
+        obj.scale[0] = s[0]
+        obj.scale[1] = s[1]
+        obj.scale[2] = s[2]
+        
+        return {'FINISHED'}
+    
+    
+    def invoke(self, context, event):
+        
+        return context.window_manager.invoke_props_dialog(self)
+```
+
+整合到之前的 `AddObjectScript.py` 中，代码 `row.operator('wm.myop', icon='CUBE', text='Cube')` 将创建的 `bl_idname = 'wm.myop'` 的 `WM_OT_myOp` 加入到 TestPanel 中：
+
+```python
+bl_info = {
+    'name': 'Object Adder',
+    'author': 'Darkfall',
+    'version': (1, 0),
+    'blender': (3, 51, 0),
+    'location': 'View3d > Tool',
+    'warning': '',
+    'wiki_url': '',
+    'category': 'Add Mesh',
+    
+}
+
+import bpy
+
+
+class TestPanel(bpy.types.Panel):
+    bl_label = "Test Panel"
+    bl_idname = "PT_TestPanel"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = 'My 1st Addona'
+    
+    def draw(self, context):
+        layout = self.layout
+        layout.scale_y = 1.4
+        
+        row = layout.row()
+        row.label(text='Add an object', icon='OBJECT_ORIGIN')
+        row = layout.row()
+        row.operator('wm.myop', icon='CUBE', text='Cube')
+        row = layout.row()
+        row.operator('mesh.primitive_cube_add', icon='CUBE')
+        row.operator('mesh.primitive_uv_sphere_add', icon='SPHERE')
+        row = layout.row()
+        row.operator('object.text_add', icon='FILE_FONT')
+        
+
+class PanelA(bpy.types.Panel):
+    bl_label = "Scale"
+    bl_idname = "PT_PanelA"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = 'My 1st Addona'
+    bl_parent_id = 'PT_TestPanel'
+    bl_options = {'DEFAULT_CLOSED'}
+    
+    def draw(self, context):
+        layout = self.layout
+        obj = context.object
+        
+        row = layout.row()
+        row.label(text='Select an option to scale your object.', icon='FONT_DATA')
+        row = layout.row()
+        row.operator('transform.resize')
+        row = layout.row()
+        layout.scale_y = 1.2
+
+        col = layout.column()
+        col.prop(obj, 'scale')
+        
+        
+class PanelB(bpy.types.Panel):
+    bl_label = "Specials"
+    bl_idname = "PT_PanelB"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = 'My 1st Addona'
+    bl_parent_id = 'PT_TestPanel'
+    bl_options = {'DEFAULT_CLOSED'}
+    
+    def draw(self, context):
+        layout = self.layout
+        
+        row = layout.row()
+        row.label(text='Select a Special Option', icon='COLOR_BLUE')
+        row = layout.row()
+        row.operator('object.shade_smooth', icon='MOD_SMOOTH', text='Set Smooth Shading')
+        row.operator('object.subdivision_set')
+        row = layout.row()
+        row.operator('object.modifier_add')
+        
+
+class WM_OT_myOp(bpy.types.Operator):
+    """Open the Add Cube Dialog Box"""
+    bl_label = 'Add Cube Dialog Box'
+    bl_idname = 'wm.myop'
+    
+    # text = bpy.props.StringProperty(name='Enter Text', default='')
+    text: bpy.props.StringProperty(name='Enter Text', default='')
+    # scale = bpy.props.FloatVectorProperty(name='Scale', default=1)
+    scale: bpy.props.FloatVectorProperty(name='Scale', default=(1, 1, 1))
+    
+    def execute(self, context):
+        
+        t = self.text
+        s = self.scale
+        
+        bpy.ops.mesh.primitive_cube_add()
+        obj = bpy.context.object
+        obj.name = t
+        obj.scale[0] = s[0]
+        obj.scale[1] = s[1]
+        obj.scale[2] = s[2]
+        
+        return {'FINISHED'}
+    
+    
+    def invoke(self, context, event):
+        
+        return context.window_manager.invoke_props_dialog(self)
+
+
+def register():
+    bpy.utils.register_class(TestPanel)
+    bpy.utils.register_class(PanelA)
+    bpy.utils.register_class(PanelB)
+    bpy.utils.register_class(WM_OT_myOp)
+  
+    
+def unregister():
+    bpy.utils.unsregister_class(TestPanel)
+    bpy.utils.unregister_class(PanelA)
+    bpy.utils.register_class(PanelB)
+    bpy.utils.unregister_class(WM_OT_myOp)
+        
+
+if __name__ == '__main__':
+    register()
+```
+
+开跑！点击 OK 就会创建一个相应名称和 Scale 的立方体。
+
+![jpg](6_1.jpg)
+
+## Creating the Text Tool Add-on
+
+> 这是一个简单的 Blender 插件，提供了一个 "Text Tool" 面板，用于添加文本对象。插件为用户提供了一些选项，如文本内容、比例尺度、是否居中编辑原点、是否挤压等。
+>
+> 在代码的开头，`bl_info` 字典定义了插件的基本信息，包括名称、作者、版本、Blender 版本要求、描述等等。这些信息将会在 Blender 中进行显示和识别。
+>
+> `OBJECT_PT_TextTool` 类定义了插件的 UI 面板，在 View3D 视图中的 "Add" 菜单下可以找到它。面板中有一个按钮，用于调用 `WM_OT_textOp` 操作器类，添加指定的文本对象。
+>
+> `WM_OT_textOp` 操作器类定义了添加文本对象的过程，并通过执行 `execute()` 方法在场景中添加文本对象。使用 `invoke()` 方法显示属性对话框，以便用户可以设置文本对象的属性。
+>
+> 在代码的末尾，`register()` 方法用于注册插件的类，`unregister()` 方法用于注销这些类。这使得 Blender 工具栏能够正确地显示插件，并在需要时供用户使用。
+
+```python
+bl_info = {
+    "name": "Text Tool",
+    "author": "Darkfall",
+    "version": (1, 0),
+    "blender": (3, 51, 0),
+    "location": "View3D > Add > Mesh > New Object",
+    "description": "Adds a new Mesh Object",
+    "warning": "",
+    "doc_url": "",
+    "category": "Add Mesh",
+}
+
+import bpy
+
+class OBJECT_PT_TextTool(bpy.types.Panel):
+    """Creates a Panel in the Object properties window"""
+    bl_label = "Text Tool"
+    bl_idname = "OBJECT_PT_TextTool"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = 'Text Tool'
+
+    def draw(self, context):
+        layout = self.layout
+        
+        row = layout.row()
+        row.operator('wm.textop', text='Add Text', icon='OUTLINER_OB_FONT')
+        
+
+class WM_OT_textOp(bpy.types.Operator):
+    bl_label = 'Text Tool Operator'
+    bl_idname = 'wm.textop'
+    
+    text: bpy.props.StringProperty(name='Enter Text', default='')
+    scale: bpy.props.FloatVectorProperty(name='Scale', default=(1, 1, 1))
+    center: bpy.props.BoolProperty(name='Center Origin', default=False)
+    extrude: bpy.props.BoolProperty(name='Extrude', default=False)
+    extrude_amount: bpy.props.FloatProperty(name='Extrude Amount', default=0.06)
+    
+    def execute(self, context):
+        
+        t = self.text
+        s = self.scale
+        c = self.center
+        e = self.extrude
+        ea = self.extrude_amount
+        
+        bpy.ops.object.text_add(enter_editmode=True, location=(0, 0, 0))
+        bpy.ops.font.delete(type='PREVIOUS_WORD')
+        bpy.ops.font.text_insert(text=t)
+        bpy.ops.object.editmode_toggle()
+        
+        if e == True:
+            bpy.context.object.data.extrude = ea
+        
+        if c == True:
+            bpy.context.object.data.align_x = 'CENTER'
+            bpy.context.object.data.align_y = 'CENTER'
+        return {'FINISHED'}
+    
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self)
+
+
+def register():
+    bpy.utils.register_class(OBJECT_PT_TextTool)
+    bpy.utils.register_class(WM_OT_textOp)
+
+
+def unregister():
+    bpy.utils.unregister_class(OBJECT_PT_TextTool)
+    bpy.utils.register_class(WM_OT_textOp)
+
+
+if __name__ == "__main__":
+    register()
+```
+
+这将创建一个文字，是否居中和具有高度都是可选的。
+
+![jpg](7_1.jpg)
+
+## Create Custom Node Group
+
+> Blender 的节点组是将多个节点整合在一起，以便于在不同的场景中重复使用。通过创建自定义节点组，用户可以自定义一组节点，然后在需要时将它们重复使用，而无需每次都手动连接一堆节点。
+>
+> 节点组可以包含多个输入和输出，这使得节点的使用更加灵活。例如，可以将某个算法封装在一个自定义节点组中，然后将其作为子程序一样反复使用，从而使整个工作流程更加高效。
+>
+> 除此之外，节点组还可以将多个节点封装在一起，隐藏内部的复杂性，从而简化整个项目的结构和管理。如果想要共享或者将你的节点组应用到其他项目中，你可以将它们保存为 .blend 文件或者 Python 脚本。
+>
+> 总之，节点组是 Blender 中非常实用的功能之一，它可以帮助用户提高工作效率，并简化项目管理流程，同时也使 Blender 更加强大和灵活。
+
+> 这段代码是一个 Blender 插件，用于创建自定义节点组。
+>
+> 首先，代码定义了一个 `NODE_PT_MAINPANEL` 类，继承自 `bpy.types.Panel` 类，表示一个面板面板，包含在节点编辑器（`NODE_EDITOR`）中的 UI 区域（`UI`），并将其放在「New Tab」分类下。`bl_label` 设置面板名称为「Custom Node Group」，`bl_idname` 表示唯一 ID，用于在代码中引用该面板。
+>
+> `create_test_group()` 函数用于创建节点组。它接收三个参数：`context` 对象、`operator` 对象和 `group_name` 字符串。此函数使用 `bpy.data.node_groups.new()` 创建一个新的节点组对象，并设置其类型为 `'CompositorNodeTree'`，意味着创建一个合成节点树。接下来，该函数创建输入和输出节点，以及两个中间节点，并将它们连接起来。最后，该函数返回新创建的节点组对象。
+>
+> `NODE_OT_TEST` 类继承自 `bpy.types.Operator` 类，代表一个操作员。`bl_label` 表示该操作员的名称，`bl_idname` 表示唯一 ID，用于在代码中引用该操作员。`execute()` 方法在执行该操作员时被调用，可以看到该方法调用 `create_test_group()` 函数创建自定义节点组，并将其添加到场景中。
+>
+> 最后，`register()` 和 `unregister()` 函数分别用于注册和注销 Blender 插件。`register_class()` 和 `unregister_class()` 方法被用于添加和移除定义的面板（`NODE_PT_MAINPANEL`）和操作员（`NODE_OT_TEST`），使它们在 Blender 中可用。`if __name__ == "__main__":` 代码块用于直接运行该脚本。这个代码块中的 `register()` 方法将插件注册到 Blender 中，使它可以在运行时使用。
+
+```python
+import bpy
+ 
+ 
+class NODE_PT_MAINPANEL(bpy.types.Panel):
+    bl_label = "Custom Node Group"
+    bl_idname = "NODE_PT_MAINPANEL"
+    bl_space_type = 'NODE_EDITOR'
+    bl_region_type = 'UI'
+    bl_category = 'New Tab' 
+ 
+    def draw(self, context):
+        layout = self.layout
+ 
+        row = layout.row()
+        row.operator('node.test_operator')
+ 
+ 
+def create_test_group(context, operator, group_name):
+    
+    # enable use nodes
+    bpy.context.scene.use_nodes = True
+    
+    test_group = bpy.data.node_groups.new(group_name, 'CompositorNodeTree')
+    
+    group_in = test_group.nodes.new('NodeGroupInput')
+    group_in.location = (-200,0)
+    test_group.inputs.new('NodeSocketFloat','Factor Value') #0
+    test_group.inputs.new('NodeSocketColor','Color Input') #1
+    
+    
+    group_out = test_group.nodes.new('NodeGroupOutput')
+    group_out.location = (400,0)
+    test_group.outputs.new('NodeSocketColor','Output')
+    
+    
+    mask_node = test_group.nodes.new(type= 'CompositorNodeBoxMask')
+    mask_node.location = (0,0)
+    mask_node.rotation = 1
+    
+    mix_node = test_group.nodes.new(type= 'CompositorNodeMixRGB')
+    mix_node.location = (200,0)
+    mix_node.use_clamp = True
+    mix_node.blend_type = 'OVERLAY'
+    
+    
+    link = test_group.links.new
+    
+    link(mask_node.outputs[0], mix_node.inputs[1])
+    
+    link(group_in.outputs[0], mix_node.inputs[0])
+    link(group_in.outputs[1], mix_node.inputs[2])
+    
+    link(mix_node.outputs[0], group_out.inputs[0])
+    
+    return test_group
+    
+           
+class NODE_OT_TEST(bpy.types.Operator):
+    bl_label = "Add Custom Node Group"
+    bl_idname = "node.test_operator"
+    
+    def execute(self, context):
+        
+        custom_node_name = "Test Node"
+        my_group = create_test_group(self, context, custom_node_name)
+        test_node = context.scene.node_tree.nodes.new('CompositorNodeGroup')
+        test_node.node_tree = bpy.data.node_groups[my_group.name]
+        test_node.use_custom_color = True
+        test_node.color = (0.5, 0.4, 0.3)
+        
+        return {'FINISHED'}
+            
+
+def register():
+    bpy.utils.register_class(NODE_PT_MAINPANEL)
+    bpy.utils.register_class(NODE_OT_TEST)
+    
+    
+def unregister():
+    bpy.utils.unregister_class(NODE_PT_MAINPANEL)
+    bpy.utils.unregister_class(NODE_OT_TEST)
+ 
+ 
+if __name__ == "__main__":
+    register()
+```
+
+## Custom Drawing / Layout Improvements
+
+美化了之前 `TextTool.py` 的界面：
+
+```python
+bl_info = {
+    "name": "Text Tool",
+    "author": "Darkfall",
+    "version": (1, 0),
+    "blender": (3, 51, 0),
+    "location": "View3D > Add > Mesh > New Object",
+    "description": "Adds a new Mesh Object",
+    "warning": "",
+    "doc_url": "",
+    "category": "Add Mesh",
+}
+
+import bpy
+
+class OBJECT_PT_TextTool(bpy.types.Panel):
+    """Creates a Panel in the Object properties window"""
+    bl_label = "Text Tool"
+    bl_idname = "OBJECT_PT_TextTool"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = 'Text Tool'
+
+    def draw(self, context):
+        layout = self.layout
+        
+        row = layout.row()
+        row.operator('wm.textop', text='Add Text', icon='OUTLINER_OB_FONT')
+        
+
+class WM_OT_textOp(bpy.types.Operator):
+    bl_label = 'Text Tool Operator'
+    bl_idname = 'wm.textop'
+    
+    text: bpy.props.StringProperty(name='Enter Text', default='')
+    scale: bpy.props.FloatVectorProperty(name='Scale', default=(1, 1, 1))
+    rotation: bpy.props.BoolProperty(name='Z up', default=False)
+    center: bpy.props.BoolProperty(name='Center Origin', default=False)
+    extrude: bpy.props.BoolProperty(name='Extrude', default=False)
+    extrude_amount: bpy.props.FloatProperty(name='Extrude Amount', default=0.06)
+    
+    
+    def draw(self, context):
+        layout = self.layout
+        layout.separator(factor=1)
+        layout.label(text='Sample Text')
+        
+        layout.prop(self, 'text')
+        layout.prop(self, 'scale')
+        
+        layout.separator(factor=2)
+        
+        box = layout.box()
+        
+        row = box.row()
+        row.prop(self, 'rotation')
+        if self.rotation == True:
+            row.label(text='Orientation: Z UP', icon='EMPTY_SINGLE_ARROW')
+        else:
+            row.label(text='Orientation: Default', icon='ARROW_LEFTRIGHT')
+            
+        row = box.row()
+        row.prop(self, 'center')
+        if self.center == True:
+            row.label(text='Alignment: Center', icon='ALIGN_CENTER')
+        else:
+            row.label(text='Alignment: Default', icon='ALIGN_LEFT')
+        
+        row = box.row()
+        row.prop(self, 'extrude')
+        if self.extrude == True:
+            row.prop(self, 'extrude_amount')
+    
+    
+    def execute(self, context):
+        
+        t = self.text
+        s = self.scale
+        c = self.center
+        e = self.extrude
+        ea = self.extrude_amount
+        r = self.rotation
+        
+        bpy.ops.object.text_add(enter_editmode=True, location=(0, 0, 0))
+        bpy.ops.font.delete(type='PREVIOUS_WORD')
+        bpy.ops.font.text_insert(text=t)
+        bpy.ops.object.editmode_toggle()
+        
+        if r == True:
+            bpy.context.object.rotation_euler[0] = 1.5708
+        if e == True:
+            bpy.context.object.data.extrude = ea
+        
+        if c == True:
+            bpy.context.object.data.align_x = 'CENTER'
+            bpy.context.object.data.align_y = 'CENTER'
+        return {'FINISHED'}
+    
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self)
+
+
+def register():
+    bpy.utils.register_class(OBJECT_PT_TextTool)
+    bpy.utils.register_class(WM_OT_textOp)
+
+
+def unregister():
+    bpy.utils.unregister_class(OBJECT_PT_TextTool)
+    bpy.utils.register_class(WM_OT_textOp)
+
+
+if __name__ == "__main__":
+    register()
+```
+
+![jpg](9_1.jpg)
+
+## Shortcut / Custom Keymap [learn python for beginners]
+
+修改 `popupdialogboxTemplate.py`，使其可以通过按下 `SHIFT+F` 打开 dialog box：
+
+```python
+import bpy
+
+class WM_OT_myOp(bpy.types.Operator):
+    """Open the Add Cube Dialog Box"""
+    bl_label = 'Add Cube Dialog Box'
+    bl_idname = 'wm.myop'
+    
+    # text = bpy.props.StringProperty(name='Enter Text', default='')
+    text: bpy.props.StringProperty(name='Enter Text', default='')
+    # scale = bpy.props.FloatVectorProperty(name='Scale', default=1)
+    scale: bpy.props.FloatVectorProperty(name='Scale', default=(1, 1, 1))
+    
+    def execute(self, context):
+        
+        t = self.text
+        s = self.scale
+        
+        bpy.ops.mesh.primitive_cube_add()
+        obj = bpy.context.object
+        obj.name = t
+        obj.scale[0] = s[0]
+        obj.scale[1] = s[1]
+        obj.scale[2] = s[2]
+        
+        return {'FINISHED'}
+    
+    
+    def invoke(self, context, event):
+        
+        return context.window_manager.invoke_props_dialog(self)
+    
+
+addon_keymaps = []
+
+
+def register():
+    bpy.utils.register_class(WM_OT_myOp)
+    
+    wm = bpy.context.window_manager
+    kc = wm.keyconfigs.addon
+    if kc:
+        km = kc.keymaps.new(name='3D View', space_type='VIEW_3D')
+        kmi = km.keymap_items.new('wm.myop', type='F', value='PRESS', shift=True)
+        addon_keymaps.append((km, kmi))
+    
+    
+def unregister():
+    for km, kmi in addon_keymaps:
+        km.keymap_items.remove(kmi)
+    addon_keymaps.clear()
+    bpy.utils.unregister_class(WM_OT_myOp)
+    
+    
+if __name__ == '__main__':
+    register()
+```
+
+在 `3D View` 中按下 `SHIFT+F` 就可以打开 dialogbox：
+
+![jpg](10_1.jpg)

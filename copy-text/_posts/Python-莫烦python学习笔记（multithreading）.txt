@@ -1,0 +1,333 @@
+---
+title: Python-莫烦python学习笔记（multithreading）
+date: Wed Jul 06 2022 12:31:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - Python
+  - 莫烦
+categories: 学习
+description: Python 多线程编程的初尝试。学习自莫烦python。
+---
+
+
+# 正文
+
+## 2 添加线程 add thread
+
+```python
+import threading
+```
+
+### 显示线程的状态
+
+
+```python
+threading.active_count()  # 显示有多少个已经激活的线程
+```
+
+
+    6
+
+
+```python
+threading.enumerate()  # 显示已经激活的现场具体情况
+```
+
+
+    [<_MainThread(MainThread, started 5844)>,
+     <Thread(IOPub, started daemon 7116)>,
+     <Heartbeat(Heartbeat, started daemon 9816)>,
+     <ControlThread(Control, started daemon 4020)>,
+     <HistorySavingThread(IPythonHistorySavingThread, started 4124)>,
+     <ParentPollerWindows(Thread-4, started daemon 10940)>]
+
+
+```python
+threading.current_thread()  # 显示正在运行的线程
+```
+
+
+    <_MainThread(MainThread, started 5844)>
+
+### 添加一个线程
+
+
+```python
+def thread_job():
+    print("Thid is an added Thread, number is %s" % threading.current_thread())
+```
+
+
+```python
+def main():
+    added_thread = threading.Thread(target=thread_job)  # 添加一个线程: 目标 thread_job
+    added_thread.start()  # 运行这个线程
+
+```
+
+
+```python
+if __name__ == "__main__":
+    main()
+```
+
+    Thid is an added Thread, number is <Thread(Thread-8, started 7464)>
+
+## 3 join 功能
+
+
+```python
+import threading
+import time
+```
+
+
+```python
+def thread_job():
+    print("T1start\n")
+    for i in range(10):
+        time.sleep(0.1)  # 每步暂停 0.1 秒
+    print("T1 finish\n")
+    
+def T2_job():
+    print('T2start\n')
+    print('T2 finish')
+    
+
+def main():
+    added_thread = threading.Thread(target=thread_job, name='T1')
+    thread2 = threading.Thread(target=T2_job, name='T2')
+    
+    added_thread.start()
+    thread2.start()
+    
+    added_thread.join()  # 加入到主线程
+    thread2.join()
+    
+    print('all done\n')
+    
+if __name__ == "__main__":
+    main()
+```
+
+    T1start
+    T2start
+    
+    T2 finish
+    
+    T1 finish
+    
+    all done
+
+​	当加入到主线程后，主线程中所有线程执行完毕后才会打印'all done\n'
+
+## 4 Quene 功能
+
+处理多线程中 target 函数没有返回值的情况
+
+
+```python
+import threading
+import time
+from queue import Queue
+
+
+def job(l, q):
+    for i in range(len(l)):
+        l[i] **= 2
+    q.put(l)  # 将计算后的列表放到 q 中
+
+    
+def multithreading():
+    q = Queue()
+    threads = []
+    data = [[1, 2, 3], [3, 4, 5], [4, 4, 4], [5, 5, 5]]
+    for i in range(4):  # 创建 4 个线程
+        t = threading.Thread(target=job, args=(data[i], q))  # args 给 target 函数传递参数
+        t.start()
+        threads.append(t)
+    for thread in threads:
+        thread.join()
+    results = []
+    for _ in range(4):
+        results.append(q.get())  # 从队列中拿出数据, 加入到 results 列表中
+    print(results)
+
+    
+if __name__ == '__main__':
+    multithreading()
+```
+
+    [[1, 4, 9], [9, 16, 25], [16, 16, 16], [25, 25, 25]]
+
+## 5 不一定有效率 GIL
+
+- 在处理较简单的问题时, 由于切换线程需要耗费时间(GIL), 多线程不一定比单线程用时更短(每个时刻只能有一个线程在 CPU 工作)
+- 为什么多线程有时候会比单线程耗时更短? 因为有些时候会边运算边读写数据. 解决方法: 多核运算
+- 分别用常规方法和多线程方法计算 0-99999 求和的四倍
+  [Python GIL 全局解释器锁详解（深度剖析）](http://c.biancheng.net/view/5537.html)
+
+
+```python
+import threading
+from queue import Queue
+import copy
+import time
+
+
+def job(l, q):
+    res = sum(l)
+    q.put(res)
+
+
+def multithreading(l):  # 多线程方法
+    q = Queue()
+    threads = []
+    for i in range(4):
+        t = threading.Thread(target=job, args=(copy.copy(l), q), name='T%i' % i)
+        t.start()
+        threads.append(t)
+    [t.join() for t in threads]
+    total = 0
+    for _ in range(4):
+        total += q.get()
+    print(total)
+
+
+def normal(l):  # 常规方法
+    total = sum(l)  # 对序列求和
+    print(total)
+
+
+if __name__ == '__main__':
+    l = list(range(1000_000))
+
+    s_t = time.time()
+    normal(l * 4)
+    print('normal:', time.time() - s_t)
+
+    s_t = time.time()
+    multithreading(l)
+    print('multithreading:', time.time() - s_t)
+```
+
+    1999998000000
+    normal: 0.1690812110900879
+    1999998000000
+    multithreading: 0.24041318893432617
+
+## 6 锁 lock
+
+一般只有在共享内存时才会用得到, 防止不同次运行程序时出现不同的情况
+
+### 未添加锁的情况
+
+
+```python
+import threading
+
+
+def job1():
+    global A  # A 是一个全局变量
+    for i in range(10):
+        A += 1
+        print('job1', A)
+    
+    
+def job2():
+    global A  # A 是一个全局变量
+    for i in range(10):
+        A += 10
+        print('job2', A)
+    
+    
+if __name__ == '__main__':
+    A = 0
+    t1 = threading.Thread(target=job1)
+    t2 = threading.Thread(target=job2)
+    t1.start()
+    t2.start()
+    t1.join()
+    t2.join()
+```
+
+    job1job2 11
+    job2 21
+    job2 31
+    job2 41
+    job2 51 
+    job2 61
+    job2 71
+    job2 81
+    job2 91
+    job2 101
+    1
+    job1 102
+    job1 103
+    job1 104
+    job1 105
+    job1 106
+    job1 107
+    job1 108
+    job1 109
+    job1 110
+
+
+### 上了锁的情况
+
+只有 job1 运行完才会运行 job2
+
+
+```python
+import threading
+
+
+def job1():
+    global A, lock  # 定义锁
+    lock.acquire()  # 上锁
+    for i in range(10):
+        A += 1
+        print('job1', A)
+    lock.release()  # 解锁
+    
+    
+def job2():
+    global A, lock  # A 是一个全局变量
+    lock.acquire()  # 上锁
+    for i in range(10):
+        A += 10
+        print('job2', A)
+    lock.release()  # 解锁
+    
+    
+if __name__ == '__main__':
+    lock = threading.Lock()
+    A = 0
+    t1 = threading.Thread(target=job1)
+    t2 = threading.Thread(target=job2)
+    t1.start()
+    t2.start()
+    t1.join()
+    t2.join()
+```
+
+    job1 1
+    job1 2
+    job1 3
+    job1 4
+    job1 5
+    job1 6
+    job1 7
+    job1 8
+    job1 9
+    job1 10
+    job2 20
+    job2 30
+    job2 40
+    job2 50
+    job2 60
+    job2 70
+    job2 80
+    job2 90
+    job2 100
+    job2 110
+

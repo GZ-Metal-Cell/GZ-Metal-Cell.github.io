@@ -1,0 +1,978 @@
+---
+title: GAMES101-现代计算机图形学入门-闫令琪（1）
+date: Wed Oct 25 2023 19:44:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - 计算机图形学
+  - GAMES101
+categories: 学习
+description: 计算机图形学学习笔记，学习自闫令琪。（已烂尾）
+---
+
+
+# 资源
+
+- [GAMES101 - CS 自学指南 (csdiy.wiki)](https://csdiy.wiki/计算机图形学/GAMES101/)
+
+- [Lecture 01 Overview of Computer Graphics_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1X7411F744/?p=1)
+- [GAMES101: 现代计算机图形学入门 (ucsb.edu)](https://sites.cs.ucsb.edu/~lingqi/teaching/games101.html)
+- [GAMES101 笔记 (notion.so)](https://www.notion.so/GAMES101-b0e27c856cde429b8672671a54c34817)
+
+# 课程
+
+## Lecture 01 Overview of Computer Graphics
+
+What is Computer Graphics？图形学的应用：
+
+- Viedo Games 游戏 
+
+-  Movies 电影特效
+
+- Animations 动画
+
+- Design 设计
+
+- Visualization 可视化
+
+- Visual Reality 虚拟现实
+- Augmented Reality 增强现实
+- Digital Illustration 数字化描述
+
+- Simulation 模拟
+
+- Graphical User Interfaces, GUI 图形用户接口
+
+- Typography 字体
+
+---
+
+Why study Computer Graphics？
+
+- Computer Graphics is AWESOME！
+
+---
+
+Course Topics（mainly 4 parts）
+
+- Rasterization 光栅化
+  - Project geometry primitives (3D triangles / polygons) onto the screen 将几何图元（三维三角形/多边形）投影到屏幕上
+  - Break projected primitives into fragments (pixels) 将投影基元分解为片段（像素）
+  - Gold standard in Video Games (Real-time Applications) 视频游戏（实时应用）的黄金标准
+
+- Curves and Meshes 曲线和模型
+  - How to represent geometry in Computer Graphics 如何在计算机图形学中表示几何图形
+
+- Ray Tracing 光线追踪
+  - Shoot rays from the camera though each pixel 通过每个像素从相机拍摄光线
+    - Calculate intersection and shading 计算交点和着色
+    - Continue to bounce the rays till they hit light sources 继续反射光线，直到光线碰到光源
+    - Gold standard in Animations / Movies (Offline Applications)  动画/电影黄金标准（离线应用程序）
+
+- Animation / Simulation 动画 / 模拟
+  - Key frame Animation 关键帧动画
+  - Mass-spring System 质量弹簧系统
+
+---
+
+计算机图形学、计算机视觉、数字图像处理的区别：
+
+![png](1_1.png)
+
+## Lecture 02 Review of Linear Algebra
+
+A **Swift** and **Brutal** Introduction to Linear Algebra!  一份对线性代数的**迅速**且**直接**的介绍！
+
+**Graphics’ Dependencies 图形相关的依赖项**
+
+- Basic mathematics  基础数学
+
+  - Linear algebra, calculus, statistics 线性代数、微积分、统计学
+
+- Basic physics 基础物理学
+
+  - Optics, Mechanics 光学、力学
+
+- Misc 杂项
+
+  - Signal processing 信号处理
+
+  - Numerical analysis 数值分析
+
+- And a bit of aesthetics 还有一点美学
+
+**This Course**
+
+- More dependent on Linear Algebra 更多依赖于线性代数
+  - Vectors (dot products, cross products, …) 向量（点积、叉积等）
+  - Matrices (matrix-matrix, matrix-vector mult., …) 矩阵（矩阵相乘、矩阵与向量相乘等）
+- For example,
+  - A point is a vector? 一个点是一个向量吗？
+  - An operation like translating or rotating objects can be matrix-vector multiplication 类似平移或旋转物体的操作可以通过矩阵与向量相乘实现
+
+**Vectors**
+
+- 通常被写作 $\vec{a}$ 或 $\boldsymbol{a}$
+
+- 向量的长度被写作 $\left|\left|\vec{a}\right|\right|$
+
+- 向量的归一化，方向不变，长度设为 1：$\hat{a}=\vec{a}/\|\vec{a}\|$
+
+**Cartesian Coordinates 笛卡尔坐标系**
+
+$$\mathbf{A}=\begin{pmatrix}x\\y\end{pmatrix}$$
+
+$$\mathbf{A}^T=\left(x,y\right)$$
+
+$$||\mathbf{A}\|=\sqrt{x^2+y^2}$$
+
+**Dot (scalar) Product 向量点乘**
+
+$$\vec{a}\cdot\vec{b}=\|\vec{a}\|\|\vec{b}\|\cos\theta $$
+
+$$\begin{aligned}\cos\theta&=\frac{\vec a\cdot\vec b}{\|\vec a\|\|\vec b\|}\end{aligned}$$
+
+对于 Unit Vectors 单位向量：
+
+$$\cos\theta=\hat{a}\cdot\hat{b}$$
+
+性质：
+
+交换律：$\vec{a}\cdot\vec{b}=\vec{b}\cdot\vec{a}$
+
+分配律：$\vec{a}\cdot(\vec{b}+\vec{c})=\vec{a}\cdot\vec{b}+\vec{a}\cdot\vec{c}$
+
+结合律：$(k\vec{a})\cdot\vec{b}=\vec{a}\cdot(k\vec{b})=k(\vec{a}\cdot\vec{b})$
+
+**Dot Product in Cartesian Coordinates 笛卡尔坐标系下的向量点乘**
+
+Component-wise multiplication, then adding up 分量逐个相乘，然后求和
+
+- In 2D
+  - $\vec{a}\cdot\vec{b}=\begin{pmatrix}x_a\\y_a\end{pmatrix}\cdot\begin{pmatrix}x_b\\y_b\end{pmatrix}=x_ax_b+y_ay_b$
+
+- In 3D
+  - $\vec a\cdot\vec b=\begin{pmatrix}x_a\\y_a\\z_a\end{pmatrix}\cdot\begin{pmatrix}x_b\\y_b\\z_b\end{pmatrix}=x_ax_b+y_ay_b+z_az_b$
+
+**Dot Product in Graphics 向量点乘在图形学中的应用**
+
+- Find angle between two vectors (e.g. cosine of angle between light source and surface) 寻找两个向量之间的夹角，例如光源和表面之间的夹角的余弦值。
+- Finding projection of one vector on another 找到一个向量在另一个向量上的投影。
+  - $\vec{b}_{\perp}$：$\vec{b}$ 在 $\vec{a}$ 方向的投影。
+    - $\vec{b}_{\perp}$ 必须与 $\vec{a}$ 或 $\hat{a}$ 平行。
+      - $\vec{b}_{\perp}=k\hat{a}, k=\|\vec{b}_\perp\|=\|\vec{b}\|\cos\theta $
+
+- Measure how close  two directions are 测量两个方向之间的接近程度
+- Decompose a vector 分解一个向量
+- Determine forward /  backward 确定正向/反向
+
+**Cross (vector) Product 矢量积**
+
+![png](2_1.png)
+
+- Cross product is orthogonal to two initial vectors 叉乘结果与两个初始向量垂直
+- Direction determined by right-hand rule 方向由右手定则确定
+  - [左手坐标系 vs 右手坐标系 - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/64707259)
+- Useful in constructing coordinate systems (later) 在构建坐标系时非常有用
+
+性质：
+
+对于右手坐标系：
+
+$$\vec{x}\times\vec{y}=+\vec{z}$$
+
+$$\vec{y}\times\vec{x}=-\vec{z}$$
+
+$$\vec{y}\times\vec{z}=+\vec{x}$$
+
+$$\vec{z}\times\vec{y}=-\vec{x}$$
+
+$$\vec{z}\times\vec{x}=+\vec{y}$$
+
+$$\vec{x}\times\vec{z}=-\vec{y}$$
+
+不满足交换律：$\vec{a}\times\vec{b}=-\vec{b}\times\vec{a}$
+
+跟自身叉乘为零向量：$\vec{a}\times\vec{a}=\vec{0}$
+
+满足分配律：
+
+$\vec{a}\times(\vec{b}+\vec{c})=\vec{a}\times\vec{b}+\vec{a}\times\vec{c}$
+
+$\vec{a}\times(k\vec{b})=k(\vec{a}\times\vec{b})$
+
+**Cross Product: Cartesian Formula? 矢量积在笛卡尔坐标系中**
+
+$$\vec{a}\times\vec{b}=\begin{pmatrix}y_az_b-y_bz_a\\z_ax_b-x_az_b\\x_ay_b-y_ax_b\end{pmatrix}$$
+
+$$\vec a\times\vec b=A^*b=\begin{pmatrix}0&-z_a&y_a\\z_a&0&-x_a\\-y_a&x_a&0\end{pmatrix}\begin{pmatrix}x_b\\y_b\\z_b\end{pmatrix}$$
+
+$A^*$ 是 $\vec{a}$ 的伴随矩阵（[伴随矩阵 - 维基百科，自由的百科全书 (wikipedia.org)](https://zh.wikipedia.org/wiki/伴随矩阵)）
+
+**Cross Product in Graphics 矢量积在图形学中的应用**
+
+- Determine left / right 判别左右
+- Determine inside / outside 判别内外
+
+**Orthonormal Bases / Coordinate Frames 正交基 / 坐标系**
+
+构建右手坐标系：
+
+$$\|\vec{u}\|=\|\vec{v}\|=\|\vec{w}\|=1$$
+
+$$\vec{u}\cdot\vec{v}=\vec{v}\cdot\vec{w}=\vec{u}\cdot\vec{w}=0$$
+
+$$\vec{w}=\vec{u}\times\vec{v}$$
+
+$$\vec p=(\vec p\cdot\vec u)\vec u+(\vec p\cdot\vec v)\vec v+(\vec p\cdot\vec w)\vec w$$
+
+**Matrix 矩阵**
+
+**Matrix-Matrix Multiplication 矩阵乘法**
+
+一般不满足交换律（一般不满足 $AB\ne BA$）
+
+满足结合律和分配律：
+
+- $(AB)C=A(BC)$
+- $A(B+C)=AB+AC$
+- $(A+B)C=AC+BC$
+
+$$(AB)^T=B^TA^T$$
+
+**Identity Matrix 单位矩阵**
+
+$$I_{3\times3}=\begin{pmatrix}1&0&0\\0&1&0\\0&0&1\end{pmatrix}$$
+
+$$AA^{-1}=A^{-1}A=I$$
+
+$$(AB)^{-1}=B^{-1}A^{-1}$$
+
+**Vector multiplication in Matrix form 向量与矩阵相乘**
+
+- Dot product 点乘
+
+$$\vec{a}\cdot\vec{b}=\vec{a}^T\vec{b}$$
+
+$$=\begin{pmatrix}x_a&y_a&z_a\end{pmatrix}\begin{pmatrix}x_b\\y_b\\z_b\end{pmatrix}=\begin{pmatrix}x_ax_b+y_ay_b+z_az_b\end{pmatrix}$$
+
+- Cross product 叉乘
+
+$$\vec a\times\vec b=A^*b=\begin{pmatrix}0&-z_a&y_a\\z_a&0&-x_a\\-y_a&x_a&0\end{pmatrix}\begin{pmatrix}x_b\\y_b\\z_b\end{pmatrix}$$
+
+## Lecture 03 Transformation
+
+**2D Transform 二维变换**
+
+**Scale Transform 缩放**
+
+等比缩放：
+
+$$x^{\prime}=sx$$
+
+$$y^{\prime}=sx$$
+
+用矩阵乘法表示：
+
+$$\left.\left[\begin{array}{c}x'\\y'\end{array}\right.\right]=\left[\begin{array}{cc}s&0\\0&s\end{array}\right]\left[\begin{array}{c}x\\y\end{array}\right]$$
+
+**Scale (Non-Uniform) 任意缩放**
+
+$$\begin{bmatrix}x'\\y'\end{bmatrix}=\begin{bmatrix}s_x&0\\0&s_y\end{bmatrix}\begin{bmatrix}x\\y\end{bmatrix}$$
+
+**Reflection Matrix 镜像**
+
+Horizontal reflection 水平镜像：
+
+$$x^{\prime}=-x$$
+
+$$y^{\prime}=y$$
+
+用矩阵乘法表示：
+
+$$\begin{bmatrix}x'\\y'\end{bmatrix}=\begin{bmatrix}-1&0\\0&1\end{bmatrix}\begin{bmatrix}x\\y\end{bmatrix}$$
+
+**Shear Matrix 斜切：**
+
+![png](3_1.png)
+
+Hints:
+
+- Horizontal shift is $0$ at $y=0$
+- Horizontal shift is $a$ at $y=1$
+- Vertical shift is always $0$
+
+$$\begin{bmatrix}x'\\y'\end{bmatrix}=\begin{bmatrix}1&a\\0&1\end{bmatrix}\begin{bmatrix}x\\y\end{bmatrix}$$
+
+**Rotation Matrix 旋转**
+
+$$\mathbf{R}_\theta=\begin{bmatrix}\cos\theta&-\sin\theta\\\sin\theta&\cos\theta\end{bmatrix}$$
+
+旋转相反的角等于矩阵的逆，等于矩阵的转置：
+
+旋转矩阵是**正交矩阵**。
+
+$$\mathbf{R}_{-\theta}=\mathbf{R}_\theta^{-1}=\mathbf{R}_{\theta}^T$$
+
+**Linear Transforms = Matrices 线性变换 = 矩阵**
+
+$$x^{\prime}=ax+by$$
+
+$$y^{\prime}=cx+dy$$
+
+$$\left.\left[\begin{array}{c}x'\\y'\end{array}\right.\right]=\left[\begin{array}{cc}a&b\\c&d\end{array}\right]\left[\begin{array}{c}x\\y\end{array}\right]$$
+
+简写为：
+
+$$\mathbf{x}^{\prime}=\mathbf{M}\mathbf{x}$$
+
+**Translation 平移**
+
+$$x^{\prime}=x+t_x$$
+
+$$y^{\prime}=y+t_y$$
+
+**Why Homogeneous Coordinates 为什么引入齐次坐标**
+
+- Translation cannot be represented in matrix form 平移变换不能用矩阵来表示
+
+$$\begin{bmatrix}x'\\y'\end{bmatrix}=\begin{bmatrix}a&b\\c&d\end{bmatrix}\begin{bmatrix}x\\y\end{bmatrix}+\begin{bmatrix}t_x\\t_y\end{bmatrix}$$
+
+因此，平移变换不是线性变换！
+
+- But we don’t want translation to be a special case 但我们不希望平移变换成为特例
+
+- Is there a unified way to represent all transformations? (and what’s the cost?) 用统一的方式描述所有变换？（代价是什么？）
+
+Solution: Homogenous Coordinates 解决办法：齐次坐标
+
+Add a third coordinate (w-coordinate) 增加一个维度
+
+- 2D point = $(x, y, {\color{Red}1})^T$
+- 2D vector = $(x, y, {\color{Red}0})^T$
+
+Matrix representation of translations 用矩阵描述所有变换
+
+$$\begin{pmatrix}x'\\y'\\w'\end{pmatrix}=\begin{pmatrix}1&0&t_x\\0&1&t_y\\0&0&1\end{pmatrix}\cdot\begin{pmatrix}x\\y\\1\end{pmatrix}=\begin{pmatrix}x+t_x\\y+t_y\\1\end{pmatrix}$$
+
+Valid operation if w-coordinate of result is 1 or 0 所增加维度的值不是 1 就是 0，这是因为：
+
+- vector + vector = vector
+- point – point = vector
+- point + vector = point 
+- point + point = 它们的中点
+
+因此定义，在齐次坐标中：
+
+$$\begin{pmatrix}x\\y\\w\end{pmatrix}\text{ is the 2D point }\begin{pmatrix}x/w\\y/w\\1\end{pmatrix},w\neq0$$
+
+**Affine Transformation 仿射变换**
+
+Affine map = linear map + translation 仿射变换 = 线性变换 + 平移
+
+$$\begin{pmatrix}x^{\prime}\\y^{\prime}\end{pmatrix}~=~\begin{pmatrix}a&b\\c&d\end{pmatrix}\cdot\begin{pmatrix}x\\y\end{pmatrix}+\begin{pmatrix}t_x\\t_y\end{pmatrix}$$
+
+Using homogenous coordinates: 使用齐次坐标
+
+$$\begin{pmatrix}x'\\y'\\1\end{pmatrix}=\begin{pmatrix}a&b&t_x\\c&d&t_y\\0&0&1\end{pmatrix}\cdot\begin{pmatrix}x\\y\\1\end{pmatrix}$$
+
+**2D Transformations 2D 变换**
+
+Scale 缩放
+
+$$\mathbf{S}(s_x,s_y)~=~\begin{pmatrix}s_x&0&0\\0&s_y&0\\0&0&1\end{pmatrix}$$
+
+Rotation 旋转
+
+$$\mathbf{R}(\alpha)=\begin{pmatrix}\cos\alpha&-\sin\alpha&0\\\sin\alpha&\cos\alpha&0\\0&0&1\end{pmatrix}$$
+
+Translation 平移
+
+$$\mathbf{T}(t_x,t_y)=\begin{pmatrix}1&0&t_x\\0&1&t_y\\0&0&1\end{pmatrix}$$
+
+**Inverse Transform 逆变换**
+
+$$\mathbf{M^{-1}}$$
+
+**Composing Transforms 复合变换**
+
+Sequence of affine transforms $A_1, A_2, A_3, ...$ 对于仿射变换序列 $A_1, A_2, A_3, ...$
+
+- Compose by matrix multiplication 通过矩阵乘法进行合成
+  - Very important for performance! 对性能非常重要！
+
+$$A_n(\ldots A_2(A_1(\mathbf{x})))=\mathbf{A}_n\cdots\mathbf{A}_2\cdot\mathbf{A}_1\cdot\begin{pmatrix}x\\y\\1\end{pmatrix}$$
+
+预乘 $n$ 个矩阵以获得表示组合变换的单个矩阵。
+
+**Decomposing Complex Transforms 分解复合变换**
+
+![png](3_2.png)
+
+How to rotate around a given point $c$? 如何绕空间任意一点 $c$ 旋转？
+
+1. Translate center to origin 平移回原点
+2. Rotate 旋转
+3. Translate back 平移回去
+
+$$\mathbf{T(c)}\cdot\mathbf{R(\alpha)}\cdot\mathbf{T(-c)}$$
+
+**3D Transforms**
+
+Use homogeneous coordinates again 再次使用齐次坐标: 
+
+- 3D point = $(x, y, z, {\color{Red}1})^T$
+- 3D vector = $(x, y, z, {\color{Red}0})^T$
+
+In general, $(x, y, z, w) (w \ne 0)$ is the 3D point：
+
+$$(x/w, y/w, z/w)$$
+
+**3D Transformations 3D 变换**
+
+Use $4\times 4$ matrices for affine transformations 使用 $4\times 4$ 齐次坐标表示：
+
+$$\begin{pmatrix}x'\\y'\\z'\\1\end{pmatrix}=\begin{pmatrix}a&b&c&t_x\\d&e&f&t_y\\g&h&i&t_z\\0&0&0&1\end{pmatrix}\cdot\begin{pmatrix}x\\y\\z\\1\end{pmatrix}$$
+
+先应用线性变换，再平移。
+
+## Lecture 04 Transformation Cont.
+
+Viewing (观测) transformation
+
+- View (视图) / Camera transformation
+- Projection (投影) transformation
+- Orthographic (正交) projection
+- Perspective (透视) projection
+
+**3D Transformations 3D 变换**
+
+Rotation around $x$-, $y$-, or $z$-axis 沿 $x$、$y$、$z$ 轴旋转：
+
+![png](4_1.png)
+
+$$\mathbf{R}_x(\alpha)=\begin{pmatrix}1&0&0&0\\0&\cos\alpha&-\sin\alpha&0\\0&\sin\alpha&\cos\alpha&0\\0&0&0&1\end{pmatrix}$$
+
+$$\mathbf{R}_y(\alpha)=\begin{pmatrix}\cos\alpha&0&\sin\alpha&0\\0&1&0&0\\-\sin\alpha&0&\cos\alpha&0\\0&0&0&1\end{pmatrix}$$
+
+$$\mathbf{R}_z(\alpha)=\begin{pmatrix}\cos\alpha&-\sin\alpha&0&0\\\sin\alpha&\cos\alpha&0&0\\0&0&1&0\\0&0&0&1\end{pmatrix}$$
+
+Compose any 3D rotation from $\mathbf{R}_x$, $\mathbf{R}_y$, $\mathbf{R}_z$? 让 $\mathbf{R}_x$, $\mathbf{R}_y$, $\mathbf{R}_z$ 构成任意三维旋转？
+
+$$\mathbf{R}_{xyz}(\alpha,\beta,\gamma)~=~\mathbf{R}_x(\alpha)\mathbf{R}_y(\beta)\mathbf{R}_z(\gamma)$$
+
+- So-called Euler angles 所谓的欧拉角
+- Often used in flight simulators: roll, pitch, yaw 常用于飞行模拟器：滚转、俯仰、偏航
+
+![png](4_2.png)
+
+**Rodrigues’ Rotation Formula 罗德里格斯轮换公式**
+
+绕轴 $n(n_x,n_y, n_z)$ 旋转角度 $\alpha$：
+
+$$\mathbf{R}(\mathbf{n},\alpha)=\cos(\alpha)\mathbf{I}+(1-\cos(\alpha))\mathbf{n}\mathbf{n}^T+\sin(\alpha)\underbrace{\begin{pmatrix}0&-n_z&n_y\\n_z&0&-n_x\\-n_y&n_x&0\end{pmatrix}}_{\mathbf{N}}$$
+
+**View / Camera Transformation 视图变换**
+
+- What is view transformation? 什么是视图变换？
+- Think about how to take a photo 考虑拍照
+  - Find a good place and arrange people (model transformation) 摆好场景：模型变换
+  - Find a good “angle” to put the camera (view transformation) 选好视角：视图变换
+  - Cheese! (projection transformation) 拍照：投影变换
+- How to perform view transformation? 如何进行视图变换？
+  - Define the camera first 首先定义一个相机
+    - Position 位置 $\vec{e}$
+    - Look-at / gaze direction 注视/凝视方向 $\hat g$
+    - Up direction 上方向 $\hat t$
+
+![png](4_3.png)
+
+- Key observation 重点观察
+  - If the camera and all objects move together,  the “photo” will be the same 如果相机和所有物体一起移动，“照片”将是相同的
+  
+- How about that we always transform the camera to 不如我们总是把相机变成
+  - The origin, up at $Y$, look at $-Z$ 处于原点，上方为 $Y$ 轴，看着 $-Z$ 轴方向
+  - And transform the objects along with the camera 并**随相机变换对象**
+  
+-  Transform the camera by $M_{view}$
+  - So it’s located at the origin, up at $Y$, look at $-Z$ 所以它位于原点，向上看 $Y$，看 $-Z$
+  
+- $M_{view}$ in math? $M_{view}=R_{view}T_{view}$
+  - Translates $e$ to origin
+    
+    $T_{view}=\begin{bmatrix}1&0&0&-x_e\\0&1&0&-y_e\\0&0&1&-z_e\\0&0&0&1\end{bmatrix}$
+    
+  - Rotates $g$ to $-Z$、Rotates $t$ to $Y$、Rotates ($g \times t$) To $X$
+    - Difficult to write!  将 $g$ 旋转到 $-Z$ 轴、将 $t$ 旋转到 $Y$ 轴、将 ($g \times t$) 旋转到 $X$ 轴，描述成矩阵是很复杂的！
+    
+    - 考虑求其逆变换
+    
+      $R_{view}^{-1}=\begin{bmatrix}x_{\hat{g}\times\hat{t}}&x_{t}&x_{-g}&0\\y_{\hat{g}\times\hat{t}}&y_{t}&y_{-g}&0\\z_{\hat{g}\times\hat{t}}&z_{t}&z_{-g}&0\\0&0&0&1\end{bmatrix}$
+    
+    - 由于旋转矩阵是正交矩阵，其逆为它的转置，因此易求得 $R_{view}$
+    
+      $R_{view}=\begin{bmatrix}x_{\hat{g}\times\hat{t}}&y_{\hat{g}\times\hat{t}}&z_{\hat{g}\times\hat{t}}&0\\x_t&y_t&z_t&0\\x_{-g}&y_{-g}&z_{-g}&0\\0&0&0&1\end{bmatrix}$
+
+- Summary 总结
+  - Transform objects together with the camera 与摄影机一起变换对象
+  - Until camera’s at the origin, up at $Y$, look at $-Z$ 直到相机移动到原点，以 $Y$ 轴为上方，视点在 $-Z$ 轴方向。
+
+- Also known as ModelView Transformation 也称为 ModelView 变换
+
+**Projection Transformation 投影变换**
+
+- Projection in Computer Graphics 投影在计算机图形学
+  - 3D to 2D
+  - Orthographic projection 正交投影
+  - Perspective projection 透视投影
+
+![png](4_4.png)
+
+**Orthographic Projection 正交投影**
+
+- A simple way of understanding 简单的理解方法
+
+  - Camera located at origin, looking at $-Z$, up at $Y$ (looks familiar?)  相机移动到原点，以 $Y$ 轴为上方，视点在 $-Z$ 轴方向
+  - Drop $Z$ coordinate 删除 $Z$ 坐标
+  - Translate and scale the resulting rectangle to $[-1, 1]^2$  将生成的矩形平移并缩放到 $[-1，1]^2$
+
+- In General
+
+  - We want to map a cuboid $[l, r]\times [b, t]\times [f, n]$ to  the “canonical” cube $[-1, 1]^3$
+
+    我们想把长方体 $[l,r]\times[b,t]\times[f,n]$ 映射到“规范(正则、规范、标准)” 的立方体 $[-1，1]^3$
+
+- Slightly different orders (to the “simple way”)
+  - Center cuboid by translating  通过平移使长方体居中
+  - Scale into “canonical” cube 缩放为“规范”多维数据集
+
+$r,l,t,b,n,f$ 的定义如下所示：
+
+$x$ 轴坐标范围：$[l,r]$
+
+$y$ 轴坐标范围：$[b,t]$
+
+$z$ 轴坐标范围：$[f,n]$
+
+![png](4_5.png)
+
+- Transformation matrix?
+
+  - Translate (center to origin) first, then scale (length/width/height to 2) 首先平移（中心到原点）然后缩放（长度/宽度/高度到 2）
+
+    $M_{ortho}=\begin{bmatrix}\frac2{r-l}&0&0&0\\0&\frac2{t-b}&0&0\\0&0&\frac2{n-f}&0\\0&0&0&1\end{bmatrix}\begin{bmatrix}1&0&0&-\frac{r+l}2\\0&1&0&-\frac{t+b}2\\0&0&1&-\frac{n+f}2\\0&0&0&1\end{bmatrix}$
+
+- Caveat 警告
+
+  - Looking at / along $-Z$ is making near and far not intuitive ($n > f$)  观察/沿着 $-Z$ 轴使远近不直观（$n>f$）
+    - $n$ 和 $f$ 是负的，$|f|>|ns's's's's's|$。
+  - FYI: that’s why OpenGL (a Graphics API) uses left hand coords. 仅供参考：这就是 OpenGL（图形 API）使用左手坐标的原因。
+
+**Perspective Projection 透视投影**
+
+- Most common in Computer Graphics, art, visual system 最常见于计算机图形学、艺术、视觉系统
+- Further objects are smaller 其他物体较小
+- Parallel lines not parallel; converge to single point 平行线不平行；收敛到单点
+
+![png](4_6.png)
+
+- How to do perspective projection 如何进行透视投影
+
+  - First “squish” the **frustum** into a cuboid ($n \to n$, $f \to f$) ($M_{persp\to ortho}$) 
+
+    首先将截头体“**压扁**”成长方体（$n\to n$，$f\to f$）（$M_{persp\to ortho}$）
+
+  - Do orthographic projection ($M_{ortho}$, already known!) 做正交投影（$M_{ortho}$，已经知道了！）
+
+![png](4_7.png)
+
+- In order to find a transformation 为了找到变换（推导出矩阵 $M_{persp\to ortho}$）
+
+  - Recall the key idea: Find the relationship between transformed points $(x', y',z')$ and the original points $(x, y, z)$
+
+    回想关键思想：找到转换之间的关系点 $(x', y',z')$ 和原始点 $(x, y, z)$
+
+    $y^{\prime}=\frac nzy$
+
+    $x^{\prime}=\frac nzx$
+
+![png](4_8.png)
+
+- In homogeneous coordinates, 齐次坐标下，
+
+  $\begin{pmatrix}x\\y\\z\\1\end{pmatrix}\Rightarrow\begin{pmatrix}nx/z\\ny/z\\\text{unknown}\\1\end{pmatrix}==\begin{pmatrix}nx\\ny\\\text{still unknown}\\z\end{pmatrix}$
+
+  
+
+- So the “squish” (persp to ortho) projection does this 所以“挤压”（透视到正交）投影可以做到这一点
+
+  $M_{persp\to ortho}^{(4\times4)}\begin{pmatrix}x\\y\\z\\1\end{pmatrix}=\begin{pmatrix}nx\\ny\\\text{unknown}\\z\end{pmatrix}$
+
+- Already good enough to figure out part of $M_{persp\to ortho}$ 可以求得 $M_{persp\to ortho}$ 的一部分：
+
+  $M_{persp\to ortho}=\begin{pmatrix}n&0&0&0\\0&n&0&0\\?&?&?&?\\0&0&1&0\end{pmatrix}$
+
+- Observation: the third row is responsible for $z’$ 观察：第三排负责 $z’$
+
+  - Any point on the near plane will not change 近平面上的任何点都不会改变
+
+  - Any point’s z on the far plane will not change 远平面上的任何点的 $z$ 都不会改变
+
+- Any point on the near plane will not change 近平面上的任何点都不会改变
+
+  $M_{persp\to ortho}^{(4\times4)}\begin{pmatrix}x\\y\\z\\1\end{pmatrix}=\begin{pmatrix}nx\\ny\\\text{unknown}\\z\end{pmatrix}\overset{\text{replace z with n}}{\operatorname*{\to}}\begin{pmatrix}x\\y\\n\\1\end{pmatrix}\Rightarrow\begin{pmatrix}x\\y\\n\\1\end{pmatrix}==\begin{pmatrix}nx\\ny\\n^2\\n\end{pmatrix}$
+
+- So the third row must be of the form $(0\ 0\ A\ B)$ 所以第三行的形式必须是$(0\ 0\ A\ B)$
+
+  $\begin{pmatrix}0&0&A&B\end{pmatrix}\begin{pmatrix}x\\y\\n\\1\end{pmatrix}=n^2$
+
+- What do we have now?
+
+  $\begin{pmatrix}0&0&A&B\end{pmatrix}\begin{pmatrix}x\\y\\n\\1\end{pmatrix}=n^2\to An+B=n^2$
+
+- Any point’s z on the far plane will not change 近平面上的任何点都不会改变
+
+  $\begin{pmatrix}0\\0\\f\\1\end{pmatrix}\Rightarrow\begin{pmatrix}0\\0\\f\\1\end{pmatrix}==\begin{pmatrix}0\\0\\f^2\\f\end{pmatrix}\quad\to\quad Af+B=f^2$
+
+- Solve for $A$ and $B$
+
+  $\begin{aligned}An+B&=n^2\\Af+B&=f^2\end{aligned}\quad\to\quad\begin{aligned}A&=n+f\\B&=-nf\end{aligned}$
+
+- Finally, every entry in $M_{persp\to ortho}$ is known!
+
+- What’s next?
+
+  - 完成正交投影（$M_{ortho}$）
+  - $\begin{aligned}M_{persp}=M_{ortho}M_{persp\to ortho}\end{aligned}$
+
+## HW0
+
+**环境配置**
+
+WSL2 下：
+
+```shell
+sudo apt-get install xfce4-terminal
+sudo apt-get install xfce4
+```
+
+配置环境变量：
+
+```shell
+echo "export DISPLAY=localhost:0">> ~/.bashrc
+```
+
+MobaXterm 下配置 wsl2：
+
+![png](HW0_1.png)
+
+开跑！
+
+![png](HW0_2.png)
+
+安装库：
+
+```shell
+sudo apt update
+sudo apt install g++ gdb cmake
+sudo apt install libopencv-dev libeigen3-dev
+sudo apt install libglu1-mesa-dev freeglut3-dev mesa-common-dev xorg-dev
+```
+
+Windows 下的 VSCode，安装 wsl 插件，点击左下角，连接 wsl。
+
+![png](HW0_3.png)
+
+打开作业模板，有如下命令：
+
+- `mkdir build`: 创建名为 build 的文件夹。
+- `cd build`: 移动到 build 文件夹下。
+- `cmake ..`: 注意其中 ’..’ 表示上一级目录，若为 ’.’ 则表示当前目录。
+- `make`: 编译程序，错误提示会显示在终端中。
+- `./Transformation`：若上一步无错误，则可运行程序（这里 Transformation 为可执行文件名，可参照 CMakeLists.txt 中修改)。
+
+写一个 `compile.sh` 便于编译：
+
+```sh
+rm -rf build
+mkdir build
+cd build
+cmake ..
+make
+./Transformation
+cd ../
+```
+
+修改权限：
+
+```shell
+chmod a+x compile.sh
+```
+
+开跑！
+
+```shell
+sh compile.sh
+```
+
+**作业**
+
+写一个用于的 sh：
+
+```sh
+rm -rf build
+mkdir build
+cd build
+cmake ..
+make -j4
+cd ../
+```
+
+**示例代码**
+
+```c++
+#include<cmath>
+#include<eigen3/Eigen/Core>
+#include<eigen3/Eigen/Dense>
+#include<iostream>
+
+int main(){
+
+    // Basic Example of cpp
+    std::cout << "Example of cpp \n";
+    float a = 1.0, b = 2.0;
+    std::cout << a << std::endl;
+    std::cout << a/b << std::endl;
+    std::cout << std::sqrt(b) << std::endl;
+    std::cout << std::acos(-1) << std::endl;
+    std::cout << std::sin(30.0/180.0*acos(-1)) << std::endl;
+
+    // Example of vector
+    std::cout << "Example of vector \n";
+    // vector definition
+    Eigen::Vector3f v(1.0f,2.0f,3.0f);
+    Eigen::Vector3f w(1.0f,0.0f,0.0f);
+    // vector output
+    std::cout << "Example of output \n";
+    std::cout << v << std::endl;
+    // vector add
+    std::cout << "Example of add \n";
+    std::cout << v + w << std::endl;
+    // vector scalar multiply
+    std::cout << "Example of scalar multiply \n";
+    std::cout << v * 3.0f << std::endl;
+    std::cout << 2.0f * v << std::endl;
+
+    // Example of matrix
+    std::cout << "Example of matrix \n";
+    // matrix definition
+    Eigen::Matrix3f i,j;
+    i << 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0;
+    j << 2.0, 3.0, 1.0, 4.0, 6.0, 5.0, 9.0, 7.0, 8.0;
+    // matrix output
+    std::cout << "Example of output \n";
+    std::cout << i << std::endl;
+    // matrix add i + j
+    // matrix scalar multiply i * 2.0
+    // matrix multiply i * j
+    // matrix multiply vector i * v
+
+    return 0;
+}
+```
+
+---
+
+**题目**
+
+给定一个点 $P=(2,1)$, 将该点绕原点先逆时针旋转 $45^\circ$，再平移 
+$(1,2)$，计算出变换后点的坐标（要求用齐次坐标进行计算）。
+
+---
+
+$P$ 以齐次坐标的表示形式为 $(2, 1, 1)^T$
+
+旋转矩阵为 $R(\pi/4)=\begin{bmatrix}\cos \pi/4 & -\sin \pi/4 & 0 \\\sin \pi/4 & \cos \pi/4 & 0 \\0 & 0 & 1 \end{bmatrix}$
+
+平移矩阵 $T(1, 2)=\begin{bmatrix}1 & 0 & 1 \\0 & 1 & 2 \\0 & 0 & 1\end{bmatrix}$
+
+最终坐标为 $TRP$。
+
+```c++
+#include<cmath>
+#include<eigen3/Eigen/Core>
+#include<eigen3/Eigen/Dense>
+#include<iostream>
+#define PI 3.1415926535
+using namespace std;
+using namespace Eigen;
+
+int main()
+{
+    float theta = PI / 4.0f;
+    Vector3f P(2.0f, 1.0f, 1.0f);
+    Matrix3f R, T;
+    R << 
+        cos(theta), -sin(theta), 0,
+        sin(theta), cos(theta), 0,
+        0, 0, 1;
+    T <<
+        1, 0, 1,
+        0, 1, 2,
+        0, 0, 1;
+    cout << T * R * P << endl;
+    return 0;
+}
+```
+
+```
+1.70711
+4.12132
+      1
+```
+
+## HW1
+
+> 本次作业的任务是填写一个旋转矩阵和一个透视投影矩阵。给定三维下三个点 $v_0(2.0, 0.0,−2.0)$, $v_1(0.0, 2.0,−2.0)$, $v_2(−2.0, 0.0,−2.0)$, 你需要将这三个点的坐标变换为屏幕坐标并在屏幕上绘制出对应的线框三角形(在代码框架中，我们已经提供了draw_triangle 函数，所以你只需要去构建变换矩阵即可)。
+
+- `get_model_matrix(float rotation_angle)`: 逐个元素地构建模型变换矩阵并返回该矩阵。
+
+代公式：$$\mathbf{R}_z(\alpha)=\begin{pmatrix}\cos\alpha&-\sin\alpha&0&0\\\sin\alpha&\cos\alpha&0&0\\0&0&1&0\\0&0&0&1\end{pmatrix}$$
+
+```c++
+Eigen::Matrix4f get_model_matrix(float rotation_angle)
+{
+    Eigen::Matrix4f model = Eigen::Matrix4f::Identity();
+
+    // TODO: Implement this function
+    // Create the model matrix for rotating the triangle around the Z axis.
+    // Then return it.
+
+    float angle = rotation_angle * MY_PI / 180.0f;
+
+    Eigen::Matrix4f translate;
+    translate << std::cos(angle), -std::sin(angle), 0, 0,
+                 std::sin(angle), std::cos(angle), 0, 0,
+                 0, 0, 1, 0,
+                 0, 0, 0, 1;
+    model = translate * model;
+    return model;
+}
+```
+
+- `get_projection_matrix(float eye_fov, float aspect_ratio, float zNear, float zFar)`: 使用给定的参数逐个元素地构建透视投影矩阵并返回该矩阵。
+
+代公式：$\begin{aligned}M_{persp}=M_{ortho}M_{persp\to ortho}\end{aligned}$
+
+其中：
+
+$M_{persp\to ortho}$，映射到“规范(正则、规范、标准)” 的立方体 $[-1，1]^3$，因此：
+
+$M_{persp\to ortho}=\begin{bmatrix}\mathrm{zNear}&0&0&0\\0&\mathrm{zNear}&0&0\\0&0&\mathrm{zNear}+\mathrm{zFar}&-\mathrm{zNear}\times\mathrm{zFar}\\0&0&1&0\end{bmatrix}$
+
+---
+
+$M_{ortho}=\begin{bmatrix}\frac2{r-l}&0&0&0\\0&\frac2{t-b}&0&0\\0&0&\frac2{n-f}&0\\0&0&0&1\end{bmatrix}\begin{bmatrix}1&0&0&-\frac{r+l}2\\0&1&0&-\frac{t+b}2\\0&0&1&-\frac{n+f}2\\0&0&0&1\end{bmatrix}$
+
+![png](4_8.png)
+
+具体地，如上图，zNear 即为 $n$，zFar 即为 $z$，$\frac yz=\tan{(\mathrm{eye\_fov}/2)}$。
+
+由于右手坐标系 $n$ 和 $f$ 为负，因此：
+
+```c++
+float angle = eye_fov * MY_PI / 180.0f;
+float n = -zNear;
+float f = -zFar;
+float t = std::tan(angle / 2) * n;
+float b = -t;
+float r = t * aspect_ratio;
+float l = -r;
+```
+
+---
+
+最后 $\begin{aligned}M_{persp}=M_{ortho}M_{persp\to ortho}\end{aligned}$ 即为所求。
+
+完整代码：
+
+```c++
+Eigen::Matrix4f get_projection_matrix(float eye_fov, float aspect_ratio,
+                                      float zNear, float zFar)
+{
+    // Students will implement this function
+
+    Eigen::Matrix4f projection = Eigen::Matrix4f::Identity();
+
+    // TODO: Implement this function
+    // Create the projection matrix for the given parameters.
+    // Then return it.
+
+    Eigen::Matrix4f M_P;
+    M_P << zNear, 0, 0, 0,
+           0, zNear, 0, 0,
+           0, 0, zNear + zFar, -(zNear * zFar),
+           0, 0, 1, 0;
+
+    float angle = eye_fov * MY_PI / 180.0f;
+    float n = -zNear;
+    float f = -zFar;
+    float t = std::tan(angle / 2) * n;
+    float b = -t;
+    float r = t * aspect_ratio;
+    float l = -r;
+
+    Eigen::Matrix4f M_T;
+    M_T << 1, 0, 0, -(r + l) / 2,
+           0, 1, 0, -(t + b) / 2,
+           0, 0, 1, -(n + f) / 2,
+           0, 0, 0, 1;
+
+    Eigen::Matrix4f M_S;
+    M_S << 2 / (r - l), 0, 0, 0,
+           0, 2 / (t - b), 0, 0,
+           0, 0, 2 / (f - n), 0,
+           0, 0, 0, 1;
+
+    projection = M_T * M_S * M_P * projection;
+    return projection;
+}
+```
+
+运行时：
+
+- n = -0.1
+- f = -50
+- t = -0.0414214
+- b = 0.0414214
+- r = -0.0414214
+- l = 0.0414214
+
+---
+
+提高项：在 `main.cpp` 中构造一个函数，该函数的作用是得到绕任意
+过原点的轴的旋转变换矩阵。`Eigen::Matrix4f get_rotation(Vector3f axis, float angle)`
+
+代公式：$$\mathbf{R}(\mathbf{n},\alpha)=\cos(\alpha)\mathbf{I}+(1-\cos(\alpha))\mathbf{n}\mathbf{n}^T+\sin(\alpha)\underbrace{\begin{pmatrix}0&-n_z&n_y\\n_z&0&-n_x\\-n_y&n_x&0\end{pmatrix}}_{\mathbf{N}}$$
+
+```c++
+Eigen::Matrix4f get_rotation(Vector3f axis, float angle)
+{
+    Eigen::Matrix4f model = Eigen::Matrix4f::Identity();
+
+    float alpha = angle * MY_PI / 180.0f;
+    float nx = axis[0];
+    float ny = axis[1];
+    float nz = axis[2];
+    Eigen::Matrix3f M;
+    M <<
+        0, -nz, ny,
+        nz, 0, -nx,
+        -ny, nx, 0;
+    Eigen::Matrix3f R = std::cos(alpha) * Eigen::Matrix3f::Identity() + (1 - std::cos(alpha)) * axis * axis.transpose() + std::sin(alpha) * M;
+    Eigen::Matrix4f translate = Eigen::Matrix4f::Identity();
+    translate.block<3, 3>(0, 0) = R;
+
+    model = translate * model;
+    return model;
+}
+```
+

@@ -1,0 +1,183 @@
+---
+title: Hexo-昼夜切换
+date: Tue Mar 05 2024 13:49:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - Hexo
+  - HTML
+categories: 学习
+description: 极黑之夜，万物凋零。
+---
+
+
+<style>
+	[data-theme='light']{
+		.dark{
+			display: none;
+		}
+	}
+	[data-theme='dark']{
+		.light{
+			display: none;
+		}
+	}
+</style>
+
+# 前言
+
+​	现在博客按下右边栏的**昼夜切换**按钮就可以白天 / 黑夜模式之间进行切换！
+
+<img class="dark" src="01.webp" alt="昼夜切换"/><img class="light" src="02.webp" alt="昼夜切换"/>
+
+<p style="color: var(--color-muted-foreground); font-size: var(--text-sm); line-height: var(--tw-leading, var(--text-sm--line-height)); text-align: center; margin-top: .375em !important;margin-bottom: .375em !important">快按它快按它快按它~</p>
+
+# 正文
+
+## data-theme
+
+​	主要原理：在 `<html>` 上添加变量，值为 `light` 或 `dark`，剩下的交给 CSS。
+
+​	新建一个 `toogleTheme.js` 用于实现这个功能。
+
+```javascript
+function getTheme(){
+    if (localStorage.getItem('theme') !== null) {
+        return localStorage.getItem('theme');
+    }
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        // 检测暗色模式
+        return "dark";
+    } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+        // 检测白天模式
+        return "light";
+    } else {
+        // 用户没有设置偏好或浏览器不支持
+        return "light";
+    }
+}
+
+function setTheme() {
+    document.documentElement.setAttribute('data-theme', getTheme());
+
+    // giscus https://blog.jvav.me/posts/change-giscus-theme-at-runtime
+    document.querySelectorAll("iframe.giscus-frame")?.forEach(frame => {
+        frame.contentWindow.postMessage(
+            {
+                giscus: {
+                    setConfig: {
+                        theme: getTheme() === 'light' ? 'light' : 'dark_high_contrast',
+                    },
+                },
+            },
+            "https://giscus.app"
+        );
+    });
+}
+
+function setToggleThemeButtonListener() {
+    const toggleButton = document.getElementById('js-toggle_theme');
+    toggleButton.addEventListener('click', toggleTheme);
+    function toggleTheme() {
+        localStorage.setItem('theme', getTheme() === 'light' ? 'dark' : 'light');
+        setTheme();
+    }
+}
+```
+
+- `getTheme()` 获取主题。
+
+  - 如果 `localStorage.getItem('theme')` 的值存在，说明用户设置过主题，使用设置的主题。
+
+  - 查询用户系统是否存在昼夜主题偏好，若没有则使用白天主题。
+
+- `setTheme()` 设置主题。
+
+  - 将昼夜主题的信息用 `localStorage` 存起来。
+  - giscus 主题不受 `data-theme` 控制，根据 [运行时修改 giscus 主题 - Code & Tea (jvav.me)](https://blog.jvav.me/posts/change-giscus-theme-at-runtime)，用 js 切换主题。
+
+- `setToggleThemeButtonListener()` 昼夜切换按钮的监听，侧边栏创建一个按钮。
+
+  ```html
+  <div class="rightside-button" id="js-toggle_theme">
+        <span>
+            <img no-lazy src="<%- theme.icon.toggle_theme %>" class="rightside-button-icon" alt="Icon">
+        </span>
+  </div>
+  ```
+
+## 防止闪烁
+
+​	这个 `setTheme()` 必须放在页面渲染前执行，不然加载页面时会有昼夜切换的闪烁，影响体验。（参考：[暗色模式下页面刷新或切换出现闪烁的问题 · Issue #107 · Siricee/hexo-theme-Chic (github.com)](https://github.com/Siricee/hexo-theme-Chic/issues/107)）
+
+```ejs
+<!DOCTYPE html>
+<html lang=<%= theme.lang %> data-theme="light">
+	<%- js('js/widget/toggleTheme.js') %>
+	<script>
+		setTheme();
+	</script>
+	<head>
+		<%- partial('_partial/head') %>
+	</head>
+
+	<body>
+		<%- body %>
+		<%- partial('_partial/footer') %>
+	</body>
+</html>
+```
+
+## var.css
+
+​	CSS 中，写好昼夜模式下的颜色变量。
+
+```css
+[data-theme='light'] {
+    --global-bg: #fff;
+    --text-primary: #333;
+    --text-secondary: #757575;
+    --text-link: #3c79b6;
+    --background-primary: #fff;
+    --background-secondary: rgba(255, 255, 255, 0.95);
+    --background-tertiary: #efefef;
+    --blockquote-bg: #fafafa;
+    --border: #e0e2e5;
+    --code-bg: #f1f5fb;
+    --highlight-tools-bg: #e6ebf1;
+    --highlight-tools-text: #b3b3b3;
+    --tabs-bg: var(--tabs-bg);
+    --gallery-content-description-bg: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9), rgba(0, 0, 0, 0));
+    --tr-bg: hsla(0, 0%, 96.5%, 0.51);
+    --scrollbar-color: auto;
+    --hr-color: #efefef;
+}
+
+[data-theme='dark'] {
+    --global-bg: #0d0d0d;
+    --text-primary: #ddd;
+    --text-secondary: #aaa;
+    --text-link: #80c8f8;
+    --background-primary: #1a1a1a;
+    --background-secondary: rgba(0, 0, 0, 0.95);
+    --background-tertiary: rgba(0, 0, 0, 0.95);
+    --blockquote-bg: #2c2c2c;
+    --border: #cdcdcd;
+    --code-bg: #2c2c2c;
+    --highlight-tools-bg: #1a1a1a;
+    --highlight-tools-text: #cdcdcd;
+    --tabs-bg: #2c2c2c;
+    --tr-bg: rgba(0, 0, 0, 0.51);
+    --gallery-content-description-bg: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0));
+    --scrollbar-color: #525252;
+    --hr-color: #666;
+}
+```
+
+## 其它
+
+​	从 [Hexo 博客音乐播放器 Aplayer 深色模式 css 文件 | 张洪 Heo (zhheo.com)](https://blog.zhheo.com/p/46d7a5f0.html) 抄一个深色模式的 Aplayer 的 css。
+
+​	昼夜切换的过程中，给有变色的元素添加过渡动画：`transition: XXX 0.5s ease-in-out;`。
+
+​	其它的就是修图 & 乱调 CSS 了。
+
+​（夜间模式看顺眼了还不习惯改回来了）

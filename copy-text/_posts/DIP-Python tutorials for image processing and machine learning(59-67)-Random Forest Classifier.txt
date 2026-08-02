@@ -1,0 +1,1559 @@
+---
+title: DIP-Python tutorials for image processing and machine learning(59-67)-Random Forest Classifier
+date: Thu Dec 15 2022 15:09:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - DigitalSreeni
+  - Python
+categories: 学习
+description: 学习自 Youtube 博主 DigitalSreeni。
+---
+
+
+# 正文
+
+## 59 - What is Random Forest classifier
+
+> 很多的决策树在一起就变成了森林，就是随机森林了。
+
+- **决策树**
+
+比如要将一张图分类成:
+
+- Air 空气
+
+- Pyrite 黄铁矿
+
+- Clay 粘土
+- Pore 孔洞
+- Quartz 石英
+
+从图像的 Pixel Value 灰度值和 Texture 纹理进行分类:
+
+![jpg](59_1.jpg)
+
+- **Why start with pixel value and not texture metric for this image?**
+  - **为什么从像素值开始，而不是纹理度量这张图像?**
+
+- Because it gives the best split of input data.
+  - 因为它给出了输入数据的最佳分割。
+
+- **How to pick a node that gives the best split?**
+  - 如何选择一个能给出最佳分割的节点?
+
+- Use Gini impurity → pick the one that maximizes the Gini gain.
+  - 使用基尼系数→选择一个使基尼系数增益最大化的。
+- Gini lmpurity is the probability of incorrectly classifying a randomly chosenelement in the dataset if it were randomly labeled according to the classdistribution in the dataset. lt's calculated as
+  - 基尼系数是指数据集中随机选择的元素，如果根据数据集中的类别分布随机标记，则错误分类的概率。计算为
+
+$$G=\sum^C_{i=1}p(i)*\left(1-p(i)\right)$$
+
+- where $C$ is the number of classes and $p(i)$ is the probability of randomly picking an element of class $i$.
+
+  - 其中 $C$ 是类的数量，$p(i)$ 是随机抽取类 $i$ 中的一个元素的概率。
+
+- **Primary Disadvantage of decision trees:**
+  Often suffers from overfitting →works well on training data but fails on newdata leading to low accuracy.
+
+  - **决策树的主要缺点:**
+
+    经常存在过拟合问题→在训练数据上很好，但在新数据上失败，导致精度低。
+
+- **Random Forest to the rescue!**
+
+  - 使用决策森林规避决策树的缺点。
+
+![jpg](59_2.jpg)
+
+## 60 - How to use Random Forest in Python
+
+```python
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+
+df = pd.read_csv('data/images_analyzed_productivity1.csv')
+df.head()
+```
+
+
+
+<table border="1">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>User</th>
+      <th>Time</th>
+      <th>Coffee</th>
+      <th>Age</th>
+      <th>Images_Analyzed</th>
+      <th>Productivity</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1</td>
+      <td>8</td>
+      <td>0</td>
+      <td>23</td>
+      <td>20</td>
+      <td>Good</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1</td>
+      <td>13</td>
+      <td>0</td>
+      <td>23</td>
+      <td>14</td>
+      <td>Bad</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1</td>
+      <td>17</td>
+      <td>0</td>
+      <td>23</td>
+      <td>18</td>
+      <td>Good</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>1</td>
+      <td>22</td>
+      <td>0</td>
+      <td>23</td>
+      <td>15</td>
+      <td>Bad</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>1</td>
+      <td>8</td>
+      <td>2</td>
+      <td>23</td>
+      <td>22</td>
+      <td>Good</td>
+    </tr>
+  </tbody>
+</table>
+
+
+
+```python
+sizes = df['Productivity'].value_counts(sort=1)
+sizes
+```
+
+
+
+
+    Bad     42
+    Good    38
+    Name: Productivity, dtype: int64
+
+
+
+去除无关的列
+
+
+```python
+df.drop(['Images_Analyzed'], axis=1, inplace=True)
+df.drop(['User'], axis=1, inplace=True)
+df.head()
+```
+
+
+
+<table border="1">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Time</th>
+      <th>Coffee</th>
+      <th>Age</th>
+      <th>Productivity</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>8</td>
+      <td>0</td>
+      <td>23</td>
+      <td>Good</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>13</td>
+      <td>0</td>
+      <td>23</td>
+      <td>Bad</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>17</td>
+      <td>0</td>
+      <td>23</td>
+      <td>Good</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>22</td>
+      <td>0</td>
+      <td>23</td>
+      <td>Bad</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>8</td>
+      <td>2</td>
+      <td>23</td>
+      <td>Good</td>
+    </tr>
+  </tbody>
+</table>
+
+
+
+
+删除缺失数据
+
+
+```python
+df = df.dropna()
+```
+
+将分析结果转换为数字
+
+
+```python
+df.Productivity[df.Productivity == 'Good'] = 1
+df.Productivity[df.Productivity == 'Bad'] = 2
+df.head()
+```
+
+
+
+<table border="1">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Time</th>
+      <th>Coffee</th>
+      <th>Age</th>
+      <th>Productivity</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>8</td>
+      <td>0</td>
+      <td>23</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>13</td>
+      <td>0</td>
+      <td>23</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>17</td>
+      <td>0</td>
+      <td>23</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>22</td>
+      <td>0</td>
+      <td>23</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>8</td>
+      <td>2</td>
+      <td>23</td>
+      <td>1</td>
+    </tr>
+  </tbody>
+</table>
+
+
+
+
+定义因变量
+
+
+```python
+Y = df['Productivity'].values
+Y = Y.astype('int')
+Y
+```
+
+
+
+
+    array([1, 2, 1, 2, 1, 2, 1, 1, 1, 2, 1, 1, 1, 2, 2, 2, 1, 2, 1, 2, 1, 2,
+           1, 2, 1, 2, 1, 2, 1, 2, 2, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 1,
+           1, 2, 2, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 2, 2, 1, 2,
+           1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 2, 2])
+
+
+
+定义自变量
+
+
+```python
+X = df.drop(labels=['Productivity'], axis=1)
+```
+
+将数据分割为训练集和测试集
+
+
+```python
+from sklearn.model_selection import train_test_split
+
+X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.4, random_state=20)
+```
+
+使用随机森林
+
+[sklearn.ensemble.RandomForestClassifier](https://scikitlearn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html)
+
+
+```python
+from sklearn.ensemble import RandomForestClassifier
+
+model = RandomForestClassifier(n_estimators=10, random_state=30)
+model.fit(X_train, Y_train)
+prediction_test = model.predict(X_test)
+prediction_test
+```
+
+
+
+
+    array([1, 1, 2, 1, 2, 1, 1, 1, 2, 1, 1, 1, 2, 2, 2, 1, 2, 1, 1, 2, 1, 2,
+           1, 1, 2, 1, 1, 2, 1, 1, 1, 1])
+
+
+
+计算训练出的结果的精确度
+
+
+```python
+from sklearn import metrics
+
+print('Accuracy =', metrics.accuracy_score(Y_test, prediction_test))
+```
+
+    Accuracy = 0.9375
+
+
+扩大训练集的比例可以增加精确度
+
+
+```python
+X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=20)
+model = RandomForestClassifier(n_estimators=10, random_state=30)
+model.fit(X_train, Y_train)
+prediction_test = model.predict(X_test)
+prediction_test
+print('Accuracy =', metrics.accuracy_score(Y_test, prediction_test))
+```
+
+    Accuracy = 0.9375
+
+
+显示特征值的重要性
+
+
+```python
+feature_list = list(X.columns)
+feature_imp = pd.Series(model.feature_importances_, index=feature_list).sort_values(ascending=False)
+feature_imp
+```
+    Time      0.714433
+    Coffee    0.205474
+    Age       0.080092
+    dtype: float64
+
+随机森林可视化
+
+[python 随机森林可视化_阿雷吖睚的博客-CSDN 博客_随机森林可视化](https://blog.csdn.net/sinat_36728101/article/details/124672217)
+
+```python
+from IPython.display import HTML, display
+from sklearn import tree
+import pydotplus
+
+estimators = model.estimators_
+for m in estimators:
+    dot_data = tree.export_graphviz(m, out_file=None,
+                         feature_names=['Time', 'Coffee', 'Age'],
+                         class_names=['Good', 'Bad'],
+                         filled=True, rounded=True,
+                         special_characters=True)
+    graph = pydotplus.graph_from_dot_data(dot_data)
+# 使用 ipython 的终端 jupyter notebook 显示。
+svg = graph.create_svg()
+if hasattr(svg, "decode"):
+     svg = svg.decode("utf-8")
+html = HTML(svg)
+display(html)
+```
+
+![svg](60_1.svg)
+
+## 61 - How to create Gabor feature banks for machine learning
+
+```python
+import numpy as np
+import cv2
+import matplotlib.pyplot as plt
+import pandas as pd
+```
+
+
+```python
+img = cv2.imread('images/synthetic.jpg', 0)
+```
+
+
+```python
+df = pd.DataFrame()
+img2 = img.reshape(-1)
+df['Original Pixels'] = img2
+df
+```
+
+
+
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Original Pixels</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>255</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>255</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>255</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>255</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>255</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>363446</th>
+      <td>255</td>
+    </tr>
+    <tr>
+      <th>363447</th>
+      <td>255</td>
+    </tr>
+    <tr>
+      <th>363448</th>
+      <td>255</td>
+    </tr>
+    <tr>
+      <th>363449</th>
+      <td>255</td>
+    </tr>
+    <tr>
+      <th>363450</th>
+      <td>255</td>
+    </tr>
+  </tbody>
+</table>
+<p>363451 rows × 1 columns</p>
+
+
+
+设置 Gabor 的不同参数构造出不同的卷积核，生成用于机器学习的 csv 文件：
+
+
+```python
+num = 1
+for sigma in (3, 5):
+    for theta in range(2):
+        theta = theta / 4. * np.pi
+        for lamda in np.arange(0, np.pi, np.pi / 4.):
+            for gamma in (0.05, 0.5):
+                gabor_label = 'Gabor ' + str(num)
+                kernel = cv2.getGaborKernel((5, 5), sigma, theta, lamda, gamma, 0, ktype=cv2.CV_32F)
+                fimg = cv2.filter2D(img, cv2.CV_8UC3, kernel)
+                filtered_img = fimg.reshape(-1)
+                df[gabor_label] = filtered_img
+                num += 1
+```
+
+
+```python
+df.head()
+```
+
+
+
+<table border="1">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Original Pixels</th>
+      <th>Gabor 1</th>
+      <th>Gabor 2</th>
+      <th>Gabor 3</th>
+      <th>Gabor 4</th>
+      <th>Gabor 5</th>
+      <th>Gabor 6</th>
+      <th>Gabor 7</th>
+      <th>Gabor 8</th>
+      <th>Gabor 9</th>
+      <th>...</th>
+      <th>Gabor 23</th>
+      <th>Gabor 24</th>
+      <th>Gabor 25</th>
+      <th>Gabor 26</th>
+      <th>Gabor 27</th>
+      <th>Gabor 28</th>
+      <th>Gabor 29</th>
+      <th>Gabor 30</th>
+      <th>Gabor 31</th>
+      <th>Gabor 32</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>255</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>255</td>
+      <td>255</td>
+      <td>0</td>
+      <td>...</td>
+      <td>255</td>
+      <td>255</td>
+      <td>0</td>
+      <td>0</td>
+      <td>255</td>
+      <td>255</td>
+      <td>130</td>
+      <td>122</td>
+      <td>255</td>
+      <td>255</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>255</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>255</td>
+      <td>255</td>
+      <td>0</td>
+      <td>...</td>
+      <td>255</td>
+      <td>255</td>
+      <td>0</td>
+      <td>0</td>
+      <td>255</td>
+      <td>255</td>
+      <td>130</td>
+      <td>122</td>
+      <td>255</td>
+      <td>255</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>255</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>255</td>
+      <td>255</td>
+      <td>0</td>
+      <td>...</td>
+      <td>255</td>
+      <td>255</td>
+      <td>0</td>
+      <td>0</td>
+      <td>255</td>
+      <td>255</td>
+      <td>130</td>
+      <td>122</td>
+      <td>255</td>
+      <td>255</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>255</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>255</td>
+      <td>255</td>
+      <td>0</td>
+      <td>...</td>
+      <td>255</td>
+      <td>255</td>
+      <td>0</td>
+      <td>0</td>
+      <td>255</td>
+      <td>255</td>
+      <td>130</td>
+      <td>122</td>
+      <td>255</td>
+      <td>255</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>255</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>255</td>
+      <td>255</td>
+      <td>0</td>
+      <td>...</td>
+      <td>255</td>
+      <td>255</td>
+      <td>0</td>
+      <td>0</td>
+      <td>255</td>
+      <td>255</td>
+      <td>130</td>
+      <td>122</td>
+      <td>255</td>
+      <td>255</td>
+    </tr>
+  </tbody>
+</table>
+<p>5 rows × 33 columns</p>
+
+
+
+
+```python
+df.to_csv('Gabor.csv')
+```
+
+![png](61_1.png)
+
+## 62 - Image Segmentation using traditional machine learning - The plan
+
+​	讲了下后面几篇视频要干啥。
+
+## 63 - Image Segmentation using traditional machine learning Part1 - FeatureExtraction
+
+
+```python
+import numpy as np
+import cv2
+import pandas as pd
+import matplotlib.pyplot as plt
+
+img = cv2.imread('images/Train_images/Sandstone_Versa0000.tif', 0)
+plt.imshow(img, cmap='gray')
+```
+
+
+
+
+    <matplotlib.image.AxesImage at 0x17d0c13f730>
+
+
+
+
+![png](1.png)
+
+
+```python
+df = pd.DataFrame()
+```
+
+- Add original pixel values to the data frame as feature \#1
+
+
+```python
+img2 = img.reshape(-1)
+df['Original Image'] = img2
+df.head()
+```
+
+
+
+<table border="1">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Original Image</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>0</td>
+    </tr>
+  </tbody>
+</table>
+
+
+
+- Add Other features
+
+- First set - Gabor features
+
+
+```python
+# Generate Gabor features
+num = 1  # To count numbers up in order to give Gabor features a lable in the data frame
+kernels = []
+for theta in range(2):  # Define number of thetas
+    theta = theta / 4. * np.pi
+    for sigma in (1, 3):  # Sigma with 1 and 3
+        for lamda in np.arange(0, np.pi, np.pi / 4):  # Range of wavelengths
+            for gamma in (0.05, 0.5):  # Gamma values of 0.05 and 0.5
+                gabor_label = 'Gabor' + str(num)  # Label Gabor columns as Gabor1, Gabor2, etc.
+                ksize = 9
+                kernel = cv2.getGaborKernel((ksize, ksize), sigma, theta, lamda, gamma, 0, ktype=cv2.CV_32F)    
+                kernels.append(kernel)
+                # Now filter the image and add values to a new column 
+                fimg = cv2.filter2D(img2, cv2.CV_8UC3, kernel)
+                filtered_img = fimg.reshape(-1)
+                df[gabor_label] = filtered_img  # Labels columns as Gabor1, Gabor2, etc.
+                print(gabor_label, ': theta =', theta, ': sigma =', sigma, ': lamda =', lamda, ': gamma =', gamma)
+                num += 1  # Increment for gabor column label
+```
+
+    Gabor1 : theta = 0.0 : sigma = 1 : lamda = 0.0 : gamma = 0.05
+    Gabor2 : theta = 0.0 : sigma = 1 : lamda = 0.0 : gamma = 0.5
+    Gabor3 : theta = 0.0 : sigma = 1 : lamda = 0.7853981633974483 : gamma = 0.05
+    Gabor4 : theta = 0.0 : sigma = 1 : lamda = 0.7853981633974483 : gamma = 0.5
+    Gabor5 : theta = 0.0 : sigma = 1 : lamda = 1.5707963267948966 : gamma = 0.05
+    Gabor6 : theta = 0.0 : sigma = 1 : lamda = 1.5707963267948966 : gamma = 0.5
+    Gabor7 : theta = 0.0 : sigma = 1 : lamda = 2.356194490192345 : gamma = 0.05
+    Gabor8 : theta = 0.0 : sigma = 1 : lamda = 2.356194490192345 : gamma = 0.5
+    Gabor9 : theta = 0.0 : sigma = 3 : lamda = 0.0 : gamma = 0.05
+    Gabor10 : theta = 0.0 : sigma = 3 : lamda = 0.0 : gamma = 0.5
+    Gabor11 : theta = 0.0 : sigma = 3 : lamda = 0.7853981633974483 : gamma = 0.05
+    Gabor12 : theta = 0.0 : sigma = 3 : lamda = 0.7853981633974483 : gamma = 0.5
+    Gabor13 : theta = 0.0 : sigma = 3 : lamda = 1.5707963267948966 : gamma = 0.05
+    Gabor14 : theta = 0.0 : sigma = 3 : lamda = 1.5707963267948966 : gamma = 0.5
+    Gabor15 : theta = 0.0 : sigma = 3 : lamda = 2.356194490192345 : gamma = 0.05
+    Gabor16 : theta = 0.0 : sigma = 3 : lamda = 2.356194490192345 : gamma = 0.5
+    Gabor17 : theta = 0.7853981633974483 : sigma = 1 : lamda = 0.0 : gamma = 0.05
+    Gabor18 : theta = 0.7853981633974483 : sigma = 1 : lamda = 0.0 : gamma = 0.5
+    Gabor19 : theta = 0.7853981633974483 : sigma = 1 : lamda = 0.7853981633974483 : gamma = 0.05
+    Gabor20 : theta = 0.7853981633974483 : sigma = 1 : lamda = 0.7853981633974483 : gamma = 0.5
+    Gabor21 : theta = 0.7853981633974483 : sigma = 1 : lamda = 1.5707963267948966 : gamma = 0.05
+    Gabor22 : theta = 0.7853981633974483 : sigma = 1 : lamda = 1.5707963267948966 : gamma = 0.5
+    Gabor23 : theta = 0.7853981633974483 : sigma = 1 : lamda = 2.356194490192345 : gamma = 0.05
+    Gabor24 : theta = 0.7853981633974483 : sigma = 1 : lamda = 2.356194490192345 : gamma = 0.5
+    Gabor25 : theta = 0.7853981633974483 : sigma = 3 : lamda = 0.0 : gamma = 0.05
+    Gabor26 : theta = 0.7853981633974483 : sigma = 3 : lamda = 0.0 : gamma = 0.5
+    Gabor27 : theta = 0.7853981633974483 : sigma = 3 : lamda = 0.7853981633974483 : gamma = 0.05
+    Gabor28 : theta = 0.7853981633974483 : sigma = 3 : lamda = 0.7853981633974483 : gamma = 0.5
+    Gabor29 : theta = 0.7853981633974483 : sigma = 3 : lamda = 1.5707963267948966 : gamma = 0.05
+    Gabor30 : theta = 0.7853981633974483 : sigma = 3 : lamda = 1.5707963267948966 : gamma = 0.5
+    Gabor31 : theta = 0.7853981633974483 : sigma = 3 : lamda = 2.356194490192345 : gamma = 0.05
+    Gabor32 : theta = 0.7853981633974483 : sigma = 3 : lamda = 2.356194490192345 : gamma = 0.5
+
+
+- Gerate **OTHER FEATURES** and add them to the data frame
+
+- **Canny edge**
+
+
+```python
+edges = cv2.Canny(img, 100, 200)
+edges1 = edges.reshape(-1)
+df['Canny Edge'] = edges1
+```
+
+- **ROBERTS EDGE**
+
+
+```python
+from skimage.filters import roberts, sobel, scharr, prewitt
+
+edge_roberts = roberts(img)
+edge_roberts1 = edge_roberts.reshape(-1)
+df['Roberts'] = edge_roberts1
+```
+
+- **SOBEL**
+
+
+```python
+edge_sobel = sobel(img)
+edge_sobel1 = edge_sobel.reshape(-1)
+df['Sobel'] = edge_sobel1
+```
+
+- **SCHARR**
+
+
+```python
+edge_scharr = scharr(img)
+edge_scharr1 = edge_scharr.reshape(-1)
+df['Scharr'] = edge_scharr1
+```
+
+- **PREWITT**
+
+
+```python
+edge_prewitt = prewitt(img)
+edge_prewitt1 = edge_prewitt.reshape(-1)
+df['Prewitt'] = edge_prewitt1
+```
+
+- **GAUSSIAN with sigma = 3**
+
+
+```python
+from scipy import ndimage as nd
+
+gaussian_img = nd.gaussian_filter(img, sigma=3)
+gaussian_img1 = gaussian_img.reshape(-1)
+df['Gaussian s3'] = gaussian_img1
+```
+
+- **GAUSSIAN with sigma = 7**
+
+
+```python
+gaussian_img2 = nd.gaussian_filter(img, sigma=7)
+gaussian_img3 = gaussian_img2.reshape(-1)
+df['Gaussian s7'] = gaussian_img3
+```
+
+- **MEDIAN with sigma = 3**
+
+
+```python
+median_img = nd.median_filter(img, size=3)
+median_img1 = median_img.reshape(-1)
+df['Median s3'] = median_img1
+```
+
+- **VARIANCE with size = 3**
+
+
+```python
+variance_img = nd.generic_filter(img, np.var, size=3)
+variance_img1 = variance_img.reshape(-1)
+df['Variance s3'] = variance_img1  # Add column to original dataframe
+```
+
+---
+
+
+```python
+df.head()
+```
+
+
+
+<table border="1">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Original Image</th>
+      <th>Gabor1</th>
+      <th>Gabor2</th>
+      <th>Gabor3</th>
+      <th>Gabor4</th>
+      <th>Gabor5</th>
+      <th>Gabor6</th>
+      <th>Gabor7</th>
+      <th>Gabor8</th>
+      <th>Gabor9</th>
+      <th>...</th>
+      <th>Gabor32</th>
+      <th>Canny Edge</th>
+      <th>Roberts</th>
+      <th>Sobel</th>
+      <th>Scharr</th>
+      <th>Prewitt</th>
+      <th>Gaussian s3</th>
+      <th>Gaussian s7</th>
+      <th>Median s3</th>
+      <th>Variance s3</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>...</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>...</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>...</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>...</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>...</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+  </tbody>
+</table>
+<p>5 rows × 42 columns</p>
+
+
+
+---
+
+
+```python
+labeled_img = cv2.imread('images/Train_masks/Sandstone_Versa0000.tif', 0)
+labeled_img1 = labeled_img.reshape(-1)
+df['Label'] = labeled_img1
+```
+
+## 64 - Image Segmentation using traditional machine learning - Part2 Training RF
+
+- Dependent variable
+
+
+```python
+Y = df['Label'].values
+X = df.drop(labels=['Label'], axis=1)
+```
+
+- Split data into test and train
+
+
+```python
+from sklearn.model_selection import train_test_split
+
+X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.4, random_state=20)
+```
+
+- Import ML algorithm and train the model
+
+
+```python
+from sklearn.ensemble import RandomForestClassifier
+
+model = RandomForestClassifier(n_estimators=10, random_state=42)
+model.fit(X_train, Y_train)
+prediction_test = model.predict(X_test)
+```
+
+
+```python
+from sklearn import metrics
+
+print("Accuracy =", metrics.accuracy_score(Y_test, prediction_test))
+```
+
+    Accuracy = 0.9812850216441728
+
+
+## 65 - Image Segmentation using traditional machine learning - Part3 Feature Ranking
+
+
+```python
+fig = plt.figure(figsize=(12, 16))
+p = 1
+for index, feature in enumerate(df.columns):
+    if index == 0:
+        p += 1
+        ax = fig.add_subplot(181)
+        plt.xticks([])
+        plt.yticks([])
+        ax.imshow(img, cmap='gray')
+        ax.title.set_text(feature)
+    else:
+        if p % 8 == 1:
+            p += 1
+        exec("ax" + str(index) + "=fig.add_subplot(6, 8, " + str(p) + ")")
+        plt.xticks([])
+        plt.yticks([])
+        exec("ax" + str(index) + ".imshow(np.array(df[feature]).reshape(img.shape), cmap='gray')")
+        exec("ax" + str(index) + ".title.set_text('" + feature + "')")
+        p += 1
+plt.show()
+```
+
+
+![png](2.png)
+    
+
+```python
+importances = list(model.feature_importances_)
+features_list = list(X.columns)
+feature_imp = pd.Series(model.feature_importances_, index=features_list).sort_values(ascending=False)
+feature_imp
+```
+
+
+
+
+    Gabor4            0.248493
+    Gaussian s3       0.168623
+    Median s3         0.122685
+    Original Image    0.092540
+    Gabor8            0.086585
+    Gabor11           0.076893
+    Gabor3            0.070587
+    Gabor6            0.021357
+    Gaussian s7       0.020470
+    Gabor24           0.011645
+    Gabor7            0.010555
+    Prewitt           0.010252
+    Gabor21           0.007676
+    Sobel             0.007102
+    Gabor23           0.006989
+    Gabor5            0.006329
+    Scharr            0.005543
+    Roberts           0.005393
+    Gabor22           0.004461
+    Variance s3       0.002942
+    Gabor31           0.002886
+    Gabor29           0.002720
+    Gabor32           0.002607
+    Gabor30           0.002361
+    Canny Edge        0.001267
+    Gabor12           0.001025
+    Gabor20           0.000011
+    Gabor28           0.000002
+    Gabor27           0.000002
+    Gabor14           0.000000
+    Gabor26           0.000000
+    Gabor25           0.000000
+    Gabor1            0.000000
+    Gabor19           0.000000
+    Gabor18           0.000000
+    Gabor17           0.000000
+    Gabor16           0.000000
+    Gabor10           0.000000
+    Gabor9            0.000000
+    Gabor15           0.000000
+    Gabor2            0.000000
+    Gabor13           0.000000
+    dtype: float64
+
+
+
+## 66 - Image Segmentation using traditional machine learning - Part4 Pickling Model
+
+
+```python
+import pickle
+
+filename = 'sandstone_model'
+pickle.dump(model, open(filename, 'wb'))
+
+load_model = pickle.load(open(filename, 'rb'))
+result = load_model.predict(X)
+
+segmented = result.reshape((img.shape))
+```
+
+
+```python
+import matplotlib.pyplot as plt
+
+plt.imshow(segmented, cmap='jet')
+```
+
+
+
+
+    <matplotlib.image.AxesImage at 0x17d37062220>
+
+
+
+
+![png](3.png)
+    
+
+```python
+plt.imsave('segmented_rock.jpg', segmented, cmap='jet')
+```
+
+## 67 - Image Segmentation using traditional machine learning - Part5 Segmenting Images
+
+
+```python
+import numpy as np
+import cv2
+import pandas as pd
+ 
+def feature_extraction(img):
+    df = pd.DataFrame()
+
+
+# All features generated must match the way features are generated for TRAINING.
+# Feature1 is our original image pixels
+    img2 = img.reshape(-1)
+    df['Original Image'] = img2
+
+# Generate Gabor features
+    num = 1
+    kernels = []
+    for theta in range(2):
+        theta = theta / 4. * np.pi
+        for sigma in (1, 3):
+            for lamda in np.arange(0, np.pi, np.pi / 4):
+                for gamma in (0.05, 0.5):      
+                    gabor_label = 'Gabor' + str(num)
+                    ksize=9
+                    kernel = cv2.getGaborKernel((ksize, ksize), sigma, theta, lamda, gamma, 0, ktype=cv2.CV_32F)    
+                    kernels.append(kernel)
+                    # Now filter image and add values to new column
+                    fimg = cv2.filter2D(img2, cv2.CV_8UC3, kernel)
+                    filtered_img = fimg.reshape(-1)
+                    df[gabor_label] = filtered_img  # Modify this to add new column for each gabor
+                    num += 1
+    ########################################
+    # Geerate OTHER FEATURES and add them to the data frame
+    # Feature 3 is canny edge
+    edges = cv2.Canny(img, 100,200)   # Image, min and max values
+    edges1 = edges.reshape(-1)
+    df['Canny Edge'] = edges1  # Add column to original dataframe
+
+    from skimage.filters import roberts, sobel, scharr, prewitt
+
+    # Feature 4 is Roberts edge
+    edge_roberts = roberts(img)
+    edge_roberts1 = edge_roberts.reshape(-1)
+    df['Roberts'] = edge_roberts1
+
+    # Feature 5 is Sobel
+    edge_sobel = sobel(img)
+    edge_sobel1 = edge_sobel.reshape(-1)
+    df['Sobel'] = edge_sobel1
+
+    # Feature 6 is Scharr
+    edge_scharr = scharr(img)
+    edge_scharr1 = edge_scharr.reshape(-1)
+    df['Scharr'] = edge_scharr1
+
+    # Feature 7 is Prewitt
+    edge_prewitt = prewitt(img)
+    edge_prewitt1 = edge_prewitt.reshape(-1)
+    df['Prewitt'] = edge_prewitt1
+
+    # Feature 8 is Gaussian with sigma=3
+    from scipy import ndimage as nd
+    gaussian_img = nd.gaussian_filter(img, sigma=3)
+    gaussian_img1 = gaussian_img.reshape(-1)
+    df['Gaussian s3'] = gaussian_img1
+
+    # Feature 9 is Gaussian with sigma=7
+    gaussian_img2 = nd.gaussian_filter(img, sigma=7)
+    gaussian_img3 = gaussian_img2.reshape(-1)
+    df['Gaussian s7'] = gaussian_img3
+
+    # Feature 10 is Median with sigma=3
+    median_img = nd.median_filter(img, size=3)
+    median_img1 = median_img.reshape(-1)
+    df['Median s3'] = median_img1
+
+    # Feature 11 is Variance with size=3
+    variance_img = nd.generic_filter(img, np.var, size=3)
+    variance_img1 = variance_img.reshape(-1)
+    df['Variance s3'] = variance_img1  # Add column to original dataframe
+
+    return df
+```
+
+
+```python
+import glob
+import pickle
+from matplotlib import pyplot as plt
+
+filename = "sandstone_model"
+loaded_model = pickle.load(open(filename, 'rb'))
+
+path = "images/Train_images/*.tif"
+for file in glob.glob(path):
+    print(file)  # just stop here to see all file names printed
+    img = cv2.imread(file, 0)
+    # Call the feature extraction function.
+    X = feature_extraction(img)
+    result = loaded_model.predict(X)
+    segmented = result.reshape((img.shape))
+    
+    name = file.split("e_")
+    cv2.imwrite('images/Segmented/'+ name[1], segmented)
+```
+
+![jpg](67_1.jpg)
+
+## 67b - Feature based image segmentation using traditional machine learning. -Multi-training images-
+
+总结通过传统机器学习方法进行图像分类的各个步骤。
+
+> 使用随机森林或支持向量机，这是传统的机器学习方法之一，我相信这比深度学习方法要好得多，因为对于大多数应用程序来说，您通常没有深度学习所需的数据类型，因此传统机器学习有时效果很好，如果您没有大量训练数据，实际上有时比深度学习好得多。
+
+
+```python
+import numpy as np
+import cv2
+import pandas as pd
+import pickle
+from matplotlib import pyplot as plt
+import os
+```
+
+- STEP 1:   READ TRAINING IMAGES AND EXTRACT FEATURES 
+
+
+```python
+image_dataset = pd.DataFrame()  # Dataframe to capture image features
+
+img_path = "images/train_images/"
+for image in os.listdir(img_path):  # iterate through each file 
+    print(image)
+    
+    df = pd.DataFrame()  # Temporary data frame to capture information for each loop.
+    # Reset dataframe to blank after each loop.
+    
+    input_img = cv2.imread(img_path + image)  # Read images
+    
+    # Check if the input image is RGB or grey and convert to grey if RGB
+    if input_img.ndim == 3 and input_img.shape[-1] == 3:
+        img = cv2.cvtColor(input_img,cv2.COLOR_BGR2GRAY)
+    elif input_img.ndim == 2:
+        img = input_img
+    else:
+        raise excerption("The module works only with grayscale and RGB images!")
+
+################################################################
+# START ADDING DATA TO THE DATAFRAME
+
+    # Add pixel values to the data frame
+    pixel_values = img.reshape(-1)
+    df['Pixel_Value'] = pixel_values  # Pixel value itself as a feature
+    df['Image_Name'] = image  # Capture image name as we read multiple images
+    
+############################################################################    
+    # Generate Gabor features
+    num = 1  # To count numbers up in order to give Gabor features a lable in the data frame
+    kernels = []
+    for theta in range(2):   # Define number of thetas
+        theta = theta / 4. * np.pi
+        for sigma in (1, 3):  # Sigma with 1 and 3
+            for lamda in np.arange(0, np.pi, np.pi / 4):   # Range of wavelengths
+                for gamma in (0.05, 0.5):  # Gamma values of 0.05 and 0.5
+                    gabor_label = 'Gabor' + str(num)  # Label Gabor columns as Gabor1, Gabor2, etc.
+                    ksize=9
+                    kernel = cv2.getGaborKernel((ksize, ksize), sigma, theta, lamda, gamma, 0, ktype=cv2.CV_32F)    
+                    kernels.append(kernel)
+                    # Now filter the image and add values to a new column 
+                    fimg = cv2.filter2D(img, cv2.CV_8UC3, kernel)
+                    filtered_img = fimg.reshape(-1)
+                    df[gabor_label] = filtered_img  #Labels columns as Gabor1, Gabor2, etc.
+                    print(gabor_label, ': theta=', theta, ': sigma=', sigma, ': lamda=', lamda, ': gamma=', gamma)
+                    num += 1  # Increment for gabor column label
+########################################
+# Gerate OTHER FEATURES and add them to the data frame
+                
+    # CANNY EDGE
+    edges = cv2.Canny(img, 100,200)   #Image, min and max values
+    edges1 = edges.reshape(-1)
+    df['Canny Edge'] = edges1 #Add column to original dataframe
+    
+    from skimage.filters import roberts, sobel, scharr, prewitt
+    
+    # ROBERTS EDGE
+    edge_roberts = roberts(img)
+    edge_roberts1 = edge_roberts.reshape(-1)
+    df['Roberts'] = edge_roberts1
+    
+    # SOBEL
+    edge_sobel = sobel(img)
+    edge_sobel1 = edge_sobel.reshape(-1)
+    df['Sobel'] = edge_sobel1
+    
+    # SCHARR
+    edge_scharr = scharr(img)
+    edge_scharr1 = edge_scharr.reshape(-1)
+    df['Scharr'] = edge_scharr1
+    
+    # PREWITT
+    edge_prewitt = prewitt(img)
+    edge_prewitt1 = edge_prewitt.reshape(-1)
+    df['Prewitt'] = edge_prewitt1
+    
+    # GAUSSIAN with sigma=3
+    from scipy import ndimage as nd
+    gaussian_img = nd.gaussian_filter(img, sigma=3)
+    gaussian_img1 = gaussian_img.reshape(-1)
+    df['Gaussian s3'] = gaussian_img1
+    
+    # GAUSSIAN with sigma=7
+    gaussian_img2 = nd.gaussian_filter(img, sigma=7)
+    gaussian_img3 = gaussian_img2.reshape(-1)
+    df['Gaussian s7'] = gaussian_img3
+    
+    # MEDIAN with sigma=3
+    median_img = nd.median_filter(img, size=3)
+    median_img1 = median_img.reshape(-1)
+    df['Median s3'] = median_img1
+    
+    # VARIANCE with size=3
+    variance_img = nd.generic_filter(img, np.var, size=3)
+    variance_img1 = variance_img.reshape(-1)
+    df['Variance s3'] = variance_img1  # Add column to original dataframe
+
+######################################                    
+# Update dataframe for images to include details for each image in the loop
+    image_dataset = image_dataset.append(df)
+```
+
+- STEP 2: READ LABELED IMAGES (MASKS) AND CREATE ANOTHER DATAFRAME WITH LABEL VALUES AND LABEL FILE NAMES
+
+
+```python
+mask_dataset = pd.DataFrame()  # Create dataframe to capture mask info.
+
+mask_path = "images/train_masks/"    
+for mask in os.listdir(mask_path):  # iterate through each file to perform some action
+    print(mask)
+    
+    df2 = pd.DataFrame()  # Temporary dataframe to capture info for each mask in the loop
+    input_mask = cv2.imread(mask_path + mask)
+    
+    # Check if the input mask is RGB or grey and convert to grey if RGB
+    if input_mask.ndim == 3 and input_mask.shape[-1] == 3:
+        label = cv2.cvtColor(input_mask,cv2.COLOR_BGR2GRAY)
+    elif input_mask.ndim == 2:
+        label = input_mask
+    else:
+        raise excerption("The module works only with grayscale and RGB images!")
+
+    # Add pixel values to the data frame
+    label_values = label.reshape(-1)
+    df2['Label_Value'] = label_values
+    df2['Mask_Name'] = mask
+    
+    mask_dataset = mask_dataset.append(df2)  # Update mask dataframe with all the info from each mask
+```
+
+- STEP 3: GET DATA READY FOR RANDOM FOREST (or other classifier) COMBINE BOTH DATAFRAMES INTO A SINGLE DATASET
+
+
+```python
+dataset = pd.concat([image_dataset, mask_dataset], axis=1)  # Concatenate both image and mask datasets
+
+# If you expect image and mask names to be the same this is where we can perform sanity check
+# dataset['Image_Name'].equals(dataset['Mask_Name'])   
+# If we do not want to include pixels with value 0 
+# e.g. Sometimes unlabeled pixels may be given a value 0.
+dataset = dataset[dataset.Label_Value != 0]
+
+# Assign training features to X and labels to Y
+# Drop columns that are not relevant for training (non-features)
+X = dataset.drop(labels = ["Image_Name", "Mask_Name", "Label_Value"], axis=1) 
+
+# Assign label values to Y (our prediction)
+Y = dataset["Label_Value"].values 
+
+# Split data into train and test to verify accuracy after fitting the model. 
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.2, random_state=20)
+```
+
+- STEP 4: Define the classifier and fit a model with our training data
+
+
+```python
+# Import training classifier
+from sklearn.ensemble import RandomForestClassifier
+# Instantiate model with n number of decision trees
+model = RandomForestClassifier(n_estimators = 50, random_state = 42)
+
+# Train the model on training data
+model.fit(X_train, y_train)
+```
+
+- STEP 5: Accuracy check
+
+
+```python
+from sklearn import metrics
+
+prediction_test = model.predict(X_test)
+# Check accuracy on test dataset. 
+print("Accuracy = ", metrics.accuracy_score(y_test, prediction_test))
+```
+
+- STEP 6: SAVE MODEL FOR FUTURE USE
+
+
+```python
+# You can store the model for future use. In fact, this is how you do machine elarning
+# Train on training images, validate on test images and deploy the model on unknown images. 
+# Save the trained model as pickle string to disk for future use
+model_name = "sandstone_model"
+pickle.dump(model, open(model_name, 'wb'))
+```

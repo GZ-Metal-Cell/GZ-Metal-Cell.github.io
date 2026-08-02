@@ -1,0 +1,949 @@
+---
+title: Python-人工智能数学基础10
+date: Wed Jul 20 2022 13:36:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - Python
+  - 《人工智能数学基础》
+categories: 学习
+description: 唐宇迪《人工智能数学基础》学习笔记第 10 章。
+---
+
+
+# 正文
+
+## 10 数据的空间变换——核函数变换
+
+### 10.1 相关知识简介
+
+#### 10.1.1 超平面
+
+超平面（Hyper Plane）的本质是自由度比所在空间的维度小 1，也就是（n-1）维度
+
+n 维空间$F^n$中超平面表示为$a _ 1 x _ 1 + ... + a _ n x _n =b$定义的子集, 其中$a _ 1,...,a _ n \in F$是不全为零的常数
+
+也可表示为$\mathbf{w\cdot x}+b=0$, 其中$\mathbf{w}$与$\mathbf{x}$是 n 维列向量, $\mathbf{w}=[w _ 1,w _ 2,...,w _ n]^T,\mathbf{x}=[x _ 1,x _ 2,...,x _ n]^T$
+
+- $\mathbf{w}$既可以看作超平面的法向量, 也可以看作是参数, 决定了超平面的方向
+
+- $\mathbf{x}$为超平面上的点
+
+- $b$是一个实数, 代表超平面到原点的距离
+
+- $\mathbf{w\cdot x}$表示向量$\mathbf{w}$与$\mathbf{x}$的内积, 结果为一个标量
+
+- 向量的内积可以转换为矩阵的乘积, 所以$\mathbf{w\cdot x}=\mathbf{w}^T\mathbf{x}, \mathbf{w}^T$表示$\mathbf{w}$的转置
+
+- 超平面将空间划分为 3 部分, 即超平面本身$\mathbf{w\cdot x}+b=0$, 超平面上部$\mathbf{w\cdot x}+b>0$, 超平面下部$\mathbf{w\cdot x}+b<0$
+
+#### 10.1.2 线性分类
+
+若一个分类超平面可以将两类样本完全分开, 则称这些样本是"线性可分"的, 椭圆在二维空间内不是分类超平面(不是一维), 不是线性可分的
+
+#### 10.1.3 升维
+
+把样本从原输入低维空间向高维特征空间作映射,使得数据的维度增大
+
+非线性可分问题可以通过升维, 找到合适的映射函数将低维的向量$\mathbf{x}$变换为高维的向量$\mathbf{x}'$, 然后在高维空间中,求向量$\mathbf{x'}$与向量$\mathbf{w}$的内积, 再与 b 相加, 得到分类超平面以及线性模型, 从而进行分类或回归, 使低维输入空间非线性可分问题变为高维特征空间的线性可分
+
+### 10.2 核函数的引入
+
+#### 10.3.1 核函数定义
+
+设$\chi$是输入空间(欧氏空间或离散集合), H 为特征空间(希尔伯特空间, (可以直接理解成更高维的空间?)), 若存在一个从$\chi$到 H 的映射,$f(\mathbf{x}):\chi \to H$,使得对所有的$\mathbf{x},\mathbf{y}\in \chi$函数$K(\mathbf{x},\mathbf{y})=f(\mathbf{x})\cdot f(\mathbf{y})$, 则称$K(\mathbf{x}, \mathbf{y})$为核函数
+
+任何半正定($\ge 0$)的函数都可以作为核函数
+
+#### 10.3.3 核函数的特点
+
+- 在原空间进行计算, 避免"维数灾难", 大大减小计算量, 有效处理高维输入
+
+### 10.4 常用核函数
+
+| 名称             | 说明                                                         |
+| :--------------- | :----------------------------------------------------------- |
+| 线性核函数       | 对数据不进行任何变换, 不需要设置任何参数, 速度快, 用于线性可分, 适用于维度很大、样本数量差不多的数据集, 也可手动升维, 再使用线性核函数 |
+| 多项式核函数     | 偏线性, 非常适合用于图像处理, 可调节参数获得好的结果         |
+| 高斯径向基核函数 | 偏非线性, 适用范围较广, 是 SVM 的默认核函数, 适用于维度较低和样本数量一般的数据集 |
+
+#### 10.4.1 线性核函数
+
+$$K(\mathbf{x},\mathbf{y})=\mathbf{x}\cdot \mathbf{y}$$
+
+线性核函数是最简单的核函数, 此时的映射函数为$f(\mathbf{z})=z$
+
+#### 10.4.2 多项式核函数
+
+$$K(\mathbf{x},\mathbf{y})=\left [ \gamma (\mathbf{x}\cdot \mathbf{y})+c \right ]^d$$
+
+- $\gamma > 0$, 一般等于 1 /类别数, 表示对内积$(\mathbf{x}\cdot \mathbf{y})$进行放缩
+
+- c 代表常数项, c>0 时称为非齐次多项式
+
+- d 代表项式的阶次, 一般设 d=2, 若 d 取值过高, 学习的复杂性也会过高, 容易出现过拟合的现象.
+
+- 多项式核函数对应的映射后的特征维度为$C ^d _ {n+d}$, n 为$\mathbf{x}$的维度
+
+常用的多项式核函数
+
+$K(\mathbf{x},\mathbf{y})=\left [ \gamma (\mathbf{x}\cdot \mathbf{y})+1 \right ]^2$
+
+$K(\mathbf{x},\mathbf{y})=\left [ (\mathbf{x}\cdot \mathbf{y})+1\right ]^2=(\Sigma^n _ {i=1}\mathbf{x} _ i \mathbf{y} _ i + 1)^2$
+
+$={\color{Red}{\Sigma^n _ {i=1} \mathbf{x}^2 _ i \mathbf{y}^2 _ i}} + {\color{Blue}{\Sigma^n _ {i=2}\Sigma^{i-1} _ {j=1}(\sqrt 2 \mathbf{x} _ i\mathbf{x} _ j)(\sqrt 2 \mathbf{y} _ i\mathbf{y} _ j)}}+ {\color{Green}{\Sigma^n _ {i=1}(\sqrt 2 \mathbf{x} _ i)(\sqrt 2 \mathbf{y} _ i)}} + {\color{Purple}1}$
+
+所以$f(\mathbf{z})=\left[{\color{Red}{z^2 _ n}}, {\color{Blue}{z^2 _ {n-1},...,z^2 _ 1, \sqrt 2 z _ n z _ {n-1},...,\sqrt 2 z _2 z _1, \sqrt 2z _n}}{\color{Green}{,\sqrt 2z _ {n-1}}}{\color{Purple}{,1}}\right]$
+
+使用该函数, 设向量$\mathbf{X}=[1, 2, 3, 4], \mathbf{Y}=[5, 6, 7, 8]$,原输入空间的维度为 4, 通过映射后特征维度将达到$C ^4 _ {4+2}=15$, 验证$K(\mathbf{x},\mathbf{y})=f(\mathbf{x})\cdot f(\mathbf{y})$
+
+
+```python
+import numpy as np
+
+
+def f(Z):
+    """
+    映射函数, 时间复杂度 O(n^2)?
+    """
+    Z1 = Z ** 2
+    Z_shape = np.shape(Z)[1] - 1
+    Z0 = []
+    for i in range(Z_shape, 0, -1):
+        for j in range(i - 1, -1, -1):
+            xy = Z[0, i] * Z[0, j] * 2 ** 0.5
+            Z0.append(xy)
+    Z2 = np.array(Z0).reshape(1, -1)
+    Z3 = Z * 2 ** 0.5
+    return np.hstack((Z1 ,Z2, Z3, [[1]]))
+
+
+X = np.array([[1,2,3,4]])  # 4 维行向量
+Y = np.array([[5,6,7,8]])
+# 使用多项式核函数计算
+XY_poly = (X.dot(Y.T) + 1) ** 2
+print("使用多项式核函数计算的结果为：", XY_poly)
+# 使用映射的计算
+X1 = f(X)
+Y1 = f(Y)
+print("使用映射计算的结果为：", X1.dot(Y1.T))
+print("输出 X 的映射值为：\n",X1)
+print("输出 Y 的映射值为：\n",Y1)
+print("原输入空间的维度为：", np.shape(X)[1])
+print("映射后特征空间的维度为：", np.shape(X1)[1])
+```
+
+    使用多项式核函数计算的结果为：[[5041]]
+    使用映射计算的结果为：[[5041.]]
+    输出 X 的映射值为：
+     [[ 1.          4.          9.         16.         16.97056275 11.3137085
+       5.65685425  8.48528137  4.24264069  2.82842712  1.41421356  2.82842712
+       4.24264069  5.65685425  1.        ]]
+    输出 Y 的映射值为：
+     [[25.         36.         49.         64.         79.19595949 67.88225099
+      56.56854249 59.39696962 49.49747468 42.42640687  7.07106781  8.48528137
+       9.89949494 11.3137085   1.        ]]
+    原输入空间的维度为：4
+    映射后特征空间的维度为：15
+
+#### 10.4.3 高斯径向基核函数
+
+$$K(\mathbf{x},\mathbf{y})=e^{(-\frac{\left \|\mathbf{x}-\mathbf{y}\right \| ^2}{2\sigma^2})}$$
+
+此时映射函数映射之后是无穷维的
+
+### 10.6 SVM 原理
+
+SVM = Support Vector Machine 是支持向量
+
+SVC = Support Vector Classification 就是支持向量机用于分类
+
+SVR = Support Vector Regression.就是支持向量机用于回归分析
+
+参考: [python 机器学习 | SVM 算法介绍及实现](https://blog.csdn.net/Claire_chen_jia/article/details/110916001)
+
+#### 10.6.7 线性可分 SVM 的实现
+
+给定训练数据集, 其正例点是$x _ 1 = (4, 3),x _ 2 = (3, 3)$,负例点是$x _ 3 = (1, 1)$, 利用 sklearn 中的 SVC 库, 求出支持向量机, 支持向量机的个数、参数, 并对点$(4, 5)$、$(0, 0)$和$(1, 3)$进行预测.
+
+
+```python
+import numpy as np
+from sklearn.svm import SVC  # 导入 SVC 模型
+import matplotlib.pyplot as plt
+import matplotlib as mpl
+
+# 导入数据
+train_x = np.array([[4, 3], [3, 3], [1, 1]])
+train_y = np.array([1, 1, -1])  # 写出对应的类别
+print("训练集(最右一列为标签):\n", np.hstack((x, y.reshape(3, 1))))
+
+# 调用 SVC, 训练算法
+model = SVC(kernel="linear")  # 实例化, 设置的核函数为线性核函数
+model.fit(x, y)  # 用训练集数据训练模型, 和上一句配合使用
+
+# 预测数据
+test_x = np.array([[4, 5], [0, 0], [1, 3]])
+test_y = model.predict(test_x)
+print("预测数据[4, 5], [0, 0], [1, 3]的类型值分别是", test_y)
+
+# 相关方法和返回值
+w = model.coef_[0]  # 获取 w
+a = -w[0] / w[1]  # 斜率
+b = model.intercept_
+print("支持向量：\n",model.support_vectors_)  # 打印支持向量
+print("支持向量的标号：",model.support_)  # 打印支持向量的标号
+print("每类支持向量的个数：",model.n_support_)  # 每类支持向量的个数
+print("数据集 X 到分类超平面的距离：",model.decision_function(x))
+print("参数（法向量）w =", w)
+print("分类线的斜率 a =", a)
+print("分类平面截距 b：", b)  # 超平面的截距值（常数值）。
+print("系数",model.coef_)  # 每个特征系数（重要性），只有 LinearSVC 核函数可用
+print("超平面方程为{}x + {}y {} = 0".format(w[0], w[1], b[0]))
+
+# 绘图
+mpl.rcParams["font.sans-serif"] = ["Microsoft YaHei"]
+mpl.rcParams['axes.unicode_minus'] = False
+plt.figure()
+plt.axis("equal")
+for i in range(0, len(train_x)):
+    plt.scatter(train_x[i][0], train_x[i][1], color="red", marker=["x", "o"][int(train_y[i] * 0.5 + 0.5)])
+for i in range(0, len(test_x)):
+    plt.scatter(test_x[i][0], test_x[i][1], color="blue", marker=["x", "o"][int(test_y[i] * 0.5 + 0.5)])
+plt.plot(np.linspace(0, 4, 2), a * np.linspace(0, 4, 2) - b / w[1])
+l1 = plt.scatter(0, 0, color="red")  # 设置图例
+l2 = plt.scatter(0, 0, color='red')
+plt.legend(handles=[plt.scatter(0, 0, color="red", marker="o"), plt.scatter(0, 0, color="red", marker="x"),
+                    plt.scatter(0, 0, color="blue", marker="o"), plt.scatter(0, 0, color="blue", marker="x")],
+           labels=['训练集正例点', '训练集负例点', '测试集正例点', '测试集负例点'] , loc='best')  # 显示图例
+plt.show()
+```
+
+    训练集(最右一列为标签):
+     [[ 4  3  1]
+     [ 3  3  1]
+     [ 1  1 -1]]
+    预测数据[4, 5], [0, 0], [1, 3]的类型值分别是 [ 1 -1  1]
+    支持向量：
+     [[1. 1.]
+     [3. 3.]]
+    支持向量的标号：[2 1]
+    每类支持向量的个数：[1 1]
+    数据集 X 到分类超平面的距离：[ 1.5  1.  -1. ]
+    参数（法向量）w = [0.5 0.5]
+    分类线的斜率 a = -1.0
+    分类平面截距 b：[-2.]
+    系数 [[0.5 0.5]]
+    超平面方程为 0.5x + 0.5y -2.0 = 0
+
+
+
+
+![png](10.6.7.png)
+    
+
+
+### 10.7 非线性 SVM 与核函数的引入
+
+参考: [核函数与非线性支持向量机(SVM)](https://www.bilibili.com/video/BV17g4y1B7b9)
+
+#### 10.7.2 非线性 SVM 的实现
+
+##### (1) 调用相关的库
+
+
+```python
+#调用相关的库：
+import numpy as np
+from sklearn.svm import SVC
+import matplotlib.pyplot as plt
+from sklearn.datasets import make_circles  # 画圆圈的库
+import matplotlib as mpl
+
+mpl.rcParams['font.sans-serif'] = ['SimHei']
+```
+
+##### (2) 通过函数 plot_decision_boundary()实现散点图和支持向量的绘图
+
+
+```python
+def plot_decision_boundary (model, X, y, h=0.03, draw_SV=True, title='decision_boundary'):
+    """
+    画分类数据集
+    :param model:
+    :param X:
+    :param y:
+    :param h: 步长
+    :param draw_SV:
+    :param title: 标题
+    """
+    X_min, X_max = X[:,0].min() - 1, X[:,0].max() + 1
+    y_min, y_max = X[:,1].min() - 1, X[:, 1].max() + 1
+    # 画决策边界，需要有网格，利用 np.meshgrid()生成一个坐标矩阵
+    """
+    语法：X,Y = numpy.meshgrid(x, y)
+    输入的 x，y，就是网格点的横纵坐标列向量（非矩阵）
+    输出的 X，Y，就是坐标矩阵。
+    """
+    xx, yy = np.meshgrid(np.arange(X_min, X_max, h),np.arange(y_min, y_max, h))
+    # 预测坐标矩阵中每个点所属的类别
+    label_predict = model.predict(np.stack((xx.flat, yy.flat), axis=1))       
+    # 将结果放入彩色图中
+    label_predict = label_predict.reshape(xx.shape)   # 使之与输入的形状相同
+    plt.title(title)
+    plt.xlim(xx.min(), xx.max())
+    plt.ylim(yy.min(), yy.max())
+    plt.xticks(())  # 隐藏坐标轴
+    plt.yticks(())
+    # contour 和 contourf 都是画三维等高线图的，不同点在于 contour() 是绘制轮廓线，contourf()会填充轮廓。
+    plt.contourf(xx, yy, label_predict, alpha=0.5)  # 用 contourf()函数为坐标矩阵中不同类别填充不同颜色    
+    markers = ['x', '^', 'o']
+    colors = ['b', 'r', 'c'] # 蓝, 红, 青
+    # 对于一维数组或者列表，unique 函数去除其中重复的元素，
+    # 并按元素由大到小返回一个新的无元素重复的元组或者列表
+    classes = np.unique(y)
+    # 画出每一类数据的散点图
+    for label in classes:
+        plt.scatter(X[y == label][:, 0], X[y == label][:, 1], 
+                    c=colors[label], s=60, marker=markers[label])
+    # 标记出支持向量，将两类支持向量机用不同颜色表示出来
+    if draw_SV:
+        SV = model.support_vectors_  # 获取支持向量
+        n = model.n_support_[0]  # 第一类支持向量个数
+        plt.scatter(SV[:n, 0],SV[:n, 1], s=15, c='black', marker='o')
+        plt.scatter(SV[n:, 0],SV[n:, 1], s=15, c='g', marker='o')
+```
+
+##### (3) 生成模拟分类数据集，并画出数据集
+
+
+```python
+"""
+make_circles: 
+    n_samples：int，optional（默认值= 100）
+生成的总点数。如果是奇数，则内圆将比外圆具有一个点。
+    shuffle：bool，optional（默认值= True）
+是否洗牌样品。
+    noise：双倍或无（默认=无）
+高斯噪声的标准偏差加到数据上。
+    random_state：int，RandomState 实例或 None（默认）
+确定数据集重排和噪声的随机数生成。传递一个 int，用于跨多个函数调用的可重现输出。见术语表。
+    factor：0  < double < 1（默认值= .8）
+内圈和外圈之间的比例因子。
+"""
+X, y = make_circles(200,factor=0.1,noise=0.1) # 产生样本点
+plt.scatter(X[y == 0, 0], X[y == 0, 1], c='b', s=20, marker = 'x')  # 第一类
+plt.scatter(X[y == 1, 0], X[y == 1, 1], c='r', s=20, marker = '^')  # 第二类
+plt.xticks(())
+plt.yticks(())
+plt.title('数据集')
+plt.show()  # 画出数据集
+```
+
+
+![png](10.7.2.3.png)
+    
+
+
+##### (4) 通过调用 SVM 函数, 分别构造线性核函数和三阶多项式核函数 SVM, 把运算的结果用图形描绘出来
+
+
+```python
+plt.figure(figsize=(12, 10), dpi=200)
+# 使用线性核函数进行分类
+model_linear = SVC(C=1.0, kernel='linear')  # 实例化，设置的核函数为线性核函数
+model_linear.fit(X, y)  # 用训练集数据训练模型，和上一句配合使用
+
+# 画出使用线性核函数的分类边界
+plt.subplot(2, 2, 1)
+plot_decision_boundary(model_linear, X, y, title='线性核函数')  # 调用画图函数
+print("采用线性核函数生成的支持向量个数：", model_linear.n_support_)
+
+# 使用多项式核函数进行分类
+model_poly = SVC(C=1.0, kernel='poly', degree=3, gamma="auto") # 实例化，设置的核函数为多项式核函数
+model_poly.fit(X, y)  # 用训练集数据训练模型
+# 画出使用多项式核函数的分类边界
+plt.subplot(2, 2, 2)
+plot_decision_boundary(model_poly, X, y, title='多项式核函数')  # 调用画图函数
+print("采用多项式函数生成的支持向量个数：", model_poly.n_support_)
+plt.show()
+```
+
+    采用线性核函数生成的支持向量个数：[100 100]
+    采用多项式函数生成的支持向量个数：[100 100]
+
+
+
+
+![png](10.7.2.4.png)
+    
+
+
+##### (5) 通过调用 SVC(), 分别构造 4 个高斯径向基核函数的 SVM, 对应的分别为 10, 1, 0.1, 0.01, 把运算的结果用图形描绘出来
+
+
+```python
+plt.figure(figsize=(12, 10), dpi=200)
+# enumerate() 函数用于将一个可遍历的数据对象(如列表、元组或字符串)组合为一个索引序列，
+# 同时列出数据和数据下标，一般用在 for 循环当中。
+for j, gamma in enumerate((10, 1, 0.1, 0.01)):
+    plt.subplot(2, 2, j+1)
+    model_rtf= SVC(C=1.0, kernel='rbf', gamma=gamma)
+    model_rtf.fit(X,y)  # 高斯核函数
+    #调用画图函数
+    plot_decision_boundary(model_rtf, X, y, title='rbf 函数，'
+                                                  '参数 gamma='+str(gamma))
+    print("rbf 函数，参数 gamma=",str(gamma),"支持向量个数：",model_rtf.n_support_)
+plt.show()
+```
+
+    rbf 函数，参数 gamma= 10 支持向量个数：[30  7]
+    rbf 函数，参数 gamma= 1 支持向量个数：[9 8]
+    rbf 函数，参数 gamma= 0.1 支持向量个数：[96 96]
+    rbf 函数，参数 gamma= 0.01 支持向量个数：[100 100]
+
+
+
+
+![png](10.7.2.5.png)
+    
+
+
+##### (6) 引申
+
+
+```python
+from sklearn.model_selection import GridSearchCV
+
+tuned_parameters = [{'kernel': ['rbf'], 'gamma': [1, 0.1, 0.01],'C': [0.1, 1, 10]},
+                 {'kernel': ['linear'], 'C': [0.1, 1, 10]},
+                 {'kernel': ['poly'],'gamma': [1, 0.1, 0.01],
+                  'C': [0.1, 1, 10]}]
+"""
+GridSearchCV()函数能实现自动调参, 把参数输进去, 就能给出最优的结果和参数
+https://blog.csdn.net/weixin_41988628/article/details/83098130
+"""
+model_grid = GridSearchCV(SVC(), tuned_parameters, cv=5)
+model_grid.fit(X, y)
+print("The best parameters are %s with a score of %0.2f"
+      % (model_grid.best_params_, model_grid.best_score_))
+```
+
+    The best parameters are {'C': 0.1, 'gamma': 1, 'kernel': 'rbf'} with a score of 1.00
+
+
+### 10.8 综合实例——利用 SVM 构建分类问题
+
+#### 准备工作: 导入需要的模块
+
+
+```python
+import numpy as np
+from sklearn import svm
+from sklearn.svm import SVC  # 导入 SVM 模型
+from sklearn.model_selection import train_test_split  # 导入测试库
+from sklearn.datasets import load_wine  # 导入 wine 数据集
+from time import time
+```
+
+#### (1)导入数据集
+
+要将数据转换为 SVM 支持的数据格式: \[ 1 类别标号 \] \[ 特征 1 \] : \[ 特征值 \] \[ 特征 2 \] : \[ 特征值 \]...
+
+sklearn 自带经典的 wine 数据集, 通过 load_wine()函数导入
+
+wine 数据集: https://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_wine.html
+
+| 属性     | 值           |
+| :------- | :----------- |
+| 类       | 3            |
+| 每类样品 | \[59,71,48\] |
+| 样品总数 | 178          |
+| 维度     | 13           |
+
+
+```python
+wine = load_wine()
+wine_data = wine.data
+wine_label = wine.target
+wine_data, wine_label
+```
+
+
+
+
+    (array([[1.423e+01, 1.710e+00, 2.430e+00, ..., 1.040e+00, 3.920e+00,
+             1.065e+03],
+            [1.320e+01, 1.780e+00, 2.140e+00, ..., 1.050e+00, 3.400e+00,
+             1.050e+03],
+            [1.316e+01, 2.360e+00, 2.670e+00, ..., 1.030e+00, 3.170e+00,
+             1.185e+03],
+            ...,
+            [1.327e+01, 4.280e+00, 2.260e+00, ..., 5.900e-01, 1.560e+00,
+             8.350e+02],
+            [1.317e+01, 2.590e+00, 2.370e+00, ..., 6.000e-01, 1.620e+00,
+             8.400e+02],
+            [1.413e+01, 4.100e+00, 2.740e+00, ..., 6.100e-01, 1.600e+00,
+             5.600e+02]]),
+     array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            2, 2]))
+
+
+
+#### (2) 数据预处理
+
+使用数据预处理中标准化类 StandardScaler 对数据进行标准化, 以避免数据存在严重的量纲不一致的问题
+
+数据的标准化(normalization)是将数据按比例缩放，使之落入一个小的特定区间。在某些比较和评价的指标处理中经常会用到，去除数据的单位限制，将其转化为无量纲的纯数值，便于不同单位或量级的指标能够进行比较和加权。
+
+
+```python
+from sklearn.preprocessing import StandardScaler
+
+wine_data = StandardScaler().fit_transform(wine_data)  # 对数据进行标准化
+wine_data
+```
+
+
+
+
+    array([[ 1.51861254, -0.5622498 ,  0.23205254, ...,  0.36217728,
+             1.84791957,  1.01300893],
+           [ 0.24628963, -0.49941338, -0.82799632, ...,  0.40605066,
+             1.1134493 ,  0.96524152],
+           [ 0.19687903,  0.02123125,  1.10933436, ...,  0.31830389,
+             0.78858745,  1.39514818],
+           ...,
+           [ 0.33275817,  1.74474449, -0.38935541, ..., -1.61212515,
+            -1.48544548,  0.28057537],
+           [ 0.20923168,  0.22769377,  0.01273209, ..., -1.56825176,
+            -1.40069891,  0.29649784],
+           [ 1.39508604,  1.58316512,  1.36520822, ..., -1.52437837,
+            -1.42894777, -0.59516041]])
+
+
+
+#### (3) 分离数据
+
+将数据划分为训练集和测试集, 训练集: 测试集 = 80%: 20% 
+
+[sklearn 的 train_test_split()各函数参数含义解释（非常全）](https://www.cnblogs.com/Yanjy-OnlyOne/p/11288098.html)
+
+
+```python
+wine_train, wine_test, wine_train_label, wine_test_label = \
+train_test_split(wine_data, wine_label, test_size=0.2, random_state=100)
+```
+
+#### (4) 以默认的 SVM 参数, 对训练数据集进行训练, 产生训练模型(以默认的 rbf 为例)
+
+
+```python
+time0 = time()
+model = SVC()
+model.fit(wine_train, wine_train_label)
+time1 = time()
+```
+
+#### (5) 结果及分析
+
+
+```python
+def result_show_analyse(test,test_label):
+    """
+    预测结果并进行分析
+    """
+    from datetime import datetime
+    
+    # 1、预测结果
+    print("---------测试集的结果--------")
+    test_pred = model.predict(test)
+    print("测试集的真实结果为：\n", test_label)
+    print("测试集的预测结果为：\n", test_pred)
+    # 求出预测和真实一样的数目
+    true = np.sum(test_pred == test_label)
+    print("预测对的结果数目为：", true)
+    print("预测错的结果数目为：", test_label.shape[0] - true)
+    print("训练时间：", datetime.fromtimestamp(time1-time0).strftime("%M:%S:%f"))
+    # 2、结果分析，给出准确率、精确率、召回率、F1 值、Cohen’s Kappa 系数
+    print("---------测试集的结果分析--------")
+    print("使用 SVM 预测 wine 数据的准确率是：%f"
+              % (accuracy_score(test_label, test_pred)))
+    print("使用 SVM 预测 wine 数据的精确率是：%f"
+              % (precision_score(test_label, test_pred, average="macro")))
+        # 对多分类要加 average="macro"
+    print("使用 SVM 预测 wine 数据的召回率是：%f"
+              % (recall_score(test_label, test_pred, average="macro")))
+    print("使用 SVM 预测 wine 数据的 F1 值是：%f"
+              % (f1_score(test_label, test_pred, average="macro")))
+    print("使用 SVM 预测 wine 数据的 Cohen’s Kappa 系数是：%f"
+              % (cohen_kappa_score(test_label, test_pred)))
+    print("使用 SVM 预测 wine 数据的分类报告为：\n",
+              classification_report(test_label, test_pred))
+    # 3、画出预测结果和真实结果对比的图
+    print("---------测试集的结果图--------")
+    plt.plot(test_pred,'bo', label="预测")
+    plt.plot(test_label,'r*', label="真实")
+    plt.xlabel(r'测试集样本',color='r', fontsize=18)
+    plt.ylabel(r'类别标签',color='r', fontsize=18, rotation=360)
+    plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+    plt.title('测试集的实际分类和预测分类图', fontsize=18)
+    plt.show()
+    
+    
+# 调用结果函数
+# 调用相关库
+from sklearn.metrics import accuracy_score,precision_score, \
+        recall_score,f1_score,cohen_kappa_score
+from sklearn.metrics import classification_report
+import matplotlib.pyplot as plt
+
+# 图表中显示中文
+from pylab import *
+
+mpl.rcParams['font.sans-serif'] = ['SimHei']
+mpl.rcParams['axes.unicode_minus'] = False
+result_show_analyse(wine_test,wine_test_label)  # 调用结果模块
+```
+
+    ---------测试集的结果--------
+    测试集的真实结果为：
+     [1 2 0 1 2 2 1 1 1 1 2 1 2 2 2 0 2 0 1 0 2 0 1 1 0 0 1 1 1 2 2 1 0 1 2 2]
+    测试集的预测结果为：
+     [1 2 0 1 1 2 1 1 1 1 2 1 2 2 2 0 2 0 1 0 2 0 1 1 0 0 1 1 1 2 2 1 0 1 2 2]
+    预测对的结果数目为：35
+    预测错的结果数目为：1
+    训练时间：00:00:003162
+    ---------测试集的结果分析--------
+    使用 SVM 预测 wine 数据的准确率是：0.972222
+    使用 SVM 预测 wine 数据的精确率是：0.979167
+    使用 SVM 预测 wine 数据的召回率是：0.974359
+    使用 SVM 预测 wine 数据的 F1 值是：0.975914
+    使用 SVM 预测 wine 数据的 Cohen’s Kappa 系数是：0.956938
+    使用 SVM 预测 wine 数据的分类报告为：
+                   precision    recall  f1-score   support
+    
+               0       1.00      1.00      1.00         8
+               1       0.94      1.00      0.97        15
+               2       1.00      0.92      0.96        13
+    
+        accuracy                           0.97        36
+       macro avg       0.98      0.97      0.98        36
+    weighted avg       0.97      0.97      0.97        36
+    
+    ---------测试集的结果图--------
+
+
+
+
+![png](10.8.5.png)
+    
+
+
+[【Sklearn】sklearn.metrics 中的评估方法](https://blog.csdn.net/tttwister/article/details/81138865)
+
+通常以关注的类为正类，其他类为负类。分类器在测试数据集上预测要么正确要么不正确。4 种情况出现的总数分别记作：
+
+| 名称                 | 说明             |
+| :------------------- | :--------------- |
+| tp（true positive）| 将正类预测为正类 |
+| fn（false negative）| 将正类预测为负类 |
+| fp（false positive）| 将负类预测为正类 |
+| tn（true negative）| 将负类预测为负类 |
+
+分类 0 混淆矩阵:
+
+|                 | 预测属于分类 0 | 预测不属于分类 0 |
+| :-------------- | :------------ | :-------------- |
+| 实际属于分类 0   | tp = 8        | fn = 0          |
+| 实际不属于分类 0 | fp = 0        | tn = 28         |
+
+| precision              | recall                 | f1-score            |
+| :--------------------- | :--------------------- | :------------------ |
+| $P=\frac{tp}{tp+fp}=1$ | $R=\frac{tp}{tp+fn}=1$ | $\frac{2PR}{P+R}=1$ |
+
+
+分类 1 混淆矩阵:
+
+|                 | 预测属于分类 1 | 预测不属于分类 1 |
+| :-------------- | :------------ | :-------------- |
+| 实际属于分类 1   | tp = 15       | fn = 0          |
+| 实际不属于分类 1 | fp = 1        | tn = 20         |
+
+| precision                                 | recall                 | f1-score                               |
+| :---------------------------------------- | :--------------------- | :------------------------------------- |
+| $P=\frac{tp}{tp+fp}=\frac{15}{16}=0.9375$ | $R=\frac{tp}{tp+fn}=1$ | $\frac{2PR}{P+R}=\frac{30}{31}=0.9677$ |
+
+分类 2 混淆矩阵: 
+
+|                 | 预测属于分类 2 | 预测不属于分类 2 |
+| :-------------- | :------------ | :-------------- |
+| 实际属于分类 2   | tp = 12       | fn = 1          |
+| 实际不属于分类 2 | fp = 0        | tn = 23         |
+
+| precision              | recall                                   | f1-score                             |
+| :--------------------- | :--------------------------------------- | :----------------------------------- |
+| $P=\frac{tp}{tp+fp}=1$ | $R=\frac{tp}{tp+fn}=\frac{12}{13}=0.923$ | $\frac{2PR}{P+R}=\frac{24}{25}=0.96$ |
+
+#### (6) 分类结果的混淆矩阵及图表显示
+
+
+```python
+from sklearn import metrics
+
+
+def cm_plot(y,yp):
+    conf_mx = metrics.confusion_matrix(y, yp) # 模型对于测试集的混淆矩阵
+    print("测试集的混淆矩阵：\n",conf_mx)
+    # 画混淆矩阵图，配色风格使用 cm.Greens
+    # (太丑了, 我要用 Oranges, https://blog.csdn.net/weixin_51111267/article/details/122605388)
+    plt.matshow(conf_mx,cmap=plt.cm.Oranges)
+    plt.colorbar()# 颜色标签
+    for x in range(len(conf_mx)):
+        for y in range(len(conf_mx)):
+            plt.annotate(conf_mx[x,y],xy=(x,y),horizontalalignment='center',
+                         verticalalignment='center')
+            plt.ylabel('True label')# 坐标轴标签
+            plt.xlabel('Predicted label')# 坐标轴标签
+    return plt
+
+
+wine_test_pred=model.predict(wine_test)
+cm_plot(wine_test_label, wine_test_pred).show()
+```
+
+    测试集的混淆矩阵：
+     [[ 8  0  0]
+     [ 0 15  0]
+     [ 0  1 12]]
+
+
+
+
+![png](10.8.6.png)
+    
+
+
+### 10.9 高手点拨
+
+#### 10.9.1 SMO 算法
+
+SVM 对应的优化算法, 以牺牲精度换取时间
+
+Sequential Minimal Optimism
+
+序列 最小 最优化 算法
+
+#### 10.9.3 核函数的选取
+
+对于高斯径向基核函数, 可以通过求准确率, 画学习曲线来调整 gamma 值
+
+
+```python
+#取不同 gamma 值得到的准确率
+score = []
+gamma_range = np.logspace(-10, 1, 50) # 得到不同的 gamma 值即对数刻度上均匀间隔的数
+for i in gamma_range:
+    model = SVC(kernel="rbf",gamma = i, cache_size=5000)
+    model.fit(wine_train, wine_train_label)
+    score_gamma = model.score(wine_test, wine_test_label)
+    score.append(score_gamma)
+print("最大的准确率为：",max(score))
+print("对应的 gamma 值", gamma_range[score.index(max(score))])
+plt.xlabel("gamma 取值")
+plt.ylabel("准确率")
+plt.title("gamma 的学习曲线")
+plt.plot(gamma_range,score)
+plt.show()
+```
+
+    最大的准确率为：1.0
+    对应的 gamma 值 0.020235896477251554
+
+
+
+
+![png](10.9.3.png)
+    
+
+
+#### 10.9.4 多分类 ROC 曲线的绘制
+
+[【小学生都会的机器学习】一个视频帮各位总结好了混淆矩阵、召回率、精准率、ROC 等...](https://www.bilibili.com/video/BV1Sq4y157LP)
+
+[ROC 曲线绘制原理及如何用 SPSS 绘制 ROC 曲线](https://zhuanlan.zhihu.com/p/147919317)
+
+ROC 曲线越接近左上角, 代表模型性能越好
+
+
+```python
+from itertools import cycle
+from sklearn.metrics import roc_curve, auc
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import label_binarize
+from numpy import interp
+
+
+def plot_roc(test, test_label, test_pred):
+    """
+    :param test: 测试样本的数据
+    :param test_label: 测试样本的标签
+    :param test_pred: 测试样本的预测值
+    """
+    class_num = sum(unique(test_label))  # 类别数
+    Y_pred = test_pred
+    # 对输出进行二值化
+    # Y_label 样例真实标签，Y_pred 学习器预测的标签
+    Y_label = label_binarize(test_label, classes=[i for i in range(class_num)])
+    Y_pred = label_binarize(Y_pred, classes=[i for i in range(class_num)])
+    # 计算每一类的 ROC
+    # dict() 用于创建一个字典
+    fpr = dict()  # 假正例率（False Positive Rate , FPR）
+    tpr = dict()  # 真正例率（True Positive Rate , TPR）
+    roc_auc = dict()  # ROC 曲线下方的面积
+    for i in range(class_num):
+        fpr[i], tpr[i], _ = roc_curve(Y_label[:, i], Y_pred[:, i])
+        roc_auc[i] = auc(fpr[i], tpr[i])
+    # 计算 micro-average ROC 曲线和 ROC 面积
+    fpr["micro"], tpr["micro"], _ = roc_curve(Y_label.ravel(), Y_pred.ravel())
+    roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])
+
+    # 计算 macro-average ROC 曲线 and ROC 面积
+    # 第一步：汇总所有误报率 aggregate all false positive rates
+    all_fpr = np.unique(np.concatenate([fpr[i] for i in range(class_num)]))
+    
+    # 第二步：在此点插值所有 ROC 曲线 interpolate all ROC curves at this points
+    mean_tpr = np.zeros_like(all_fpr)
+    for i in range(class_num):
+        mean_tpr += interp(all_fpr, fpr[i], tpr[i])
+    # 第三步：最后对其进行平均并计算 AUC Finally average it and compute AUC
+    mean_tpr /= class_num
+    fpr["macro"] = all_fpr
+    tpr["macro"] = mean_tpr
+    roc_auc["macro"] = auc(fpr["macro"], tpr["macro"])
+    # 画出具体的某一类的 ROC 曲线，如第一类
+    plt.figure()
+    lw = 2
+    plt.plot(fpr[1], tpr[2], color="darkorange",
+             lw=lw, label="ROC curve (area = %0.2f)" % roc_auc[1])
+    plt.plot([0, 1], [0, 1], color="navy", lw=lw, linestyle="--")
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel("假正例率 False Positive Rate（FPR）")
+    plt.ylabel("真正例率 True Positive Rate（TPR）")
+    plt.title("Receiver operating characteristic example")
+    plt.legend(loc="lower right")
+    plt.show()
+
+    # 画出所有类的 ROC 曲线
+    lw = 2  # line width
+    plt.figure()
+    plt.plot(fpr["micro"], tpr["micro"],
+             label="micro-average ROC 曲线 (area = {0:0.2f})"
+                   "".format(roc_auc["micro"]),
+             color="deeppink", linestyle=":", linewidth=4)
+
+    plt.plot(fpr["macro"], tpr["macro"],
+             label="macro-average ROC 曲线 (area = {0:0.2f})"
+                   "".format(roc_auc["macro"]),
+             color="navy", linestyle=":", linewidth=4)
+    colors = cycle(["aqua", "darkorange", "cornflowerblue"])
+    for i, color in zip(range(class_num), colors):
+        plt.plot(fpr[i], tpr[i], color=color, lw=lw,
+                 label="ROC curve of class {0} (area = {1:0.2f})"
+                       "".format(i, roc_auc[i]))
+
+    plt.plot([0, 1], [0, 1], "k--", lw=lw)
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel("假正例率 False Positive Rate（FPR）")
+    plt.ylabel("真正例率 True Positive Rate（TPR）")
+    plt.title('Some extension of Receiver operating characteristic'
+              'to multi-class')
+    plt.legend(loc="lower right")
+    plt.show()
+
+
+# 调用画 ROC 曲线的函数
+model = SVC()  # 实例化，设置模型参数
+model.fit(wine_train, wine_train_label)
+wine_test_pred = model.predict(wine_test)
+plot_roc(wine_test, wine_test_label, wine_test_pred)
+```
+
+
+![png](10.9.4.1.png)
+    
+
+
+
+
+![png](10.9.4.2.png)
+    
+
+
+#### 10.10 习题 构建基于 iris 数据集的 SVM 分类模型
+
+https://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_iris.html
+
+
+```python
+import numpy as np
+from sklearn import svm
+from sklearn.svm import SVC
+from sklearn.model_selection import train_test_split
+from sklearn.datasets import load_iris
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import classification_report
+import matplotlib.pyplot as plt
+import matplotlib as mpl
+from time import time
+
+# (1) 读取数据集, 区分标签和数据
+iris = load_iris()
+iris_data = iris.data
+iris_label = iris.target
+# (2) 标准化数据集
+iris_data = StandardScaler().fit_transform(iris_data)
+# (3) 将数据集划分为训练集和测试集
+iris_train, iris_test, iris_train_label, iris_test_label = \
+train_test_split(iris_data, iris_label, test_size=0.2)
+# (4) 构建 SVM 模型
+model = SVC()
+model.fit(iris_train, iris_train_label)
+iris_test_pred = model.predict(iris_test)
+# (5) 输出预测测试集结果, 评价分类模型性能, 输出测试报告
+print(classification_report(iris_test_label, iris_test_pred))
+mpl.rcParams['font.sans-serif'] = ['SimHei']
+mpl.rcParams['axes.unicode_minus'] = False
+print("---------测试集的结果图--------")
+plt.plot(iris_test_pred,'bo', label="预测")
+plt.plot(iris_test_label,'r*', label="真实")
+plt.xlabel(r'测试集样本',color='r', fontsize=18)
+plt.ylabel(r'类别标签',color='r', fontsize=18, rotation=360)
+plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+plt.title('测试集的实际分类和预测分类图', fontsize=18)
+plt.show()
+```
+
+                  precision    recall  f1-score   support
+    
+               0       1.00      1.00      1.00         9
+               1       0.92      0.92      0.92        13
+               2       0.88      0.88      0.88         8
+    
+        accuracy                           0.93        30
+       macro avg       0.93      0.93      0.93        30
+    weighted avg       0.93      0.93      0.93        30
+    
+    ---------测试集的结果图--------
+
+
+
+
+![png](10.10.png)
