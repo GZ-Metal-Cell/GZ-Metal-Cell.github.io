@@ -1,0 +1,478 @@
+---
+title: OS-程序与进程
+date: Sat Oct 18 2025 09:48:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - 南京大学《操作系统原理》
+categories: 课程
+description: 学习自 B 站 UP 主绿导师原谅你了。
+---
+
+
+# 资源
+
+-   [2025 南京大学操作系统原理 哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1XZAbeqEyt/)
+-   [Yanyan's Wiki](https://jyywiki.cn/)
+-   [2025春季 操作系统 | Xintao Niu (钮鑫涛)](https://niuxintao.github.io/courses/2025Spring-OS/main/)
+
+# 正文
+
+## 5. 程序与进程
+
+**内容回顾**
+
+- **应用视角的操作系统**
+  - 操作系统 = 对象 + API
+
+- **硬件视角的操作系统**
+  - 操作系统 = 程序
+
+- **数学视角的操作系统**
+  - 操作系统 = 状态机
+
+**正片开始**
+
+- **虚拟化**
+
+  - One of the most fundamental abstractions that the OS provides to users: the **process**
+
+  - 把物理计算机 “抽象” 成 “虚拟计算机”
+    - 程序好像独占计算机运行
+
+- **进入 “每一讲都实现一点什么” 的模式**
+  - 每次课都感到编程能力的增长
+
+### 5.1 程序和进程
+
+```c
+#include <unistd.h>
+
+int main() {
+    while (1) {
+        write(1, "Hello, World!\n", 13);
+    }
+}
+```
+
+> 这是一段 **C 语言代码**，使用系统调用 `write()` 向文件描述符 `1`（标准输出）不断写入 `"Hello, World!\n"`。
+
+```python
+def main():
+    while True:
+        sys_write("Hello, World!\n")
+```
+
+> 无论是 C 还是 Python，本质上程序都在调用底层系统调用（syscall）来与操作系统交互。
+
+- 程序是状态机的**静态描述**
+  - 描述了所有可能的程序状态
+  - 程序（动态）运行起来，就成了**进程**（进行中的程序）
+
+> ​	当我们执行这段程序（例如在命令行输入 `./a.out`），操作系统会做以下几件事：
+>
+> 1. **从磁盘读取程序文件**到内存；
+>
+> 2. **为它分配资源**（内存空间、寄存器、文件描述符等）；
+>
+> 3. **创建一个进程控制块 (PCB)**，记录该程序的执行状态；
+>
+> 4. **启动 CPU 执行第一条指令**。
+>
+>    此时，程序不再是静态的文本，而是一个“**正在运行的实例**”，即——**进程（Process）**。
+>
+> 可以这么比喻：
+>
+> | 概念           | 类比                 |
+> | -------------- | -------------------- |
+> | 程序 (Program) | 食谱——写在书上的菜谱 |
+> | 进程 (Process) | 正在厨房里做菜的厨师 |
+
+**进程：程序的运行时状态随时间的演进**
+
+- 除了程序状态，操作系统还会保存一些额外的 (只读) 状态
+- 我们可以**探索**：试图获取当前进程的各种信息
+
+**我们编写一个 Linux C 程序，可以获取到哪些关于当前进程的信息？**
+
+| 信息类别 | 示例函数/接口                          | 说明                 |
+| -------- | -------------------------------------- | -------------------- |
+| 身份信息 | `getuid()`, `geteuid()`                | 用户/组 ID           |
+| 进程标识 | `getpid()`, `getppid()`                | 进程层次结构         |
+| 工作目录 | `getcwd()`                             | 当前目录             |
+| 内存信息 | `/proc/self/maps`, `/proc/self/status` | 内存布局与使用       |
+| CPU使用  | `getrusage()`                          | 用户态/内核态CPU时间 |
+| 打开文件 | `/proc/self/fd/`                       | 文件描述符列表       |
+| 优先级   | `getpriority()`                        | 进程调度优先级       |
+| 线程信息 | `/proc/self/status`                    | `Threads` 字段       |
+
+```c
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/resource.h>
+#include <limits.h>
+#include <stdlib.h>
+
+int main() {
+    char cwd[PATH_MAX];
+    struct rusage usage;
+
+    printf("===== Basic Process Info =====\n");
+    printf("PID: %d\n", getpid());
+    printf("PPID: %d\n", getppid());
+    printf("PGID: %d\n", getpgrp());
+    printf("SID: %d\n", getsid(0));
+
+    printf("\n===== Identity Info =====\n");
+    printf("Real UID: %d\n", getuid());
+    printf("Effective UID: %d\n", geteuid());
+    printf("Real GID: %d\n", getgid());
+    printf("Effective GID: %d\n", getegid());
+
+    printf("\n===== Working Directory =====\n");
+    if (getcwd(cwd, sizeof(cwd)) != NULL)
+        printf("CWD: %s\n", cwd);
+    else
+        perror("getcwd");
+
+    printf("\n===== Resource Usage =====\n");
+    getrusage(RUSAGE_SELF, &usage);
+    printf("User CPU time: %ld.%06lds\n", usage.ru_utime.tv_sec, usage.ru_utime.tv_usec);
+    printf("System CPU time: %ld.%06lds\n", usage.ru_stime.tv_sec, usage.ru_stime.tv_usec);
+    printf("Max resident set size: %ld KB\n", usage.ru_maxrss);
+
+    printf("\n===== Priority =====\n");
+    int prio = getpriority(PRIO_PROCESS, 0);
+    printf("Nice value: %d\n", prio);
+
+    printf("\n===== Memory Map (/proc/self/maps) =====\n");
+    FILE *maps = fopen("/proc/self/maps", "r");
+    if (maps) {
+        char line[256];
+        int count = 0;
+        while (fgets(line, sizeof(line), maps) && count++ < 10)  // Only print first 10 lines
+            printf("%s", line);
+        fclose(maps);
+    } else {
+        perror("fopen /proc/self/maps");
+    }
+
+    printf("\n===== Status (/proc/self/status) =====\n");
+    FILE *status = fopen("/proc/self/status", "r");
+    if (status) {
+        char line[256];
+        int count = 0;
+        while (fgets(line, sizeof(line), status) && count++ < 15) // Only print first 15 lines
+            printf("%s", line);
+        fclose(status);
+    } else {
+        perror("fopen /proc/self/status");
+    }
+
+    printf("\n===== Open File Descriptors =====\n");
+    system("ls -l /proc/self/fd");
+
+    return 0;
+}
+```
+
+```
+===== Basic Process Info =====
+PID: 456327
+PPID: 456212
+PGID: 456327
+SID: 456212
+
+===== Identity Info =====
+Real UID: 1001
+Effective UID: 1001
+Real GID: 1001
+Effective GID: 1001
+
+===== Working Directory =====
+CWD: /home/gz/C
+
+===== Resource Usage =====
+User CPU time: 0.000730s
+System CPU time: 0.001461s
+Max resident set size: 2480 KB
+
+===== Priority =====
+Nice value: 0
+
+===== Memory Map (/proc/self/maps) =====
+6125a0e58000-6125a0e59000 r--p 00000000 fd:01 1377017                    /home/gz/C/self_info
+6125a0e59000-6125a0e5a000 r-xp 00001000 fd:01 1377017                    /home/gz/C/self_info
+6125a0e5a000-6125a0e5b000 r--p 00002000 fd:01 1377017                    /home/gz/C/self_info
+6125a0e5b000-6125a0e5c000 r--p 00002000 fd:01 1377017                    /home/gz/C/self_info
+6125a0e5c000-6125a0e5d000 rw-p 00003000 fd:01 1377017                    /home/gz/C/self_info
+6125a29f6000-6125a2a17000 rw-p 00000000 00:00 0                          [heap]
+77f280400000-77f280428000 r--p 00000000 fd:01 18904                      /usr/lib/x86_64-linux-gnu/libc.so.6
+77f280428000-77f2805b0000 r-xp 00028000 fd:01 18904                      /usr/lib/x86_64-linux-gnu/libc.so.6
+77f2805b0000-77f2805ff000 r--p 001b0000 fd:01 18904                      /usr/lib/x86_64-linux-gnu/libc.so.6
+77f2805ff000-77f280603000 r--p 001fe000 fd:01 18904                      /usr/lib/x86_64-linux-gnu/libc.so.6
+
+===== Status (/proc/self/status) =====
+Name:   self_info
+Umask:  0002
+State:  R (running)
+Tgid:   456327
+Ngid:   0
+Pid:    456327
+PPid:   456212
+TracerPid:      0
+Uid:    1001    1001    1001    1001
+Gid:    1001    1001    1001    1001
+FDSize: 256
+Groups: 27 1001
+NStgid: 456327
+NSpid:  456327
+NSpgid: 456327
+
+===== Open File Descriptors =====
+total 0
+lrwx------ 1 gz gz 64 Oct 18 02:10 0 -> /dev/pts/1
+lrwx------ 1 gz gz 64 Oct 18 02:10 1 -> /dev/pts/1
+lrwx------ 1 gz gz 64 Oct 18 02:10 2 -> /dev/pts/1
+lr-x------ 1 gz gz 64 Oct 18 02:10 3 -> /proc/456328/fd
+```
+
+### 5.2 进程（状态机管理）
+
+> 在计算机中：
+>
+> - 程序运行起来后，CPU、内存、文件描述符、寄存器、信号处理函数等，都是“状态”的一部分；
+> - 操作系统要同时管理成千上万个这样的“状态机”。
+>
+> 所以我们可以这样看：
+>
+> ​	“进程管理”其实就是“状态机的创建、复制、切换和销毁”。
+
+**操作系统 = 状态机的管理者**
+
+- 进程管理 = 状态机管理
+
+**一个直观的想法**
+
+- 创建状态机：`spawn(path, argv)`
+- 销毁状态机: `_exit()`
+  - 这是一个合理的设计 (例子：Windows)
+
+**UNIX 的答案**
+
+- 复制状态机：`fork()`
+  - 做一份状态机完整的复制（内存、寄存器现场）
+- 复位状态机：`execve()`
+
+#### `fork()` 的行为
+
+**立即复制状态机**
+
+- 包括**所有状态**的完整拷贝
+  - 寄存器 & 每一个字节的内存
+  - Caveat: 进程在操作系统里也有状态: ppid, 文件, 信号, ...
+    - **小心这些状态的复制行为**
+  - 复制失败返回 -1
+    - errno 会返回错误原因 (man fork)
+
+> 完全一样的部分：
+>
+> - 所有寄存器、栈、堆、全局变量
+> - 所有打开的文件描述符（共享引用）
+> - 信号处理状态
+>
+> 不完全一样的部分：
+>
+> - PID、PPID 会变化
+> - 内核中的调度状态不同
+
+**如何区分两个状态机？**
+
+- 新创建进程返回 0
+- 执行 fork 的进程返回子进程的进程号——“父子关系”
+
+**进程的创建关系形成了进程树**
+
+- $A→B→C$，如果 $B$ 终止了……$C$ 的 ppid 是什么？
+  - 看似简单：我们 “往上提” 一层就行
+  - 实际复杂：
+    - 子进程结束会通知父进程
+      - 通过 SIGCHLD 信号
+      - 父进程可以捕获这个信号（参考 testkit 的实现）
+    - “往上提” 就发错人了
+
+> “**孤儿进程 (orphan process)**” 行为
+>
+> ​	当父进程 B 结束后，它的子进程 C 会被 **init 进程（PID 1 或 systemd）接管**，所以 C 的 `ppid` 会变成 1（或 systemd 的 PID，通常也是 1）。
+
+```c
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/wait.h>
+
+int main() {
+    pid_t pidB, pidC;
+
+    // A -> 创建 B
+    pidB = fork();
+
+    if (pidB == 0) {
+        // 进程 B
+        printf("B: PID=%d, PPID=%d\n", getpid(), getppid());
+
+        pidC = fork();  // B -> 创建 C
+
+        if (pidC == 0) {
+            // 进程 C
+            printf("  C: PID=%d, PPID=%d (created by B)\n", getpid(), getppid());
+            sleep(3); // 等待 B 结束
+            printf("  C: After B exits, PPID=%d (should be 1 or systemd)\n", getppid());
+        } else if (pidC > 0) {
+            // B 立即退出，不 wait 子进程
+            printf("B: exiting now, leaving C running...\n");
+            _exit(0);
+        } else {
+            perror("fork C failed");
+        }
+    } 
+    else if (pidB > 0) {
+        // 进程 A
+        printf("A: PID=%d created B=%d\n", getpid(), pidB);
+        wait(NULL); // 等待 B 结束
+        printf("A: B has exited.\n");
+        sleep(5);   // 保持 A 活着一会，方便观察
+    } 
+    else {
+        perror("fork B failed");
+    }
+
+    return 0;
+}
+```
+
+```
+A: PID=458617 created B=458618
+B: PID=458618, PPID=458617
+B: exiting now, leaving C running...
+  C: PID=458619, PPID=458618 (created by B)
+A: B has exited.
+  C: After B exits, PPID=1 (should be 1 or systemd)
+```
+
+**理解 fork**
+
+```c
+pid_t x = fork();
+pid_t y = fork();
+printf("%d %d\n", x, y);
+```
+
+**一些重要问题**
+
+- 到底创建了几个状态机？4 个
+- pid 分别是多少？
+  - “状态机视角” 帮助我们严格理解
+
+```mermaid
+flowchart TD
+    %% 初始进程
+    P0["P0_initial"]
+
+    %% 第一次 fork()
+    P0 -->|fork x=PID_P1| P0A["P0 x=PID(P1)"]
+    P0 -->|fork x=0| P1["P1 x=0"]
+
+    %% 第二次 fork()，P0A 执行
+    P0A -->|fork y=PID_P2| P0Final["P0 x=PID(P1) y=PID(P2)"]
+    P0A -->|fork y=0| P2["P2 x=PID(P1) y=0"]
+
+    %% 第二次 fork()，P1 执行
+    P1 -->|fork y=PID_P3| P1Final["P1 x=0 y=PID(P3)"]
+    P1 -->|fork y=0| P3["P3 x=0 y=0"]
+```
+
+```c
+for (int i = 0; i < 2; i++) {
+    fork();
+    printf("Hello\n");
+}
+```
+
+```mermaid
+flowchart TD
+    %% 初始进程
+    P0["P0_initial"]
+
+    %% 第一次循环 i=0
+    P0 -->|fork| P0A["P0 after fork 1"]
+    P0 -->|fork| P1["P1 from P0"]
+
+    %% 第二次循环 i=1
+    P0A -->|fork| P0B["P0 after fork 2"]
+    P0A -->|fork| P2["P2 from P0A"]
+
+    P1 -->|fork| P1B["P1 after fork 2"]
+    P1 -->|fork| P3["P3 from P1"]
+```
+
+#### 复位状态机
+
+```c
+int execve(const char *filename,
+           char * const argv[], char * const envp[]);
+```
+
+**UNIX 选择只给一个复位状态机的 API**
+
+- 将当前进程**重置**成一个可执行文件描述状态机的初始状态
+- **操作系统维护的状态不变**：进程号、目录、打开的文件……
+  - （程序员总犯错，因此打开文件有了 O_CLOEXEC）
+
+> 当前进程会变成新程序的“初始状态机”，代码、数据、指令计数器（PC）都被替换掉。
+>
+> **重要特点**：
+>
+> - **进程号（PID）不变**
+> - **父进程关系不变**
+> - **打开的文件句柄等内核管理的状态不变**（除非使用 `O_CLOEXEC`）
+
+**execve 是唯一能够 “执行程序” 的系统调用**
+
+- 因此也是一切进程 strace 的第一个系统调用
+
+> 每个程序执行时，操作系统实际上做了两步：
+>
+> 1. 创建状态机（`fork()` 或 shell 创建进程）
+> 2. 复位状态机（`execve()` 加载可执行文件）
+>
+> 因此在 **strace 跟踪进程** 时，`execve` 是第一个系统调用。
+
+**argc & argv: 命令行参数**
+
+- 困扰多年的疑问得到解答：main 的参数是 execve 给的！
+
+**envp: 环境变量**
+
+- 使用 env 命令查看
+  - PATH, PWD, HOME, DISPLAY, PS1, ...
+- export: 告诉 shell 在创建子进程时设置环境变量
+  - 小技巧：`export TK_VERBOSE=1`
+
+**程序被正确加载到内存**
+
+- 代码、数据、PC 位于程序入口
+
+### 销毁状态机
+
+```c
+void _exit(int status);
+```
+
+- 立即摧毁状态机，允许有一个返回值
+  - 返回值可以被父进程获取
+
+### UNIX 进程的生命周期
+
+**UNIX 中实现 “创建新状态机” 的方式**
+
+- **Spawn = fork + execve**
+- 我们会在之后介绍这些系统调用的灵活应用

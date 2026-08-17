@@ -1,0 +1,584 @@
+---
+title: OS-构建应用生态
+date: Mon Dec 22 2025 21:16:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - 南京大学《操作系统原理》
+categories: 课程
+description: 学习自 B 站 UP 主绿导师原谅你了。
+---
+
+
+# 资源
+
+-   [2025 南京大学操作系统原理 哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1XZAbeqEyt/)[Yanyan's Wiki](https://jyywiki.cn/)
+-   [2025春季 操作系统 | Xintao Niu (钮鑫涛)](https://niuxintao.github.io/courses/2025Spring-OS/main/)
+
+# 正文
+
+## 12. 构建应用生态
+
+### 12.1 从 UNIX 到 Linux
+
+Evolution of the UNIX Time Sharing System
+
+**最早的版本甚至没有 fork**
+
+1. Shell 关闭所有打开的文件，然后为 0, 1 fd 打开终端文件
+2. 从终端读取命令行
+3. 打开文件，把加载器代码复制到内存并执行（相当于 exec）
+4. exit 会重新加载 shell
+   - [DMR 的文章](https://read.seas.harvard.edu/~kohler/class/aosref/ritchie84evolution.pdf)
+   - Takeaway message: 不要害怕 “不好”，大胆去做，并且持续改进
+
+**所以，从零开始做很重要**
+
+> [!Note]
+>
+> 今天我们理解的 UNIX / Linux：
+>
+> - shell `fork()` 一个子进程
+> - 子进程 `exec()` 程序
+> - 父进程继续当 shell
+>
+> 最早的 UNIX 的系统模型非常原始：
+>
+> **一次只能运行一个用户程序**
+>
+> - 没有进程树
+>
+> - 没有真正意义上的多任务
+
+**Minix by Andrew S. Tanenbaum**
+
+**Minix1 (1987)**
+
+- UNIXv7 兼容
+- Linus 实现 Linux 的起点
+- 同时兼容 16-bit 和 32-bit
+  - 真实展示 16-bit 编程
+
+**[Minix2](http://download.minix3.org/previous-versions/Intel-2.0.4/) (1997)**
+
+- POSIX 兼容
+- 随书附有代码
+
+> [!Note]
+>
+> Minix 是一个教学导向的 UNIX 实现，通过兼容 UNIX V7 / POSIX 并开放源码，为学生提供了完整、可理解的操作系统实现环境。它虽然不是工业级系统，却在 Linux 的诞生和 UNIX 应用生态的扩展中起到了关键作用。
+>
+> UNIX：**证明“最小系统 + 演化”可行**
+>
+> Minix：**证明“可学习 + 可复制”可行**
+>
+> Linux：**证明“规模化生态”可行**
+
+**[Minix3](http://minix3.org/) (2006): POSIX/NetBSD 兼容**
+
+- 一度是世界上应用最广的操作系统 (Intel ME)
+
+![webp](01.webp)
+
+> [!Note]
+>
+> Intel ME 是：
+>
+> - Intel 芯片里的 **独立子系统**
+> - 有：
+>   - 自己的 CPU
+>   - 自己的内存
+>   - 自己的 OS
+> - **在主机 OS 启动之前就已运行**
+> - 用于：
+>   - 远程管理
+>   - 安全启动
+>   - 企业运维
+>
+> **几乎每一颗现代 Intel CPU 里，都跑着 Minix3**
+>
+> 所以从“装机数量”角度看：
+>
+> - Windows / Linux：跑在电脑上
+> - **Minix3：跑在 CPU 里**
+
+**25 Aug 1991, The Birthday of Linux**
+
+> Hello, everybody out there using minix – I’m doing a (free) operating system (just a hobby（不是商业项目，不承诺稳定性，不承诺支持）, won’t be big and professional like gnu（GNU 已经存在 8 年，gcc、bash、glibc 都很成熟，缺的只是内核）) for 386(486) AT clones. This has been brewing since April, and is starting to get ready.
+>
+> —— Linus Torvalds (时年 21 岁)
+
+**类似于 “我写了个加强版的 OSLab，现在与大家分享”**
+
+- 发布在 comp.os.minix
+  - (“百度贴吧”)
+  - 因为还依赖 Minix 的工具链 (从零开始做东西是不现实的)
+  - 跑的都是 GNU 的程序：gcc, bash, ...
+- 合适的人、合适的时间
+
+| Minix       | Linux     |
+| ----------- | --------- |
+| 教学        | 实用      |
+| 16-bit 兼容 | 纯 32-bit |
+| 可读        | 可用      |
+
+> [!Note]
+>
+> Linux 生态爆发的原因：
+>
+> 程序员已经会用：
+>
+> - gcc
+> - bash
+> - make
+> - coreutils
+>
+> Linux 一出现：
+>
+> - **程序不用重写**
+> - 工具不用再学
+> - 心智成本几乎为 0
+>
+> Linux 的成功并非源于技术上的绝对领先，而是通过在合适的时间点嵌入已有 GNU/UNIX 生态，以极低参与成本吸引开发者，共同演化出庞大的应用生态。
+
+**Linux 生态 VS 商业厂商**
+
+- ["NVIDIA is the Single Worst Company We've Ever Dealt With:" Linus Torvalds | TechPowerUp](https://www.techpowerup.com/167855/nvidia-is-the-single-worst-company-weve-ever-dealt-with-linus-torvalds)
+
+> **“The single worst company we've ever dealt with.”**
+>  —— Linus Torvalds
+
+> [!Note]
+>
+> Linus 生气的不是“你不开源”，而是：
+>
+> **你要吃 Linux 生态的红利，却不遵守生态规则**
+
+这是 **Linus 在公开场合评价 NVIDIA** 时说的话（2012 年左右），并配合了那个后来很出名的 **“竖中指”视频**。
+
+> [!Note]
+>
+> ### 表面原因：Linux 显卡驱动问题
+>
+> - NVIDIA：
+>   - 长期只提供 **闭源二进制驱动**
+>   - 不愿公开硬件接口文档
+> - Linux 内核：
+>   - 社区驱动模型
+>   - 需要源码协作
+>   - 内核 API 会演进
+>
+> 结果是：
+>
+> - 驱动频繁炸
+> - 内核升级就不兼容
+> - 社区无法修
+>
+> | Linux 生态   | NVIDIA 模式 |
+> | ------------ | ----------- |
+> | 开源协作     | 黑盒交付    |
+> | 社区维护     | 厂商控制    |
+> | 内核持续演进 | 驱动冻结    |
+> | “一起修”     | “你别动我”  |
+>
+> **Intel / AMD 的做法：**
+>
+> - 提供硬件文档
+> - 驱动进入主线内核
+> - 接受社区 review
+> - API 改了就跟
+>
+> 结果：
+>
+> - 驱动稳定
+> - 内核升级顺滑
+> - 用户体验好
+> - 厂商成本反而更低（社区帮你维护）
+
+**“Linux is Obsolete” Debate**
+
+**在 comp.os.minix 上关于 Linux 的讨论越来越多了**
+
+- Andrew Tanenbaum 做出了 “官方回应”
+  - 觉得 “太落后”
+- Linus 完全不服气
+  - [全文](https://www.oreilly.com/openbook/opensources/book/appa.html)
+- Ken Thompson 也参与了讨论
+  - 他已经在 ~10 年前获得了图灵奖……
+
+> [!Note]
+>
+> | 维度       | Tanenbaum     | Linus    |
+> | ---------- | ------------- | -------- |
+> | 理论判断   | 对            | —        |
+> | 工程判断   | —             | 对       |
+> | 短期可用性 | ❌             | ✅        |
+> | 长期演进性 | ❌（低估演化） | ✅        |
+> | 生态结果   | 教学成功      | 生态统治 |
+>
+> **Tanenbaum 从一开始就“输在生态层面”**
+>
+> Tanenbaum 关心的是：
+>
+> - 架构纯度
+> - 可证明的正确性
+> - 教学价值
+>
+> Linus 关心的是：
+>
+> - 能不能跑 gcc
+> - 能不能跑 bash
+> - 能不能让别人一起改
+>
+> Linux 赢的不是内核，而是：**“我什么都不做，但我允许你在我之上做一切”**
+
+**后来大家知道的故事**
+
+![webp](02.webp)
+
+- Linux 2.0 引入多处理器 (Big Kernel Lock, 内核不能并行)
+- Linux 2.4 内核并行
+- 2002 年才引入 Read-Copy-Update (RCU) 无锁同步
+- 2003 年 Linux 2.6 发布，随云计算开始起飞
+
+**Linux 的 “两面”**
+
+**Kernel**
+
+- 加载第一个进程
+  - 相当于在操作系统中 “放置一个位于初始状态的状态机”
+  - “Initramfs” 模式
+- 包含一些进程可操纵的操作系统对象
+- 除此之外 “什么也没有” (Kernel 就是一个 trap handler)
+
+**Linux Kernel 系统调用上的发行版和应用生态**
+
+- 系统工具 [coreutils](https://www.gnu.org/software/coreutils/coreutils.html), [binutils](https://www.gnu.org/software/binutils/), [systemd](https://systemd.io/), ...
+- 桌面系统 Gnome, xfce, Android
+- 应用程序 file manager, vscode, ...
+
+### 12.2 Linux 和应用程序的接口
+
+**除了对象和系统调用 API**
+
+**The last piece: “初始状态”**
+
+- Everything is a state machine
+  - “操作系统中的对象” 应该也有一个初始状态（否则你根本无法定义“第一步”。）
+
+**它是什么呢？**
+
+- 观察到 Linux 的系统更新
+  - “update-initramfs... (漫长的等待)”
+  - 这就是 Linux Kernel 启动后的 “初始状态”
+
+> [!Note]
+>
+> 前面学 Linux / UNIX 接口时，通常会学到：
+>
+> - 对象：
+>   - 进程
+>   - 文件
+>   - 文件描述符
+>   - 虚拟内存
+> - 接口：
+>   - `fork / exec / wait`
+>   - `read / write`
+>   - `open / close`
+>
+> 但这里有一个**致命问题**：**这些接口假设“已经有进程在跑了”**
+>
+> 那第一个问题是：**第一个进程从哪来？**
+
+**initramfs**
+
+**我们的 initramfs**
+
+- 可以只有一个 init 文件
+  - 可以是任意的 binary，包括我们自己实现的
+- (系统启动后，Linux 还会增加 /dev 和 /dev/console)
+  - 需要给 stdin/stdout/stderr 一个 “地方”
+
+> [!Note]
+>
+> 内核只做这件事：
+>
+> 1. 解压 initramfs
+> 2. 挂载为根文件系统
+> 3. 执行 `/init`
+>
+> **至于 `/init` 是什么，Linux 不关心**
+
+**实际的 initramfs (我们可以解开来看一看)**
+
+- 基本的命令行工具
+- 基础设备驱动程序 (可能从磁盘/网络挂载文件系统)
+- 文件系统工具 (万一磁盘损坏了，还能抢救一下)
+
+> [!Note]
+>
+> **Linux 把“初始状态”交给了 initramfs**
+>
+> Kernel 上电完成 → 进入 initramfs 提供的“初始状态” → 由 initramfs 决定如何进入真正的系统 
+>
+> Linux 给应用提供的不只是系统调用，还有**“从哪开始跑”**：
+>
+> - 系统调用：内核能力
+> - 对象模型：进程 / 文件 / FD
+> - ABI：ELF + syscall 约定
+> - **初始状态：initramfs**
+>
+> **initramfs 定义了第一个用户态世界**。
+>  没有它：
+>
+> - 没有 shell、/bin、/dev
+> - 没有 stdin / stdout / stderr
+> - **应用根本无法启动**
+>
+> **initramfs 里通常有什么？为什么像个小系统？**
+>
+> 因为它就是**最小可用系统**：
+>
+> 1. **基础命令**
+>    - sh / mount / ls / cat
+>       → 系统坏了也能手动处理
+> 2. **基础设备支持**
+>    - 磁盘 / 网络 / LVM / RAID
+>       → 真正的根文件系统还没来
+> 3. **文件系统工具**
+>    - fsck / rescue
+>       → 启动也是一次“自救过程”
+
+**initramfs: 并不是我们 “看到” 的 Linux 世界**
+
+**启动的初级阶段**
+
+- 加载剩余必要的驱动程序，例如磁盘/网卡
+- 挂载必要的文件系统
+  - Linux 内核有启动选项 (类似环境变量)
+    - /proc/cmdline (man 7 bootparam)
+  - 读取 root filesystem 的 /etc/fstab
+- 将根文件系统和控制权移交给另一个程序，例如 systemd
+
+> [!Note]
+>
+> 你可以把 initramfs 看作临时的启动舞台：它提供必要的驱动、命令和工具来准备真正的主舞台（根文件系统）。
+>
+> 你在 initramfs 中看到的 shell 或文件系统环境，和完整系统相比很简陋。
+
+**启动的第二级阶段**
+
+- 看一看系统里的 /sbin/init 是什么？
+- 计算机系统没有魔法 (一切都有合适的解释)
+
+> [!Note]
+>
+> `/sbin/init` 可以是 **systemd、SysVinit 或任何可执行程序**，这意味着：
+>
+> - Linux 并没有魔法，一切都是程序在执行。
+> - 你可以自己写程序接管整个系统。
+
+**我们可以自己接管一切**
+
+**创建一个磁盘镜像**
+
+- /sbin/init 指向任何一个程序
+  - 同样需要加载必要的驱动
+  - 例子：pivot_root 之后才加载网卡驱动、配置 IP
+  - 例子：tty 字体变化
+    - 这些都是 systemd 的工作
+- 例子：[NOILinux Lite](https://zhuanlan.zhihu.com/p/619237809)（一个完全自定义的 Linux 启动系统）
+
+**Initramfs 会被释放**
+
+- 功成身退
+
+> [!Note]
+>
+> 一旦真正的根文件系统挂载完成，initramfs 就完成使命，释放内存。
+>
+> 所以 initramfs 是 **短暂存在** 的。
+
+**That's All: 操作系统 = 对象的集合**
+
+**初始状态**
+
+- initramfs 中的对象 + /dev/console + 加载的 init
+
+**状态迁移**
+
+- 选择一个进程 (对象) 执行一条指令
+- 系统调用指令
+  - 进程管理: fork, execve, exit, waitpid, getpid, ...
+  - 操作系统对象和访问: open, close, read, write, pipe, mount, mkfifo, mknod, stat, socket, ...
+  - 地址空间管理: mmap, sbrk (mmap 的前身)
+  - 以及一些其他的机制: pivot_root, chmod, chown, ...
+
+> [!Note]
+>
+> 也就是说，操作系统就是一个对象集合，每个对象都有属性和方法，进程通过系统调用去操作这些对象，从而让系统状态发生迁移。
+>
+> Linux 系统本质是 **对象集合 + 进程对对象的操作**。
+
+### 12.3 构建应用程序的世界
+
+**操作系统是应用世界的幕后英雄**
+
+**仅有的机制**
+
+- 初始状态 + 系统调用
+
+> [!Note]
+>
+> 这句话强调：操作系统的作用主要是为应用程序提供基础设施和接口，但它本身并不是用户直接交互的对象。
+>
+> 举例：应用程序如 VSCode、GCC、SSH 服务在操作系统之上运行，而操作系统负责调度 CPU、管理内存、文件系统、网络等资源。
+
+**操作系统完全 “感知不到” 应用程序**
+
+- Shell: 系统管理的接口
+- 系统工具: grep, cat, gcc, ...
+- 应用程序: vscode, ...
+- 后台服务: sshd, httpd, ...
+  - 嘿！AI 时代，操作系统也许可以 “感知” 应用了：为每一个 system call (甚至是 function call) 提供 “traceability”
+
+> [!Note]
+>
+> **操作系统不关心应用做了什么，只关心应用做了哪些系统调用**。
+>
+> 在未来，操作系统可能变得更智能，能够：
+>
+> - **追踪系统调用甚至函数调用（traceability）**
+> - 这样操作系统可能对应用程序的行为有更高的感知能力
+> - 例如性能分析、安全监控、自动资源调度等。
+>
+> **传统 OS 是被动的“幕后英雄”，AI 增强的 OS 可能成为主动的“观察者”甚至“管理者”。**
+
+**但我们还是需要应用程序的**
+
+**前互联网时代**
+
+- 软盘发行 (DOS) v.s. 光盘发行 (Windows 3.X/95)
+  - 双击安装程序，输入 CD-Key (“破解” 简直太容易了)
+
+**今天呢？**
+
+- 装应用哪那么麻烦；登录账号，自动管理，自动更新、……
+
+> [!Note]
+>
+> **应用分发模式的演进**：
+>
+> - 软盘/光盘 → 用户手动安装
+> - 应用商店/仓库 → 自动管理、更新、集中管理
+
+**操作系统上的应用生态**
+
+**应用商店模式**
+
+- 操作系统提供 SDK/API
+- 开发者独立发行 (安装包)，或像 AppStore 提交
+  - [入门：在 Microsoft Store 中发布你的第一个应用](https://learn.microsoft.com/zh-cn/windows/apps/publish/)
+  - $19 可以开一个 “个人账户”
+
+**开源模式**
+
+- 开发者维护代码
+- 和发行版团队共同维护应用仓库
+
+**例子：Debian**
+
+**Our Mission: Creating a Free Operating System**
+
+> The Debian Project is an association of individuals, sharing a common goal: We want to create a free operating system, freely available for everyone. Now, when we use the word "free", we're not talking about money, instead, we are referring to software freedom.
+
+- CS 和其他任何学科都不同：开源开放
+- apt-get install firefox (1998)
+  - 跨时代的 “Advanced Packaging Tool”
+
+> [!Note]
+>
+> - Debian 是一个开源、自由的软件系统项目，强调 **软件自由** 而不是价格自由。
+> - CS 和其他学科不同：开源和开放是核心理念。
+> - Debian 提供的工具和软件都是自由可用、可修改和可分发的。
+
+**一个压缩包 ([例子](https://packages.debian.org/trixie/ffmpeg))**
+
+- control.tar.xz
+  - “control” 文件: Package, Source, Version, Architecture, Maintainer, Depends, Suggests, Section, Priority, Description, ...
+- data.tar.xz
+  - 实际的文件 (绝对路径)
+- dpkg 可以安装 deb 包
+  - 它也是操作系统上的一个普通应用程序 (使用系统调用完成 “安装” 功能)
+
+> [!Note]
+>
+> 以 [ffmpeg 的 Debian 包](https://packages.debian.org/trixie/ffmpeg) 为例，.deb 包其实就是一个压缩包，内部有两个主要部分：
+>
+> 1. **control.tar.xz**
+>    - 包含控制信息：
+>      - `Package`, `Source`, `Version`, `Architecture`, `Maintainer`, `Depends`, `Suggests`, `Section`, `Priority`, `Description`…
+>    - 用于 **描述软件及其依赖关系**，让包管理器知道如何处理。
+> 2. **data.tar.xz**
+>    - 实际的程序文件和资源（按绝对路径存放），这些文件将被安装到操作系统中。
+>
+> - **dpkg** 工具负责安装 .deb 包：
+>   - 它本身只是一个普通的 Linux 应用程序。
+>   - 使用系统调用操作文件系统、修改权限、创建目录等，实现“安装”的功能。
+
+**dbkg 的流程**
+
+**Preinstall & Unpack**
+
+- 执行 preinst 脚本，用于检查/备份等
+
+**Configure**
+
+- 执行 postinit 脚本；dpkg 标记为 installed
+
+**Triggers (可以延迟到多个包安装后执行)**
+
+- 延迟触发的操作 (man-db update 等)，例如 update-initramfs
+
+**Postinstall**
+
+- 执行 postinst 脚本
+
+**关于生态**
+
+**为什么建设我们的生态那么艰难？**
+
+- 生态的关键是**开发者**
+- 但 qualify 的开发者太少了
+  - 大学四年都在写高血压代码？
+  - **错误的设计 = 无法维护的泥潭**
+    - 课程的使命是让大家 “见识” 各种设计
+
+> [!Note]
+>
+> - 操作系统或平台的 **应用生态**（生态系统）依赖 **开发者群体**：
+>   - 生态是否繁荣，关键在于开发者是否愿意、能够持续贡献应用。
+> - 问题：
+>   1. **合格的开发者太少**
+>      - 很多人在大学四年里写的都是 “高血压代码” → 代码不规范、可维护性差。
+>   2. **错误设计导致维护困境**
+>      - 错误的架构或设计，最终会让代码难以维护，生态难以扩展。
+>      - 课程目标：让学生见识各种设计，避免“走入泥潭”。
+>
+> 核心观点：软件生态不是单靠操作系统本身就能建立的，它依赖 **人才和高质量代码**。
+
+**AI 时代**
+
+- “软件生态” 会消失吗？
+  - 只需要一个 “最小” 的执行环境
+  - AI 随时随地按需生成代码
+
+> [!Note]
+>
+> **传统生态** = 开发者 + 操作系统 + 应用 + 用户
+>
+> - 开发者是瓶颈。
+>
+> **AI 驱动的生态** = 最小执行环境 + AI
+>
+> - AI 替代了大量开发者的角色
+> - 用户需求直接转化为可执行代码，生态变得更加“即时”
+> - 操作系统仍然是幕后英雄，提供系统调用、文件、网络、资源调度等基础设施。

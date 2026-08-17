@@ -1,0 +1,418 @@
+---
+title: Git-莫烦python学习笔记（git）
+date: Sat Aug 13 2022 09:46:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - Git
+  - 莫烦
+categories: 课程
+description: Git 的学习笔记。学习自莫烦python。
+---
+
+
+# 官网
+
+[Git 版本管理 教程系列 | 莫烦 Python (yulizi123.github.io)](https://yulizi123.github.io/tutorials/others/git/)
+
+[【莫烦 Python】Git 代码版本管理教程](https://www.bilibili.com/video/BV1Jx411L7VE)
+
+[Git (git-scm.com)](https://git-scm.com/)
+
+# 课程
+
+## Git 安装
+
+Ubuntu:
+
+```shell
+sudo apt-get install git-all
+```
+
+## 查看用户名和用户邮箱
+
+用户名: 
+
+```shell
+$ git config user.name
+metal-cell
+```
+
+用户邮箱:
+
+```shell
+$ git config user.email
+XXX@qq.com
+```
+
+## Git 流程图
+
+![png](FlowChart.png)
+
+- `Untracked`: 未跟踪
+- `Unmodified`: 未修改
+- `Modified`: 修改过
+- `Staged`: 暂存
+
+## 创建/修改 版本库
+
+```shell
+$ git init
+Initialized empty Git repository in D:/Study/0th-year-master/gitTUT/.git/
+```
+
+![png](01.png)
+
+
+
+新建一个`1.py`文件
+
+![png](02.png)
+
+### git status 查看版本库的状态
+
+```shell
+$ git status
+On branch master
+
+No commits yet
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+        1.py
+
+nothing added to commit but untracked files present (use "git add" to track)
+```
+
+![png](03.png)
+
+### git add 添加进版本库
+
+现在`1.py`并没有被放入版本库中(Unstaged), 所以我们要使用`add`把它添加进版本库(staged):
+
+```shell
+$ git add 1.py
+```
+
+![png](04.png)
+
+```shell
+$ git status
+On branch master
+
+No commits yet
+
+Changes to be committed:
+  (use "git rm --cached <file>..." to unstage)
+
+        new file:   1.py
+```
+
+### git add .一次性添加文件夹中所有未被添加的文件
+
+```shell
+$ git .
+```
+
+### git commit 提交改变
+
+```shell
+$ git commit -m "create 1.py"
+[master (root-commit) 3520206] create 1.py
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+ create mode 100644 1.py
+```
+
+![png](05.png)
+
+## 记录修改(log & diff)
+
+### 修改记录 log
+
+```shell
+$ git log
+commit XXX (HEAD -> master)
+Author: XXX <XXX@qq.com>
+Date:   Sat Aug 13 11:53:09 2022 +0800
+
+    create 1.py
+```
+
+我们对`1.py`文件进行一次修改:
+
+![png](06.png)
+
+然后我们就能在`status`中看到修改还没被提交的信息了
+
+```shell
+$ git status
+On branch master
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+        modified:   1.py
+
+no changes added to commit (use "git add" and/or "git commit -a")
+```
+
+把这次修改添加(add)到可被提交的(commit)的状态, 然后再提交(commit)这次的修改:
+
+```shell
+$ git add 1.py
+$ git commit -m "change 1"
+[master 2b5d3bc] change 1
+ 1 file changed, 1 insertion(+)
+```
+
+![png](07.png)
+
+再次查看 `log`, 现在我们就能看到 `create 1.py` 和 `change 1` 这两条修改信息了. 而且做出这两条 `commit` 的 ID, 修改的 `Author`, 修改 `Date` 也被显示在上面.
+
+```shell
+$ git log
+commit XXX (HEAD -> master)
+Author: XXX <XXX@qq.com>
+Date:   Sat Aug 13 12:15:33 2022 +0800
+
+    change 1
+
+commit XXXX
+Author: XXX <XXX@qq.com>
+Date:   Sat Aug 13 11:53:09 2022 +0800
+
+    create 1.py
+```
+
+如果删除一部分代码, 也会被记录上, 比如把 `a = 1` 改成 `a = 2`, 再添加一个 `b = 1`.
+
+![png](08.png)
+
+### 查看 unstaged
+
+```shell
+$ git diff
+diff --git a/1.py b/1.py
+index d25d49e..61ce15f 100644
+--- a/1.py
++++ b/1.py
+@@ -1 +1,2 @@
+-a = 1
+\ No newline at end of file
++a = 2
++b = 1
+\ No newline at end of file
+```
+
+![png](09.png)
+
+### 查看 staged (--cached)
+
+如果想要查看这次还没 `add` (unstaged) 的修改部分 和上个已经 `commit` 的文件有何不同, 我们将使用 `$ git diff`:
+
+```shell
+$ git add .
+diff --git a/1.py b/1.py
+index d25d49e..61ce15f 100644
+--- a/1.py
++++ b/1.py
+@@ -1 +1,2 @@
+-a = 1
+\ No newline at end of file
++a = 2
++b = 1
+\ No newline at end of file
+```
+
+### 查看 staged & unstaged (HEAD)
+
+还有种方法让我们可以查看 `add` 过 (staged) 和 没 `add` (unstaged) 的修改, 比如我们再修改一下 `1.py` 但不 `add`:
+
+![png](10.png)
+
+![png](11.png)
+
+```shell
+# 对比三种不同的 diff 形式
+$ git diff HEAD  # staged & unstaged
+diff --git a/1.py b/1.py
+index d25d49e..ac13cf6 100644
+--- a/1.py
++++ b/1.py
+@@ -1 +1,3 @@
+-a = 1
+\ No newline at end of file
++a = 2
++b = 1
++c = b
+\ No newline at end of file
+```
+
+```shell
+$ git diff  # unstaged
+diff --git a/1.py b/1.py
+index 61ce15f..ac13cf6 100644
+--- a/1.py
++++ b/1.py
+@@ -1,2 +1,3 @@
+ a = 2
+-b = 1
+\ No newline at end of file
++b = 1
++c = b
+\ No newline at end of file
+```
+
+```shell
+$ git diff --cached  # staged
+diff --git a/1.py b/1.py
+index d25d49e..61ce15f 100644
+--- a/1.py
++++ b/1.py
+@@ -1 +1,2 @@
+-a = 1
+\ No newline at end of file
++a = 2
++b = 1
+\ No newline at end of file
+```
+
+> 为了下节内容, 我们保持这次修改, 全部 `add` 变成 `staged` 状态, 并 `commit`.
+
+```shell
+$ git add .
+$ git commit -m "change 2"
+[master 8f0a599] change 2
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+```
+
+![png](12.png)
+
+## 回到从前
+
+### 修改已 commit 的版本
+
+有时候我们总会忘了什么, 比如已经提交了 `commit` 却发现在这个 `commit` 中忘了附上另一个文件. 接下来我们模拟这种情况. 上节内容中, 我们最后一个 `commit` 是 `change 2`, 我们将要添加另外一个文件, 将这个修改也 `commit` 进 `change 2`. 所以我们复制 `1.py` 这个文件, 改名为 `2.py`. 并把 `2.py` 变成 `staged`, 然后使用 `--amend` 将这次改变合并到之前的 `change 2` 中.
+
+![png](13.png)
+
+```shell
+$ git add 2.py
+$ git commit --amend --no-edit
+[master dc47039] change 2
+ Date: Sat Aug 13 12:41:55 2022 +0800
+ 2 files changed, 6 insertions(+), 1 deletion(-)
+ create mode 100644 2.py
+```
+
+`--no-edit`: 不编辑, 直接合并到上一个 commit
+
+```shell
+$ git log --oneline
+dc47039 (HEAD -> master) change 2
+2b5d3bc change 1
+3520206 create 1.py
+```
+
+### reset 回到 add 之前
+
+有时我们添加 `add` 了修改, 但是又后悔, 并想补充一些内容再 `add`. 这时, 我们有一种方式可以回到 `add` 之前. 比如在 `1.py` 文件中添加这一行:
+
+![png](14.png)
+
+然后 `add` 去 `staged` 再返回到 `add` 之前:
+
+```shell
+$ git add 1.py
+$ git status -s
+M  1.py
+$ git reset 1.py
+Unstaged changes after reset:
+M       1.py
+$ git status -s
+ M 1.py
+```
+
+![png](15.png)
+
+### reset 回到 commit 之前
+
+![png](git_checkout.png)
+
+每个 `commit` 都有自己的 `id` 数字号, `HEAD` 是一个指针, 指引当前的状态是在哪个 `commit`. 最近的一次 `commit` 在最右边, 我们如果要回到过去, 就是让 `HEAD` 回到过去并 `reset` 此时的 `HEAD` 到过去的位置.
+
+```shell
+$ git reset --hard HEAD
+HEAD is now at dc47039 change 2
+```
+
+查看所有的 log:
+
+```shell
+$ git log --oneline
+dc47039 (HEAD -> master) change 2
+2b5d3bc change 1
+3520206 create 1.py
+```
+
+回到 `2b5d3bc change 1`:
+
+```shell
+$ git reset --hard HEAD^
+HEAD is now at 2b5d3bc change 1
+```
+
+![png](16.png)
+
+使用`commit id`:
+
+```shell
+$ git reset --hard 2b5d3bc
+HEAD is now at 2b5d3bc change 1
+```
+
+ "回到未来" , 挽救消失的`change2`
+
+### git reflog 查看所有改动
+
+```shell
+$ git reflog
+2b5d3bc (HEAD -> master) HEAD@{0}: reset: moving to 2b5d3bc
+2b5d3bc (HEAD -> master) HEAD@{1}: reset: moving to HEAD^
+dc47039 HEAD@{2}: reset: moving to HEAD
+dc47039 HEAD@{3}: commit (amend): change 2
+8f0a599 HEAD@{4}: commit: change 2
+2b5d3bc (HEAD -> master) HEAD@{5}: commit: change 1
+3520206 HEAD@{6}: commit (initial): create 1.py
+```
+
+回到`change 2`:
+
+```shell
+$ git reset --hard dc47039
+HEAD is now at dc47039 change 2
+```
+
+![png](17.png)
+
+## 回到从前(checkout 针对单个文件)
+
+```shell
+$ git log --oneline
+dc47039 (HEAD -> master) change 2
+2b5d3bc change 1
+3520206 create 1.py
+```
+
+`checkout`回`change 1`:
+
+```shell
+$ git checkout 2b5d3bc -- 1.py
+```
+
+![png](18.png)
+
+我们在 `1.py` 加上一行内容 `# I went back to change 1` 然后 `add` 并 `commit` `1.py`:
+
+![png](/19.PNG)
+
+可以看出, 不像 `reset` 时那样, 我们的 `change 2` 并没有消失, 但是 `1.py` 却已经回去了过去, 并改写了未来.

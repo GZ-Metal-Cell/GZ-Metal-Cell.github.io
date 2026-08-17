@@ -1,0 +1,130 @@
+---
+title: Web-Mermaid
+date: Tue Jul 30 2024 14:39:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - 前端
+  - JavaScript
+categories: 探索
+description: 马一下，感觉以后会有用。
+---
+
+
+# 资源
+
+- [Mermaid 中文网 (nodejs.cn)](https://mermaid.nodejs.cn/)
+- [关于 Mermaid | Mermaid 中文网 (nodejs.cn)](https://mermaid.nodejs.cn/intro/)
+
+# 快速开始
+
+## 自动挡
+
+​	获取文件：https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js
+
+​	导入文件并使用 `mermaid.initialize({startOnLoad:true});` 加载：
+
+​	使用 `<pre class="mermaid"></pre>`  内包含语句定义图表：
+
+```html
+<script src="/js/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad:true});</script>
+<pre class="mermaid">
+graph TD;
+    A-->B;
+    A-->C;
+    B-->D;
+    C-->D;
+</pre>
+```
+
+<pre class="mermaid">
+graph TD;
+    A-->B;
+    A-->C;
+    B-->D;
+    C-->D;
+</pre>
+
+​	更多语法见官方文档。这个工具使用了较为简洁的语法实现了画图的功能。（感觉好慢……）
+
+## 手动挡
+
+​	[用法 | Mermaid 中文网 (nodejs.cn)](https://mermaid.nodejs.cn/config/usage.html#api-usage) 这里有写如何使用 `mermaid.min.js` 将 mermaid 语法的字符串转为 svg 字符串并生成 DOM。
+
+```html
+<script src="/js/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad:false});  // startOnLoad 应设为 false，但好像设为 true 也没事……</script>
+
+<script>
+  // Example of using the render function
+  const drawDiagram = async function (graphDefinition, id) {
+    // 转换为 svg 语句
+    const { svg } = await mermaid.render('graphDiv', graphDefinition);
+    const outputContainer = document.getElementById(id);
+    // 将 HTML 语句插入到容器中
+    outputContainer.innerHTML = svg;
+  };
+</script>
+
+<div id="output-container"></div>
+
+<script type="module">
+  await drawDiagram(`
+graph TD;
+    A-->B;
+    A-->C;
+    B-->D;
+    C-->D;
+`, 'output-container');
+</script>
+```
+
+<script>
+  // Example of using the render function
+  const drawDiagram = async function (graphDefinition, id) {
+    // 转换为 svg 语句
+    const { svg } = await mermaid.render('graphDiv', graphDefinition);
+    const outputContainer = document.getElementById(id);
+    // 将 HTML 语句插入到容器中
+    outputContainer.innerHTML = svg;
+    console.log(graphDefinition);
+  };
+</script>
+
+<div id="output-container"></div>
+
+<script type="module">
+  await drawDiagram(`
+graph TD;
+    A-->B;
+    A-->C;
+    B-->D;
+    C-->D;
+`, 'output-container');
+</script>
+
+​	这么写感觉渲染快了很多……不知道为什么。
+
+## hexo 插件
+
+​	 hexo 有这么一个插件：[webappdevelp/hexo-filter-mermaid-diagrams: mermaid diagrams for hexo (github.com)](https://github.com/webappdevelp/hexo-filter-mermaid-diagrams)
+
+​	安装它！
+
+```shell
+npm install --save hexo-filter-mermaid-diagrams
+```
+
+​	这个插件的原理就是将下面的 Markdown 语句：
+
+<figure class="highlight markdown"><table><tbody><tr><td class="code"><pre><code class="hljs markdown"><span class="hljs-code">``</span>`mermaid<br>graph TD;<br><span class="hljs-code">    A--&gt;B;</span><br><span class="hljs-code">    A--&gt;C;</span><br><span class="hljs-code">    B--&gt;D;</span><br><span class="hljs-code">    C--&gt;D;</span><br><span class="hljs-code">```</span><br></code></pre></td></tr></tbody></table></figure>
+
+​	渲染成：
+```html
+<pre class="mermaid">graph TD;
+    A--&gt;B;
+    A--&gt;C;
+    B--&gt;D;
+    C--&gt;D;</pre>
+```
+
+​	然后再自行调用相关函数进行渲染。

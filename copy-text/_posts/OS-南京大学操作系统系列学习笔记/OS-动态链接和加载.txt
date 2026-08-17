@@ -1,0 +1,186 @@
+---
+title: OS-动态链接和加载
+date: Sat Dec 13 2025 10:00:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - 南京大学《操作系统原理》
+categories: 课程
+description: 学习自 B 站 UP 主绿导师原谅你了。
+---
+
+
+# 资源
+
+-   [2025 南京大学操作系统原理 哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1XZAbeqEyt/)[Yanyan's Wiki](https://jyywiki.cn/)
+-   [2025春季 操作系统 | Xintao Niu (钮鑫涛)](https://niuxintao.github.io/courses/2025Spring-OS/main/)
+
+# 正文
+
+## 11 动态链接和加载
+
+### 11.1 动态链接：机制
+
+![webp](01.webp)
+
+以前玩游戏经常出现缺少安装库的问题，这其实是游戏中用到了动态加载。
+
+不同软件可能用到相同的功能，使用动态链接可以节省资源。
+
+#### “拆解应用程序”的需求
+
+**实现运行库和应用代码分离**
+
+- 应用之间的库共享
+  - 每个程序都需要 glibc（Linux）
+  - 但系统里只需要**一个副本**就可以了
+    - 是的，我们可以用 ldd 命令查看（可以查看程序依赖了哪些动态库）
+    - 运行库和应用代码还可以分别独立升级（库和应用分离后，可以单独升级库而不必重新编译所有程序）
+- 大型项目的分解
+  - 改一行代码不用重新链接 2GB 的文件
+  - libjvm.so, libart.so, ...
+    - NEMU: “把 CPU 插上主板”（通过动态链接把不同组件像插模块一样组合，而不必把它们全部焊死在一起）
+
+动态链接：机制
+
+**库的依赖也是一种代码克隆**
+
+- 震惊世界的 [xz-utils (liblzma) 投毒事件](https://scout.docker.com/vulnerabilities/id/CVE-2024-3094)
+  - JiaT75 甚至悄悄[绕开了 oss-fuzz](https://github.com/google/oss-fuzz/pull/10667)
+  - [Linux incident](https://cse.umn.edu/cs/linux-incident); [Greg Kroah-Hartman revert all commits from umn.edu](https://lore.kernel.org/lkml/20210421130105.1226686-1-gregkh@linuxfoundation.org/); [S&P'21 Statement](https://www.ieee-security.org/TC/SP2021/downloads/2021_PC_Statement.pdf)
+
+> [!Note]
+>
+> - 动态链接并不是完全安全的：如果库本身被篡改，依赖它的所有程序都会受到影响。
+>
+> - **xz-utils/liblzma 投毒事件**就是例子：攻击者偷偷修改了库的代码，绕过了检测工具（如 oss-fuzz），导致很多依赖该库的程序受到影响。
+>
+> - 这里强调了动态链接库共享的风险：**库是代码复用的一种形式，但也可能放大安全问题**。
+
+**如果 Linux 应用世界是静态链接的……**
+
+- libc 紧急发布安全补丁 → 重新链接**所有**应用
+- [Semantic Versioning](https://semver.org/)
+  - “Compatible” 是个有些微妙的定义
+  - “Dependency hell”
+    - 静态链接下，这种兼容性问题可能导致“依赖地狱（Dependency hell）”，程序不得不同时管理多个版本的库。
+
+### 11.2 mmap 和虚拟内存
+
+**程序**
+
+- 构造一个非常大的 libbloat.so
+  - 我们的例子：100M of nop (0x90)
+
+**实验**
+
+- 创建 1,000 个进程动态链接 libbloat.so 的进程
+- 观察系统的内存占用情况
+  - 100MB or 100GB?
+  - (如果是后者，直播会立即翻车)
+    - Prototypes are easy. Production is hard. (Elon Musk)
+
+答案是不会，操作系统能够进行虚拟内存管理。
+
+> [!Note]
+>
+> `mmap` 是 **memory map（内存映射）** 的缩写。
+>
+> 它的作用是：
+>
+> > **把文件或者设备映射到进程的虚拟内存地址空间中**
+>
+> 也就是说，文件内容可以“像数组一样”直接在内存中访问，而不需要通过 `read()`/`write()` 系统调用来复制数据。
+>
+> | 方式     | 特点                                                |
+> | -------- | --------------------------------------------------- |
+> | `read()` | 需要把文件内容复制到内存 → 占用额外内存，I/O 开销大 |
+> | `mmap()` | 文件直接映射到虚拟内存 → 按需加载，支持共享，效率高 |
+>
+> > 动态链接程序启动时，内核并不直接加载 libc，而是先根据 ELF 的 INTERP 段启动动态链接器 ld.so，由 ld.so 在用户态通过 mmap 加载并重定位 libc 和其他共享库，多个进程只读共享同一份物理内存。
+
+mmap 和虚拟内存
+
+**背后的机制：虚拟内存管理**
+
+**地址空间表面是 “若干连续的内存段”**
+
+- 通过 mmap/munmap/mprotect 维护
+- 实际是分页机制维护的 “幻象”
+
+> [!Note]
+>
+> 对于进程来说，它看到的虚拟内存好像是一块连续的线性空间：
+>
+> - 代码段（text）
+> - 数据段（data）
+> - 堆（heap）
+> - 栈（stack）
+> - 动态库映射区（mmap 的结果）
+>
+> **实际机制**：
+>
+> - 这些段并不是连续的物理内存
+> - 内核通过 **页表 + 分页机制** 把虚拟地址映射到物理页
+> - 虚拟地址的连续性只是“幻象”，让程序觉得自己在操作一整块内存
+>
+> **相关系统调用**：
+>
+> - `mmap()` / `munmap()` → 映射/取消映射
+> - `mprotect()` → 修改权限（读/写/执行）
+
+**Virtual Memory**
+
+- 操作系统维护 “memory mappings” 的数据结构
+  - 这个数据结构很紧凑 (“哪一段映射到哪里了”)
+- 延迟加载
+  - 不到万不得已，不给进程分配内存（物理内存只有在访问虚拟页时才分配）
+- 写时复制 (Copy-on-Write)
+  - `fork()` 时，父子进程先只读共享全部地址空间
+    - Page fault 时，写者复制一份
+
+**Memory Deduplication; Compression & Swapping**
+
+- 反正都是虚拟内存了
+  - 悄悄扫描内存
+    - 如果有重复的 read-only pages，合并
+    - (如果硬件提供 page hash 就更好了)
+  - 悄悄扫描内存
+    - 发现 cold pages，可以压缩/swap 到硬盘
+    - (硬件提供了 Access/Dirty bit)
+  - 我们还能悄悄扫描内存做什么？
+
+> [!Note]
+>
+> | 功能分类                          | 具体作用                                        | 技术/机制说明                                       |
+> | --------------------------------- | ----------------------------------------------- | --------------------------------------------------- |
+> | **内存去重（Deduplication）**     | 将多个进程中相同的只读页合并为同一物理页        | 共享库代码页、静态只读数据页；硬件 page hash 可加速 |
+> | **内存压缩（Compression）**       | 将不常用的页压缩以节省物理内存                  | Linux zswap/zram；按需解压使用                      |
+> | **换出/交换（Swapping）**         | 将冷页 swap 到磁盘，为热页腾出空间              | 利用 Access/Dirty bit 判断冷页                      |
+> | **共享只读库**                    | 多个进程共享同一份 libc、libstdc++ 等库的代码页 | mmap + MAP_PRIVATE/MAP_SHARED 映射                  |
+> | **写时复制（Copy-on-Write）优化** | fork 后父子进程共享页，写入时才复制             | 延迟复制，减少 fork 内存开销                        |
+> | **安全隔离 / 沙箱**               | 监控页访问权限，保护敏感内存                    | mprotect + 访问异常捕获                             |
+> | **页面预取（Prefetch）**          | 根据访问模式预测访问页，提前加载                | 避免 page fault，提高性能                           |
+> | **快照 / 增量备份**               | 进程或虚拟机快照，支持备份与恢复                | 利用页位图标记修改页，增量复制                      |
+> | **垃圾回收辅助**                  | 语言运行时扫描页位图，优化 GC                   | JVM、Python 等运行时可利用访问标记                  |
+
+### 11.3 实现动态链接
+
+> [!Note]
+>
+> 1. **编译阶段**
+>    - 生成目标文件 `.o`，未定义符号留给库提供
+> 2. **链接阶段**
+>    - 链接器生成 ELF 可执行文件
+>    - 不把库代码拷贝进程序，只记录依赖
+>    - ELF `INTERP` 段指定动态链接器（ld.so）
+> 3. **运行阶段**
+>    - 内核加载 ELF → 首先执行 ld.so
+>    - ld.so 使用 `mmap` 加载所需库（如 libc）
+>    - 重定位符号（GOT/PLT）
+>    - 解析函数地址（Lazy 或 Immediate Binding）
+>    - 跳转到程序入口 `_start` → main()
+> 4. **内存共享与优化**
+>    - 代码页只读，共享多进程
+>    - 写时复制 (Copy-on-Write)
+>    - 可延迟加载和内存去重
+>
+> 动态链接 = **编译时记录依赖 + 运行时 ld.so mmap 加载库 + 重定位符号 → 程序执行**。

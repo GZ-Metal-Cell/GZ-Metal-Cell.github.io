@@ -1,0 +1,1270 @@
+---
+title: AI-MCP Server
+date: Sat Sep 06 2025 13:00:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - Agent
+categories: 探索
+description: 学习自 B 站 UP 主技术爬爬虾。
+---
+
+
+# 资源
+
+- [Introducing the Model Context Protocol \ Anthropic](https://www.anthropic.com/news/model-context-protocol)
+
+- [技术爬爬虾的个人空间-技术爬爬虾个人主页-哔哩哔哩视频](https://space.bilibili.com/316183842/lists/5432414?type=season)
+
+- [modelcontextprotocol/servers: Model Context Protocol Servers](https://github.com/modelcontextprotocol/servers)
+
+- [Smithery - Extend your agent's capabilities](https://smithery.ai/)
+
+
+# 正文
+
+## MCP 是什么
+
+​	MCP（Model Context Protocol）模型上下文协议由 Claude 的母公司 Anthropic 在 24 年底开源发布：
+
+> ​	今天，我们开源了[模型上下文协议](https://modelcontextprotocol.io/) （MCP），这是一种将 AI 助手连接到数据所在系统（包括内容存储库、业务工具和开发环境）的新标准。其目的是帮助前沿模型产生更好、更相关的响应。
+>
+> ​	随着人工智能助手获得主流采用，该行业在模型能力方面投入巨资，在推理和质量方面取得了快速进步。然而，即使是最复杂的模型也会受到与数据隔离的限制，这些模型被困在信息孤岛和遗留系统后面。每个新数据源都需要自己的自定义实现，这使得真正互联的系统难以扩展。
+>
+> ​	MCP 解决了这一挑战。它提供了一个通用的、开放的标准，用于将人工智能系统与数据源连接起来，用单一协议取代零散的集成。其结果是一种更简单、更可靠的方式，让人工智能系统能够访问所需的数据。
+
+```mermaid
+graph TD
+    A[AI] --> B[人]
+    B --> C[浏览器]
+    B --> D[文件系统]
+    B --> E[数据库]
+    B --> F[Github]
+```
+
+​	在传统方法中，我们需要手动从浏览器、文件系统、数据库、Github 等手动截图或复制文本给 LLM 与其对话。
+
+```mermaid
+graph TD
+    A[AI] --> B[MCP Servers]
+    B --> C[浏览器]
+    B --> D[文件系统]
+    B --> E[数据库]
+    B --> F[Github]
+```
+
+​	MCP 通过标准化的协议自动化这一步骤。MCP 服务作为 AI 与外部工具的中间层。
+
+```mermaid
+graph TD
+    A[AI] --> B[MCP Server A]
+    A[AI] --> D[MCP Server B]
+    A[AI] --> F[MCP Server C]
+    A[AI] --> H[MCP Server D]
+    B --> C[浏览器]
+    D --> E[文件系统]
+    F --> G[数据库]
+    H --> I[Github]
+```
+
+​	每个 MCP 服务都专精于一类的工作。MCP 服务本质上是一个 NodeJS 或 Python 程序，通过 stdio（标准输入通道）与  AI 通信。
+
+![webp](01.webp)
+
+​	MCP 协议整合了各家大模型的 function call 标准。市面上几乎所有的大模型几乎都可以接入 MCP。
+
+## 实战演示
+
+### 准备工作
+
+​	视频中列举出的支持 MCP 的客户端：
+
+- Cursor
+- Cline（开源免费）
+  - [cline/cline: Autonomous coding agent right in your IDE, capable of creating/editing files, executing commands, using the browser, and more with your permission every step of the way.](https://github.com/cline/cline)
+- WindSurf
+- Claude App
+
+​	在 VSC 中下载并安装这个插件。
+
+![webp](02.webp)
+
+​	登陆后设置该插件，可以选择 `OpenRouter`（提供免费的 DeepSeek V3）。
+
+​	在 [OpenRouter](https://openrouter.ai/) 中创建一个 Key：
+
+![webp](03.webp)
+
+​	设置 Cline：
+
+- `API Provider` 选择 `OpenRouter`
+- `OpenRouter API Key` 输入所给出的 key（**You will not be able to see it again.**）
+- `Model` 选择 `deepseek/deepseek-chat-v3.1:free`
+
+![webp](04.webp)
+
+​	测试一下，可以正常运行：
+
+![webp](05.webp)
+
+​	确保系统中安装了 NodeJS。命令行中下面命令可以正确执行。
+
+```shell
+node -v
+npx -v
+```
+
+​	还得安装 Docker……
+
+> ​	严格来说，如果你的 MCP Server 配置里使用的镜像是 `ghcr.io/github/github-mcp-server`，**是必须通过 Docker 来运行的**。MCP Server 官方目前提供的服务器都是 Docker 镜像形式，所以没有 Docker 是无法启动这个服务的。
+
+- [Docker Desktop: The #1 Containerization Tool for Developers | Docker](https://www.docker.com/products/docker-desktop/)
+
+```shell
+docker --version
+```
+
+### 安装 MCP
+
+​	选择 `MCP Servers` 选项，安装 `Github` 为示例。
+
+- [github/github-mcp-server: GitHub's official MCP Server](https://github.com/github/github-mcp-server)
+
+![webp](06.webp)
+
+​	对话框中会自动进行相应的步骤，逐步继续（`Aprove`）：
+
+​	真漫长……
+
+![webp](07.webp)
+
+​	然后 DeepSeek 还安装失败了😅。手动安装 `Configure MCP Servers` 以配置 `cline_mcp_settings.json`：
+
+```shell
+{
+  "inputs": [
+    {
+      "type": "promptString",
+      "id": "github_token",
+      "description": "GitHub Personal Access Token",
+      "password": true
+    }
+  ],
+  "mcpServers": {
+    "github": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "GITHUB_PERSONAL_ACCESS_TOKEN",
+        "ghcr.io/github/github-mcp-server"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${input:github_token}"
+      }
+    }
+  }
+}
+```
+
+​	Github 中 `Settings/Developor Settings` 创建一个 `tokens`，设置好相应权限，将生成的 token （`ghp_XXX`）替换 `${input:github_token}`：
+
+![webp](08.webp)
+
+​	`Installed` 中显示绿灯即可。
+
+![webp](09.webp)
+
+### 使用 MCP
+
+​	直接问 Cline：`我在 Github 上有哪些仓库？`。DeepSeek 会自动选择相应的 MCP 进行推理。
+
+​	然后说不让用免费模型了，😅。[OpenRouter 国内使用、充值教程 - 知乎](https://zhuanlan.zhihu.com/p/1898753591528908109) 冲个 $10。让继续用免费模型了。
+
+![webp](10.webp)
+
+​	漫长等待中……
+
+![webp](11.webp)
+
+### 安装并使用 filesystem MCP
+
+> Node.js 为文件系统作实现模型上下文协议 （MCP） 的服务器。
+>
+> **特性**
+>
+> - 读/写文件
+> - 创建/列出/删除目录
+> - 移动文件/目录
+> - 搜索文件
+> - 获取文件元数据
+> - 通过 [Roots](https://modelcontextprotocol.io/docs/learn/client-concepts#roots) 进行动态目录访问控制
+
+​	可以选择库中让 DeepSeek 帮忙安装 filesystem（但感觉还是笨笨的😅，搁这烧我 API 使用量呢）。
+
+​	也可以阅读文档，从 [servers/src/filesystem at main · modelcontextprotocol/servers](https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem) 处找到这个 MCP 的 Docker 安装方式：
+
+```json
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "--mount", "type=bind,src=/Users/username/Desktop,dst=/projects/Desktop",
+        "--mount", "type=bind,src=/path/to/other/allowed/dir,dst=/projects/other/allowed/dir,ro",
+        "--mount", "type=bind,src=/path/to/file.txt,dst=/projects/path/to/file.txt",
+        "mcp/filesystem",
+        "/projects"
+      ]
+    }
+  }
+}
+```
+
+​	合并之前的 MCP 配置文件（记得配置正确的桌面路径为 Docker 能识别的格式，这里是 `src=/mnt/c/Users/19048/Desktop`）：
+
+```json
+{
+  "inputs": [
+    {
+      "type": "promptString",
+      "id": "github_token",
+      "description": "GitHub Personal Access Token",
+      "password": true
+    }
+  ],
+  "mcpServers": {
+    "github": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "GITHUB_PERSONAL_ACCESS_TOKEN",
+        "ghcr.io/github/github-mcp-server"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${input:github_token}"
+      }
+    },
+    "filesystem": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "--mount", "type=bind,src=/c/Users/19048/Desktop,dst=/projects/Desktop",
+        "mcp/filesystem",
+        "/projects"
+      ]
+    }
+  }
+}
+```
+
+![webp](12.webp)
+
+​	直接问 Cline：`帮我看看我的桌面都有哪些文件？`。授权后 DeepSeek 会自动选择相应的 MCP 进行推理。
+
+![webp](13.webp)
+
+## MCP 的底层原理
+
+```mermaid
+graph TD
+    A[AI 客户端] <--> B[Cloudflare]
+    B[Cloudflare] <--> C[AI 服务端]
+```
+
+​	Cloudflare 有一个 AI Gateway 的功能，可以将 AI 客户端与 AI 服务端间加入一个中转站，以此可以记录日志。
+
+### 配置 Cloudflare 网关
+
+![webp](14.webp)
+
+​	在 [Connect, protect, and build everywhere | Cloudflare](https://www.cloudflare.com/) 的 Dashboard 中，选择 `AI` - `AI Gateway`，创建一个网关，点击右侧 `API`…
+
+![webp](15.webp)
+
+​	`Platform` 选择 `OpenRouter`，复制下 `API Endpoint`。
+
+![webp](16.webp)
+
+​	Cline 的 `Settings` 下：
+
+- `API Provider` 选择 `OpenAI Compatible`；
+- `Base URL` 选择 Cloudflare 提供的 `API Endpoint`；
+- `Model ID` 从 [DeepSeek V3.1 (free) - API, Providers, Stats | OpenRouter](https://openrouter.ai/deepseek/deepseek-chat-v3.1:free) 处获得，这里是 `deepseek/deepseek-chat-v3.1:free` 
+
+### 安装 Time MCP Server
+
+​	无论是手动安装 [servers/src/time/README.md at main · modelcontextprotocol/servers](https://github.com/modelcontextprotocol/servers/blob/main/src/time/README.md)，还是 AI 辅助安装，能装上就成。
+
+​	`cline_mcp_settings.json` 中设定时区为亚太/上海：
+
+```json
+  "time": {
+  "command": "python",
+  "args": ["-m", "mcp_server_time", "--local-timezone=Asia/Shanghai"]
+}
+```
+
+​	问 Cline 一下时间。
+
+![webp](17.webp)
+
+​	在 Cloudflare 查看一下网关记录的日志：
+
+![webp](18.webp)
+
+​	观察一下请求的 `json`：
+
+```json
+{
+  "model": "deepseek/deepseek-chat-v3.1:free",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are Cline, a highly skilled software engineer with extensive knowledge in many programming languages, frameworks, design patterns, and best practices.\n\n====\n\nTOOL USE\n\nYou have access to a set of tools that are executed upon the user's approval. You can use one tool per message, and will receive the result of that tool use in the user's response. You use tools step-by-step to accomplish a given task, with each tool use informed by the result of the previous tool use.\n\n# Tool Use Formatting\n\nTool use is formatted using XML-style tags. The tool name is enclosed in opening and closing tags, and each parameter is similarly enclosed within its own set of tags. Here's the structure:\n\n<tool_name>\n<parameter1_name>value1</parameter1_name>\n<parameter2_name>value2</parameter2_name>\n...\n\n# Preferred Language\n\nSpeak in zh-CN."
+    },
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": "<task>\n现在的时间是什么\n</task>"
+        },
+        {
+          "type": "text",
+          "text": "<environment_details>\n# VSCode Visible Files\n../AppData/Roaming/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json\n\n# VSCode Open Tabs\n../AppData/Roaming/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json\n\n# Current Time\n9/7/2025, 8:50:05 AM (Etc/GMT-8, UTC+8:00)\n\n# Current Working Directory (C:/Users/19048/Desktop) Files\n(Desktop files not shown automatically. Use list_files to explore if needed.)\n\n# Context Window Usage\n0 / 128K tokens used (0%)\n\n# Current Mode\nACT MODE\n</environment_details>"
+        }
+      ]
+    },
+    {
+      "role": "assistant",
+      "content": "<thinking>\n用户询问当前时间。我可以看到环境详情中已经提供了当前时间信息：9/7/2025, 8:50:05 AM (Etc/GMT-8, UTC+8:00)。不过为了更精确和符合用户要求，我应该使用MCP服务器的时间工具来获取当前时间。\n</thinking>\n\n<use_mcp_tool>\n<server_name>time</server_name>\n<tool_name>get_current_time</tool_name>\n<arguments>\n{\n  \"timezone\": \"Asia/Shanghai\"\n}\n</arguments>\n</use_mcp_tool>"
+    },
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": "[use_mcp_tool for 'time'] Result:"
+        },
+        {
+          "type": "text",
+          "text": "{\n  \"timezone\": \"Asia/Shanghai\",\n  \"datetime\": \"2025-09-07T08:50:28+08:00\",\n  \"is_dst\": false\n}"
+        },
+        {
+          "type": "text",
+          "text": "<environment_details>\n# VSCode Visible Files\n../AppData/Roaming/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json\n\n# VSCode Open Tabs\n../AppData/Roaming/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json\n\n# Current Time\n9/7/2025, 8:50:28 AM (Etc/GMT-8, UTC+8:00)\n\n# Context Window Usage\n31,598 / 128K tokens used (25%)\n\n# Current Mode\nACT MODE\n</environment_details>"
+        }
+      ]
+    }
+  ],
+  "temperature": 0,
+  "stream": true,
+  "stream_options": {
+    "include_usage": true
+  }
+}
+```
+
+> [!Tip]
+>
+> 这段请求的流程是：
+>
+> 1. 系统设定助手为 "Cline"，有工具调用能力。
+> 2. 用户问“现在几点”。
+> 3. 助手识别到需要调用时间工具 → 调用 `time.get_current_time`。
+> 4. 工具返回北京时间 → 最终助手会把这个时间告诉用户。
+
+​	MCP 与 AI 对接时，根据客户端的不同，对接方式也有所不同。
+
+| 客户端        | 系统提示词 | Function Call |
+| ------------- | ---------- | ------------- |
+| Cline         | 是         |               |
+| 5ire          |            | 是            |
+| Cherry Studio |            | 是            |
+
+​	但是 DeepSeek R1 不支持 Function Call，所以不能在 5fire 中使用 DeepSeek R1 调用 MCP。
+
+​	再观察一下响应的 `json`：
+
+```json
+{
+  "id": "gen-1757206235-XXX",
+  "provider": "DeepInfra",
+  "model": "deepseek/deepseek-chat-v3.1:free",
+  "choices": [
+    {
+      "delta": {
+        "role": "assistant",
+        "content": "<attempt_completion>\n<result>\n当前时间是2025年9月7日08:50:28（北京时间，UTC+8时区）\n</result>\n</attempt_completion>"
+      }
+    }
+  ],...
+      "usage": {
+        "prompt_tokens": 31795,
+        "completion_tokens": 41,
+        "total_tokens": 31836,
+        "cost": 0,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": null,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0
+        }
+      }
+    }
+  ]
+}
+```
+
+> [!Tip]
+>
+> 这是 **一次流式聊天补全 (chat.completion.stream)** 的完整响应。
+>
+> 顶层结构：
+>
+> - **id**: 本次生成的唯一标识符。
+>
+> - **provider**: 模型服务提供者是 `DeepInfra`。
+>
+> - **model**: 调用的模型 ID。
+>
+> - **choices**: 包含模型最终的回答（非流式合并结果）。
+>
+> - **usage**: 记录 token 使用情况和推理成本。
+>
+> - **streamed_data**: 流式输出的数据片段，逐步拼出完整答案。
+>
+> **`choices`** 给出最终答案：
+>
+> - `delta.role`: 模型输出的身份（这里是 `assistant`）。
+>
+> - `delta.content`: 最终的完整回答，用 XML-like 标签包裹。
+>
+> **`streamed_data`** 展示答案是如何逐步流式传回的。
+>
+> - **prompt_tokens**: 输入消耗了 31795 个 token。
+>
+> - **completion_tokens**: 模型生成了 41 个 token。
+>
+> - **total_tokens**: 总计 31836 个。
+>
+> - **cost**: 费用（这里是 0，因为用的是 free 模型）。
+>
+> 其它字段像 `cached_tokens`、`reasoning_tokens` 表示更细粒度的 token 分类。
+>
+> **`usage`** 统计了 token 使用情况。
+
+​	最后整理信息，返回给用户。
+
+完整流程：
+
+```mermaid
+sequenceDiagram
+    participant MCP as MCP Server
+    participant Cline
+    participant LLM
+
+    Cline->>LLM: 用户提问 + MCP 使用方法
+    LLM->>Cline: 请求调用 MCP
+    Cline->>MCP: 调用 MCP
+    MCP->>Cline: 输出信息
+    Cline-->>MCP: 用户提问 + MCP 调用过程
+    MCP->>Cline: 最终结果
+```
+
+## MCP Server 推荐
+
+​	可以从 [Smithery - Extend your agent's capabilities](https://smithery.ai/) 获取更多有意思的 MCP！
+
+​	[punkpeye/awesome-mcp-servers: A collection of MCP servers.](https://github.com/punkpeye/awesome-mcp-servers) 这个仓库里也有很多 MCP 推荐。
+
+### 安装 Cherry Studio
+
+- [项目简介 | CherryStudio](https://docs.cherry-ai.com/)
+
+​	Cherry Studio 也是一个 AI 客户端，下载之。
+
+​	配置模型。
+
+![webp](19.webp)
+
+​	配置 MCP（这个软件判断对应的目录下是否存在 `uv.exe` / `bun.exe` 以判断是否安装成功，如果自动安装失败，则需要手动安装）：
+
+![webp](20.webp)
+
+### Fetch
+
+​	`添加` - `从 JSON 导入`…
+
+![webp](21.webp)
+
+​	从 [Fetch网页内容抓取 · MCP](https://www.modelscope.cn/mcp/servers/@modelcontextprotocol/fetch) 中获取配置的 JSON：
+
+![webp](22.webp)
+
+```json
+{
+	"mcpServers": {
+		"fetch": {
+			"command": "uvx",
+			"args": ["mcp-server-fetch"]
+		}
+	}
+}
+```
+
+​	对话框中选用 `fetch` 的 MCP Server：
+
+![webp](23.webp)
+
+​	测试后可以使用。
+
+![webp](24.webp)
+
+### 高德地图 MCP
+
+​	原视频推荐的百度地图 MCP，发现我的账号 API 申请太麻烦了，换高德了！
+
+- [快速接入-MCP Server | 高德地图API](https://lbs.amap.com/api/mcp-server/gettingstarted)
+
+- [创建应用和 Key-MCP Server | 高德地图API](https://lbs.amap.com/api/mcp-server/create-project-and-key)
+
+​	先整一个高德地图的 Key，使用 `Web 服务`。
+
+![webp](25.webp)
+
+​	申请好后记住 Key，配置好 MCP。
+
+![webp](26.webp)
+
+​	配置完成！
+
+![webp](27.webp)
+
+​	这时候启用这个 MCP，问 AI 地图相关的问题的时候，就会请求这个 MCP 服务器以获得更精确的资料（但是速度也变慢了）。
+
+![webp](28.webp)
+
+​	最后告诉我这么干太颠了……一日游不可行😅。
+
+> 经过详细的路线规划，我发现从南京浮桥站出发，途经仙林、镇江、扬州，最后返回南京浮桥的一日游路线在时间上存在较大挑战：
+>
+> **主要问题：**
+>
+> 1. **时间过长**：仅公共交通单程就需要：
+>    - 南京浮桥 → 仙林：约 50 分钟
+>    - 仙林 → 镇江：公交约 3 小时（建议高铁）
+>    - 镇江 → 扬州：公交约 2 小时（建议高铁）
+>    - 扬州 → 南京浮桥：约 4 小时
+> 2. **总耗时**：如果全部使用公共交通，总行程时间将超过 10 小时，这还不包括在各个城市的游览时间。
+>
+> **现实建议：**
+>
+> **方案一（推荐）：精简行程**
+>
+> - 上午：南京浮桥 → 仙林（地铁 2 号线转 4 号线，约 50 分钟）
+> - 下午：仙林 → 南京市区其他景点
+> - 晚上：返回浮桥站
+>
+> **方案二：分段游览** 如果确实想去镇江和扬州，建议：
+>
+> 1. 分两天游览：一天南京 + 仙林，另一天镇江 + 扬州
+> 2. 使用高铁：南京南站 ↔ 镇江南站（约 30 分钟），镇江南站 ↔ 扬州东站（约 20 分钟）
+>
+> **方案三：选择性游览**
+>
+> - 只选择南京市区和仙林大学城区域
+> - 或者只选择南京和镇江/扬州中的一个城市
+>
+> **具体路线建议（如果坚持一日游）：**
+>
+> 1. **南京浮桥 → 仙林**：地铁 3 号线转 2 号线，约 50 分钟
+> 2. **仙林游览**：建议 2-3 小时
+> 3. **返回南京**：由于时间限制，建议放弃镇江和扬州行程
+>
+> 这样的行程安排更加现实可行，能够确保您有足够的时间享受每个地点的美景，而不是把大部分时间花在路上。
+
+## MCP 建站
+
+### EdgeOne Pages 直接部署
+
+- [EdgeOne Pages - 腾讯云](https://cloud.tencent.com/developer/mcp/server/10011)
+
+​	这个服务可以快速部署一个网页。有了 MCP 就可以实现自动写代码并部署。
+
+​	按照 [API Token](https://edgeone.cloud.tencent.com/pages/document/176921267881082880) 申请一个 API：
+
+![webp](29.webp)
+
+​	按照指南安装 `edgeone-pages-mcp-server`，设定好 API。
+
+```json
+{
+  "mcpServers": {
+    "edgeone-pages-mcp-server": {
+      "command": "npx",
+      "args": ["edgeone-pages-mcp"],
+      "env": {
+        // 可选。如果将文件夹或压缩文件部署到EdgeOne Pages项目
+        // 请提供您的EdgeOne Pages API令牌。
+        // 如何获取API令牌：https://edgeone.ai/document/177158578324279296
+        "EDGEONE_PAGES_API_TOKEN": "",
+        // 可选。留空以创建新的EdgeOne Pages项目。
+        // 提供项目名称以更新现有项目。
+        "EDGEONE_PAGES_PROJECT_NAME": ""
+      }
+    }
+  }
+}
+```
+
+![webp](30.webp)
+
+​	表白 pro 神并部署：
+
+![webp](31.webp)
+
+- [表白promefire](https://mcp.edgeone.site/share/sOI6v6E9OFI4opa8tqAUb)
+
+​	EdgeOne Pages 还有更多模板可以使用，其边缘计算的特性让国内访问速度极佳。
+
+## 阿里云百炼平台
+
+- [大模型服务平台百炼控制台](https://bailian.console.aliyun.com/?spm=5176.29619931.J__Z58Z6CX7MY__Ll8p1ZOR.1.74cd521c88nVPS&tab=home#/home)
+
+​	感觉就是一个云端的 Cherry Studio……试一下高德的 MCP：
+
+- [大模型服务平台百炼控制台](https://bailian.console.aliyun.com/?spm=5176.29619931.J__Z58Z6CX7MY__Ll8p1ZOR.1.74cd521c88nVPS&tab=mcp#/mcp-market/detail/amap-maps)
+
+![webp](32.webp)
+
+```json
+{
+  "isError": false,
+  "content": [
+    {
+      "text": "{\"results\":[{\"country\":\"中国\",\"province\":\"河北省\",\"city\":\"保定市\",\"citycode\":\"0312\",\"district\":\"莲池区\",\"street\":[],\"number\":[],\"adcode\":\"130606\",\"location\":\"115.515701,38.871250\",\"level\":\"公交地铁站点\"},{\"country\":\"中国\",\"province\":\"河北省\",\"city\":\"保定市\",\"citycode\":\"0312\",\"district\":\"莲池区\",\"street\":[],\"number\":[],\"adcode\":\"130606\",\"location\":\"115.518558,38.854382\",\"level\":\"公交地铁站点\"}]}",
+      "type": "text"
+    }
+  ]
+}
+```
+
+​	开通高德的 MCP 后，新建一个智能体，配置 API，指令及对应的 MCP 服务。
+
+![webp](33.webp)
+
+​	然后就会给一个不靠谱的上学路线……
+
+![webp](34.webp)
+
+​	将这个智能体发布，还可以部署到微信公众号机器人中。
+
+## AI 知识库
+
+​	对于上下文过于多的任务（如搭建 AI 知识库），有一种方法是 RAG（Retrieval-Augmented Generation），检索增强生成。
+
+```mermaid
+flowchart TD
+    A[大文件] -->|拆分| B[文本块]
+    B -->|嵌入模型| C[向量]
+    C --> D[向量数据库]
+
+    E[用户提问] -->|嵌入模型| F[用户向量]
+    F[用户向量] --> |检索数据| D[向量数据库]
+
+    D --> |匹配度最高的 K 个文本块| H[重排序模型]
+    H --> |按问题相关性重新排序| G[大模型]
+    G --> |归纳总结| E
+```
+
+​	这需要一个**嵌入模型**，如果需要更好的知识库检索精度则需要**重排序模型**。可以从 [硅基流动 SiliconFlow - 致力于成为全球领先的 AI 能力提供商](https://www.siliconflow.cn/) 处获得一个免费的 API：
+
+![webp](35.webp)
+
+​	在 Cherry Studio 中启用硅基流动，并启用嵌入模型 `BAAI/bge-m3` 和重排序模型 `BAAI/bge-reranker-v2-m3`。
+
+![webp](36.webp)
+
+​	在 Cherry Studio 中创建一个使用嵌入模型 `BAAI/bge-m3` 和重排序模型 `BAAI/bge-reranker-v2-m3` 的知识库。
+
+![webp](37.webp)
+
+​	喂给这个知识库点书[《两晋演义》_txt全集下载_在线全文阅读 - 古典小说 - 爱上阅读](https://www.isyd.net/books/75/)：
+
+![webp](38.webp)
+
+​	添加知识库后，大模型便可以根据知识库中的信息来回答并给出引用。
+
+![webp](39.webp)
+
+​	还有一种霸王硬上弓的方法，使用上下文窗口超大的大模型。如 Gemini。
+
+> [!Note]
+>
+> **检索环节的痛点**
+>
+> 1. **文档拆分策略**
+>    - 拆得太细：上下文被打断，检索到的块缺乏完整语义。
+>    - 拆得太粗：容易带入大量无关信息，增加无效 token 开销。
+> 2. **Embedding 表达能力有限**
+>    - 对长文本、专业领域术语、代码等场景，嵌入模型的语义表示可能不到位。
+>    - 不同语言/领域的跨域检索效果差。
+> 3. **Top K 检索的局限**
+>    - 固定 K 值不一定合适：K 小可能漏掉关键信息，K 大则增加冗余和干扰。
+>    - 向量相似度 ≠ 语义相关度，可能检索到“看起来像”但实际无关的块。
+>
+> **生成环节的痛点**
+>
+> 1. **上下文拼接成本高**
+>    - 将多个检索块拼接进 prompt，容易超出模型上下文窗口。
+>    - 需要做二次筛选、压缩或排序。
+> 2. **事实幻觉（Hallucination）**
+>    - 模型可能不使用检索结果，而“编”答案。
+>    - 即便检索结果相关，模型也可能错误引用或曲解。
+> 3. **结果难以解释**
+>    - 用户难以判断回答是否真的基于知识库，还是模型自己补充的。
+>    - 缺乏引用和溯源机制。
+>
+> **系统工程层面的痛点**
+>
+> 1. **向量数据库性能**
+>    - 数据量大时检索延迟高，需要索引优化（如 HNSW、IVF、PQ 等）。
+>    - 热更新、删除文档时容易引发索引碎片。
+> 2. **知识更新难**
+>    - 大文件新增或修改，需要重新拆分和嵌入，成本高。
+>    - 如何保证知识库与真实业务数据的一致性是个问题。
+> 3. **多模态支持不足**
+>    - 当前多数 RAG 系统主要是文本，图片/音频/视频嵌入和检索难度更大。
+>
+> **交互体验层面的痛点**
+>
+> 1. **用户查询多样性**
+>    - 用户提问方式不一，embedding 无法完全捕捉语义差异。
+>    - 对复杂问题，需要多步推理，但 RAG 一般只做单次检索。
+> 2. **答案的可信度**
+>    - 用户想知道“答案来自哪一段文档”，如果系统不给出处，信任度下降。
+> 3. **难以处理模糊问题**
+>    - 当知识库没有答案时，系统往往回答模棱两可，甚至给出错误答案。
+>
+> **总结来看：**
+>
+> - **检索质量** 和 **生成可靠性** 是 RAG 的核心痛点；
+> - **知识更新与维护成本** 和 **用户体验（解释性、可信度）** 是工程上的大挑战。
+
+## Trae
+
+​	有一个**规则**功能。
+
+![webp](40.webp)
+
+​	在项目中创建 `.trae/rules/projct_rules.md`：
+
+```markdown
+# AI 你画我猜网页游戏
+
+## 项目概述
+
+创建一个在线你画我猜游戏，玩家可以在画布上作画，AI 系统负责猜测画的是什么内容。
+
+## 技术栈选择
+- 脚手架：Vite
+- 前端：React + TypeScript
+- 画布：HTML5 Canvas
+- 后端：Node.js + Express
+- AI 集成：OpenAI Vision API
+```
+
+​	让 AI 拆解成任务列表。
+
+```markdown
+请根据 rules 里的项目介绍，拆解任务，任务可以跟踪状态，把所有任务写进 task.md 文件中。
+```
+
+![webp](41.webp)
+
+​	尝试着让 AI 帮忙写（但是也需要不断地调试才可以）：
+
+![webp](42.webp)
+
+## 无影 AgentBay
+
+​	就是一个可以**云电脑** + MCP 的概念，实现类似于 Manus 的效果。
+
+​	从 [无影AgentBay](https://www.aliyun.com/activity/wuying/aiagent) 整一个 API。花费￥0.01 购买 100 云环境积分！
+
+![webp](43.webp)
+
+​	再整一个镜像。
+
+![webp](44.webp)
+
+​	在 [无影 AgentBay · MCP](https://www.modelscope.cn/mcp/servers/@aliyun/wuying-agentbay-mcp-server) 中填写 API 密钥，得到 MCP Server 的安装 json：
+
+![webp](45.webp)
+
+```json
+{
+  "mcpServers": {
+    "wuying-agentbay-mcp-server": {
+      "type": "sse",
+      "url": "https://mcp.api-inference.modelscope.net/XXX/sse"
+    }
+  }
+}
+```
+
+​	试用之。
+
+![webp](46.webp)
+
+## n8n
+
+### 安装 n8n
+
+- [n8n-io/n8n: Fair-code workflow automation platform with native AI capabilities. Combine visual building with custom code, self-host or cloud, 400+ integrations.](https://github.com/n8n-io/n8n)
+- [AI Workflow Automation Platform & Tools - n8n](https://n8n.io/)
+
+> [!Important]
+>
+> **n8n 使用许可**
+>
+> ​	您只能出于内部业务目的或非商业或个人用途使用或修改本软件。您只能出于非商业目的免费分发软件或将其提供给他人。不得更改、删除或模糊软件中的任何许可、版权或许可人的其他声明。对许可人商标的任何使用均须遵守适用法律。
+
+​	如果无法遵守，可以考虑使用 Dify。
+
+​	使用 Docker 配置镜像：
+
+![webp](47.webp)
+
+```shell
+{
+  "builder": {
+    "gc": {
+      "defaultKeepStorage": "20GB",
+      "enabled": true
+    }
+  },
+  "experimental": false,
+  "registry-mirrors": [
+    "https://docker.m.daocloud.io",
+    "https://docker.imgdb.de",
+    "https://docker-0.unsee.tech",
+    "https://docker.hlmirror.com",
+    "https://docker.1ms.run",
+    "https://func.ink",
+    "https://lispy.org",
+    "https://docker.xiaogenban1993.com"
+  ]
+}
+```
+
+​	执行命令：
+
+```shell
+docker run -it --rm --name n8n -p 5678:5678 -v n8n_data:/home/node/.n8n n8nio/n8n
+```
+
+​	第一次巨慢😭~漫长地等待后：
+
+```shell
+There are deprecations related to your environment variables. Please take the recommended actions to update your configuration:
+ - DB_SQLITE_POOL_SIZE -> Running SQLite without a pool of read connections is deprecated. Please set `DB_SQLITE_POOL_SIZE` to a value higher than zero. See: https://docs.n8n.io/hosting/configuration/environment-variables/database/#sqlite
+ - N8N_RUNNERS_ENABLED -> Running n8n without task runners is deprecated. Task runners will be turned on by default in a future version. Please set `N8N_RUNNERS_ENABLED=true` to enable task runners now and avoid potential issues in the future. Learn more: https://docs.n8n.io/hosting/configuration/task-runners/
+ - N8N_BLOCK_ENV_ACCESS_IN_NODE -> The default value of N8N_BLOCK_ENV_ACCESS_IN_NODE will be changed from false to true in a future version. If you need to access environment variables from the Code Node or from expressions, please set N8N_BLOCK_ENV_ACCESS_IN_NODE=false. Learn more: https://docs.n8n.io/hosting/configuration/environment-variables/security/
+
+[license SDK] Skipping renewal on init: license cert is not initialized
+Version: 1.110.1
+
+Editor is now accessible via:
+http://localhost:5678
+
+Press "o" to open in Browser.
+(node:7) [DEP0060] DeprecationWarning: The `util._extend` API is deprecated. Please use Object.assign() instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+```
+
+​	浏览器打开 http://localhost:5678 进入 n8n 的控制台。
+
+### 使用 n8n 定期发新闻邮件
+
+![webp](48.webp)
+
+​	进入 `Create Workflow`：
+
+![webp](49.webp)
+
+​	添加一个 `Trigger manually` 的 `trigger`：
+
+![webp](50.webp)
+
+> [!Note]
+>
+> | 触发方式                                                | 描述                                                         | 适用场景                                                    |
+> | ------------------------------------------------------- | ------------------------------------------------------------ | ----------------------------------------------------------- |
+> | Trigger manually（手动触发）                            | 通过在 n8n 界面点击按钮来运行工作流。                        | 测试或快速启动流程，不依赖外部事件。                        |
+> | On app event（应用事件触发）                            | 当某个应用里发生事件时触发，如 Telegram 收到消息、Notion 数据更新、Airtable 数据变更等。 | 监听应用动作，自动执行工作流。                              |
+> | On a schedule（定时触发）                               | 按每天、每小时或自定义时间间隔执行工作流。                   | 定期任务，如每天备份数据、每小时检查邮箱。                  |
+> | On webhook call（Webhook 触发）                         | 接收到 HTTP 请求时触发工作流。                               | 外部系统或服务向 n8n 发送数据时触发，如表单提交、API 回调。 |
+> | On form submission（表单提交触发）                      | 用户在 n8n 生成的 webform 提交数据时触发工作流。             | 问卷、调查或数据收集自动处理。                              |
+> | When executed by another workflow（被另一个工作流触发） | 工作流被另一个 workflow 调用时触发。                         | 拆分大型工作流或复用子流程。                                |
+> | On chat message（聊天消息触发）                         | 当用户发送聊天消息时触发工作流。                             | 配合 AI 节点，实现聊天机器人或自动回复。                    |
+> | Other ways…（其他方式触发）                             | 包含特殊触发方式，如工作流出错、文件变化等。                 | 监控或自动化异常处理。                                      |
+
+​	添加 `RSS Read` 作为数据来源：
+
+![webp](51.webp)
+
+​	`URL` 使用 [Hacker News RSS](https://hnrss.github.io/) 中的 `Points`：https://hnrss.org/newest?points=5（当且列表热度 ≥5 的新闻）。
+
+​	之后使用 Firecrawl 对获取到的新闻链接进行爬虫。左下角用户 `Settings`，安装 `n8n-nodes-firecrawl`（原视频版本要安装，现在这个版本自带安装了）。
+
+![webp](52.webp)
+
+​	安装好后，重启整个 Docker 镜像。之后就出现了 `FireCrwal` 这个节点。使用其 `Scrape A Url And Get Its Content` 这个功能。
+
+​	但是要先从 [Firecrawl - The Web Data API for AI](https://www.firecrawl.dev/) 获得又一个 API Key…有免费额度，也可以本地部署 Firecrawl。
+
+![webp](53.webp)
+
+​	将这个 API 配置上。
+
+![webp](54.webp)
+
+​	之后 Firecrawl 就可以将 RSS 指向的网址转换为其中的内容数据。为了不过度使用，加入 `Limit` 限制一次的内容。
+
+![webp](55.webp)
+
+![webp](56.webp)
+
+​	之后便可以使用 `AI Agent`，使用如下提示词：
+
+```plaintext
+你是一个新闻助手，我需要你把从网站上爬取的数据，整理成一个新闻简报。
+```
+
+​	依靠 AI 总结爬取的数据（需要设置 `Chat Model`）。
+
+​	使用 `Pin Data`，固定输出的数据，便于测试。
+
+![webp](57.webp)
+
+​	使用 `Markdown`，将 AI 输出的 Markdown 格式转为邮件支持的 HTML 格式。
+
+![webp](58.webp)
+
+​	在 QQ 邮箱中配置 SMTP 服务。生成的密码让第三方程序也可以使用该 QQ 邮箱账号发送信息。
+
+![webp](59.webp)
+
+​	配置 `Send email` 节点。
+
+![webp](60.webp)
+
+​	将邮件发送到指定邮箱中。
+
+![webp](61.webp)
+
+​	将 `Trigger manually` 替换成 `On a schedule`。最终的 graph 如下所示。
+
+![webp](62.webp)
+
+​	可以将项目流程激活，就能够发送邮件了。
+
+​	可以将整个图标 `Download` 成 `json` 文件以便于分享。
+
+![webp](63.webp)
+
+## 开发 MCP
+
+### 配置环境
+
+​	MCP 本质上就是一个可运行的 Python/NodeJS 程序，因此可以使用 Python/JavaScript 开发一个 MCP。
+
+| 编程语言 | MCP 命令 | 协议  | 发布方式   |
+| -------- | -------- | ----- | ---------- |
+| Python   | uvx      | STDIO | pypi       |
+|          | 远程调用 | SSE   | 服务器部署 |
+| NodeJS   | npx      | STDIO | npm        |
+|          | 远程调用 | SSE   | 服务器部署 |
+
+> [!Tip]
+>
+> | 对比维度              | STDIO（Standard Input/Output）          | SSE（Server-Sent Events）                   |
+> | --------------------- | --------------------------------------- | ------------------------------------------- |
+> | **通信方式**          | 通过进程的标准输入/输出（stdin/stdout） | 基于 HTTP 的长连接，服务端向客户端推送      |
+> | **数据流向**          | 双向（进程间可互相写入/读取）           | 单向（服务器 → 客户端）                     |
+> | **典型场景**          | 本地命令行工具、子进程通信、插件调试    | 浏览器实时更新（消息流、通知、日志）        |
+> | **依赖环境**          | 不依赖网络，直接在本地 I/O 层通信       | 依赖 HTTP 协议和网络环境                    |
+> | **实现难度**          | 简单，容易调试（直接打印/读写）         | 稍复杂，需要保持 HTTP 长连接                |
+> | **性能特点**          | 本地快、轻量级、无网络延迟              | 可跨网络实时推送，适合分布式环境            |
+> | **在 FastMCP 中应用** | 本地开发调试 MCP 插件（`stdio` 模式）   | 部署成网络服务，客户端通过 SSE 接收实时响应 |
+
+​	从 [Model Context Protocol](https://github.com/modelcontextprotocol) 处找到开发的 SDK。以 Python 为例。
+
+​	官方要求使用 uv。先从 [uv](https://docs.astral.sh/uv/#projects) 下载并安装（时代变了，conda 被淘汰了？）。
+
+```shell
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+```
+Downloading uv 0.8.17 (x86_64-pc-windows-msvc)
+Installing to C:\Users\XXX\.local\bin
+  uv.exe
+  uvx.exe
+  uvw.exe
+everything's installed!
+```
+
+​	重新打开 Powershell，新建一个工程目录，在该目录下初始化：
+
+```shell
+uv init . -p 3.13
+```
+
+![webp](64.webp)
+
+​	安装开发工具包：
+
+```shell
+uv add "mcp[cli]"
+```
+
+```
+Using CPython 3.13.5 interpreter at: C:\ProgramData\anaconda3\python.exe
+Creating virtual environment at: .venv
+Resolved 35 packages in 3.75s
+⠹ Preparing packages... (33/34)
+Prepared 34 packages in 32.44s
+░░░░░░░░░░░░░░░░░░░░ [0/34] Installing wheels...                                                                          warning: Failed to hardlink files; falling back to full copy. This may lead to degraded performance.
+         If the cache and target directories are on different filesystems, hardlinking may not be supported.
+         If this is intentional, set `export UV_LINK_MODE=copy` or use `--link-mode=copy` to suppress this warning.
+Installed 34 packages in 3.20s
+ + annotated-types==0.7.0
+ + anyio==4.10.0
+ + attrs==25.3.0
+ + certifi==2025.8.3
+ + click==8.2.1
+ + colorama==0.4.6
+ + h11==0.16.0
+ + httpcore==1.0.9
+ + httpx==0.28.1
+ + httpx-sse==0.4.1
+ + idna==3.10
+ + jsonschema==4.25.1
+ + jsonschema-specifications==2025.9.1
+ + markdown-it-py==4.0.0
+ + mcp==1.14.0
+ + mdurl==0.1.2
+ + pydantic==2.11.9
+ + pydantic-core==2.33.2
+ + pydantic-settings==2.10.1
+ + pygments==2.19.2
+ + python-dotenv==1.1.1
+ + python-multipart==0.0.20
+ + pywin32==311
+ + referencing==0.36.2
+ + rich==14.1.0
+ + rpds-py==0.27.1
+ + shellingham==1.5.4
+ + sniffio==1.3.1
+ + sse-starlette==3.0.2
+ + starlette==0.48.0
+ + typer==0.17.4
+ + typing-extensions==4.15.0
+ + typing-inspection==0.4.1
+ + uvicorn==0.35.0
+```
+
+### Stdio 协议
+
+​	快速开始：
+
+```python
+"""
+FastMCP quickstart example.
+
+cd to the `examples/snippets/clients` directory and run:
+    uv run server fastmcp_quickstart stdio
+"""
+
+from mcp.server.fastmcp import FastMCP
+
+# Create an MCP server
+mcp = FastMCP("Demo")
+
+
+# Add an addition tool
+@mcp.tool()
+def add(a: int, b: int) -> int:
+    """Add two numbers"""
+    return a + b
+
+
+# Add a dynamic greeting resource
+@mcp.resource("greeting://{name}")
+def get_greeting(name: str) -> str:
+    """Get a personalized greeting"""
+    return f"Hello, {name}!"
+
+
+# Add a prompt
+@mcp.prompt()
+def greet_user(name: str, style: str = "friendly") -> str:
+    """Generate a greeting prompt"""
+    styles = {
+        "friendly": "Please write a warm, friendly greeting",
+        "formal": "Please write a formal, professional greeting",
+        "casual": "Please write a casual, relaxed greeting",
+    }
+
+    return f"{styles.get(style, styles['friendly'])} for someone named {name}."
+
+
+if __name__ == "__main__":
+    mcp.run(transport="stdio")
+```
+
+> [!Tip]
+>
+> **导入和初始化**
+>
+> ```python
+> from mcp.server.fastmcp import FastMCP
+> 
+> # 创建一个 MCP 服务器实例，名字叫 "Demo"
+> mcp = FastMCP("Demo")
+> ```
+>
+> - `FastMCP("Demo")` 创建了一个名为 **Demo** 的 MCP 服务器。
+> - MCP（Model Context Protocol）是 OpenAI 提出的一个协议，方便 **模型和外部服务交互**（像插件一样）。
+>
+> **定义一个工具**（tool）
+>
+> ```python
+> @mcp.tool()
+> def add(a: int, b: int) -> int:
+>     """Add two numbers"""
+>     return a + b
+> ```
+>
+> - `@mcp.tool()` 装饰器把函数注册为一个 **工具**。
+> - 工具可以被模型调用，相当于“能力接口”。
+> - `"""Add two numbers"""` 告诉 AI 大模型，要是需要执行两数相加的任务可以调用这个函数。
+> - 这里的 `add` 接收两个整数 `a` 和 `b`，返回它们的和。
+>
+> ✅ 调用效果示例：
+>  请求 `{ "name": "add", "arguments": { "a": 2, "b": 3 } }` → 返回 `5`
+>
+> **定义一个资源**（resource）
+>
+> ```python
+> @mcp.resource("greeting://{name}")
+> def get_greeting(name: str) -> str:
+>     """Get a personalized greeting"""
+>     return f"Hello, {name}!"
+> ```
+>
+> - `@mcp.resource("greeting://{name}")` 定义了一个动态资源，URL 形式是 `greeting://<名字>`。
+> - 请求 `greeting://Alice` → 返回 `"Hello, Alice!"`
+>
+> 资源通常用于提供可读的数据（像文件、API 数据、数据库内容）。
+>
+> **定义一个提示**（prompt）
+>
+> ```python
+> @mcp.prompt()
+> def greet_user(name: str, style: str = "friendly") -> str:
+>     """Generate a greeting prompt"""
+>     styles = {
+>         "friendly": "Please write a warm, friendly greeting",
+>         "formal": "Please write a formal, professional greeting",
+>         "casual": "Please write a casual, relaxed greeting",
+>     }
+> 
+>     return f"{styles.get(style, styles['friendly'])} for someone named {name}."
+> ```
+>
+> - `@mcp.prompt()` 定义了一个提示生成器。
+> - 它根据不同的 **风格（style）**，返回一段文字提示，让模型去生成问候语。
+> - 默认风格是 `"friendly"`。
+>
+> ✅ 调用示例：
+>
+> ```json
+> {
+>   "name": "greet_user",
+>   "arguments": { "name": "Alice", "style": "formal" }
+> }
+> ```
+>
+> 返回：
+>
+> ```
+> "Please write a formal, professional greeting for someone named Alice."
+> ```
+>
+> **总结**
+>
+> 这段代码创建了一个最小的 **MCP 服务器**，它提供了：
+>
+> 1. **工具**：`add` → 执行逻辑运算。
+> 2. **资源**：`greeting://name` → 提供数据访问。
+> 3. **提示**：`greet_user` → 生成模型可用的提示。
+>
+> 这样，MCP 客户端（例如某些支持 MCP 的 AI 应用）就可以调用这些接口，让 AI 有更多“外挂能力”。
+
+​	Cherry Studio 中创建一个 MCP 服务器。
+
+![webp](65.webp)
+
+​	（参数中路径替换成自己的项目地址）。
+
+```
+--directory
+D:\Users\Documents\Study\MCP_Server
+run
+main.py
+```
+
+​	测试成功。
+
+![webp](66.webp)
+
+### SSE 协议
+
+​	修改代码，将 `mcp.run(transport="stdio")` 改成 `mcp.run(transport="sse")`，运行程序。
+
+![webp](67.webp)
+
+​	配置 MCP：
+
+![webp](68.webp)
+
+​	运行之。命令将在服务端执行。
+
+![webp](69.webp)
+
+### 发布
+
+​	如果是 STDIO 协议，则可以将程序发布到 pypi 中。
+
+​	如果是 SSE/Streamable Http 协议，则可以部署到服务器上暴露公网地址（好像有说 SSE 正在被弃用？）。

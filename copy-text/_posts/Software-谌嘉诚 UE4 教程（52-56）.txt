@@ -1,0 +1,137 @@
+---
+title: Software-谌嘉诚 UE4 教程（52-56）
+date: Mon Mar 11 2024 15:07:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - UE4
+  - 谌嘉诚
+categories: 课程
+description: 学习自 B 站 UP 主谌嘉诚。
+---
+
+
+# 资源
+
+- [【虚幻 4】UE4 初学者系列教程合集-全中文新手入门教程_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV164411Y732)
+
+# 课程
+
+## AI
+
+### 【AI】01-1 课：导航网格
+
+![创建导航网络](A1.1.1.png)
+
+​	可以创建一个 `Nav Mesh Bounds Volume` 覆盖在地图上，形成一个导航网络。
+
+![显示导航网络](A1.1.2.png)
+
+​	显示中打开 `Navigation`，绿色范围即为导航网络。
+
+![设置动态/静态](A1.1.3.png)
+
+​	可以设置导航网络的静态/动态。
+
+### 【AI】01-2 课：蓝图实现 AI 随机移动
+
+![AI 小人](A1.2.1.png)
+
+​	复制小白人，清空变量蓝图节点，删除摄像机。
+
+![绘制蓝图](A1.2.2.png)
+
+​	绘制蓝图。`Set Timer by Event` 会让 `Time` 时间走完后触发 `AI_Move_Event`，`Looping` 打开的话就有循环的计时器。
+
+​	`AIMoveTo` 让 `Pawn` 走到导航网络中以 `Acceptance Radius` 为半径的圆的 `Destination` 处。
+
+### 【AI】01-3 课：AI 行为树实现随机和跟随移动
+
+​	这节课挺混乱的……
+
+![新建文件](A1.3.1.png)
+
+​	创建两种 AI 文件：行为树 `Behavior Tree` 和黑板 `Blackboard`。
+
+![创建 AIController](A1.3.2.png)
+
+​	创建一个 `AIController`，这是 `Actor` 下的一个子类。
+
+![文件](A1.3.3.png)
+
+​	现在我们有这么四个文件。蓝图 `AI_BP`、AI 控制器 `AIController_New`、行为树 `AI_BT`、黑板 `AI_BB`。
+
+![黑板](A1.3.4.png)
+
+​	黑板里存放着 AI 逻辑所用到的变量，布尔类型的 `seePlayer` 表示有没有看到玩家，`Position` 表示玩家坐标。
+
+![AI Controller](A1.3.5.png)
+
+​	`AI Controller` 里添加 `AIPerception`。
+
+![AI Perception](A1.3.6.png)
+
+​	`AI Perception` 里设置 `AI Sight config`，让 AI 拥有视觉。
+
+![绘制蓝图](A1.3.7.png)
+
+​	此时就可以在 `AI Controller` 的蓝图里添加 `On Target Perception Updated (AIPerception)` 然后这么绘制蓝图。`Get Blackboard` 获取黑板并 `Make Literal Name` 将黑板里的值 `seePlayer` 设为感知出的结果。
+
+![绘制蓝图](A1.3.8.png)
+
+​	将 `AI Controller` 与行为树 `AI_BT` 绑定。至此 `AI Controller` 设置完成。
+
+![AI Controller](A1.3.9.png)
+
+​	在蓝图 `AI_BP` 中，将其 `Class Defaults` 下的 `AI Controller Class` 设为 `AI Controller_New`。
+
+![行为树](A1.3.10.png)
+
+​	行为树 `AI_BT` 绑定好 `AI_BB`，如此绘制行为树。
+
+![创建任务](A1.3.11.png)
+
+​	根据 `seePlayer` 的值开两个分叉，分叉下分别执行一个事件。至此行为树 `AI_BT` 设置完成。
+
+![绘制蓝图](A1.3.12.png)
+
+​		事件 1 中设置找到玩家时的 AI 逻辑。
+
+![绘制蓝图](A1.3.13.png)
+
+​	事件 2 中设置未找到玩家时的逻辑。
+
+![设置](A1.3.14.png)
+
+​	为了让 AI 移动时朝向更自然，蓝图 `AI_BP` 中，将 `Orient Rotation to Movement` 关闭。
+
+![设置](A1.3.15.png)
+
+​	为了让 AI 移动时朝向更自然，蓝图 `AI_BP` 中，将 `Class Defaults` 里的 `Use Controller Rotation Yaw` 打开。
+
+### 【AI】01-4 课：靠近玩家挥拳
+
+​	失败……少资源😭……
+
+### 【选看】AI 跟随样条线移动思路
+
+- [UE4 学习笔记 20——【AI 选看】AI 跟随样条线移动 - 我会变强的 - 博客园 (cnblogs.com)](https://www.cnblogs.com/wjjgame/p/16925925.html)
+
+![创建蓝图](T1.1.png)
+
+​	创建一个样条线的蓝图，往里放上一个 `Spline`。
+
+![放置蓝图](T1.2.png)
+
+​	放置蓝图，选中某个点后，`Alt` + `拖动鼠标` 即可创建下一个点。
+
+![修改行为树](T1.3.png)
+
+​	修改行为树，新建一个事件 `FindPointFromSpline`，没找到人时执行事件 `FindPointFromSpline`。
+
+![设置事件](T1.4.png)
+
+​	事件中定义变量 `Index`，记录样条线的序号。
+
+![绘制蓝图](T1.5.png)
+
+​	事件的蓝图节点这么画……有些节点属实难找，慢慢整吧。
+

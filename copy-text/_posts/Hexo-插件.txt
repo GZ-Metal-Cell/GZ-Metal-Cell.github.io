@@ -1,0 +1,1347 @@
+---
+title: Hexo-插件
+date: Tue Dec 10 2024 08:15:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - Hexo
+categories: 开发
+description: 分析 Hexo 插件！
+---
+
+
+# 前言
+
+​	Hexo 官网有很多插件 [Plugins | Hexo](https://hexo.io/plugins/)，让我们来研究一下它们是怎么实现的，看一看官方文档 [插件 | Hexo](https://hexo.io/zh-cn/docs/plugins) 和 [API | Hexo](https://hexo.io/zh-cn/api/)，试试几个有用的。
+
+# 文档
+
+## 安装 Hexo
+
+​	全局安装 Hexo 脚手架：
+
+```shell
+npm install hexo-cli -g
+```
+
+​	新建一个文件夹，创建一个 Hexo 工程：
+
+```shell
+hexo init blog
+```
+
+```
+INFO  Cloning hexo-starter https://github.com/hexojs/hexo-starter.git
+INFO  Install dependencies
+INFO  Start blogging with Hexo!
+```
+
+​	这个步骤相当于从 [hexojs/hexo-starter: Hexo Starter site (use `npx hexo init myBlog`)](https://github.com/hexojs/hexo-starter/tree/master) clone 仓库到本地并执行命令 `npm install hexo`。
+
+​	渲染文件到本地服务器：
+
+```shell
+hexo s
+```
+
+```
+INFO  Validating config
+INFO  Start processing
+INFO  Hexo is running at http://localhost:4000/ . Press Ctrl+C to stop.
+```
+
+> [!Note]
+>
+> ​	Hexo 使用 [Node.js](https://nodejs.org) 和其模块，如 [Commander](https://github.com/tj/commander.js) 或类似工具，解析命令行输入的 `hexo s` 命令。
+>
+> - `hexo` 是 Hexo CLI 的入口。
+> - `s` 是 `server` 命令的缩写。CLI 解析后映射到 `server` 指令。
+
+## 插件
+
+> [!Tip]
+>
+> ​	Hexo 有强大的插件系统，使您能轻松扩展功能而不用修改核心模块的源码。 在 Hexo 中有两种形式的插件。
+
+### 脚本（Scripts）
+
+​	在工程根目录下创建文件夹 `scripts`，每次渲染过程中就会引入该文件夹下的所有 `.js` 文件，在文件夹中创建一个 `test.js`，内容如下：
+
+```javascript
+hexo.on('ready', () => {
+  hexo.log.info('Hello world!')
+})
+```
+
+​	之后无论执行何种 hexo 指令都会在控制台中打印 `Hello world!`。
+
+```shell
+hexo cl
+```
+
+```
+INFO  Validating config
+INFO  Hello world!
+INFO  Deleted database.
+```
+
+```shell
+hexo s
+```
+
+```
+INFO  Validating config
+INFO  Hello world!
+INFO  Start processing
+INFO  Hexo is running at http://localhost:4000/ . Press Ctrl+C to stop.
+```
+
+### 插件（Packages）
+
+- [插件 | Hexo](https://hexo.io/zh-cn/docs/plugins)
+- [hexo 教程之为 hexo 编写一个插件_如何在hexo中自定义插件知乎-CSDN博客](https://blog.csdn.net/godread_cn/article/details/122031503)
+
+> [!Note]
+>
+> ​	如果您的代码很复杂或者您想将其发布到 NPM，建议使用插件。 首先，在 `node_modules` 文件夹中创建一个文件夹。 该文件夹的名称必须以 `hexo-` 开头，否则 Hexo 将忽略它。
+>
+> ​	文件夹（`./node_modules` 下）内至少要包含 2 个文件：一个是主程序，另一个是 `package.json`，描述插件的用途和所依赖的插件。
+>
+> ```
+> .
+> ├── index.js
+> └── package.json
+> ```
+>
+> ​	编辑 `source/_data/plugins/<your-plugin-name>.yml` 并添加您的插件（其实我并不知道这段的作用）。 例如：
+>
+> ```json
+> {
+>   "name": "hexo-my-plugin",
+>   "version": "0.0.1",
+>   "main": "index"
+> }
+> ```
+>
+> ​	您还需要将您的插件列在您的 hexo 项目实例根目录下的 `package.json` 文件中的依赖项中，以便 Hexo 检测并加载它。
+
+​	这里我们拿别人写的插件试一下，就决定是你了——[Troy-Yang/hexo-lazyload-image: lazyload image plugin for Hexo.](https://github.com/Troy-Yang/hexo-lazyload-image)
+
+```shell
+npm install hexo-lazyload-image --save
+```
+
+​	执行完这个命令后，根目录下的 `package.json` 将出现，说明该插件已经添加到依赖项中，Hexo 可以检测到它：
+
+```json
+"dependencies": {
+    ...,
+    "hexo-lazyload-image": "^1.1.3",
+    ...
+  }
+```
+
+​	查看 `./node_modules/hexo-lazyload-image` 下，存有该插件的配置项 `package.json` 和入口代码 `index.js`。
+
+## 事件
+
+- [事件 | Hexo](https://hexo.io/zh-cn/api/events)
+
+> [!Note]
+>
+> ​	Hexo 继承了 [EventEmitter](https://nodejs.org/dist/latest/docs/api/events.html)。 您可以用 `on` 方法监听 Hexo 所发布的事件，也可以使用 `emit` 方法对 Hexo 发布事件。 更详细的说明请参阅 Node.js 的 API。
+>
+> ​	感觉其它的功能更依赖于过滤器……
+
+| 执行命令            | 依次触发事件                                    |
+| ------------------- | ----------------------------------------------- |
+| `hexo cl`           | `ready`-`exit`                                  |
+| `hexo new`          | `ready`-`new`-`exit`                            |
+| `hexo g` & `hexo s` | `ready`-`generateBefore`-`generateAfter`-`exit` |
+| `hexo d`            | `ready`-`deployBefore`-`deployAfter`-`exit`     |
+
+### ready
+
+> [!Note]
+>
+> ​	在初始化完成后发布。
+
+​	Hexo 启动时会触发。
+
+```javascript
+hexo.on('ready', () => {
+  hexo.log.info('Hello world!')
+})
+```
+
+### new
+
+> [!Note]
+>
+> ​	在文章文件建立后发布。 该事件返回文章参数。
+
+```javascript
+hexo.on("new", function (post) {
+    console.log(`New post created:\n${post.content}\n${post.path}`);
+});
+```
+
+​	当执行命令 `hexo new` 时会触发：
+
+```shell
+hexo new test
+```
+
+```
+INFO  Validating config
+New post created:
+---
+title: test
+date: 2024-12-10 09:46:33
+tags:
+---
+
+D:\XXX\blog\source\_posts\test.md
+INFO  Created: D:\XXX\blog\source\_posts\test.md
+```
+
+### exit
+
+> [!Note]
+>
+> ​	在 Hexo 结束前发布。
+
+```javascript
+hexo.on("exit", function () {
+    console.log('Bye!');
+});
+```
+
+## 本地变量
+
+- [局部变量 | Hexo](https://hexo.io/zh-cn/api/locals)
+
+| 变量         | 描述     |
+| :----------- | :------- |
+| `posts`      | 所有文章 |
+| `pages`      | 所有分页 |
+| `categories` | 所有分类 |
+| `tags`       | 所有标签 |
+
+​	写一个查看 `posts` 变量的插件：
+
+```javascript
+hexo.on("generateBefore", function () {
+    let posts = hexo.locals.get("posts");
+    console.log(posts);
+    console.log("\n----------------\n");
+});
+
+hexo.on("generateAfter", function () {
+    let posts = hexo.locals.get("posts");
+    console.log(posts);
+    console.log("\n----------------\n");
+});
+```
+
+​	执行：
+
+```shell
+hexo cl
+hexo s
+```
+
+```
+INFO  Validating config
+INFO  Start processing
+_Query {
+  data: [
+    _Document {
+      title: 'Hello World',
+      _content: 'Welcome to [Hexo](https://hexo.io/)! This is your very first post. Check [documentation](https://hexo.io/docs/) for more info. If you get any problems when using Hexo, you can find the answer in [troubleshooting](https://hexo.io/docs/troubleshooting.html) or you can ask me on [GitHub](https://github.com/hexojs/hexo/issues).\n' +
+        '\n' +
+        '## Quick Start\n' +
+        '\n' +
+        '### Create a new post\n' +
+        '\n' +
+        '``` bash\n' +
+        '$ hexo new "My New Post"\n' +
+        '```\n' +
+        '\n' +
+        'More info: [Writing](https://hexo.io/docs/writing.html)\n' +
+        '\n' +
+        '### Run server\n' +
+        '\n' +
+        '``` bash\n' +
+        '$ hexo server\n' +
+        '```\n' +
+        '\n' +
+        'More info: [Server](https://hexo.io/docs/server.html)\n' +
+        '\n' +
+        '### Generate static files\n' +
+        '\n' +
+        '``` bash\n' +
+        '$ hexo generate\n' +
+        '```\n' +
+        '\n' +
+        'More info: [Generating](https://hexo.io/docs/generating.html)\n' +
+        '\n' +
+        '### Deploy to remote sites\n' +
+        '\n' +
+        '``` bash\n' +
+        '$ hexo deploy\n' +
+        '```\n' +
+        '\n' +
+        'More info: [Deployment](https://hexo.io/docs/one-command-deployment.html)\n',
+      source: '_posts/hello-world.md',
+      raw: '---\n' +
+        'title: Hello World\n' +
+        '---\n' +
+        'Welcome to [Hexo](https://hexo.io/)! This is your very first post. Check [documentation](https://hexo.io/docs/) for more info. If you get any problems when using Hexo, you can find the answer in [troubleshooting](https://hexo.io/docs/troubleshooting.html) or you can ask me on [GitHub](https://github.com/hexojs/hexo/issues).\n' +
+        '\n' +
+        '## Quick Start\n' +
+        '\n' +
+        '### Create a new post\n' +
+        '\n' +
+        '``` bash\n' +
+        '$ hexo new "My New Post"\n' +
+        '```\n' +
+        '\n' +
+        'More info: [Writing](https://hexo.io/docs/writing.html)\n' +
+        '\n' +
+        '### Run server\n' +
+        '\n' +
+        '``` bash\n' +
+        '$ hexo server\n' +
+        '```\n' +
+        '\n' +
+        'More info: [Server](https://hexo.io/docs/server.html)\n' +
+        '\n' +
+        '### Generate static files\n' +
+        '\n' +
+        '``` bash\n' +
+        '$ hexo generate\n' +
+        '```\n' +
+        '\n' +
+        'More info: [Generating](https://hexo.io/docs/generating.html)\n' +
+        '\n' +
+        '### Deploy to remote sites\n' +
+        '\n' +
+        '``` bash\n' +
+        '$ hexo deploy\n' +
+        '```\n' +
+        '\n' +
+        'More info: [Deployment](https://hexo.io/docs/one-command-deployment.html)\n',
+      slug: 'hello-world',
+      published: true,
+      date: Moment<2024-12-10T08:49:57+08:00>,
+      updated: Moment<2024-12-10T08:49:57+08:00>,
+      comments: true,
+      layout: 'post',
+      photos: [],
+      _id: 'cm4htkdur0000g49j8dxq6tfg',
+      path: [Getter],
+      permalink: [Getter],
+      full_source: [Getter],
+      asset_dir: [Getter],
+      tags: [Getter],
+      categories: [Getter]
+    },
+    _Document {
+      title: 'test',
+      date: Moment<2024-12-10T09:54:41+08:00>,
+      _content: '',
+      source: '_posts/test.md',
+      raw: '---\ntitle: test\ndate: 2024-12-10 09:54:41\ntags:\n---\n',
+      slug: 'test',
+      published: true,
+      updated: Moment<2024-12-10T09:54:41+08:00>,
+      comments: true,
+      layout: 'post',
+      photos: [],
+      _id: 'cm4htkdux0001g49jbpbsc60s',
+      path: [Getter],
+      permalink: [Getter],
+      full_source: [Getter],
+      asset_dir: [Getter],
+      tags: [Getter],
+      categories: [Getter]
+    }
+  ],
+  length: 2
+}
+
+----------------
+
+_Query {
+  data: [
+    _Document {
+      title: 'Hello World',
+      _content: 'Welcome to [Hexo](https://hexo.io/)! This is your very first post. Check [documentation](https://hexo.io/docs/) for more info. If you get any problems when using Hexo, you can find the answer in [troubleshooting](https://hexo.io/docs/troubleshooting.html) or you can ask me on [GitHub](https://github.com/hexojs/hexo/issues).\n' +
+        '\n' +
+        '## Quick Start\n' +
+        '\n' +
+        '### Create a new post\n' +
+        '\n' +
+        '``` bash\n' +
+        '$ hexo new "My New Post"\n' +
+        '```\n' +
+        '\n' +
+        'More info: [Writing](https://hexo.io/docs/writing.html)\n' +
+        '\n' +
+        '### Run server\n' +
+        '\n' +
+        '``` bash\n' +
+        '$ hexo server\n' +
+        '```\n' +
+        '\n' +
+        'More info: [Server](https://hexo.io/docs/server.html)\n' +
+        '\n' +
+        '### Generate static files\n' +
+        '\n' +
+        '``` bash\n' +
+        '$ hexo generate\n' +
+        '```\n' +
+        '\n' +
+        'More info: [Generating](https://hexo.io/docs/generating.html)\n' +
+        '\n' +
+        '### Deploy to remote sites\n' +
+        '\n' +
+        '``` bash\n' +
+        '$ hexo deploy\n' +
+        '```\n' +
+        '\n' +
+        'More info: [Deployment](https://hexo.io/docs/one-command-deployment.html)\n',
+      source: '_posts/hello-world.md',
+      raw: '---\n' +
+        'title: Hello World\n' +
+        '---\n' +
+        'Welcome to [Hexo](https://hexo.io/)! This is your very first post. Check [documentation](https://hexo.io/docs/) for more info. If you get any problems when using Hexo, you can find the answer in [troubleshooting](https://hexo.io/docs/troubleshooting.html) or you can ask me on [GitHub](https://github.com/hexojs/hexo/issues).\n' +
+        '\n' +
+        '## Quick Start\n' +
+        '\n' +
+        '### Create a new post\n' +
+        '\n' +
+        '``` bash\n' +
+        '$ hexo new "My New Post"\n' +
+        '```\n' +
+        '\n' +
+        'More info: [Writing](https://hexo.io/docs/writing.html)\n' +
+        '\n' +
+        '### Run server\n' +
+        '\n' +
+        '``` bash\n' +
+        '$ hexo server\n' +
+        '```\n' +
+        '\n' +
+        'More info: [Server](https://hexo.io/docs/server.html)\n' +
+        '\n' +
+        '### Generate static files\n' +
+        '\n' +
+        '``` bash\n' +
+        '$ hexo generate\n' +
+        '```\n' +
+        '\n' +
+        'More info: [Generating](https://hexo.io/docs/generating.html)\n' +
+        '\n' +
+        '### Deploy to remote sites\n' +
+        '\n' +
+        '``` bash\n' +
+        '$ hexo deploy\n' +
+        '```\n' +
+        '\n' +
+        'More info: [Deployment](https://hexo.io/docs/one-command-deployment.html)\n',
+      slug: 'hello-world',
+      published: true,
+      date: Moment<2024-12-10T08:49:57+08:00>,
+      updated: Moment<2024-12-10T08:49:57+08:00>,
+      comments: true,
+      layout: 'post',
+      photos: [],
+      _id: 'cm4htkdur0000g49j8dxq6tfg',
+      content: '<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>\n' +
+        '<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>\n' +
+        '\n' +
+        '<p>More info: <a href="https://hexo.io/docs/writing.html">Writing</a></p>\n' +
+        '<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>\n' +
+        '\n' +
+        '<p>More info: <a href="https://hexo.io/docs/server.html">Server</a></p>\n' +
+        '<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>\n' +
+        '\n' +
+        '<p>More info: <a href="https://hexo.io/docs/generating.html">Generating</a></p>\n' +
+        '<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>\n' +
+        '\n' +
+        '<p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>\n',
+      excerpt: '',
+      more: '<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>\n' +
+        '<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>\n' +
+        '\n' +
+        '<p>More info: <a href="https://hexo.io/docs/writing.html">Writing</a></p>\n' +
+        '<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>\n' +
+        '\n' +
+        '<p>More info: <a href="https://hexo.io/docs/server.html">Server</a></p>\n' +
+        '<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>\n' +
+        '\n' +
+        '<p>More info: <a href="https://hexo.io/docs/generating.html">Generating</a></p>\n' +
+        '<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>\n' +
+        '\n' +
+        '<p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>\n',
+      path: [Getter],
+      permalink: [Getter],
+      full_source: [Getter],
+      asset_dir: [Getter],
+      tags: [Getter],
+      categories: [Getter],
+      prev: [_Document],
+      __post: true
+    },
+    _Document {
+      title: 'test',
+      date: Moment<2024-12-10T09:54:41+08:00>,
+      _content: '',
+      source: '_posts/test.md',
+      raw: '---\ntitle: test\ndate: 2024-12-10 09:54:41\ntags:\n---\n',
+      slug: 'test',
+      published: true,
+      updated: Moment<2024-12-10T09:54:41+08:00>,
+      comments: true,
+      layout: 'post',
+      photos: [],
+      _id: 'cm4htkdux0001g49jbpbsc60s',
+      content: '',
+      excerpt: '',
+      more: '',
+      path: [Getter],
+      permalink: [Getter],
+      full_source: [Getter],
+      asset_dir: [Getter],
+      tags: [Getter],
+      categories: [Getter],
+      next: [_Document],
+      __post: true
+    }
+  ],
+  length: 2
+}
+
+----------------
+```
+
+​	这说明在 `generateBefore` 触发时，文章内容还是 markdown 语法（在属性 `_content` 中），`generateAfter` 后文章内容就被渲染成了 html 语法（在属性 `content` 中）。
+
+## 路由
+
+- [路由 | Hexo](https://hexo.io/zh-cn/api/router)
+
+> [!Note]
+>
+> ​	路由存储了网站中所用到的所有路径。
+
+​	就是一些操作文件的函数。
+
+```javascript
+hexo.on("generateBefore", function () {
+    console.log(hexo.route.list());
+});
+
+hexo.on("generateAfter", function () {
+    console.log(hexo.route.list());
+});
+```
+
+```shell
+hexo s
+```
+
+```
+INFO  Validating config
+INFO  Start processing
+[]
+[
+  'css/style.css',
+  'fancybox/jquery.fancybox.min.css',
+  'fancybox/jquery.fancybox.min.js',
+  'js/jquery-3.6.4.min.js',
+  'js/script.js',
+  'css/images/banner.jpg',
+  '2024/12/10/test/index.html',
+  '2024/12/10/hello-world/index.html',
+  'archives/index.html',
+  'archives/2024/index.html',
+  'archives/2024/12/index.html',
+  'index.html'
+]
+INFO  Hexo is running at http://localhost:4000/ . Press Ctrl+C to stop.
+```
+
+# 案例
+
+​	这里分析几个自认为比较典型的几个插件吧！
+
+## 过滤器类
+
+> [!Note]
+>
+> - [过滤器（Filter） | Hexo](https://hexo.io/zh-cn/api/filter)
+>
+> ​	过滤器用于修改一些指定的数据。Hexo 按顺序将数据传递给 filter，然后 filter 一个接一个地修改数据。这个概念是从 [WordPress](http://codex.wordpress.org/Plugin_API#Filters) 借来的。
+
+### hexo-lazyload-image
+
+- [Troy-Yang/hexo-lazyload-image: lazyload image plugin for Hexo.](https://github.com/Troy-Yang/hexo-lazyload-image)
+
+​	这个插件的原理是在渲染前把 `<img src="XXX">` 藏起来，等浏览到这个图片时再显示真实的 src，从而实现图片的懒加载。
+
+#### index.js
+
+```javascript
+'use strict';
+
+if (!hexo.config.lazyload || !hexo.config.lazyload.enable) {
+    return;
+}
+if (hexo.config.lazyload.onlypost) {
+    hexo.extend.filter.register('after_post_render', require('./lib/process').processPost);
+}
+else {
+    hexo.extend.filter.register('after_render:html', require('./lib/process').processSite);
+}
+hexo.extend.filter.register('after_render:html', require('./lib/addscripts').addScript);
+```
+
+​	文件读取了 `hexo.config`，也就是 `_config.yml` 里的数据，根据 `README.md` 说到：
+
+> First add configuration in `_config.yml` from your hexo project.
+>
+> ```yaml
+> lazyload:
+>   enable: true
+>   onlypost: false # optional
+>   loadingImg: # optional eg ./images/loading.gif
+>   isSPA: false # optional
+>   preloadRatio: 3 # optional, default is 1
+> ```
+
+​	也就是说只有 `lazyload` 有值或 `enable` 不为 `false` 时，插件才会启动。
+
+```javascript
+if (!hexo.config.lazyload || !hexo.config.lazyload.enable) {
+    return;
+}
+```
+
+​	当 `onlypost` 被打开时，只渲染 post 文章（使用过滤器，在 post 渲染后执行）；
+
+​	否则渲染所有文章（使用过滤器，在所有文件被渲染成 `html` 后执行）。
+
+```javascript
+if (hexo.config.lazyload.onlypost) {
+    hexo.extend.filter.register('after_post_render', require('./lib/process').processPost);
+}
+else {
+    hexo.extend.filter.register('after_render:html', require('./lib/process').processSite);
+}
+```
+
+​	使用过滤器，在所有文件被渲染成 `html` 后执行插入控制懒加载的代码：
+
+```javascript
+hexo.extend.filter.register('after_render:html', require('./lib/addscripts').addScript);
+```
+
+#### lib/process.js
+
+```javascript
+'use strict';
+
+const fs = require('hexo-fs');
+
+function lazyProcess(htmlContent) {
+    let defaultImagePath = __dirname + '/default-image.json';
+    let loadingImage = this.config.lazyload.loadingImg;
+
+    if (!loadingImage) {
+        loadingImage = JSON.parse(fs.readFileSync(defaultImagePath)).default;
+    }
+
+    return htmlContent.replace(/<img(.*?)src="(.*?)"(.*?)>/gi, function (str, p1, p2) {
+        // might be duplicate
+        if(/data-original/gi.test(str)){
+            return str;
+        }
+        if(/src="data:image(.*?)/gi.test(str)) {
+            return str;
+        }
+        if(/no-lazy/gi.test(str)) {
+            return str;
+        }
+        return str.replace(p2, loadingImage + '" data-original="' + p2);
+    });
+}
+
+module.exports.processPost = function (data) {
+    if (data.lazyimage !== 'no') {
+        data.content = lazyProcess.call(this, data.content);
+    }
+    return data;
+};
+
+module.exports.processSite = function (htmlContent) {
+    return lazyProcess.call(this, htmlContent);
+};
+```
+
+​	函数对渲染后的文档处理，将 `<img src="XXX">` 换成 `<img src="loadingImg" data-original="XXX">`。
+
+​	说明过滤器 `after_post_render` 把数据传给了函数中，下面说明 `data.content` 是渲染 post 后的文件的 html 内容。
+
+​	如果 post 头部设有 `lazyimage: no`，则不对这个文档进行懒加载处理。
+
+```javascript
+module.exports.processPost = function (data) {
+    if (data.lazyimage !== 'no') {
+        data.content = lazyProcess.call(this, data.content);
+    }
+    return data;
+};
+```
+
+​	过滤器 `after_render:html` 将所有渲染后的 .html 交给了下面这个函数，`htmlContent` 即为渲染后的 html 内容。
+
+```javascript
+module.exports.processSite = function (htmlContent) {
+    return lazyProcess.call(this, htmlContent);
+};
+```
+
+#### lib/addscripts.js
+
+```javascript
+const fs = require('hexo-fs');
+const UglifyJS = require('uglify-js');
+const lazyLoadPath = __dirname + '/simple-lazyload.js';
+const thirdPartyFixPath = __dirname + '/third-party-fix.js';
+
+module.exports.addScript = function(htmlContent){
+    let injectSetting = function () {
+    return `
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: ${!!this.config.lazyload.isSPA},
+                preloadRatio: ${this.config.lazyload.preloadRatio || 1},
+                processImages: null,
+            };
+        </script>`;
+    };
+    let injectExtraScript = function (filePath) {
+        if (!fs.exists(filePath)) throw new TypeError(filePath + ' not found!');
+        let sourceCode = fs.readFileSync(filePath, { escape: true });
+        return '<script>' + UglifyJS.minify(sourceCode).code + '</script>';
+    };
+    let appendScript = function(content, htmlContent) {
+        let lastIndex = htmlContent.lastIndexOf('</body>');
+        return htmlContent.substring(0, lastIndex) + content + htmlContent.substring(lastIndex, htmlContent.length);
+    };
+    if (/<\/body>/gi.test(htmlContent)) {
+        htmlContent = appendScript(injectSetting.bind(this)(), htmlContent);
+        htmlContent = appendScript(injectExtraScript(thirdPartyFixPath), htmlContent);
+        htmlContent = appendScript(injectExtraScript(lazyLoadPath), htmlContent);
+    }
+    return htmlContent;
+};
+```
+
+​	这段代码将在文章的 `<body/>` 之前引入控制懒加载的代码。
+
+### hexo-filter-mermaid-diagrams
+
+- [webappdevelp/hexo-filter-mermaid-diagrams: mermaid diagrams for hexo](https://github.com/webappdevelp/hexo-filter-mermaid-diagrams)
+
+#### index.js
+
+```javascript
+const assign = require('deep-assign');
+
+// api url https://github.com/knsv/mermaid/blob/master/src/mermaidAPI.js
+const config = {
+  theme: 'forest',
+  logLevel: 5,
+  startOnLoad: true,
+  arrowMarkerAbsolute: false,
+  flowchart: {
+    htmlLabels: true,
+    useMaxWidth: true,
+    curve: 'linear'
+  },
+  sequence: {
+    diagramMarginX: 50,
+    diagramMarginY: 10,
+    actorMargin: 50,
+    width: 150,
+    height: 65,
+    boxMargin: 10,
+    boxTextMargin: 5,
+    noteMargin: 10,
+    messageMargin: 35,
+    mirrorActors: true,
+    bottomMarginAdj: 1,
+    useMaxWidth: true
+  },
+  gantt: {
+    titleTopMargin: 25,
+    barHeight: 20,
+    barGap: 4,
+    topPadding: 50,
+    leftPadding: 75,
+    gridLineStartPadding: 35,
+    fontSize: 11,
+    fontFamily: '"Open-Sans", "sans-serif"',
+    numberSectionStyles: 4,
+    axisFormat: '%Y-%m-%d'
+  },
+  class: {},
+  git: {}
+};
+
+hexo.config.mermaid = assign({
+  version: '7.1.2',
+  enable: true
+},
+  config,
+  hexo.config.mermaid
+);
+
+hexo.extend.filter.register('before_post_render', require('./lib/render'), 9);
+```
+
+​	这个插件原理是将文档中的：<code>\`\`\`mermaid\`\`\`</code> 替换成 `<pre class="mermaid"></pre>`。
+
+​	由于这个语法在渲染器中会自动转换成代码块，因此要在渲染前进行。
+
+#### lib/render.js
+
+```javascript
+const reg = /(\s*)(`{3}) *(mermaid) *\n?([\s\S]+?)\s*(\2)(\n+|$)/g;
+
+const ignore = data => {
+  var source = data.source;
+  var ext = source.substring(source.lastIndexOf('.')).toLowerCase();
+  return ['.js', '.css', '.html', '.htm'].indexOf(ext) > -1;
+}
+
+module.exports = function (data) {
+  const mermaidConfig = this.config.mermaid;
+  let { enable } = mermaidConfig;
+  enable = enable || false;
+  if (!enable) {
+    return;
+  }
+  if (!ignore(data)) {
+    data.content = data.content
+      .replace(reg, function (raw, start, startQuote, lang, content, endQuote, end) {
+        return `${start}<pre class="mermaid">${content}</pre>${end}`;
+      });
+  }
+};
+```
+
+​	这里说明 Hexo 在渲染 post 时会把非 .md 文件也考虑进去？因此要做一个排除逻辑。
+
+​	之后就是字符串替换的逻辑了。
+
+### hexo-hide-posts
+
+- [prinsss/hexo-hide-posts: A plugin to hide specific posts from your Hexo blog and make them only accessible by links. (隐藏 Hexo 文章)](https://github.com/prinsss/hexo-hide-posts)
+
+​	配置方式：
+
+```yaml
+hide_posts:
+  # 是否启用 hexo-hide-posts 插件。
+  enable: true
+
+  # 用于标记隐藏文章的 front-matter 键。
+  # 你可以根据需要修改过滤器名称。
+  filter: hidden
+
+  # 添加 "noindex" 元标签以防止隐藏文章被搜索引擎索引。
+  noindex: true
+
+  # 允许访问隐藏文章的生成器名单。
+  # Hexo 中常见的生成器：'index', 'tag', 'category', 'archive', 'sitemap', 'feed'
+  # allowlist_generators: []
+
+  # 禁止访问隐藏文章的生成器名单。
+  # 如果同时设置了允许名单，允许名单优先级更高。
+  # blocklist_generators: ['*']
+```
+
+#### index.js
+
+```javascript
+/* global hexo */
+'use strict';
+
+// Backward compatibility for v0.2.0
+if (hexo.config.hide_posts) {
+  const config = hexo.config.hide_posts;
+  if (config.public_generators && !config.allowlist_generators) {
+    config.allowlist_generators = config.public_generators;
+  }
+}
+
+// Load plugin config
+hexo.config.hide_posts = Object.assign({
+  enable: true,
+  filter: 'hidden',
+  allowlist_generators: [],
+  blocklist_generators: ['*'],
+  allowlist_function: null,
+  acl_function_per_post: null,
+  hexo_7_compatibility_patch: hexo.version.startsWith('7'),
+  noindex: true,
+  noindex_tag: '<meta name="robots" content="noindex">',
+  html_flag: '<!-- flag of hidden posts -->'
+}, hexo.config.hide_posts);
+
+const config = hexo.config.hide_posts;
+
+if (!config.enable) {
+  return;
+}
+
+// Ensure allowlist and blocklist are arrays
+if (config.allowlist_generators && !Array.isArray(config.allowlist_generators)) {
+  config.allowlist_generators = [config.allowlist_generators];
+}
+
+if (config.blocklist_generators && !Array.isArray(config.blocklist_generators)) {
+  config.blocklist_generators = [config.blocklist_generators];
+}
+
+// Prepare hidden posts
+hexo.extend.filter.register('before_generate', require('./lib/prepareHiddenPosts'));
+
+// Apply patch for Hexo 7.0
+hexo.extend.filter.register('before_generate', require('./lib/applyPatch'));
+
+// Hook into generators
+hexo.extend.filter.register('after_init', require('./lib/injectGenerators'));
+
+// Add a command to get a list of all hidden posts.
+// Usage: `$ hexo hidden:list`
+hexo.extend.console.register(
+  'hidden:list',
+  'Show a list of all hidden articles.',
+  require('./lib/getHiddenList')
+);
+
+// Append a special HTML tag to render result of hidden posts for future use.
+hexo.extend.filter.register('after_post_render', data => {
+  if (data[config.filter]) {
+    data.content += config.html_flag;
+  }
+  return data;
+});
+
+// When `after_render:html` filter is triggered, no useful data but
+// only a bunch of messy HTML string will be passed as argument.
+// So we have to use the HTML flag set before in `after_post_render` filter
+// to recognize hidden posts, and manipulate whatever we want.
+if (config.noindex) {
+  hexo.extend.filter.register('after_render:html', str => {
+    if (str && str.includes(config.html_flag)) {
+      str = str.replace('</title>', '</title>' + config.noindex_tag);
+    }
+    return str;
+  });
+}
+```
+
+
+
+## 渲染器类
+
+- [Renderer | Hexo](https://hexo.io/zh-cn/api/renderer)
+
+### hexo-renderer-less
+
+- [hexojs/hexo-renderer-less: Less renderer for Hexo.](https://github.com/hexojs/hexo-renderer-less)
+
+#### index.js
+
+​	这段代码注册了一个新的渲染器，用于读取所有 less 文件，输出对应名称的 css 文件。
+
+```javascript
+/* global hexo */
+
+'use strict';
+
+hexo.extend.renderer.register('less', 'css', require('./lib/renderer'));
+```
+
+#### lib/renderer.js
+
+```javascript
+'use strict';
+
+const less = require('less');
+const { basename, dirname, join } = require('path');
+const micromatch = require('micromatch');
+
+async function lessFn(data) {
+  const { route, theme } = this;
+
+  theme.config.less = Object.assign({
+    paths: [],
+    options: {}
+  }, theme.config.less);
+
+  const config = theme.config.less;
+  const { options, paths: pathsCfg } = config;
+  const cwd = process.cwd();
+  const routeList = route.list();
+  const tmpPaths = typeof pathsCfg === 'string' ? [pathsCfg] : pathsCfg;
+
+  const paths = tmpPaths.filter(path => !micromatch.scan(path).isGlob)
+    .map(path => join(cwd, path)); // assuming paths are relative from the root of the project;
+  const match = micromatch(routeList, config.paths).map(path => join(cwd, dirname(path)));
+  paths.push(...match, dirname(data.path));
+
+  const result = await less.render(data.text, {
+    paths,
+    filename: basename(data.path),
+    ...options
+  });
+
+  return result.css;
+}
+
+lessFn.disableNunjucks = true;
+
+module.exports = lessFn;
+```
+
+​	利用 `less` 模块异步编译给定的 Less 文本为 CSS 输出，并返回编译结果。
+
+### hexo-renderer-markdown-it
+
+- [hexojs/hexo-renderer-markdown-it: Markdown-it is a Markdown parser, done right. A faster and CommonMark compliant alternative for Hexo.](https://github.com/hexojs/hexo-renderer-markdown-it)
+
+​	将 Hexo 的渲染引擎替换为目前流行的 `markdown-it`。
+
+#### index.js
+
+```javascript
+/* global hexo */
+
+'use strict';
+
+hexo.config.markdown = Object.assign({
+  preset: 'default',
+  render: {},
+  anchors: {}
+}, hexo.config.markdown);
+
+hexo.config.markdown.render = Object.assign({
+  html: true,
+  xhtmlOut: false,
+  breaks: true,
+  linkify: true,
+  typographer: true,
+  quotes: '“”‘’'
+}, hexo.config.markdown.render);
+
+hexo.config.markdown.anchors = Object.assign({
+  level: 2,
+  collisionSuffix: '',
+  permalink: false,
+  permalinkClass: 'header-anchor',
+  permalinkSide: 'left',
+  permalinkSymbol: '¶',
+  case: 0,
+  separator: '-'
+}, hexo.config.markdown.anchors);
+
+const Renderer = require('./lib/renderer');
+const renderer = new Renderer(hexo);
+
+renderer.disableNunjucks = Boolean(hexo.config.markdown.disableNunjucks);
+
+function render(data, options) {
+  return renderer.render(data, options);
+}
+
+hexo.extend.renderer.register('md', 'html', render, true);
+hexo.extend.renderer.register('markdown', 'html', render, true);
+hexo.extend.renderer.register('mkd', 'html', render, true);
+hexo.extend.renderer.register('mkdn', 'html', render, true);
+hexo.extend.renderer.register('mdwn', 'html', render, true);
+hexo.extend.renderer.register('mdtxt', 'html', render, true);
+hexo.extend.renderer.register('mdtext', 'html', render, true)
+```
+
+​	这说明 Hexo 渲染时将 `.md`、`.markdown`、`.mkd`、`.mkdn`、`.mdwn`、`.mdtxt` 和 `.mdtext` 渲染成 .html。
+
+## 生成器类
+
+- [生成器（Generator） | Hexo](https://hexo.io/zh-cn/api/generator)
+
+### hexo-generator-index-pin-top
+
+- [netcan/hexo-generator-index-pin-top: Index generator plugin for Hexo. Pin top version](https://github.com/netcan/hexo-generator-index-pin-top)
+
+#### index.js
+
+​	Hexo 的生成器 `index` 会把所有 post 按时间排序并放到首页中，这里给排序添加一个置顶的逻辑。
+
+```javascript
+/* global hexo */
+
+'use strict';
+
+var assign = require('object-assign');
+
+hexo.config.index_generator = assign({
+  per_page: typeof hexo.config.per_page === 'undefined' ? 10 : hexo.config.per_page,
+  order_by: '-date'
+}, hexo.config.index_generator);
+
+hexo.extend.generator.register('index', require('./lib/generator'));
+```
+
+#### lib/generator.js
+
+```javascript
+'use strict';
+var pagination = require('hexo-pagination');
+module.exports = function(locals){
+  var config = this.config;
+  var posts = locals.posts;
+    posts.data = posts.data.sort(function(a, b) {
+        if(a.top && b.top) { // 两篇文章top都有定义
+            if(a.top == b.top) return b.date - a.date; // 若top值一样则按照文章日期降序排
+            else return b.top - a.top; // 否则按照top值降序排
+        }
+        else if(a.top && !b.top) { // 以下是只有一篇文章top有定义，那么将有top的排在前面（这里用异或操作居然不行233）
+            return -1;
+        }
+        else if(!a.top && b.top) {
+            return 1;
+        }
+        else return b.date - a.date; // 都没定义按照文章日期降序排
+    });
+  var paginationDir = config.pagination_dir || 'page';
+  return pagination('', posts, {
+    perPage: config.index_generator.per_page,
+    layout: ['index', 'archive'],
+    format: paginationDir + '/%d/',
+    data: {
+      __index: true
+    }
+  });
+};
+```
+
+​	设置排列 `posts.data` 的规则。
+
+### hexo-generator-search
+
+- [wzpan/hexo-generator-search: A plugin to generate search data for Hexo.](https://github.com/wzpan/hexo-generator-search)
+
+​	设置属性：
+
+```yaml
+search:
+  path: search.xml
+  field: post
+  content: true
+  template: ./search.xml
+```
+
+#### index.js
+
+```javascript
+var merge = require('utils-merge');
+var pathFn = require('path');
+
+var config = hexo.config.search = merge({
+	path: 'search.xml',
+	field: 'post'
+}, hexo.config.search);
+
+// Set default search path
+if (!config.path){
+  config.path = 'search.xml';
+}
+
+// Add extension name if don't have
+if (!pathFn.extname(config.path)){
+  config.path += '.xml';
+}
+
+if (pathFn.extname(config.path)=='.xml') {
+	hexo.extend.generator.register('xml', require('./lib/xml_generator'));
+}
+
+if (pathFn.extname(config.path)=='.json') {    
+	hexo.extend.generator.register('json', require('./lib/json_generator'));
+}
+```
+
+​	说明可以按参数定义生成的数据是 `.xml` 还是 `.json` 格式。
+
+#### lib/xml_generator.js
+
+```javascript
+'use strict';
+var nunjucks = require('nunjucks');
+var env = new nunjucks.Environment();
+var pathFn = require('path');
+var fs = require('fs');
+
+// 添加自定义过滤器
+env.addFilter('uriencode', function(str) {
+	return encodeURI(str);
+});
+
+env.addFilter('noControlChars', function(str) {
+	return str && str.replace(/[\x00-\x1F\x7F]/g, '');
+});
+
+// 导出主函数。locals 是 Hexo 提供的上下文数据，包含所有文章、页面等信息。
+module.exports = function(locals){
+    // 读取和编译模板
+  var config = this.config;
+  var searchConfig = config.search;
+
+  var searchTmplSrc = searchConfig.template || pathFn.join(__dirname, '../templates/search.xml');
+  var searchTmpl = nunjucks.compile(fs.readFileSync(searchTmplSrc, 'utf8'), env);
+
+  // 解析搜索范围
+  var template = searchTmpl;
+  var searchfield = searchConfig.field;
+  var content = searchConfig.content;
+  if (content == undefined) content=true;
+
+  var posts, pages;
+
+  if(searchfield.trim() != ''){
+    searchfield = searchfield.trim();
+    if(searchfield == 'post'){
+      posts = locals.posts.sort('-date');
+    }else if(searchfield == 'page'){
+      pages = locals.pages;
+    }else{
+      posts = locals.posts.sort('-date');
+      pages = locals.pages;
+    }
+  }else{
+    posts = locals.posts.sort('-date');
+  }
+
+  // 处理根路径
+  var rootURL;
+  if (config.root == null){
+    rootURL = "/";
+  }else{
+    rootURL = config.root;
+  }
+
+  // 渲染模板并返回结果
+  var xml = template.render({
+    config: config,  // 全局配置。
+    posts: posts,  // 搜索范围内的文章和页面。
+    pages: pages,
+    content: content,  // 文章内容
+    url: rootURL  // 文章根路径
+  });
+
+  return {
+    path: searchConfig.path,
+    data: xml
+  };
+};
+```
+
+## 部署器类
+
+- [部署器（Deployer） | Hexo](https://hexo.io/zh-cn/api/deployer)
+
+### hexo-deployer-git
+
+- [hexojs/hexo-deployer-git: Git deployer plugin for Hexo.](https://github.com/hexojs/hexo-deployer-git)
+
+#### index.js
+
+```javascript
+/* global hexo */
+'use strict';
+
+hexo.extend.deployer.register('git', require('./lib/deployer'));
+```
+
+​	定义一个部署器。
+
+**设置 Git 环境**：
+
+- 初始化 `.deploy_git` 目录作为临时 Git 仓库。
+- 配置用户信息（用户名和邮箱）。
+- 提交生成的静态文件。
+
+**文件操作**：
+
+- 清空 `.deploy_git` 文件夹。
+- 从 `public` 文件夹复制生成的静态文件到 `.deploy_git` 目录。
+- 可选：复制额外的扩展目录文件（`extend_dirs`）。
+
+**Git 推送**：
+
+- 将 `.deploy_git` 目录中的文件推送到用户配置的远程仓库。
+
+## 标签类
+
+- [标签插件（Tag） | Hexo](https://hexo.io/zh-cn/api/tag)
+
+### butterfly
+
+- [Butterfly - A Simple and Card UI Design theme for Hexo](https://butterfly.js.org/)
+
+​	这里有不少标签类插件。
+
+#### scripts/tag/button.js
+
+```javascript
+/**
+ * Button
+ * {% btn url text icon option %}
+ * option: color outline center block larger
+ * color : default/blue/pink/red/purple/orange/green
+ */
+
+'use strict'
+
+const urlFor = require('hexo-util').url_for.bind(hexo)
+
+const btn = args => {
+  args = args.join(' ').split(',')
+  const [url = '', text = '', icon = '', option = ''] = args.map(arg => arg.trim())
+
+  return `<a class="btn-beautify ${option}" href="${urlFor(url)}" 
+  title="${text}">${icon.length ? `<i class="${icon}"></i>` : ''}${text.length ? `<span>${text}</span>` : ''}</a>`
+}
+
+hexo.extend.tag.register('btn', btn, { ends: false })
+```
+
+​	原理就是把 `{% btn url text icon option %}` 转换为：
+
+```html
+<a class="btn-beautify ${option}" href="${urlFor(url)}" 
+  title="${text}">${icon.length ? `<i class="${icon}"></i>` : ''}${text.length ? `<span>${text}</span>` : ''}</a>
+```
+

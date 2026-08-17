@@ -1,0 +1,569 @@
+---
+title: AI-博客搜索系统
+date: Tue Jul 28 2026 18:58:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - Agent
+  - AI应用
+categories: 开发
+description: 给博客整点 AI 赋能！
+---
+
+
+import { Agent } from '../_components/Agent/index'
+import { KBAgent } from '../_components/Agent/KB'
+
+# 演示
+
+博客原先的文章搜索系统组件如下：
+
+<Search/>
+
+全新的 AI 赋能版博客 Agent 检索系统如下（需要用户自行配置 LLM）：
+
+<KBAgent
+  searchIndexURL="/search-index.json"
+  copyTextBasePath="/copy-text/_posts/"
+  title="博客问答"
+  placeholder="输入问题，Agent 将搜索博客文章后回答..."
+  emptyTitle="有什么可以帮你的？"
+  emptyDescription="向 AI 助手提问关于博客文章的问题，Agent 会自动搜索文章索引、拉取全文作为上下文，再由 LLM 生成回答。"
+  exampleQuestions={[
+    '这个博客有哪些文章？',
+    '这个博客里的文章大都写什么的？',
+    '帮我找找博客里 AI 相关的文章？',
+  ]}
+  userLabel="You"
+  assistantLabel="AI 助手"
+  additionalSystemPrompt="Pro哥就是promefire的简称，他与杰哥，杰杰是一个人，他这么取网名是参考了普罗米修斯的火的英文；"
+/>
+
+也可以只用纯 LLM 对话（没有博客相关的关键词），不需要知识库：
+
+<Agent
+  title="AI Chat"
+  placeholder="随便聊聊..."
+/>
+
+# 前言
+
+> [!Tip]
+>
+> 现在大家都讲究 AI 赋能，自己的博客系统自然也不能落下😭！操作一下代码 Agent 让它帮我整一个博客 Agent！
+>
+> 根据我对 Agent 的浅显理解，要设计一个能用的 Agent，重要的是给 Agent 足够的上下文，因此我想到了用原先博客框架中的搜索功能和复制全文功能的文件作为上下文，然后设计一个完备的 system prompt，完事。
+>
+> 正文内容 100% 由 AI 撰写，真是超高的 AI 入库率😎！
+
+# 正文
+
+本博客目前运行着两套搜索引擎：
+
+| | 自带搜索 | KBAgent |
+|--|---------|---------|
+| **定位** | 即时关键词下拉检索 | 基于全文的 AI 对话问答 |
+| **核心技术** | FlexSearch 倒排索引 | TF-IDF 检索 + LLM RAG |
+| **是否需要 LLM** | ❌ 纯前端 | ✅ 两次 API 调用 |
+| **结果形态** | 文章标题 + 摘要 + 高亮 | 流式自然语言回答 + 引用 |
+
+虽然定位不同，但两套引擎**共用同一份构建时生成的搜索索引**。先通过一张图看清整个系统的数据流向：
+
+```mermaid
+flowchart TD
+    A[source/_posts/*.mdx] --> B[generate-search-index.mjs]
+    A --> C[generate-post-sources.mjs]
+    
+    B --> D[public/search-index.json]
+    C --> E[public/copy-text/_posts/*.txt]
+    
+    D --> F[Search.tsx\nFlexSearch 客户端]
+    D --> G[KBAgent.tsx\nTF-IDF 检索]
+    E --> G
+    
+    F --> H[关键词下拉结果]
+    G --> I[LLM stream API]
+    I --> J[流式 AI 回答]
+```
+
+整个流程可以概括为三个环节：
+
+1. **构建时**：`run-all.mjs` 调度脚本，从 Markdown 源文件生成两份数据——搜索索引 JSON（两套引擎共用）和文章全文副本（KBAgent 专用）。
+2. **浏览器加载时**：分别加载 FlexSearch 库（自带搜索）和博客概览（KBAgent），做好检索准备。
+3. **用户交互时**：自带搜索走「输入 → FlexSearch 匹配 → 展示」的快速路径；KBAgent 走「输入 → LLM 提取关键词 → TF-IDF 检索 → 拉取全文 → LLM 生成回答」的深度路径。
+
+下面从索引生成到最终呈现，把整条链路讲清楚。
+
+## 一、搜索索引的生成
+
+脚本路径：`scripts/generate-search-index.mjs`。它作为预构建脚本（由 `scripts/run-all.mjs` 在 `prebuild` / `predev` 时自动调度）运行，输出 `public/search-index.json`。
+
+**处理流程：**
+
+```
+source/_posts/*.mdx  →  读取 front matter + 正文  →  剥离 Markdown  →  写入 JSON
+```
+
+具体步骤如下：
+
+1. **收集文章**：遍历 `source/_posts/` 下所有 `.mdx` / `.md` 文件。
+2. **解析 front matter**：用 `gray-matter` 提取 `title`、`description`、`categories`、`tags`、`hidden`、`password` 等元数据。
+3. **排除隐藏文章**：`hidden: true` 或 `hidden: { search: true }` 的文章跳过；子目录文章如果配置了 `hide_sub_posts.search` 也跳过。
+4. **处理加密文章**：有 `password` 或属于加密标签的文章，`content` 字段留空，只保留标题和描述。
+5. **剥离 Markdown 语法**：逐条正则去除代码块、行内代码、图片、链接、标题标记、粗斜体、列表标记、水平线，最后合并多余空白为单个空格。
+6. **截断**：正文按 `content_max_length`（默认 5000 字符）截断。
+7. **输出 JSON**：写入 `public/search-index.json`，每篇文章一条记录：
+
+```json
+{
+  "title": "AI-MCP Server",
+  "description": "...",
+  "slug": "AI-MCP Server",
+  "url": "/posts/AI-MCP Server/",
+  "content": "正文纯文本（最多 5000 字）",
+  "categories": ["学习"],
+  "tags": ["Agent", "MCP"],
+  "encrypted": false
+}
+```
+
+## 二、自带搜索引擎（FlexSearch）
+
+组件路径：`src/components/mdx/Search.tsx`。
+
+### 2.1 技术选型
+
+选用 [FlexSearch](https://github.com/nextapps-de/flexsearch) v0.7，一个纯 JavaScript 的客户端全文搜索引擎。它在浏览器内存中构建倒排索引，无需任何服务端参与。
+
+### 2.2 索引构建（浏览器端）
+
+组件挂载后：
+
+1. `fetch('/search-index.json')` 拉取索引数据（一次性）。
+2. 动态 `import('flexsearch')` 加载库。
+3. 创建 FlexSearch `Index` 实例，配置 **自定义 CJK 分词器** `cjkEncode`：
+
+```js
+// 分词策略：空格切分后，对每个 CJK 段落生成：
+// ① 单字  ② 二元组 (bigram)  ③ 三元组 (trigram)
+// 例如 "计算机" → ["计算机", "计", "算", "机", "计算", "算机", "计算机"]
+```
+
+配合 FlexSearch 的两个关键配置，实现较好的中日韩文本搜索效果：
+
+**`tokenize: 'forward'`（前缀匹配）**
+
+FlexSearch 的 `tokenize` 选项控制索引构建和查询时的分词策略。`'forward'` 表示**前缀索引**：对于每个 token，不仅索引完整 token，还会索引它的所有前缀子串。
+
+以 "计算机" 为例，`cjkEncode` 分词后产生 `["计算机", "计", "算", "机", "计算", "算机", "计算机"]`。在 `forward` 策略下，FlexSearch 会为每个 token 建立前缀链：
+
+- `"计算机"` → 索引前缀：`"计"`、`"计算"`、`"计算机"`
+- `"计算"` → 索引前缀：`"计"`、`"计算"`
+- `"计"` → 索引前缀：`"计"`
+
+当用户输入 "计算" 时，即使原始文章中有完整的 "计算机"，也能通过前缀匹配找到——因为 "计算" 是 "计算机" 的前缀。这种策略非常适合 CJK 语言中通过部分字符匹配完整词汇的场景。
+
+其他可选策略对比：
+- `'strict'`：只有完全匹配才命中，"计算" 搜不到 "计算机"
+- `'reverse'`：后缀匹配，"机" 能搜到 "计算" 但 "计" 搜不到 "计算机"
+- `'full'`：前缀+后缀，索引体积更大但覆盖面最广
+
+**`threshold: 0`（精确匹配，关闭模糊搜索）**
+
+`threshold` 控制 FlexSearch 的模糊匹配容忍度，范围 0～5：
+
+| threshold | 行为 |
+|-----------|------|
+| 0 | 精确匹配，不做任何模糊处理 |
+| 1 | 允许 1 个字符的编辑距离（插入/删除/替换） |
+| 5 | 极高容忍度，匹配大量近似结果 |
+
+设为 0 是因为我们已经在 `cjkEncode` 分词阶段通过单字+二元组+三元组实现了「结构化模糊」——字符级的 n-gram 拆分天然覆盖了部分匹配。再叠加 FlexSearch 的编辑距离模糊会导致过多噪音结果，降低搜索精度。
+
+4. 将每篇文章的 `title + description + content` 拼接后加入索引。
+
+### 2.3 搜索流程
+
+```
+用户输入 → FlexSearch.search(query) → 返回最多 50 个 ID
+    → 可选：按分类/标签前端过滤
+    → 取前 20 条展示
+```
+
+搜索结果以**下拉面板**展示，每条包含：
+- 文章标题（加密文章标注 🔒）
+- 描述
+- 分类/标签徽章
+- 正文片段，查询词用 `<mark>` 高亮
+
+### 2.4 分类/标签筛选
+
+索引加载时同时提取所有分类和标签去重集合，渲染为两个 `<Select>` 下拉框。选择后在搜索结果上做前端过滤。
+
+## 三、KBAgent 搜索引擎
+
+KBAgent 是一个 **RAG（检索增强生成）Agent**，核心逻辑位于 `source/_components/Agent/KB/`。
+
+### 3.1 整体架构
+
+```
+用户提问 → LLM 提取关键词 → TF-IDF 检索文章 → 拉取全文
+    → 组装 System Prompt → LLM 流式生成回答
+```
+
+### 3.2 第一步：LLM 关键词提取
+
+函数：`extractKeywords()` in `KBAgent.tsx`
+
+在 TF-IDF 检索之前，先把用户的自然语言问题发往 LLM 做**关键词提炼**。这一步解决了「自然语言 → 搜索词」的语义鸿沟：
+
+| 用户输入 | LLM 提取 |
+|---------|---------|
+| "有没有计算机图形学相关的文章？" | `计算机图形学` |
+| "Tell me about Python articles" | `Python` |
+| "这个博客一共多少篇文章？" | （空）→ 跳过检索 |
+| "你能干啥" | （空）→ 跳过检索 |
+| "你好" | （空）→ 跳过检索 |
+
+如果 LLM 返回空字符串（统计类/闲聊类问题），直接跳过 TF-IDF 检索，仅用博客概览回答。
+
+实现细节：
+- 调用 `/chat/completions` API，使用专门的 keyword extraction system prompt
+- `temperature: 0.1`（低温度保证稳定输出）
+- `max_tokens: 1024`（给推理模型留足思考空间，避免 reasoning token 吃光配额导致 content 为空）
+- 5 秒超时，超时则回退到原始查询
+
+**关键词提取的智能分类**：System prompt 将用户输入分为四类，LLM 根据类别决定提取策略：
+
+| 类别 | 触发条件 | 提取策略 | 示例 |
+|------|---------|---------|------|
+| 指定文章 | "xxx这篇文章/这个文章" | 提取文章标题标识符 | "总结一下Diary-01这个文章" → `Diary-01` |
+| 博客人物/术语 | 询问 additionalSystemPrompt 中提到的人物 | 提取所有已知别名 | "某某是一个什么样的人" → `某某 别名` |
+| 一般话题 | 询问某个主题领域 | 提取核心主题关键词 | "有没有 AI 相关文章？" → `AI` |
+| 无需检索 | 打招呼/统计/能力询问 | 返回空字符串 | "你好" / "一共多少篇" → `""` |
+
+**空关键词的处理**：通过 `finish_reason` 区分两种情况——`finish_reason === "stop"` 且 content 为空，说明 LLM 有意判断无需检索，返回空字符串，跳过 TF-IDF 搜索，仅用博客概览回答。`finish_reason === "length"` 或超时/报错，说明 LLM 调用失败，回退到原始查询兜底。
+
+**推理模型的兼容处理**：对于 DeepSeek-R1、o1 等推理模型，它们会在输出 `content` 之前产生大量 `reasoning_content`（内部思考 token）。如果 `max_tokens` 设置过小（如早期版本的 30），全部 token 被推理消耗，`content` 为空。增大到 1024 后推理消耗 ~100-300 token，剩余足够输出关键词。
+
+此外，还增加了 `reasoning_content` 兜底解析——如果 `content` 仍为空（极端情况），从 `reasoning_content` 的末尾行中启发式提取关键词，作为最后一道安全网。
+
+### 3.3 第二步：TF-IDF 检索
+
+函数：`searchArticles()` in `rag.ts`
+
+收到关键词后，在搜索索引上执行 TF-IDF 评分。先理解 TF-IDF 的核心思想：
+
+**TF-IDF = 词频 × 逆文档频率**，用于衡量一个词对一篇文章的「重要程度」。
+
+- **TF（Term Frequency，词频）**：词在文档中出现越多次，越重要。比如 "React" 在文章 A 中出现 10 次，对文章 A 的 TF 就很高。
+- **IDF（Inverse Document Frequency，逆文档频率）**：词在越少文档中出现，区分度越高。比如 "的" 几乎每篇文章都有，IDF 极低；"WebGL" 只在 2 篇文章出现，IDF 很高。
+
+具体计算：
+
+1. **分词**：与自带搜索的 `cjkEncode` 类似，但**只做单字+二元组，不做三元组**（粒度更粗，适合关键词级检索）。这是有意为之——TF-IDF 检索只需要找到相关文章，LLM 会负责精确理解全文内容，所以检索阶段可以适当放宽粒度。
+
+2. **加权打分**（支持可选的分类/标签预过滤）：
+   - 标题匹配权重：**×3**
+   - 描述匹配权重：**×2**
+   - 正文匹配权重：**×1**
+
+   每个 token 的最终得分 = `Σ(TF × IDF)`。以关键词 "React" 为例：
+
+   ```
+   文章 A：标题出现 1 次 "React"（TF=1, 加权×3），正文出现 5 次（TF=5, 加权×1）
+   文章 B：标题未出现，正文出现 2 次（TF=2, 加权×1）
+   
+   IDF("React") = log((文章总数 + 1) / (出现该词的文章数 + 1)) + 1
+   （"React" 出现在 10 篇文章中，共 50 篇 → IDF = log(51/11) + 1 ≈ 2.53）
+   
+   文章 A 得分 = (1×3 + 5×1) × 2.53 = 20.24
+   文章 B 得分 = (0×3 + 2×1) × 2.53 = 5.06
+   ```
+
+   标题匹配的 3 倍权重确保了标题含有关键词的文章被优先考虑——毕竟标题是最凝练的内容概括。
+
+4. **短语精确匹配加成**：token 级打分完成后，如果完整关键词（≥2 字符）作为子串出现在文章标题中，得分 **×10**。这确保了用户指定文章标题时，目标文章必定排第一。
+
+   例如关键词 "AI-博客搜索系统" 在标题中精确出现 → 得分从 768 跃升至 7688，远超其他文章。
+
+3. **动态 Top-K**：`dynamicTopK()` 不是固定取前 K 篇，而是**取所有得分高于平均分的文章**，范围夹在 3～10 篇之间：
+
+   - 如果所有文章得分都很接近（如都是 2～3 分），说明关键词区分度不高，取较少的 3 篇避免噪音
+   - 如果部分文章得分远超平均（如 20、15、3、1），说明有明显的强相关文章，取更多篇（最多 10 篇）给 LLM 提供充分上下文
+
+   这种自适应策略比固定 K 值更灵活——不会因为设太小而漏掉重要文章，也不会因为设太大而塞入无关内容浪费 token。
+
+### 3.4 第三步：拉取全文
+
+函数：`fetchArticle()` / `fetchArticles()` in `rag.ts`
+
+TF-IDF 选出的文章，从 `public/copy-text/_posts/{slug}.txt` 拉取正文。与早期版本每篇固定 2000 字符不同，现在采用 **按 TF-IDF 评分比例分配字符预算** 的策略：
+
+- **总预算不变**：`topK × baseMaxChars`（如 5 篇 × 2000 = 10000 字符）
+- **高分多得、低分少得**：通过 `allocateCharsByScore()` 按得分比例分配，范围 [500, 4000]
+- **效果**：最相关的文章获得 3000～4000 字符的完整上下文给 LLM，边缘文章仅给 500～700 字符的摘要，Token 利用率更高
+
+这是 KBAgent 相比自带搜索的关键优势——**自带搜索只能看到索引中的摘要（5000 字截断），而 KBAgent 拿到了完整文章内容后交给 LLM 阅读理解**。
+
+### 3.5 第四步：组装 System Prompt
+
+函数：`buildMessages()` + `buildSystemPrompt()` in `rag.ts`
+
+这是 RAG 的核心——将检索到的文章注入 System Prompt：
+
+```markdown
+You are an AI assistant for "Zi-Zi's Journey", a blog by Zack Guan. All data below is from this blog.
+
+---
+
+## BLOG OVERVIEW
+- This blog contains **50** articles
+- Main categories: 学习(30), 生活(10)...
+- Main tags: Agent(5), MCP(3)...
+
+---
+
+## SEARCH RESULTS
+### Article: AI-MCP Server
+Link: </posts/AI-MCP Server/>
+
+Content:
+（完整文章正文）
+
+---
+
+### Article: AI-Agent 工具探索
+Link: </posts/AI-Agent 工具探索/>
+
+Content:
+（完整文章正文）
+
+---
+
+## CRITICAL RULES:
+- Always cite articles as clickable markdown links: [Title](<Link>) — use angle brackets to support CJK/spaces in URLs
+- You CAN read and summarize the full article content
+- The user chatting with you is a READER, not the blog author
+- For chitchat → briefly introduce yourself, mention the blog name and author naturally
+- Respond in the same language as the user's query
+```
+
+博客名称和作者通过 `useSiteConfig()` 从 `_config.yml` 动态读取，换博客只需改配置，无需修改代码。也可以通过 `<KBAgent blogName="..." author="..." />` 手动覆盖。
+
+### 3.6 博客概览
+
+在加载搜索索引时，KBAgent 还会生成一份「博客概览」：
+
+- 文章总数
+- 加密文章数
+- 分类排行榜（前 15）
+- 标签排行榜（前 15）
+
+格式化为自然语言后注入 System Prompt，使 Agent 能回答「有多少篇关于 AI 的文章？」「有哪些分类？」等统计类问题，而这类问题 TF-IDF 检索是无效的。
+
+当没有匹配文章时，KBAgent 回退到 `DEFAULT_NO_CONTEXT_PROMPT`，仅用博客概览回答：
+
+```markdown
+You are an AI assistant for "Zi-Zi's Journey", a blog by Zack Guan. All information below describes this blog.
+## BLOG OVERVIEW
+（博客统计）
+If you cannot answer the question from the blog overview, be honest about it.
+```
+
+### 3.7 随机推荐机制
+
+当 LLM 关键词提取返回空（主观推荐类问题，如"你觉得最有意思的文章是哪篇？"），不直接回退到纯博客概览，而是触发 **随机文章推荐**：
+
+函数：`pickRandomArticles()` in `rag.ts`
+
+- 从索引中排除加密文章，Fisher-Yates 洗牌后随机选取 5 篇
+- 拉取全文后注入 System Prompt
+- LLM 基于这 5 篇随机文章进行推荐，给出自然语言回答
+
+这样"你觉得哪篇文章最有趣？"不再是空回答，而是真正基于随机抽样做出的个性化推荐。
+
+### 3.7 第五步：LLM 流式生成
+
+Agent 核心：`source/_components/Agent/agent.ts` 中的 `streamChat()`。
+
+```
+组装好的 messages（system + history） → POST /chat/completions (stream: true)
+    → 逐 token 读取 SSE 流 → onToken 回调更新 UI
+```
+
+技术细节：
+- 使用 `fetch` + `ReadableStream` 手动解析 SSE（Server-Sent Events）
+- 解析 `data: {...}` 行，提取 `choices[0].delta.content`
+- 支持 `AbortController` 中断（用户点击停止按钮）
+- 错误处理：HTTP 状态码错误解析 JSON error message
+
+Markdown 渲染：`render-markdown.ts` 使用 `unified` + `remark-parse` + `remark-gfm` + `remark-rehype` + `rehype-stringify`，支持 GFM 表格、删除线、任务列表，外部链接自动添加 `target="_blank"`。
+
+## 四、复制文本的生成（KBAgent 全文来源）
+
+脚本路径：`scripts/generate-post-sources.mjs`，同样由 `run-all.mjs` 在构建时调度。
+
+输出目录：`public/copy-text/`，包含：
+
+```
+public/copy-text/
+├── _posts/
+│   ├── AI-MCP Server.txt
+│   ├── AI-Agent 工具探索.txt
+│   └── ...
+├── about.txt
+├── archives.txt
+├── links.txt
+└── tags.txt
+```
+
+**处理逻辑：**
+
+1. **文章**（`source/_posts/`）：遍历所有 `.mdx`，提取 front matter（仅保留 `title`、`date`、`tags`、`categories`、`description`），正文中的 `:::encrypt` 块替换为占位提示。
+2. **页面**（`source/{folder}/index.mdx`）：`about`、`archives`、`links`、`tags` 等独立页面。
+3. **跳过条件**：`password` 不为空 或 `post_tools.copy_source === false` 的文章不生成副本。
+
+这样 KBAgent 的 `fetchArticle()` 就可以通过 HTTP 拉取到完整的文章纯文本。
+
+## 五、Agent 的用户输入 API 原理
+
+`ChatAgent` 组件（`source/_components/Agent/ChatAgent.tsx`）是整个 Agent 系统的 UI 骨架，KBAgent 是它的一个「增强版」。
+
+### 5.1 组件层次
+
+```
+ChatAgent（通用聊天 UI）
+  ├── 纯 LLM Agent：直接发送 system prompt + 用户消息
+  └── KBAgent：通过 prepareMessages 钩子注入 RAG 上下文
+```
+
+### 5.2 消息流
+
+```
+1. 用户输入 → handleSend()
+2. 创建 userMsg + 空 assistantMsg → 追加到 messages 数组
+3. 调用 prepareMessages()（KBAgent 在此执行关键词提取 + TF-IDF + 拉取全文）
+4. 得到完整的 messages[]（含 system prompt + RAG 上下文 + 历史）
+5. streamChat() 发起 SSE 流式请求
+6. onToken 逐字追加到 assistantMsg.content → React 状态更新 → UI 重渲染
+7. onDone / onError 结束流
+```
+
+### 5.3 配置管理与 API Key 安全
+
+用户通过 `ApiKeySetup` 组件配置三项：
+
+```ts
+interface AgentConfig {
+  apiKey: string      // LLM API Key
+  baseURL: string     // API 端点（兼容 OpenAI 格式）
+  model: string       // 模型名称
+}
+```
+
+**API Key 的存储：AES-GCM 加密 + PBKDF2 密钥派生**
+
+API Key 是敏感信息，不能明文存在 `localStorage`。博客的 Agent 模块（`secureStorage.ts`）使用 Web Crypto API 做了完整的加密保护：
+
+```mermaid
+flowchart LR
+    A[浏览器指纹] --> B[PBKDF2-SHA256\n100,000 次迭代]
+    B --> C[AES-256-GCM 密钥]
+    D[API Key 明文] --> E[AES-256-GCM 加密]
+    C --> E
+    E --> F["localStorage\n{ encrypted, iv, salt }"]
+```
+
+具体流程：
+
+1. **密钥派生（PBKDF2-SHA256）**：从「浏览器指纹」派生 AES 密钥。指纹由 `userAgent` + `screen.width` + `screen.height` + `colorDepth` + `language` 拼接而成，同一设备上的同一浏览器产生相同指纹，换机器或换浏览器都会改变。PBKDF2 执行 100,000 次 SHA-256 哈希迭代，暴力破解成本极高。
+
+2. **加密（AES-256-GCM）**：每次保存时生成随机 16 字节 salt 和随机 12 字节 IV（初始化向量），用 AES-256-GCM 加密 JSON 序列化后的配置。GCM 模式自带认证标签，能检测密文是否被篡改。
+
+3. **存储**：加密后的 `{ encrypted, iv, salt }` 三个字段（均为 hex 字符串）存入 `localStorage`。即使有人拿到 `localStorage` 内容，没有浏览器指纹也无法解密。
+
+4. **解密**：加载时从 `localStorage` 读取密文，用相同指纹重新派生密钥，AES-GCM 解密还原明文。
+
+**API Key 为什么不会泄露？**
+
+很多用户担心把 API Key 输入网页后会泄露。实际上：
+
+- API Key **只在浏览器本地加密存储**，明文从未离开过浏览器（加密后才写入 `localStorage`）。
+- 发送 LLM 请求时，API Key 被放入 HTTP 请求头 `Authorization: Bearer {apiKey}`，**直接发给模型供应商**（如 `https://api.openai.com/v1/chat/completions`），整个通信走 HTTPS 加密。
+- 博客服务器**完全不参与** LLM API 调用——`fetch()` 请求从浏览器直接发往模型供应商，博客后端看不到也无法记录 API Key。
+- 如果你用的是本地模型（如 Ollama `http://localhost:11434`），API Key 甚至不会离开你的机器。
+
+简而言之：API Key 的传输路径是 `localStorage（加密） → 浏览器内存（解密） → HTTPS → 模型供应商`，博客服务器全程无感知。
+
+### 5.4 KBAgent 的 prepareMessages 钩子
+
+这是 KBAgent 区别于普通 Agent 的核心——它在发送前拦截消息，执行 RAG 检索：
+
+```ts
+// KBAgent.tsx
+const prepareMessages = async (text, allMessages) => {
+  // 1. LLM 提取关键词
+  const searchQuery = await extractKeywords(text, allMessages, config)
+  
+  // 2. TF-IDF 检索 + 拉取全文
+  const { articles, totalHits, allHits } = await buildRAGContext(searchQuery, ...)
+  
+  // 3. 构建带统计信息的博客概览
+  // 4. 构建带 RAG 上下文的 messages 数组
+  const messages = buildMessages(text, articles, allMessages, blogOverviewText, ...)
+  
+  return messages
+}
+```
+
+## 六、两套搜索引擎对比
+
+### 6.1 功能维度
+
+| | 自带搜索 (FlexSearch) | KBAgent (RAG) |
+|--|----------------------|---------------|
+| 搜索算法 | FlexSearch 倒排索引 + `forward` 分词 | 自定义 TF-IDF + 加权评分 |
+| CJK 分词 | 单字 + 二元组 + 三元组 | 单字 + 二元组（更粗粒度） |
+| LLM 参与 | ❌ | ✅ 关键词提取 + 最终回答 |
+| 结果形态 | 文章列表 + 摘要 + 高亮 | 自然语言综合回答 + 引用链接 |
+| 全文利用 | 仅索引摘要（≤5000 字截断） | 拉取完整 .txt 副本 |
+| 上下文窗口 | 无 | 3～10 篇文章全文注入 |
+| 非搜索问题 | 无结果 | 基于博客概览回答 |
+| 加密文章 | 仅标题+描述 | 同上，LLM 可提示需密码 |
+| 分类/标签筛选 | UI 下拉框 | API 参数（无 UI） |
+
+### 6.2 性能维度
+
+| | 自带搜索 | KBAgent |
+|--|---------|---------|
+| 网络请求 | 1 次（加载 JSON） | 3+ 次（JSON + 关键词 API + N 篇全文 + 回答 API） |
+| 首次加载 | 索引 JSON + FlexSearch 库 | 同左 + 博客概览计算 |
+| 搜索延迟 | \< 50ms（内存倒排索引） | 1～5s（取决于 LLM API 延迟） |
+| 离线可用 | 是（索引缓存后） | 否（依赖 LLM API） |
+| 费用 | 免费 | 按 API 调用计费 |
+
+### 6.3 适用场景
+
+| 场景 | 推荐 |
+|------|------|
+| 快速找到某篇文章 | 自带搜索 |
+| 不知道文章标题，想要了解某个主题 | KBAgent |
+| 统计类问题（"有多少篇 AI 文章？"） | KBAgent |
+| 需要 AI 综合多篇文章信息 | KBAgent |
+| 即时响应，无等待 | 自带搜索 |
+
+## 七、构建流程总览
+
+两个搜索引擎的索引和副本都在**构建时**生成，由 `scripts/run-all.mjs` 统一调度（作为 Next.js 的 `prebuild` / `predev` 钩子）：
+
+```
+run-all.mjs
+  ├── generate-search-index.mjs   → public/search-index.json      （两套引擎共用）
+  ├── generate-post-sources.mjs   → public/copy-text/_posts/*.txt  （KBAgent 专用）
+  ├── generate-rss.mjs            → public/rss.xml
+  ├── generate-mdx-components.mjs → 组件注册表
+  └── ...其他脚本
+```
+
+所有生成脚本在每次 `next dev` 或 `next build` 之前自动运行，确保索引和副本始终与文章内容同步。
+
+两套引擎各司其职：自带搜索负责「找文章」，KBAgent 负责「读文章并回答问题」。它们共享同一份索引数据，却服务于截然不同的用户体验——这正是博客搜索系统灵活性的体现。

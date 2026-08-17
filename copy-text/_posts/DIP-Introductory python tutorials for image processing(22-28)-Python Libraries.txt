@@ -1,0 +1,749 @@
+---
+title: DIP-Introductory python tutorials for image processing(22-28)-Python Libraries
+date: Wed Nov 02 2022 08:52:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - Python
+  - 数字图像处理
+  - DigitalSreeni
+categories: 课程
+description: 学习自 Youtube 博主 DigitalSreeni。
+---
+
+
+# 正文
+
+## 数字图像处理的基本步骤
+
+- **图像获取**
+- **图像增强**：对图像进行某种操作，使结果在特定应用中比原图像更为合适的过程
+- **图像复原**：改善图像外观的一个领域，倾向于以图像退化的数学或概率模型为基础
+- **彩色图像处理**
+- **小波**：以不同分辨率来表示图像的基础
+- **形态学处理**：提取图像中用于表示和描述形状的成分的处理工具
+- **分割**：将一幅图像划分为各个组成部分和目标
+- **特征提取**
+- **图像模式分类**：根据目标特征描述子对目标赋予标记的过程
+
+## Tutorial 22 - Reading images into Python
+
+Reading Images into Python
+
+- **scikit-image**: *pip install scikit-image*
+- **opencv**: *pip install opencv-python*
+- **Pillow**: **PIL** - does not import images as numpy array. You can convert using *numpy.asarray(img)*
+
+### 使用 skimage 读取图像
+
+
+```python
+from skimage import io
+
+img = io.imread('images/Osteosarcoma_01.tif')
+img.shape  # y, x, c, dtype=uint8
+```
+
+
+    (1104, 1376, 3)
+
+- 转成 float 格式
+
+
+```python
+from skimage import io, img_as_float
+
+img2 = img_as_float(img)
+```
+
+不要使用 *.astype(np.float)*
+
+
+```python
+import numpy as np
+
+img3 = img.astype(np.float64)
+```
+
+转换成 uint8 格式的图像
+
+
+```python
+from skimage import io, img_as_ubyte
+
+img_8bit = img_as_ubyte(img2)
+```
+
+![png](22_1.png)
+
+### 使用 OpenCV 读取图像
+
+
+```python
+import cv2
+
+img_cv2 =  cv2.imread('images/Osteosarcoma_01.tif')  # 彩色图像
+grey_img = cv2.imread('images/Osteosarcoma_01.tif', 0)  # 灰度图像
+color_img = cv2.imread('images/Osteosarcoma_01.tif', 1)  # 彩色图像
+img_opencv = cv2.cvtColor(color_img, cv2.COLOR_BGR2RGB)  # 将图像转为 RGB 格式
+```
+
+OpenCV 默认使用 BGR 颜色空间, skimage 默认使用 RGB 颜色空间
+
+![png](22_2.png)
+
+## Tutorial 23 - Reading proprietary images in python
+
+- 使用 Python 读取专有图像文件
+
+```python
+import tifffile
+
+img = tifffile.imread('images/Osteosarcoma_01.tif')
+```
+
+
+```python
+from skimage import io
+
+img2 = io.imread('images/Osteosarcoma_01.tif', as_gray=False)
+```
+
+- tif 还有 3D image 格式 和 Time series 格式
+
+- 还可以读取 czi(显微镜图像格式) 格式 (Time series, scenes, channels, y, x, z, RGB)
+
+好专业的图像格式...
+
+
+```python
+# Let us extract only relevant pixels, all channels in x and y
+img1 = img[0, 0, :, :, :, 0]  # 分离出高, 宽, 通道
+
+# Next, let us extract each channel image.
+img2 = img1[0, :, :]  # 第一个通道 Red
+img3 = img1[0, :, :]  # 第二个通道 Green
+img4 = img1[2, :, :]  # 第三个通道 Blue DAPI
+```
+
+## Tutorial 24 - Saving images from python to your local drive
+
+### skimage
+
+
+```python
+from skimage import io
+
+img = io.imread('images/Osteosarcoma_01.tif')
+```
+
+
+```python
+from skimage import filters
+
+gaussian_img = filters.gaussian(img, sigma=3)  # 此时图像会变成 float 形式
+```
+
+
+```python
+io.imsave('images/exported/saved_using_skimage.jpg', gaussian_img)
+```
+
+    Lossy conversion from float64 to uint8. Range [0, 1]. Convert image to uint8 prior to saving to suppress this warning.
+
+```python
+io.imsave('images/exported/saved_using_skimage.tif', gaussian_img)  # 打不开, 因为识别不出 float 格式的颜色
+```
+
+
+```python
+from skimage import img_as_ubyte
+
+gaussian_img_8bit = img_as_ubyte(gaussian_img)
+io.imsave('images/exported/saved_using_skimage_8bit.tif', gaussian_img_8bit)  # 此时可以打开
+```
+
+### OpenCV
+
+
+```python
+import cv2
+
+# OpenCV 并不会将浮点数映射到 0-255 之间, 而是直接取整, 所以会显示黑色的图片
+cv2.imwrite('images/exported/saved_using_opencv.jpg', gaussian_img)
+```
+
+
+    True
+
+
+```python
+# OpenCV 默认输出 BGR 颜色模型, 如果直接输出, 颜色会有变化
+cv2.imwrite('images/exported/saved_using_opencv_8bit.jpg', gaussian_img_8bit)
+```
+
+
+    True
+
+
+```python
+# 预处理后再输出
+gaussian_img_8bit_RGB = cv2.cvtColor(gaussian_img_8bit, cv2.COLOR_BGR2RGB)
+cv2.imwrite('images/exported/saved_using_opencv_8bit_RGB.jpg', gaussian_img_8bit_RGB)
+```
+
+
+    True
+
+### matplotlib
+
+
+```python
+from matplotlib import pyplot as plt
+
+plt.imsave('images/exported/saved_using_pyplot.jpg', gaussian_img)
+```
+
+### tifffile
+
+
+```python
+import tifffile
+
+tifffile.imwrite('images/exported/saved_using_tifffile.tiff', gaussian_img)
+```
+
+![png](24_1.png)
+
+## Tutorial 25 - Viewing 2d images in python
+
+### matplotlib
+
+
+```python
+from skimage import io
+
+img = io.imread('images/Osteosarcoma_01.tif')
+
+io.imshow(img)
+```
+
+
+    <matplotlib.image.AxesImage at 0x1d668f31a08>
+
+
+![png](25_1.png)
+
+```python
+import matplotlib.pyplot as plt
+
+plt.imshow(img)
+```
+
+
+    <matplotlib.image.AxesImage at 0x1d66951bbc8>
+
+![png](25_2.png)
+
+#### cmap: 用多种风格显示灰度图像:
+
+[pyplot cmap 颜色 - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/114420786)
+
+![png](cmap.png)
+
+```python
+img_gray = io.imread('images/Osteosarcoma_01.tif', as_gray=True)
+```
+
+
+```python
+plt.imshow(img_gray, cmap='hot')
+```
+
+
+    <matplotlib.image.AxesImage at 0x1d6698518c8>
+
+
+![png](25_3.png)
+
+```python
+plt.imshow(img_gray, cmap='jet')
+```
+
+
+    <matplotlib.image.AxesImage at 0x1d6698c9948>
+
+
+![png](25_4.png)
+
+```python
+plt.imshow(img_gray, cmap='Blues')
+```
+
+
+    <matplotlib.image.AxesImage at 0x1d66b5018c8>
+
+
+![png](25_5.png)
+
+```python
+fig = plt.figure(figsize=(10, 10))
+
+ax1 = fig.add_subplot(2,2,1)
+ax1.imshow(img_gray, cmap='hot')
+ax1.title.set_text('1st')
+
+ax2 = fig.add_subplot(2,2,2)
+ax2.imshow(img_gray, cmap='jet')
+ax2.title.set_text('2nd')
+
+ax3 = fig.add_subplot(2,2,3)
+ax3.imshow(img_gray, cmap='gray')
+ax3.title.set_text('3rd')
+
+ax4 = fig.add_subplot(2,2,4)
+ax4.imshow(img_gray, cmap='nipy_spectral')
+ax4.title.set_text('4th')
+plt.show()
+```
+
+
+![png](25_6.png)
+
+
+### OpenCV
+
+
+```python
+import cv2
+
+gray_img = cv2.imread("images/Osteosarcoma_01.tif", 0)
+color_img = cv2.imread("images/Osteosarcoma_01.tif", 1)
+
+# Use the function cv2.imshow() to display an image in a window. 
+# First argument is the window name which is a string. second argument is our image. 
+
+cv2.imshow("pic from skimage import", img)  # Shows weird colors as R and B channels are swapped
+cv2.imshow("color pic from opencv", color_img)
+cv2.imshow("gray pic from opencv", gray_img)
+
+# Maintain output window until 
+# user presses a key or 1000ms (1s)
+cv2.waitKey(0)          
+
+# destroys all windows created
+cv2.destroyAllWindows() 
+```
+
+![png](25_7.png)
+
+## Tutorial 26 - Basic plotting in python using matplot.pyplot
+
+教你怎么用 matplotlib 库
+
+- 画折线图
+
+```python
+from matplotlib import pyplot as plt
+
+x = [1, 2, 3, 4, 5]
+y = [1, 4, 9, 16, 25]
+
+plt.plot(x, y)
+```
+
+
+    [<matplotlib.lines.Line2D at 0x22168454048>]
+
+
+![png](26_1.png)
+
+```python
+import numpy as np
+
+a = np.array(x)
+b = np.array(y)
+plt.plot(a, b)
+```
+
+
+    [<matplotlib.lines.Line2D at 0x22168e11148>]
+
+![png](26_2.png)
+
+- 显示图片
+
+```python
+import cv2
+
+gray_img = cv2.imread('images/sandstone.tif', 0)
+
+plt.imshow(gray_img, cmap='gray')
+```
+
+
+    <matplotlib.image.AxesImage at 0x2216b0b5908>
+
+![png](26_3.png)
+
+- 显示直方图
+
+```python
+plt.hist(gray_img.flat, bins=100, range=(0, 150))
+```
+
+
+    (array([  544.,    30.,    99.,    71.,   122.,    74.,   183.,    88.,
+              274.,   170.,   394.,   253.,   594.,   341.,   806.,   507.,
+             1145.,   626.,  1431.,   794.,  1808.,  1001.,  2091.,  1062.,
+             2303.,  1184.,  2352.,  1178.,  2271.,  1113.,  2083.,  1021.,
+             1830.,   803.,  1568.,   662.,  1367.,   680.,  1320.,   621.,
+             1218.,   613.,  1211.,   608.,  1206.,   634.,  1245.,   614.,
+             1325.,   686.,  1397.,   683.,  1371.,   715.,  1390.,   754.,
+             1493.,   756.,  1630.,   828.,  1763.,   916.,  1849.,   975.,
+             2028.,  1202.,  2575.,  1480.,  3536.,  2095.,  5313.,  3461.,
+             8307.,  4992., 12007.,  6800., 15600.,  8629., 18104.,  9210.,
+            18742.,  9243., 17429.,  8156., 14734.,  6413., 11317.,  4760.,
+             8432.,  3439.,  5933.,  2508.,  4391.,  1920.,  3222.,  1417.,
+             2677.,  1213.,  2205.,  1962.]),
+     array([  0. ,   1.5,   3. ,   4.5,   6. ,   7.5,   9. ,  10.5,  12. ,
+             13.5,  15. ,  16.5,  18. ,  19.5,  21. ,  22.5,  24. ,  25.5,
+             27. ,  28.5,  30. ,  31.5,  33. ,  34.5,  36. ,  37.5,  39. ,
+             40.5,  42. ,  43.5,  45. ,  46.5,  48. ,  49.5,  51. ,  52.5,
+             54. ,  55.5,  57. ,  58.5,  60. ,  61.5,  63. ,  64.5,  66. ,
+             67.5,  69. ,  70.5,  72. ,  73.5,  75. ,  76.5,  78. ,  79.5,
+             81. ,  82.5,  84. ,  85.5,  87. ,  88.5,  90. ,  91.5,  93. ,
+             94.5,  96. ,  97.5,  99. , 100.5, 102. , 103.5, 105. , 106.5,
+            108. , 109.5, 111. , 112.5, 114. , 115.5, 117. , 118.5, 120. ,
+            121.5, 123. , 124.5, 126. , 127.5, 129. , 130.5, 132. , 133.5,
+            135. , 136.5, 138. , 139.5, 141. , 142.5, 144. , 145.5, 147. ,
+            148.5, 150. ]),
+     <BarContainer object of 100 artists>)
+
+![png](26_4.png)
+
+- 显示图片样式
+
+```python
+from matplotlib import pyplot as plt
+import numpy as np
+
+a = np.array([1, 2, 3, 4, 5])
+b = np.array([1, 4, 9, 16, 25])
+
+plt.plot(a, b, 'r--')
+plt.axis([0, 6, 0, 50])
+```
+
+
+    (0.0, 6.0, 0.0, 50.0)
+
+![png](26_5.png)
+
+- 多种图形
+
+```python
+from matplotlib import pyplot as plt
+
+wells = ['well1', 'well2', 'well3', 'well4', 'well5']
+cells = [80, 62, 88, 110, 90]
+
+plt.bar(wells, cells)  # 条形图
+plt.scatter(wells, cells)  # 散点图
+plt.plot(wells, cells)  # 折线图
+```
+
+
+    [<matplotlib.lines.Line2D at 0x2216c346dc8>]
+
+
+![png](26_6.png)
+
+```python
+from matplotlib import pyplot as plt
+
+# Adding labels and annotations
+wells = [1,2,3,4,5]
+cells = [80, 62, 88, 110, 90]
+
+plt.figure(figsize=(8, 8))
+plt.bar(wells, cells)
+plt.xlabel('Well #', fontsize=18, color='red')
+plt.ylabel('# dead cells')
+plt.title('Dead cells in each well')
+plt.axis([1, 6, 60, 120])   #xmin, xmax, ymin, ymax
+plt.grid(True)  # 显示网格
+plt.show()
+```
+
+![png](26_7.png)
+
+- 更改坐标轴单位
+
+```python
+from matplotlib import pyplot as plt
+
+x = [1,2,3,4,5]
+y = [10, 125, 1350, 11250, 100500]
+
+plt.figure(figsize=(12, 6))
+
+# linear
+plt.subplot(121)
+plt.plot(x, y)
+plt.yscale('linear')
+plt.title('linear')
+plt.grid(True)
+
+#Log
+plt.subplot(122)
+plt.plot(x, y)
+plt.yscale('log')
+plt.title('log')
+plt.grid(True)
+```
+
+![png](26_8.png)
+
+- 显示多幅图片
+
+```python
+ from matplotlib import pyplot as plt
+
+wells = ['well1', 'well2', 'well3', 'well4', 'well5']
+cells = [80, 62, 88, 110, 90]
+
+
+#Initialize the plot and sublots
+# Initialize the plot
+fig = plt.figure(figsize=(16,6))
+ax1 = fig.add_subplot(131)
+ax1.set(title='vertical bar', xlabel='Well #', ylabel='# cells')
+        
+ax2 = fig.add_subplot(132)
+ax1.set(title='horizontal bar', xlabel='Well #', ylabel='# cells')
+
+ax3 = fig.add_subplot(133)
+
+# Plot the data
+ax1.bar(wells, cells)
+ax2.barh(wells, cells)
+ax3.plot(wells, cells)
+
+plt.savefig("images/my_plot.jpg")  # Save plot
+# Show the plot
+plt.show()
+```
+
+
+![png](26_9.png)
+
+## Tutorial 27 - Using glob to read multiple files in python
+
+[Python 模块之 glob 模块 - 知乎](https://zhuanlan.zhihu.com/p/71861602)
+
+使用 glob 遍历某个文件夹, 得到这个文件夹下面所有文件的名称
+
+- 一次性得到整个列表
+
+
+```python
+import cv2
+import glob
+
+file_list = glob.glob('images/*.*')
+file_list
+```
+
+
+    ['images\\Alloy_gradient.jpg',
+     'images\\BSE.tif',
+     'images\\bubbles.tif',
+     'images\\cast_iron1.tif',
+     'images\\cast_iron2.jpg',
+     'images\\monalisa.jpg',
+     'images\\Osteosarcoma_01.tif',
+     'images\\Osteosarcoma_01_1sigma_blur.tif',
+     'images\\Osteosarcoma_01_25Sigma_noise.tif',
+     'images\\Osteosarcoma_01_2sigma_blur.tif',
+     'images\\Osteosarcoma_01_8bit.ome.tiff',
+     'images\\Osteosarcoma_01_8bit_salt_pepper.tif',
+     'images\\Osteosarcoma_01_8bit_salt_pepper_cropped.tif',
+     'images\\Osteosarcoma_01_small.tif',
+     'images\\Osteosarcoma_01_transl.tif',
+     'images\\Osteosarcoma_01_transl_rot.tif',
+     'images\\sandstone.tif',
+     'images\\sandstone_blur_2sigma.tif',
+     'images\\sandstone_low_contrast.tif',
+     'images\\scratch_time_series.tif',
+     'images\\synthetic.jpg',
+     'images\\Ti_powder.tif',
+     'images\\Ti_powder_single.tif']
+
+- 通过 for 循环得到列表
+
+
+```python
+my_list = []
+path = 'images/*.*'
+for file in glob.glob(path):
+    print(file)
+    a = cv2.imread(file)
+    my_list.append(a)
+```
+
+    images\Alloy_gradient.jpg
+    images\BSE.tif
+    images\bubbles.tif
+    images\cast_iron1.tif
+    images\cast_iron2.jpg
+    images\monalisa.jpg
+    images\Osteosarcoma_01.tif
+    images\Osteosarcoma_01_1sigma_blur.tif
+    images\Osteosarcoma_01_25Sigma_noise.tif
+    images\Osteosarcoma_01_2sigma_blur.tif
+    images\Osteosarcoma_01_8bit.ome.tiff
+    images\Osteosarcoma_01_8bit_salt_pepper.tif
+    images\Osteosarcoma_01_8bit_salt_pepper_cropped.tif
+    images\Osteosarcoma_01_small.tif
+    images\Osteosarcoma_01_transl.tif
+    images\Osteosarcoma_01_transl_rot.tif
+    images\sandstone.tif
+    images\sandstone_blur_2sigma.tif
+    images\sandstone_low_contrast.tif
+    images\scratch_time_series.tif
+    images\synthetic.jpg
+    images\Ti_powder.tif
+    images\Ti_powder_single.tif
+
+## Tutorial 28 - Using os.listdir to read multiple files
+
+- 使用 os.listdir
+
+```python
+import os
+
+path = 'images/'
+print(os.listdir(path))
+
+for image in os.listdir(path):
+    print(image)
+```
+
+    ['Alloy_gradient.jpg', 'BSE.tif', 'bubbles.tif', 'cast_iron1.tif', 'cast_iron2.jpg', 'exported', 'monalisa.jpg', 'Osteosarcoma_01.tif', 'Osteosarcoma_01_1sigma_blur.tif', 'Osteosarcoma_01_25Sigma_noise.tif', 'Osteosarcoma_01_2sigma_blur.tif', 'Osteosarcoma_01_8bit.ome.tiff', 'Osteosarcoma_01_8bit_salt_pepper.tif', 'Osteosarcoma_01_8bit_salt_pepper_cropped.tif', 'Osteosarcoma_01_small.tif', 'Osteosarcoma_01_transl.tif', 'Osteosarcoma_01_transl_rot.tif', 'sandstone.tif', 'sandstone_blur_2sigma.tif', 'sandstone_low_contrast.tif', 'scratch_time_series.tif', 'synthetic.jpg', 'Ti_powder.tif', 'Ti_powder_single.tif']
+    Alloy_gradient.jpg
+    BSE.tif
+    bubbles.tif
+    cast_iron1.tif
+    cast_iron2.jpg
+    exported
+    monalisa.jpg
+    Osteosarcoma_01.tif
+    Osteosarcoma_01_1sigma_blur.tif
+    Osteosarcoma_01_25Sigma_noise.tif
+    Osteosarcoma_01_2sigma_blur.tif
+    Osteosarcoma_01_8bit.ome.tiff
+    Osteosarcoma_01_8bit_salt_pepper.tif
+    Osteosarcoma_01_8bit_salt_pepper_cropped.tif
+    Osteosarcoma_01_small.tif
+    Osteosarcoma_01_transl.tif
+    Osteosarcoma_01_transl_rot.tif
+    sandstone.tif
+    sandstone_blur_2sigma.tif
+    sandstone_low_contrast.tif
+    scratch_time_series.tif
+    synthetic.jpg
+    Ti_powder.tif
+    Ti_powder_single.tif
+
+- 使用 os.walk 遍历文件
+
+```python
+import os
+
+print(os.walk('.'))  # Nothing to see here as this is just a generator
+
+for root, dirs, files in os.walk('.'):
+    # root 表示当前正在访问的文件夹路径
+    # dirs 表示该文件夹下的子目录名 list
+    # files 表示该文件夹下的文件 list
+    # 遍历文件
+    for f in files:
+         print(os.path.join(root, f))
+```
+
+    <generator object walk at 0x000001AAF06408C8>
+    .\4.ipynb
+    .\Untitled.ipynb
+    .\Untitled1.ipynb
+    .\Untitled2.ipynb
+    .\Untitled3.ipynb
+    .\Untitled4.ipynb
+    .\Untitled5.ipynb
+    .\Untitled6.ipynb
+    .\Untitled7.ipynb
+    .\Untitled8.ipynb
+    .\Untitled9.ipynb
+    .\.ipynb_checkpoints\4-checkpoint.ipynb
+    .\.ipynb_checkpoints\Untitled-checkpoint.ipynb
+    .\.ipynb_checkpoints\Untitled1-checkpoint.ipynb
+    .\.ipynb_checkpoints\Untitled2-checkpoint.ipynb
+    .\.ipynb_checkpoints\Untitled3-checkpoint.ipynb
+    .\.ipynb_checkpoints\Untitled4-checkpoint.ipynb
+    .\.ipynb_checkpoints\Untitled5-checkpoint.ipynb
+    .\.ipynb_checkpoints\Untitled6-checkpoint.ipynb
+    .\.ipynb_checkpoints\Untitled7-checkpoint.ipynb
+    .\.ipynb_checkpoints\Untitled8-checkpoint.ipynb
+    .\.ipynb_checkpoints\Untitled9-checkpoint.ipynb
+    .\images\Alloy_gradient.jpg
+    .\images\BSE.tif
+    .\images\bubbles.tif
+    .\images\cast_iron1.tif
+    .\images\cast_iron2.jpg
+    .\images\monalisa.jpg
+    .\images\Osteosarcoma_01.tif
+    .\images\Osteosarcoma_01_1sigma_blur.tif
+    .\images\Osteosarcoma_01_25Sigma_noise.tif
+    .\images\Osteosarcoma_01_2sigma_blur.tif
+    .\images\Osteosarcoma_01_8bit.ome.tiff
+    .\images\Osteosarcoma_01_8bit_salt_pepper.tif
+    .\images\Osteosarcoma_01_8bit_salt_pepper_cropped.tif
+    .\images\Osteosarcoma_01_small.tif
+    .\images\Osteosarcoma_01_transl.tif
+    .\images\Osteosarcoma_01_transl_rot.tif
+    .\images\sandstone.tif
+    .\images\sandstone_blur_2sigma.tif
+    .\images\sandstone_low_contrast.tif
+    .\images\scratch_time_series.tif
+    .\images\synthetic.jpg
+    .\images\Ti_powder.tif
+    .\images\Ti_powder_single.tif
+    .\images\exported\saved_using_opencv.jpg
+    .\images\exported\saved_using_opencv.tif
+    .\images\exported\saved_using_opencv_8bit.jpg
+    .\images\exported\saved_using_opencv_8bit_RGB.jpg
+    .\images\exported\saved_using_pyplot.jpg
+    .\images\exported\saved_using_skimage.jpg
+    .\images\exported\saved_using_skimage.tif
+    .\images\exported\saved_using_skimage_8bit.tif
+    .\images\exported\saved_using_tifffile.tiff
+
+- 使用 os.walk 遍历文件夹
+
+```python
+import os
+
+print(os.walk('.'))  # Nothing to see here as this is just a generator
+
+for root, dirs, files in os.walk('.'):
+    # root 表示当前正在访问的文件夹路径
+    # dirs 表示该文件夹下的子目录名 list
+    # files 表示该文件夹下的文件 list
+    # 遍历所有的文件夹
+    for d in dirs:
+        print(os.path.join(root, d))
+```
+
+    <generator object walk at 0x000001AAF06406C8>
+    .\.ipynb_checkpoints
+    .\images
+    .\images\exported
+

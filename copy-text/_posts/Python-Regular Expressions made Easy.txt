@@ -1,0 +1,2279 @@
+---
+title: Python-Regular Expressions made Easy
+date: Wed Nov 09 2022 08:45:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - Python
+categories: 探索
+description: 正则表达式的初尝试。学习自 Youtube 博主 PyMoondra。
+---
+
+
+# 资源
+
+- [Python Regular Expressions - part #1 - YouTube](https://www.youtube.com/watch?v=VU60rEXaOXk&list=PLGKQkV4guDKH1TpfM-FvPGLUyjsPGdXOg&ab_channel=PyMoondra)
+
+- Regular Expressions are used to match string patterns. 正则表达式用于匹配字符串模式。
+
+  - They are very powerful 它们非常强大
+
+  - If you want to pull out a string pattern RE can do it 如果你想拉出一个字符串模式正则可以做到
+
+  - They may seem intimidating 他们可能看起来很吓人
+
+# 课程
+
+# Things to note
+
+- The first thing I want start off with is the the back slash character
+  - 我想要开始的第一件事是反斜杠字符
+- Very confusing to people
+  - 很让人困惑
+
+- Python uses back slash to indicate special characters
+  - Python 使用反斜杠表示特殊字符
+- `'\n'`  Backslash followed by n denotes a newline
+  - 反斜杠后面加 n 表示换行符
+- `'\t'`  denotes a tab
+  - '\t' 表示制表符 
+
+- `'r' `expression, that voids the Python's special characters
+  - 'r'表达式，将使 Python 的特殊字符无效
+- `r'\n' `means it's a raw string with two characters 'n' and '\' as opposed to just one special character'
+  - r'\n'表示它是一个有两个字符'n'和'\'的原始字符串而不是只有一个特殊字符' 
+
+- Let's see some examples of this dont mind the python syntax
+  - 让我们看一些这样的例子，不要介意 python 语法
+
+[python 正则表达式 re.search()怎么使用？](https://www.w3cschool.cn/article/81381190.html)
+
+re.search(pattern, string, flags  =0)
+
+
+```python
+import re
+re.search('n', '\n')  # first item is pattern, second item is string
+```
+
+
+```python
+# two ways to handle this one way is to use \ for every backslash
+# 有两种处理方法，一种方法是对每个反斜杠使用\ (另一种是在前面加 r)
+re.search('n', '\\n')   
+```
+
+
+
+
+    <re.Match object; span=(1, 2), match='n'>
+
+
+
+
+```python
+# not the best way if we have too many \s
+# 如果我们有太多的\，这不是最好的方法
+re.search('n',  '\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n')  
+```
+
+
+```python
+# r converts to raw string
+# r 转换为原始字符串
+re.search('n',  r'\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n')    
+```
+
+
+
+
+    <re.Match object; span=(1, 2), match='n'>
+
+
+
+
+```python
+"""
+there are some nuances that you should be aware of regular expressions 
+has its own special characters as well regex with '\n' and r'\n' both
+look for newline.
+你应该注意到一些细微的差别，正则表达式也有自己的特殊字符，
+带有'\n'和 r'\n'的正则表达式都查找换行符
+"""
+re.search('\n',  '\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n')   
+```
+
+
+
+
+    <re.Match object; span=(0, 1), match='\n'>
+
+
+
+
+```python
+# this works as well because r'\n' also looks for new line
+# 同样有效，因为 pattern 中 r'\n' 也会查找新行
+re.search(r'\n',  '\n\n')     
+```
+
+
+
+
+    <re.Match object; span=(0, 1), match='\n'>
+
+
+
+
+```python
+# doesn't work because string doesn't use newline and r'\n' looks for newline
+# 不能工作，因为 string 不使用换行符，而 pattern 中 r'\n'查找换行符
+re.search(r'\n',  r'\n\n')
+```
+
+# MATCH and SEARCH EXAMPLES
+
+REs common methods - Match and Search
+
+- searches anywhere in the sentence 搜索句子中的任何位置
+- flags: special options 标志:特殊选项
+
+re.search(pattern, string, flags)
+
+- only beginning of the string 只搜索字符串的开始
+
+re.match(pattern, string, flags) 
+
+
+```python
+# returns none because only looks at the start of string
+# 返回 none，因为只查看字符串的开头
+re.match("c", "abcdef")  
+```
+
+
+```python
+re.search("c", "abcdef")  # searches anywhere
+```
+
+
+
+
+    <re.Match object; span=(2, 3), match='c'>
+
+
+
+
+```python
+bool(re.match("c", "abcdef"))  # no match returns boolean false
+```
+
+
+
+
+    False
+
+
+
+
+```python
+bool(re.match("a", "abcdef"))  # match returns true
+```
+
+
+
+
+    True
+
+
+
+
+```python
+# tells you where it matched first and only first
+# 告诉你它首先匹配的位置
+re.search("c", "abcdef")  
+```
+
+
+
+
+    <re.Match object; span=(2, 3), match='c'>
+
+
+
+
+```python
+re.search("c", "abcdefc")  # multiple 'c's first instance only 返回多个 c 的第一个实例
+```
+
+
+
+
+    <re.Match object; span=(2, 3), match='c'>
+
+
+
+
+```python
+re.search("c", "abdef\nc")  # multiline works with search 多行与搜索一起工作
+```
+
+
+
+
+    <re.Match object; span=(6, 7), match='c'>
+
+
+
+
+```python
+re.match("c", "\nc")  # match doesn't work with newline 匹配对换行符无效
+```
+
+## Printing the output of match and search
+
+
+```python
+(re.match("a", "abcdef"))  # match objects
+```
+
+
+
+
+    <re.Match object; span=(0, 1), match='a'>
+
+
+
+[python 正则匹配中 re.match().group(num=0)](https://blog.csdn.net/cout__waht/article/details/82756848)
+
+
+```python
+re.match("a", "abcdef").group()  # string output # defautlt value is 0 默认值为 0 
+```
+
+
+
+
+    'a'
+
+
+
+
+```python
+re.match("a", "abcdef").group(0)  
+```
+
+
+
+
+    'a'
+
+
+
+
+```python
+re.search("n", "abcdefnc abcd").group()
+```
+
+
+
+
+    'n'
+
+
+
+
+```python
+re.search('n.+', "abcdefnc abcd").group()  # pull out different types of strings 拿出不同类型的字符串
+                                           # depending on the wildcards you use 这取决于您使用的通配符
+```
+
+
+
+
+    'nc abcd'
+
+
+
+[python 正则(2)group/start/end/span 方法](https://blog.csdn.net/weixin_43914889/article/details/87978018)
+
+
+```python
+re.search("c", "abdef\nc").start()
+```
+
+
+
+
+    6
+
+
+
+
+```python
+re.search("c", "abdef\nc").end()
+```
+
+
+
+
+    7
+
+
+
+##  Literal matching
+
+
+```python
+re.search('na',"abcdefnc abcd" )  # doesn't work, because they are ordered 无效，因为它们是有序的
+```
+
+
+```python
+re.search('n|a',"abcdefnc abcda" )  # n or a
+```
+
+
+
+
+    <re.Match object; span=(0, 1), match='a'>
+
+
+
+
+```python
+ re.search('n|a',"bcdefnc abcda" )  # replaced the a with b, first match is an n
+```
+
+
+
+
+    <re.Match object; span=(5, 6), match='n'>
+
+
+
+
+```python
+re.search('n|a|b',"bcdefnc abcda" ) # as many OR expressions
+```
+
+
+
+
+    <re.Match object; span=(0, 1), match='b'>
+
+
+
+##  re.findall
+
+
+```python
+re.findall('n|a',"bcdefnc abcda" ) # find all pulls out all instances 取出所有实例
+```
+
+
+
+
+    ['n', 'a', 'a']
+
+
+
+
+```python
+re.search('abcd',"abcdefnc abcd" ) # multiple characters - literal search 多字符-文字搜索
+```
+
+
+
+
+    <re.Match object; span=(0, 4), match='abcd'>
+
+
+
+
+```python
+re.findall('abcd',"abcdefnc abcd" ) 
+```
+
+
+
+
+    ['abcd', 'abcd']
+
+
+
+## CHARACTER SETS
+
+- Character sets can match a set of characters
+  - 简化正则表达式
+
+
+```python
+import re
+re.search('abcd',"abcdefnc abcd" ) # earlier code 之前的代码
+```
+
+
+
+
+    <re.Match object; span=(0, 4), match='abcd'>
+
+
+
+
+```python
+re.search(r'\w\w\w\w',"abcdefnc abcd" )  # matches characters and numbers 匹配字符和数字
+                                         # alpha numeric characters 
+```
+
+
+
+
+    <re.Match object; span=(0, 4), match='abcd'>
+
+
+
+\w matches alpha numeric characters [a-zA-Z0-9_] 
+
+
+```python
+re.search(r'\w\w\w\w',"ab_cdefnc abcd" )  # matches _ character 匹配_字符
+```
+
+
+
+
+    <re.Match object; span=(0, 4), match='ab_c'>
+
+
+
+
+```python
+re.search(r'\w\w\w', "a3.!-!")  # doesn't match symbols only numbers and characters 不匹配符号，只匹配数字和字符
+```
+
+
+```python
+re.search(r'\w\w\w', "a33-_!") .group()
+```
+
+
+
+
+    'a33'
+
+
+
+\W  opposite of \w ;
+
+so nothing included in   [a-zA-Z0-9_]
+
+
+```python
+re.search(r'\w\w\W', "a3.-_!")  # \W matches non characters and numbers
+                                # \W 匹配非字符和数字
+```
+
+
+
+
+    <re.Match object; span=(0, 3), match='a3.'>
+
+
+
+
+```python
+re.search(r'\w\w\W', "a3 .-_!")  # matches empty space as well 
+                                 # \W 也可以匹配空格
+```
+
+
+
+
+    <re.Match object; span=(0, 3), match='a3 '>
+
+
+
+We will go over other character sets later on
+
+# Let's go over quantifiers'
+
+- quantifiers
+  - `'+'`   = 1 or more
+  - `'?'` =  0 or 1
+  - `'*'` =  0 or more
+  - `'{n,m}'`  = n to m repetitions {,3}, {3,}
+
+
+```python
+re.search(r'\w\w',"abcdefnc abcd" )
+```
+
+
+
+
+    <re.Match object; span=(0, 2), match='ab'>
+
+
+
+
+```python
+re.search(r'\w+',"abcdefnc abcd" ).group()  # don't know the numbers of letters 不知道单词的字母个数
+```
+
+
+
+
+    'abcdefnc'
+
+
+
+
+```python
+re.search(r'\w+\W+\w+',"abcdefnc abcd").group()
+```
+
+
+
+
+    'abcdefnc abcd'
+
+
+
+
+```python
+re.search('\w+\W+\w+',"abcdefnc       abcd").group()  # added spaces
+```
+
+
+
+
+    'abcdefnc       abcd'
+
+
+
+
+```python
+re.search(r'\w+\W?\w+',"abcdefnabcd").group()  # ? = 0 or 1 instances
+```
+
+
+
+
+    'abcdefnabcd'
+
+
+
+
+```python
+re.search(r'\w+\W?\w+',"abcde fnabcd").group()
+```
+
+
+
+
+    'abcde fnabcd'
+
+
+
+
+```python
+re.search(r'\w+\W+\w+', "abcdefnabcd")
+```
+
+- Pulling out specific amounts
+  - 取出特定数量
+
+
+```python
+re.search(r'\w{3}', 'aaaaaaaaaaa')  # only 3 \w characters
+```
+
+
+
+
+    <re.Match object; span=(0, 3), match='aaa'>
+
+
+
+
+```python
+re.search(r'\w{1,4}', 'aaaaaaaaaaa').group()  #1 is min, 4 is max
+```
+
+
+
+
+    'aaaa'
+
+
+
+
+```python
+re.search(r'\w{1,10}\W{0,4}\w+',"abcdefnc abcd").group()
+# 1-10 \w characters,
+# 0-4  \W chracters,
+# 1+ \w characters
+```
+
+
+
+
+    'abcdefnc abcd'
+
+
+
+
+```python
+re.search(r'\w{1,}\W{0,}\w+',"abcdefnc abcd").group() #at least 1, at least 0, 1+
+```
+
+
+
+
+    'abcdefnc abcd'
+
+## Other types of characters sets
+
+`'\d'` = matches digits [0-9]
+
+`'\D'` = matches This matches any non-digit character; ~\d
+
+
+```python
+import re
+string = '23abced++'
+re.search('\d+', string).group()
+```
+
+
+
+
+    '23'
+
+
+
+`'\s'`  = matches any whitespace character, new lines, tabs, spaces etc 匹配任何空白字符，新行，制表符，空格等
+
+`'\S'` = matches any non-whitespace chracter : ~\s 匹配任何非空格字符:~\s
+
+
+```python
+string = '23abced++'
+re.search('\S+', string).group()  # no spaces
+```
+
+
+
+
+    '23abced++'
+
+
+
+
+```python
+string = '''Robots are branching out. A new prototype soft robot takes inspiration from plants by growing to explore its environment.
+
+Vines and some fungi extend from their tips to explore their surroundings. 
+Elliot Hawkes of the University of California in Santa Barbara 
+and his colleagues designed a bot that works 
+on similar principles. Its mechanical body 
+sits inside a plastic tube reel that extends 
+through pressurized inflation, a method that some 
+invertebrates like peanut worms (Sipunculus nudus)
+also use to extend their appendages. The plastic 
+tubing has two compartments, and inflating one 
+side or the other changes the extension direction. 
+A camera sensor at the tip alerts the bot when it’s 
+about to run into something.
+
+In the lab, Hawkes and his colleagues 
+programmed the robot to form 3-D structures such 
+as a radio antenna, turn off a valve, navigate a maze, 
+swim through glue, act as a fire extinguisher, squeeze 
+through tight gaps, shimmy through fly paper and slither 
+across a bed of nails. The soft bot can extend up to 
+72meters, and unlike plants, it can grow at a speed of 
+10meters per second, the team reports July 19 in Science Robotics. 
+The design could serve as a model for building robots 
+that can traverse constrained environments
+
+This isn’t the first robot to take 
+inspiration from plants. One plantlike 
+predecessor was a robot modeled on roots.'''
+```
+
+
+```python
+(re.findall('\S+', string))  # 返回 string 中所有的单词
+```
+
+
+
+
+    ['Robots',
+     'are',
+     'branching',
+     'out.',
+     'A',
+     'new',
+     'prototype',
+     'soft',
+     'robot',
+     'takes',
+     'inspiration',
+     'from',
+     'plants',
+     'by',
+     'growing',
+     'to',
+     'explore',
+     'its',
+     'environment.',
+     'Vines',
+     'and',
+     'some',
+     'fungi',
+     'extend',
+     'from',
+     'their',
+     'tips',
+     'to',
+     'explore',
+     'their',
+     'surroundings.',
+     'Elliot',
+     'Hawkes',
+     'of',
+     'the',
+     'University',
+     'of',
+     'California',
+     'in',
+     'Santa',
+     'Barbara',
+     'and',
+     'his',
+     'colleagues',
+     'designed',
+     'a',
+     'bot',
+     'that',
+     'works',
+     'on',
+     'similar',
+     'principles.',
+     'Its',
+     'mechanical',
+     'body',
+     'sits',
+     'inside',
+     'a',
+     'plastic',
+     'tube',
+     'reel',
+     'that',
+     'extends',
+     'through',
+     'pressurized',
+     'inflation,',
+     'a',
+     'method',
+     'that',
+     'some',
+     'invertebrates',
+     'like',
+     'peanut',
+     'worms',
+     '(Sipunculus',
+     'nudus)',
+     'also',
+     'use',
+     'to',
+     'extend',
+     'their',
+     'appendages.',
+     'The',
+     'plastic',
+     'tubing',
+     'has',
+     'two',
+     'compartments,',
+     'and',
+     'inflating',
+     'one',
+     'side',
+     'or',
+     'the',
+     'other',
+     'changes',
+     'the',
+     'extension',
+     'direction.',
+     'A',
+     'camera',
+     'sensor',
+     'at',
+     'the',
+     'tip',
+     'alerts',
+     'the',
+     'bot',
+     'when',
+     'it’s',
+     'about',
+     'to',
+     'run',
+     'into',
+     'something.',
+     'In',
+     'the',
+     'lab,',
+     'Hawkes',
+     'and',
+     'his',
+     'colleagues',
+     'programmed',
+     'the',
+     'robot',
+     'to',
+     'form',
+     '3-D',
+     'structures',
+     'such',
+     'as',
+     'a',
+     'radio',
+     'antenna,',
+     'turn',
+     'off',
+     'a',
+     'valve,',
+     'navigate',
+     'a',
+     'maze,',
+     'swim',
+     'through',
+     'glue,',
+     'act',
+     'as',
+     'a',
+     'fire',
+     'extinguisher,',
+     'squeeze',
+     'through',
+     'tight',
+     'gaps,',
+     'shimmy',
+     'through',
+     'fly',
+     'paper',
+     'and',
+     'slither',
+     'across',
+     'a',
+     'bed',
+     'of',
+     'nails.',
+     'The',
+     'soft',
+     'bot',
+     'can',
+     'extend',
+     'up',
+     'to',
+     '72',
+     'meters,',
+     'and',
+     'unlike',
+     'plants,',
+     'it',
+     'can',
+     'grow',
+     'at',
+     'a',
+     'speed',
+     'of',
+     '10',
+     'meters',
+     'per',
+     'second,',
+     'the',
+     'team',
+     'reports',
+     'July',
+     '19',
+     'in',
+     'Science',
+     'Robotics.',
+     'The',
+     'design',
+     'could',
+     'serve',
+     'as',
+     'a',
+     'model',
+     'for',
+     'building',
+     'robots',
+     'that',
+     'can',
+     'traverse',
+     'constrained',
+     'environments',
+     'This',
+     'isn’t',
+     'the',
+     'first',
+     'robot',
+     'to',
+     'take',
+     'inspiration',
+     'from',
+     'plants.',
+     'One',
+     'plantlike',
+     'predecessor',
+     'was',
+     'a',
+     'robot',
+     'modeled',
+     'on',
+     'roots.']
+
+
+
+
+```python
+' '.join(re.findall('\S+', string))
+```
+
+
+
+
+    'Robots are branching out. A new prototype soft robot takes inspiration from plants by growing to explore its environment. Vines and some fungi extend from their tips to explore their surroundings. Elliot Hawkes of the University of California in Santa Barbara and his colleagues designed a bot that works on similar principles. Its mechanical body sits inside a plastic tube reel that extends through pressurized inflation, a method that some invertebrates like peanut worms (Sipunculus nudus) also use to extend their appendages. The plastic tubing has two compartments, and inflating one side or the other changes the extension direction. A camera sensor at the tip alerts the bot when it’s about to run into something. In the lab, Hawkes and his colleagues programmed the robot to form 3-D structures such as a radio antenna, turn off a valve, navigate a maze, swim through glue, act as a fire extinguisher, squeeze through tight gaps, shimmy through fly paper and slither across a bed of nails. The soft bot can extend up to 72meters, and unlike plants, it can grow at a speed of 10meters per second, the team reports July 19 in Science Robotics. The design could serve as a model for building robots that can traverse constrained environments This isn’t the first robot to take inspiration from plants. One plantlike predecessor was a robot modeled on roots.'
+
+
+
+`.` the dot matches any character excerpt the newline. 点匹配除换行符以外的任何字符。
+
+
+```python
+string = '''Robots are branching out. A new prototype soft robot takes inspiration from plants by growing to explore its environment.
+
+Vines and some fungi extend from their tips to explore their surroundings. Elliot Hawkes of the University of California in Santa Barbara and his colleagues designed a bot that works on similar principles. Its mechanical body sits inside a plastic tube reel that extends through pressurized inflation, a method that some invertebrates like peanut worms (Sipunculus nudus) also use to extend their appendages. The plastic tubing has two compartments, and inflating one side or the other changes the extension direction. A camera sensor at the tip alerts the bot when it’s about to run into something.
+
+In the lab, Hawkes and his colleagues programmed the robot to form 3-D structures such as a radio antenna, turn off a valve, navigate a maze, swim through glue, act as a fire extinguisher, squeeze through tight gaps, shimmy through fly paper and slither across a bed of nails. The soft bot can extend up to 72meters, and unlike plants, it can grow at a speed of 10meters per second, the team reports July 19 in Science Robotics. The design could serve as a model for building robots that can traverse constrained environments
+
+This isn’t the first robot to take inspiration from plants. One plantlike predecessor was a robot modeled on roots.'''
+```
+
+
+```python
+re.search('.+', string).group()  # no new line
+```
+
+
+
+
+    'Robots are branching out. A new prototype soft robot takes inspiration from plants by growing to explore its environment.'
+
+
+
+
+```python
+re.search('.+', string, flags = re.DOTALL).group()
+```
+
+
+
+
+    'Robots are branching out. A new prototype soft robot takes inspiration from plants by growing to explore its environment.\n\nVines and some fungi extend from their tips to explore their surroundings. Elliot Hawkes of the University of California in Santa Barbara and his colleagues designed a bot that works on similar principles. Its mechanical body sits inside a plastic tube reel that extends through pressurized inflation, a method that some invertebrates like peanut worms (Sipunculus nudus) also use to extend their appendages. The plastic tubing has two compartments, and inflating one side or the other changes the extension direction. A camera sensor at the tip alerts the bot when it’s about to run into something.\n\nIn the lab, Hawkes and his colleagues programmed the robot to form 3-D structures such as a radio antenna, turn off a valve, navigate a maze, swim through glue, act as a fire extinguisher, squeeze through tight gaps, shimmy through fly paper and slither across a bed of nails. The soft bot can extend up to 72meters, and unlike plants, it can grow at a speed of 10meters per second, the team reports July 19 in Science Robotics. The design could serve as a model for building robots that can traverse constrained environments\n\nThis isn’t the first robot to take inspiration from plants. One plantlike predecessor was a robot modeled on roots.'
+
+
+
+## Creating your own character sets
+
+`[A-Z]`  `'-'`  is a metacharacter when used in `[]` (custom character sets) `'-'`在`[]`(自定义字符集)中使用时是一个元字符
+
+
+```python
+string = 'Hello, There, How, Are, You'
+```
+
+
+```python
+re.findall('[A-Z]', string)  # pulls out all capital letters 取出所有大写字母
+```
+
+
+
+
+    ['H', 'T', 'H', 'A', 'Y']
+
+
+
+
+```python
+re.findall('[A-Z,]', string)
+# here we search for any capital letters or a comma
+# 这里我们搜索大写字母或逗号
+```
+
+
+
+
+    ['H', ',', 'T', ',', 'H', ',', 'A', ',', 'Y']
+
+
+
+
+```python
+string = 'Hello, There, How, Are, You...'
+re.findall('[A-Z,.]', string)  # 在这里 . 只是一个字符集而不是之前所讲的所有非换行符
+```
+
+
+
+
+    ['H', ',', 'T', ',', 'H', ',', 'A', ',', 'Y', '.', '.', '.']
+
+
+
+
+```python
+string = 'Hello, There, How, Are, You...'
+re.findall('[A-Za-z,\s.]', string)  # 大写字母, 小写字母, 逗号, 非空白, 句点
+```
+
+
+
+
+    ['H',
+     'e',
+     'l',
+     'l',
+     'o',
+     ',',
+     ' ',
+     'T',
+     'h',
+     'e',
+     'r',
+     'e',
+     ',',
+     ' ',
+     'H',
+     'o',
+     'w',
+     ',',
+     ' ',
+     'A',
+     'r',
+     'e',
+     ',',
+     ' ',
+     'Y',
+     'o',
+     'u',
+     '.',
+     '.',
+     '.']
+
+## Quantifers with custom sets
+
+
+```python
+import re
+```
+
+- `+` 出现一次或更多
+- `?` 出现 0 或 1 次
+- `*` 出现 0 次或更多
+- `{}` 自定义出现次数
+
+
+```python
+string = 'HELLO, There, How, Are, You...'
+```
+
+
+```python
+re.search('[A-Z]+', string)
+```
+
+
+
+
+    <re.Match object; span=(0, 5), match='HELLO'>
+
+
+
+
+```python
+re.findall('[A-Z]+', string)
+```
+
+
+
+
+    ['HELLO', 'T', 'H', 'A', 'Y']
+
+
+
+
+```python
+re.findall('[A-Z]{2,}', string)  # 2 or more
+```
+
+
+
+
+    ['HELLO']
+
+
+
+
+```python
+# one or more of 4 types of characters
+# 四种字符中的一种或多种
+re.search('[A-Za-z\s,]+', string).group() 
+```
+
+
+
+
+    'HELLO, There, How, Are, You'
+
+
+
+
+```python
+re.findall('[A-Z]?[a-z\s,]+', string)
+```
+
+
+
+
+    ['O, ', 'There, ', 'How, ', 'Are, ', 'You']
+
+
+
+
+```python
+# ^ is a metacharacter within brackets
+# ^是括号中的元字符
+# 表示相反
+re.search('[^A-Za-z\s,]+', string).group()  
+```
+
+
+
+
+    '...'
+
+
+
+
+```python
+re.findall('[^A-Z]+', string) # 匹配所有非大写字符
+```
+
+
+
+
+    [', ', 'here, ', 'ow, ', 're, ', 'ou...']
+
+
+
+## GROUPS
+
+- `groups` allow us to pull out sections of a match and store them
+  - `groups` 允许我们提取匹配的部分并存储它们
+
+
+```python
+# contrived example 举例
+import re
+string = 'John has 6 cats but I think my friend Susan has 3 dogs and Mike has 8 fishes'
+```
+
+
+```python
+re.findall('[A-Za-z]+ \w+ \d+ \w+', string)
+```
+
+
+
+
+    ['John has 6 cats', 'Susan has 3 dogs', 'Mike has 8 fishes']
+
+
+
+- the use of `brackets` denotes a group 使用括号表示一个组
+  - `()`  = metacharacter 元字符
+
+
+```python
+re.findall('([A-Za-z]+) \w+ \d+ \w+', string) # to pull out just the names 只把名字取出来
+```
+
+
+
+
+    ['John', 'Susan', 'Mike']
+
+
+
+
+```python
+re.findall('[A-Za-z]+ \w+ \d+ (\w+)', string) # pull out animals 取出所有动物
+```
+
+
+
+
+    ['cats', 'dogs', 'fishes']
+
+
+
+
+```python
+re.findall('([A-Za-z]+) \w+ (\d+) (\w+)', string)
+# use original string to make sure matching is correct, then use groups to pull out the info you want
+# 使用原始字符串确保匹配是正确的，然后使用组拉出你想要的信息
+```
+
+
+
+
+    [('John', '6', 'cats'), ('Susan', '3', 'dogs'), ('Mike', '8', 'fishes')]
+
+
+
+
+```python
+# organize the data by data-types 按数据类型组织数据
+info = re.findall('([A-Za-z]+) \w+ (\d+) (\w+)', string)
+```
+
+
+```python
+info
+```
+
+
+
+
+    [('John', '6', 'cats'), ('Susan', '3', 'dogs'), ('Mike', '8', 'fishes')]
+
+
+
+[Python3 zip() 函数](https://www.runoob.com/python3/python3-func-zip.html)
+
+- zip() 函数用于将可迭代的对象作为参数，将对象中对应的元素打包成一个个元组，然后返回由这些元组组成的对象，这样做的好处是节约了不少的内存。
+- 与 zip 相反，zip(*) 可理解为解压，返回二维矩阵式
+
+
+```python
+list(zip(*info))  # organize your data by categories 按类别组织数据
+```
+
+
+
+
+    [('John', 'Susan', 'Mike'), ('6', '3', '8'), ('cats', 'dogs', 'fishes')]
+
+
+
+
+```python
+match = re.search('([A-Za-z]+) \w+ (\d+) (\w+)', string)  # pulls out three groups 抽出三组
+match
+```
+
+
+
+
+    <re.Match object; span=(0, 15), match='John has 6 cats'>
+
+
+
+
+```python
+match.group(0)
+```
+
+
+
+
+    'John has 6 cats'
+
+
+
+
+```python
+match.groups()
+```
+
+
+
+
+    ('John', '6', 'cats')
+
+
+
+
+```python
+match.group(1)
+```
+
+
+
+
+    'John'
+
+
+
+
+```python
+match.group(2)
+```
+
+
+
+
+    '6'
+
+
+
+
+```python
+match.group(3)
+```
+
+
+
+
+    'cats'
+
+
+
+
+```python
+match.group(1, 3)  # multiple groups 多个组
+```
+
+
+
+
+    ('John', 'cats')
+
+
+
+
+```python
+match.group(3, 2, 1, 1)  # change the order 改变顺序
+```
+
+
+
+
+    ('cats', '6', 'John', 'John')
+
+
+
+
+```python
+match.span()
+```
+
+
+
+
+    (0, 15)
+
+
+
+
+```python
+match.span(2)
+```
+
+
+
+
+    (9, 10)
+
+
+
+
+```python
+match.span(3)
+```
+
+
+
+
+    (11, 15)
+
+
+
+
+```python
+match.start(3)
+```
+
+
+
+
+    11
+
+
+
+
+```python
+# find all has no group function
+# re.findall 没有 group 函数
+re.findall('([A-Za-z]+) \w+ (\d+) (\w+)', string).group(1)
+```
+
+
+    ---------------------------------------------------------------------------
+    
+    AttributeError                            Traceback (most recent call last)
+    
+    Input In [101], in <cell line: 3>()
+          1 # find all has no group function
+          2 # re.findall 没有 group 函数
+    ----> 3 re.findall('([A-Za-z]+) \w+ (\d+) (\w+)', string).group(1)
+
+
+    AttributeError: 'list' object has no attribute 'group'
+
+
+
+```python
+re.findall('([A-Za-z]+) \w+ (\d+) (\w+)', string)[0]
+```
+
+
+
+
+    ('John', '6', 'cats')
+
+
+
+
+```python
+re.findall('([A-Za-z]+) \w+ (\d+) (\w+)', string)[0].group(1)  # 这也不好使
+```
+
+
+    ---------------------------------------------------------------------------
+    
+    AttributeError                            Traceback (most recent call last)
+    
+    Input In [39], in <cell line: 1>()
+    ----> 1 re.findall('([A-Za-z]+) \w+ (\d+) (\w+)', string)[0].group(1)
+
+
+    AttributeError: 'tuple' object has no attribute 'group'
+
+
+
+```python
+re.findall('([A-Za-z]+) \w+ (\d+) (\w+)', string)
+```
+
+
+
+
+    [('John', '6', 'cats'), ('Susan', '3', 'dogs'), ('Mike', '8', 'fishes')]
+
+
+
+
+```python
+data = re.findall('(([A-Za-z]+) \w+ (\d+) (\w+))', string)  # 组中组
+```
+
+
+```python
+data
+```
+
+
+
+
+    [('John has 6 cats', 'John', '6', 'cats'),
+     ('Susan has 3 dogs', 'Susan', '3', 'dogs'),
+     ('Mike has 8 fishes', 'Mike', '8', 'fishes')]
+
+
+
+
+```python
+# 你只能这么干
+for i in data:
+    print(i[3])
+```
+
+    cats
+    dogs
+    fishes
+
+
+- we can use iteration
+  - 我们可以使用迭代
+
+- [Python next() 函数](https://www.runoob.com/python/python-func-next.html)
+
+
+```python
+it = re.finditer('([A-Za-z]+) \w+ (\d+) (\w+)', string)
+next(it).groups()
+```
+
+
+
+
+    ('John', '6', 'cats')
+
+
+
+
+```python
+it = re.finditer('([A-Za-z]+) \w+ (\d+) (\w+)', string)
+for element in it:
+    print (element.group(1, 3, 2))   # don't forget iterators exhaust
+```
+
+    ('John', 'cats', '6')
+    ('Susan', 'dogs', '3')
+    ('Mike', 'fishes', '8')
+
+
+
+```python
+it = re.finditer('([A-Za-z]+) \w+ (\d+) (\w+)', string)
+for element in it:
+    print(element.group())
+```
+
+    John has 6 cats
+    Susan has 3 dogs
+    Mike has 8 fishes
+
+
+
+```python
+it = re.finditer('([A-Za-z]+) \w+ (\d+) (\w+)', string)
+for element in it:
+    print(element.groups())
+```
+
+    ('John', '6', 'cats')
+    ('Susan', '3', 'dogs')
+    ('Mike', '8', 'fishes')
+
+## Naming Groups
+
+
+```python
+import re
+```
+
+
+```python
+string = 'New York, New York 11369'
+```
+
+- `([A-Za-z\s]+)` 寄件地址
+- `([A-Za-z\s]+)` 收件地址
+- `(\d+)` 邮编
+
+
+```python
+match = re.search('([A-Za-z\s]+),([A-Za-z\s]+)(\d+)', string)
+```
+
+
+```python
+match.group(1), match.group(2), match.group(3), match.group(0)
+```
+
+
+
+
+    ('New York', ' New York ', '11369', 'New York, New York 11369')
+
+
+
+`?P< >` to name a group-- group name inside the `<>`, followed by RE for group
+
+- `(?P<City>)`
+- `(?P<State>)`
+- `(?P<ZipCode>)`
+
+
+```python
+pattern = re.compile('(?P<City>[A-Za-z\s]+),(?P<State>[A-Za-z\s]+)(?P<ZipCode>\d+)')
+```
+
+
+```python
+match = re.search(pattern, string)
+```
+
+
+```python
+match.group('City'), match.group('State'), match.group('ZipCode')
+```
+
+
+
+
+    ('New York', ' New York ', '11369')
+
+
+
+
+```python
+match.group(1)
+```
+
+
+
+
+    'New York'
+
+
+
+
+```python
+match.groups()
+```
+
+
+
+
+    ('New York', ' New York ', '11369')
+
+
+
+
+```python
+# Just incase you forget the names of the groups you used
+# 以防您忘记了您使用的组的名称
+match.groupdict()
+```
+
+
+
+
+    {'City': 'New York', 'State': ' New York ', 'ZipCode': '11369'}
+
+### Quantifiers on groups
+
+- Using quantifiers on groups has some nuances, but very useful
+  - 在组上使用量词有一些细微差别，但非常有用
+
+
+```python
+import re
+```
+
+
+```python
+string = 'abababababab'  # ab repeated many times
+re.search('(ab)+', string)  #(ab)+ is many instances of one group repeated 同一组的许多实例重复出现
+```
+
+
+
+
+    <re.Match object; span=(0, 12), match='abababababab'>
+
+
+
+
+```python
+string = 'abababababab'  # ab repeated many times 重复了很多次
+
+re.search('[ab]+', string)  # this is different
+```
+
+
+
+
+    <re.Match object; span=(0, 12), match='abababababab'>
+
+
+
+- difference explained below
+  - `(ab)` 表示 a 和 b
+  - `[ab]` 表示 a 或 b
+
+
+```python
+string = 'abababbbbbbb'  # only partial fit to our new string 只有部分符合我们的新字符串
+re.search('(ab)+', string)
+```
+
+
+
+
+    <re.Match object; span=(0, 6), match='ababab'>
+
+
+
+
+```python
+string = 'abababbbbbbb'  # but this pattern fits perfectly 但这个模式完全吻合
+re.search('[ab]+', string)
+```
+
+
+
+
+    <re.Match object; span=(0, 12), match='abababbbbbbb'>
+
+
+
+
+```python
+string = 'abababbbbbbb'  # allows flexibility 允许的灵活性
+re.search('(ab)+\w+', string)
+```
+
+
+
+
+    <re.Match object; span=(0, 12), match='abababbbbbbb'>
+
+
+
+
+```python
+string = 'abababsssss'  # allows flexibility
+re.search('(ab)+\w+', string)
+```
+
+
+
+
+    <re.Match object; span=(0, 11), match='abababsssss'>
+
+
+
+### Nuances to be wary of
+
+需要注意的细微差别
+
+
+```python
+# only one group not multiple groups 只有一个组而不是多个组
+```
+
+
+```python
+string = 'abababababab' # original string
+match = re.search('(ab)+', string) 
+
+match.group(1)
+# capturing only one group; value is overwritten each time
+# 只捕获一个群体; 值每次都会被覆盖
+```
+
+
+
+
+    'ab'
+
+
+
+
+```python
+match.group(2) # no value 没有值
+```
+
+
+    ---------------------------------------------------------------------------
+    
+    IndexError                                Traceback (most recent call last)
+    
+    Input In [10], in <cell line: 1>()
+    ----> 1match.group(2)
+
+
+    IndexError: no such group
+
+
+
+```python
+match.groups()  # only one group, group just overwritten 只有一个组，组被覆盖了
+```
+
+
+
+
+    ('ab',)
+
+
+
+
+```python
+match.group(0) # the full match, not related to groups 完全匹配，与组无关
+```
+
+
+
+
+    'abababababab'
+
+
+
+- Another simple example with two groups using quantifiers
+  - 另一个使用量词的两个组的简单例子
+
+
+```python
+string = 'ababababab'
+```
+
+
+```python
+match = re.search ('(ab)+(ab)+', string)
+match
+```
+
+
+
+
+    <re.Match object; span=(0, 10), match='ababababab'>
+
+
+
+
+```python
+match.groups()
+```
+
+
+
+
+    ('ab', 'ab')
+
+
+
+
+```python
+match.span(2) # the first group is greedy
+```
+
+
+
+
+    (8, 10)
+
+
+
+- Only one group captured
+  - 只捕获了一个群体
+
+
+```python
+string = '123456789'
+
+match = re.search('(\d)+', string)
+```
+
+
+```python
+match
+```
+
+
+
+
+    <re.Match object; span=(0, 9), match='123456789'>
+
+
+
+
+```python
+(match.groups())  # only one group, and it uses the last value 只有一个组，它使用最后一个值
+```
+
+
+
+
+    ('9',)
+
+
+
+### Quantifiers with groups within findall
+
+在 findall 中包含组的量词
+
+
+```python
+string = '123456789'
+
+re.findall('(\d)+', string)
+# only pulls out group and last instance
+# 只取出组和最后一个实例
+```
+
+
+
+
+    ['9']
+
+
+
+
+```python
+string = '1234 56789'
+re.findall('(\d)+', string)
+# Here we have two matches 匹配了两个
+```
+
+
+
+
+    ['4', '9']
+
+
+
+
+```python
+re.findall('((\d)+)', string)[1][0] 
+# to find full match create a main group engulfing the smaller groups
+# 要找到完全匹配，创建一个主组，吞噬较小的组
+```
+
+
+
+
+    '56789'
+
+
+
+
+```python
+# another example
+string  = 'abbbbb ababababab'
+re.findall('(ab)+', string)  # two instances
+```
+
+
+
+
+    ['ab', 'ab']
+
+
+
+
+```python
+string  = 'abbbbb ababababab'
+re.findall('((ab)+)', string)   #full match
+```
+
+
+
+
+    [('ab', 'ab'), ('ababababab', 'ab')]
+
+
+
+### Groups for word completion
+
+
+```python
+re.search('Happy (Valentines|Birthday|Anniversary)', 'Happy Birthday')
+```
+
+
+
+
+    <re.Match object; span=(0, 14), match='Happy Birthday'>
+
+
+
+
+```python
+re.search('Happy (Valentines|Birthday|Anniversary)', 'Happy Valentines')
+```
+
+
+
+
+    <re.Match object; span=(0, 16), match='Happy Valentines'>
+
+
+
+
+```python
+re.search('Happy Valentines| Happy Birthday | Happy Anniversary', 'Happy Valentines')
+```
+
+
+
+
+    <re.Match object; span=(0, 16), match='Happy Valentines'>
+
+## Non-capture Groups
+
+
+```python
+import re
+```
+
+
+```python
+# Here is one such example:
+import re
+
+string = '1234 56789'
+re.findall('(\d)+', string)
+```
+
+
+
+
+    ['4', '9']
+
+
+
+
+```python
+re.search('(\d)+', string).groups()  #using search
+```
+
+
+
+
+    ('4',)
+
+
+
+**捕获组**（capturing group）是把多个字符当作一个单元对待的一种方式。通过把字符括在括号内创建捕获组。例如，正则表达式(dog)创建包含字母“d”、“o”和“g”的一个组。输入字符串和捕获组匹配的那一部分将被保存在内存中，以便以后通过反向引用再次使用。
+
+而**非捕获组**就是输入字符串和捕获组匹配的那一部分将不被保存在内存中。
+
+- non-capture groups syntax
+  - `?:` The symbol above represents non-capture groups and looks slightly similar to the syntax for naming groups
+    - 上面的符号表示非捕获组，看起来有点类似于命名组的语法
+  - `?P` don't confuse the two please.
+    - 请不要混淆这两者
+
+
+```python
+# comparison 比较
+```
+
+
+```python
+re.findall('(\d)+', string)
+```
+
+
+
+
+    ['4', '9']
+
+
+
+
+```python
+re.findall('(?:\d)+', string)  # with non capture group 非捕获组
+```
+
+
+
+
+    ['1234', '56789']
+
+
+
+- So the group is part of the pattern, but we don't output the groups' results
+  - 所以 group 是模式的一部分，但我们不输出 group 的结果
+
+
+```python
+re.findall('\d+', string)
+# when RE has no groups in findall, we output entire match
+# 当 RE 在 findall 中没有组时，我们输出整个匹配
+```
+
+
+
+
+    ['1234', '56789']
+
+
+
+
+```python
+# Another example
+```
+
+
+```python
+string  = '123123 = Alex, 123123123 = Danny, 123123123123 = Mike, 456456 = rick, 121212 = John, 132132 = Luis,' 
+```
+
+
+```python
+# We want to pull out all names whose ID has 123 within in
+# 我们要取出所有 ID 包含 123 的名字
+```
+
+
+```python
+re.findall('(?:123)+ = (\w+),', string)  # three instances
+```
+
+
+
+
+    ['Alex', 'Danny', 'Mike']
+
+
+
+
+```python
+# Another example
+string = '1*1*1*1*22222  1*1*3333  2*1*2*1*222  1*2*2*2*333 3*3*3*444'
+```
+
+
+```python
+re.findall('(?:1\*){2,}\d+', string)
+```
+
+
+
+
+    ['1*1*1*1*22222', '1*1*3333']
+
+
+
+- Now, non-captured groups doesn't just affect the findall method
+- it also affects the search and match methods
+  - 现在，未捕获的组不仅影响 findall 方法——它还影响搜索和匹配方法
+
+### BE CAREFUL WITH SYNTAX 
+
+- `?:` correct!
+- `:?` incorrect!
+
+
+```python
+string = '1234 56789'
+match = re.search('(?:\d)+', string)  # correct syntax
+print(match.groups())
+```
+
+    ()
+
+
+
+```python
+string = '1234 56789'
+match = re.search('(:?\d)+', string)  # :? incorrect syntax!!!! 
+print(match.groups())
+```
+
+    ('4',)
+
+
+Summary: 
+
+- when we capture groups we are either storing the value or outputting them.
+  - 当我们捕获组时，我们要么存储值，要么输出值。
+
+## Backreferences  - Using captured groups inside other operations
+
+反向引用——在其他操作中使用捕获的组
+
+- backreferencing is making a refererence to the captured group within the same regular expression
+  - 反向引用是在同一个正则表达式中引用捕获的组
+
+
+```python
+# syntax and example
+```
+
+
+```python
+re.search(r'(\w+) \1','Merry Merry Christmas')  # Looking for repeated words 寻找重复的单词
+```
+
+
+
+
+    <re.Match object; span=(0, 11), match='Merry Merry'>
+
+
+
+
+```python
+re.search(r'(\w+) \1','Merry Merry Christmas').groups()
+```
+
+
+
+
+    ('Merry',)
+
+
+
+`\1` is just referencing the first group within the regular expression 
+
+`‘\1’` 匹配的是 所获取的第 1 个()匹配的引用。例如，`’(\d)\1’` 匹配两个连续数字字符。如 33aa 中的 33
+
+
+```python
+# Another example
+```
+
+
+```python
+re.findall(r'(\w+)','Happy Happy Holidays. Merry Christmas Christmas')
+```
+
+
+
+
+    ['Happy', 'Happy', 'Holidays', 'Merry', 'Christmas', 'Christmas']
+
+
+
+
+```python
+re.findall(r'(\w+) \1','Happy Happy Holidays. Merry Christmas Christmas')   # Want to look for repeated words 想要寻找重复的单词
+```
+
+
+
+
+    ['Happy', 'Christmas']
+
+
+
+
+```python
+# another example
+```
+
+
+```python
+re.findall(r'(\w+) \1','Merry Merry Christmas Christmas Merry Merry Christmas')
+```
+
+
+
+
+    ['Merry', 'Christmas', 'Merry']
+

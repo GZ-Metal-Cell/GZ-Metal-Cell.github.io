@@ -1,0 +1,161 @@
+---
+title: ML-李宏毅-機器如何生成圖像
+date: Sat May 20 2023 19:07:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - 李宏毅
+categories: 课程
+description: 李宏毅《机器学习2023》课程学习笔记。
+---
+
+
+# 正文
+
+## 【生成式 AI】速覽圖像生成常見模型
+
+![png](P1_1.png)
+
+图像生成很复杂，人给出的提示对于图像来说只是一小部分。
+
+![png](P1_2.png)
+
+文字多采取 Autoregressive 模式。
+
+![png](P1_3.png)
+
+影像也可以，影像版 GPT，一行一行地生成图片。
+
+- [Image GPT (openai.com)](https://openai.com/research/images-gpt)
+
+![png](P1_5.png)
+
+在文字生成图片时，除了文本提示外，其实还有输入一个高斯分布。
+
+![png](P1_6.png)
+
+VAE：设了服从某些常见的分布（比如正态分布或均匀分布），然后希望训练一个模型 $X=g(Z)$，这个模型能够将原来的概率分布映射到训练集的概率分布。
+
+![png](P1_7.png)
+
+Flow-based：用一系列的可逆映射（INN 实现）将原始分布转换成新的分布，最终达到将简单的高斯分布转换为复杂的真实后验分布的目的
+
+![png](P1_8.png)
+
+扩散模型给图片不断加噪音，然后在噪音图上不断减少噪音生成新的图片。
+
+![png](P1_9.png)
+
+![png](P1_10.png)
+
+GAN：设置了一个鉴别器，判断输入的图片是合成的还是真实的。
+
+![png](P1_11.png)
+
+VAE、Flow-based、Diffusion 都可归为一类。GAN 的思想与这三个差距较大。
+
+![png](P1_12.png)
+
+GAN 可以和它们结合起来使用。
+
+- [[1512.09300\] Autoencoding beyond pixels using a learned similarity metric (arxiv.org)](https://arxiv.org/abs/1512.09300)
+- [[1705.08868\] Flow-GAN: Combining Maximum Likelihood and Adversarial Learning in Generative Models (arxiv.org)](https://arxiv.org/abs/1705.08868)
+- [[2206.02262] Diffusion-GAN: Training GANs with Diffusion (arxiv.org)](https://arxiv.org/abs/2206.02262)
+
+## 【生成式 AI】淺談圖像生成模型 Diffusion Model 原理
+
+![png](P2_1.png)
+
+目前流行的 Diffusion Model 都是 Denoising Diffusion Probabilistic Models (DDPM) [[2006.11239] Denoising Diffusion Probabilistic Models (arxiv.org)](https://arxiv.org/abs/2006.11239)
+
+![png](P2_3.png)
+
+Diffusion Model 从一张噪声图中不断进行 Denoise 操作，最后得到目标图像，称之为 Reverse Process。
+
+![png](P2_4.png)
+
+> The sculpture is already complete within the marble block, before l start my work. lt is already there, l just have to chisel away the superfluous material. **- Michelangelo**
+>
+> 在我开始工作之前，雕塑已经在大理石块中完成了。它已经在那里了，我只是要把多余的材料凿掉。**- 米开朗基罗**
+
+![png](P2_6.png)
+
+Denoise 内部有一个 Noise Predicter，生成当前添加的噪声图。
+
+![png](P2_7.png)
+
+给图片不断添加噪声的过程叫做 **Forward Process（Diffusion Process）**。
+
+![png](P2_8.png)
+
+Noise Predicter 的 ground truth 就是输入的噪声图像。
+
+![png](P2_9.png)
+
+Text-to-Image 问题中，需要成对的图片数据集，LAION 拥有 5.85B 张图片。[LAION-5B: A NEW ERA OF OPEN LARGE-SCALE MULTI-MODAL DATASETS | LAION](https://laion.ai/blog/laion-5b/)
+
+![png](P2_10.png)
+
+![png](P2_2.png)
+
+## 【生成式 AI】Stable Diffusion、DALL-E、Imagen 背後共同的套路
+
+![png](P3_1.png)
+
+Stable Diffusion、DALL-E、Imagen 的训练过程都分成三个模块，每个模块独立训练而成：
+
+- Text Encoder 将文本描述转换为词嵌入向量
+- Generation Model 生成一个“中间产物”，图片的压缩版本
+- Decoder 将“中间产物”转换成最终的图片
+
+![png](P3_2.png)
+
+Stable Diffusion：[[2112.10752\] High-Resolution Image Synthesis with Latent Diffusion Models (arxiv.org)](https://arxiv.org/abs/2112.10752)
+
+分为三个模块：
+
+- Conditioning
+- Latent Space
+- Pixel Space
+
+![png](P3_3.png)
+
+- [[2204.06125] Hierarchical Text-Conditional Image Generation with CLIP Latents (arxiv.org)](https://arxiv.org/abs/2204.06125)
+- [[2102.12092] Zero-Shot Text-to-Image Generation (arxiv.org)](https://arxiv.org/abs/2102.12092)
+
+![png](P3_4.png)
+
+- [Imagen: Text-to-Image Diffusion Models (research.google)](https://imagesn.research.google/)
+- [[2205.11487\] Photorealistic Text-to-Image Diffusion Models with Deep Language Understanding (arxiv.org)](https://arxiv.org/abs/2205.11487)
+
+![png](P3_5.png)
+
+Text Encoder 对结果影响很大。
+
+![png](P3_6.png)
+
+衡量生成图像与目标图像的差距：Frechet Inception Distance(FID)，FID 越小，代表图像生成的越好
+
+![png](P3_7.png)
+
+CLIP 是很常用的 Text Encoder。[[2103.00020\] Learning Transferable Visual Models From Natural Language Supervision (arxiv.org)](https://arxiv.org/abs/2103.00020)
+
+![png](P3_8.png)
+
+Decoder 接受“中间产物”为输入，输出最终图像，可以不需要带标签的数据。
+
+![png](P3_9.png)
+
+如果中间产物为小图，则可以很容易地从真实图片中进行缩放来获取数据。
+
+![png](P3_10.png)
+
+如果中间产物为 Latent Representation，往往需要一个 Auto-encoder 重新解码生成最终图像
+
+![png](P3_11.png)
+
+![png](P3_12.png)
+
+生成模型：给图像不断加噪声，巴拉巴拉
+
+![png](P3_13.png)
+
+接受词嵌入向量和噪声分布，输出结果。

@@ -1,0 +1,298 @@
+---
+title: DIP-Introductory python tutorials for image processing(44-45)-Color Spaces
+date: Sat Nov 05 2022 10:46:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - DigitalSreeni
+  - 数字图像处理
+  - Python
+categories: 课程
+description: 学习自 Youtube 博主 DigitalSreeni。
+---
+
+
+# 正文
+
+## Tutorial 44 - A note about color spaces in python
+
+### Color spaces
+
+Color spaces are a way to represent color information present in an image.
+
+3 popular color spaces are RGB, HSV and LAB.
+
+```python
+import cv2
+from skimage import io
+import matplotlib.pyplot as plt
+
+color_opencv = cv2.imread('images/Osteosarcoma_01.tif', 1)
+gray_opencv = cv2.imread('images/Osteosarcoma_01.tif', 0)
+
+color_skimage = io.imread('images/Osteosarcoma_01.tif', as_gray=False)
+gray_skimage = io.imread('images/Osteosarcoma_01.tif', as_gray=True)
+```
+
+### RGB Color space
+
+Stores information as Red, Green and Blue channels.
+
+Additive color model.
+
+Both scikit-image and opencv read color images by default as RGB but, opencv stored color infromation as BGR.
+
+
+```python
+B, G, R = cv2.split(color_opencv)
+
+fig = plt.figure(figsize=(6, 6))
+
+ax1 = fig.add_subplot(221)
+ax1.imshow(color_opencv)
+ax1.title.set_text('Original')
+
+ax2 = fig.add_subplot(222)
+ax2.imshow(B, cmap='gray')
+ax2.title.set_text('B')
+
+ax3 = fig.add_subplot(223)
+ax3.imshow(G, cmap='gray')
+ax3.title.set_text('G')
+
+ax4 = fig.add_subplot(224)
+ax4.imshow(R, cmap='gray')
+ax4.title.set_text('R')
+```
+
+
+![png](44_2.png)  
+
+### HSV
+
+HSV stores color image information as Hue, Saturation and Value.
+
+HSV separates luma, or the image intensity, from chroma or the color information.
+
+HSV 将亮度或图像强度从色度或颜色信息中分离出来。
+
+**When to use HSV?**
+
+For applications where you need to change only pixel intensites and not color information.
+
+适用于只需要更改像素强度而不需要更改颜色信息的应用程序。
+
+e.g. histogram equalization 直方图均衡化
+
+
+```python
+hsv_image = cv2.cvtColor(color_opencv, cv2.COLOR_BGR2HSV)
+H, S, V = cv2.split(hsv_image)
+
+fig = plt.figure(figsize=(6, 6))
+
+ax1 = fig.add_subplot(221)
+ax1.imshow(color_opencv)
+ax1.title.set_text('Original')
+
+ax2 = fig.add_subplot(222)
+ax2.imshow(H, cmap='gray')
+ax2.title.set_text('H')
+
+ax3 = fig.add_subplot(223)
+ax3.imshow(S, cmap='gray')
+ax3.title.set_text('S')
+
+ax4 = fig.add_subplot(224)
+ax4.imshow(V, cmap='gray')
+ax4.title.set_text('V')
+```
+
+
+![png](44_3.png)
+
+### LAB
+
+LAB expresses color as three values:
+
+- L - for the lightness (consider this as your grey scale image)
+
+- A - from green to red
+- B - from blue to yellow
+
+**When to use LAB?**
+
+Just like HSV, LAB can be used for applications where you need to change only pixel intensities and color information.
+
+就像 HSV 一样，LAB 可以用于只需要更改像素强度和颜色信息的应用程序。
+
+e.g. histogram equalization
+
+Either HSV or LAB can be used interchangeably for most image processing tasks.
+
+对于大多数图像处理任务，HSV 或 LAB 都可以互换使用。
+
+
+```python
+lab_image = cv2.cvtColor(color_opencv, cv2.COLOR_BGR2LAB)
+L, A, B = cv2.split(lab_image)
+
+fig = plt.figure(figsize=(6, 6))
+
+ax1 = fig.add_subplot(221)
+ax1.imshow(color_opencv)
+ax1.title.set_text('Original')
+
+ax2 = fig.add_subplot(222)
+ax2.imshow(L, cmap='gray')
+ax2.title.set_text('L')
+
+ax3 = fig.add_subplot(223)
+ax3.imshow(A, cmap='gray')
+ax3.title.set_text('A')
+
+ax4 = fig.add_subplot(224)
+ax4.imshow(B, cmap='gray')
+ax4.title.set_text('B')
+```
+
+
+![png](44_4.png)
+
+## Tutorial 45 - Applying filters designed for grey scale to color images in python
+
+```python
+from skimage.color.adapt_rgb import adapt_rgb, each_channel, hsv_value
+from skimage import filters
+from skimage import io
+from matplotlib import pyplot as plt
+from skimage.color import rgb2gray
+```
+
+- <font color="red">Fails</font> on color images as it is a grey filter
+- May work with newest skimage, but not clear what is does.
+
+
+```python
+image = io.imread('images/monalisa.jpg')
+try_to_apply_sobel = filters.sobel(image)
+plt.imshow(try_to_apply_sobel)
+```
+
+
+    <matplotlib.image.AxesImage at 0x2c0eaaeab50>
+
+
+![png](45_1.png)
+
+
+Two ways to apply the filter on color images
+
+- Separate R, G and B channels and apply the filter to each channel and put the channel back together.
+  - 分开 R, G 和 B 通道，对每个通道使用过滤器，然后把通道放回一起。
+
+- Convert RGB to HSV and then apply filter to V channel and put it back to HSV and convert to RGB.
+  - 将 RGB 转换为 HSV，然后对 V 通道应用滤镜，将其放回 HSV 并转换为 RGB。
+
+
+Too many lines of code to do these tasks but with adapt_rgb decorator the task becomes easy.
+
+- 太多的代码行来完成这些任务，但使用 adapt_rgb 装饰器，任务变得容易。
+
+
+```python
+@adapt_rgb(each_channel)  # 修饰器
+def sobel_each(image):
+    return filters.sobel(image)
+
+
+@adapt_rgb(hsv_value)
+def sobel_hsv(image):
+    return filters.sobel(image)
+```
+
+
+```python
+each_channel_image = sobel_each(image)
+hsv_value_image = sobel_hsv(image)
+plt.imshow(hsv_value_image)
+```
+
+
+    <matplotlib.image.AxesImage at 0x2c0eab5cb50>
+
+
+![png](45_2.png)
+
+```python
+import cv2
+
+
+@adapt_rgb(each_channel)
+def median_each(image, k):
+    output_image = cv2.medianBlur(image, k)
+    return output_image
+
+median_using_cv2 = median_each(image, 13)
+plt.imshow(median_using_cv2)
+```
+
+
+    <matplotlib.image.AxesImage at 0x2c0eb86fbb0>
+
+
+![png](45_3.png)
+
+```python
+from skimage import exposure
+
+
+@adapt_rgb(each_channel)
+def eq_each(image):
+    output_image = exposure.equalize_hist(image)
+    return (output_image)
+
+equ_RGB = eq_each(image)
+plt.imshow(equ_RGB)
+```
+
+
+    <matplotlib.image.AxesImage at 0x2c0ec1ef3d0>
+
+
+![png](45_4.png)
+
+```python
+@adapt_rgb(hsv_value)
+def eq_hsv(image):
+    output_image = exposure.equalize_hist(image)
+    return (output_image)
+
+equ_hsv = eq_hsv(image)
+plt.imshow(equ_hsv)
+```
+
+
+    <matplotlib.image.AxesImage at 0x2c0ed2423a0>
+
+
+![png](45_5.png)
+
+```python
+fig = plt.figure(figsize=(10, 10))
+
+ax1 = fig.add_subplot(2,2,1)
+ax1.imshow(image)
+ax1.title.set_text('Input Image')
+
+ax2 = fig.add_subplot(2,2,2)
+ax2.imshow(equ_RGB)
+ax2.title.set_text('Equalized using RGB channels')
+
+ax3 = fig.add_subplot(2,2,3)
+ax3.imshow(equ_hsv)
+ax3.title.set_text('Equalized using v channel in hsv')
+
+plt.show()
+```
+
+
+![png](45_6.png)

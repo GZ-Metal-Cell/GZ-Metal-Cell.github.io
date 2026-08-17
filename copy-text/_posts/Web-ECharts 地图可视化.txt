@@ -1,0 +1,267 @@
+---
+title: Web-ECharts 地图可视化
+date: Mon Apr 22 2024 20:39:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - 前端
+  - jQuery
+  - JavaScript
+categories: 探索
+description: 踏万千河山 风雨飘 摇自由停歇
+---
+
+
+# 资源
+
+- [Examples - Apache ECharts](https://echarts.apache.org/examples/zh/editor.html?c=geo-svg-map)
+- [数据可视化 Echarts 实现地图系列绘制 svg 作为底图_svg 地图-CSDN 博客](https://blog.csdn.net/qq_61788891/article/details/132826096)
+- [DataV.GeoAtlas 地理小工具系列 (aliyun.com)](https://datav.aliyun.com/portal/school/atlas/area_selector)
+- [echarts 地图贴图（非纹理贴图）的完美实现 - 掘金 (juejin.cn)](https://juejin.cn/post/7184370811518582840)
+
+# 演示
+
+<div id="chart" style="width: 100%; height: 400px; margin: 0 auto; margin-top: 1em; margin-bottom: 1em;"></div>
+
+<p style="color: var(--color-muted-foreground); font-size: var(--text-sm); line-height: var(--tw-leading, var(--text-sm--line-height)); text-align: center; margin-top: .375em !important;margin-bottom: .375em !important">福州市</p>
+
+<script src="Fuzhou.js"></script>
+
+# 创建地图
+
+## 获取 SVG
+
+![福州市.svg](01.png)
+
+​	从 [DataV.GeoAtlas 地理小工具系列 (aliyun.com)](https://datav.aliyun.com/portal/school/atlas/area_selector) 获取 `福州市.svg`。
+
+## Ai
+
+​	将 `福州市.svg` 导入 Ai 处理一下。
+
+![文档设置](02.png)
+
+​	将画板单位选为 `像素`。为了保证贴图的清晰度，这里将画板设为 `5000px x 3000px`。
+
+![调整图像](03.png)
+
+​	把地图里的填充删了。自由变换地图，让地图放在画板中心并尽可能大。
+
+![另存为](04.png)
+
+​	这么设置以另存为 SVG。
+
+![修改](05.png)
+
+​	修改导出的 SVG 代码，把 `id` 都改成 `name`，这样 ECharts 才可以识别。
+
+## PS
+
+​	用 Ai 再导出两张 png，方便 PS 操作！
+
+![png](Fuzhou2.png)
+
+​	先直接导出一张 png。
+
+![png](Fuzhou.png)
+
+​	给各个区县填充，再导出一张 png（真像分割任务里的分割图）。
+
+![webp](Fuzhou.webp)
+
+​	根据 Ai 导出的两张 png，用 PS 做好背景贴图。
+
+## HTML
+
+​	创建一个容器：
+
+```html
+<div id="chart" style="width: 100%; height: 400px; margin: 0 auto; margin-top: 1em; margin-bottom: 1em;"></div>
+```
+
+​	JS 中导入 ECharts：
+
+```html
+<script src="XXX/echarts.min.js"></script>
+```
+
+​	再写一个 JS 控制这个 `<div id="chart"></div>`（这里还不太熟练，抄抄别人的，然后看看官方文档，问问 ChatGPT，拼凑出如下臭臭代码）：
+
+```javascript
+var dom = document.getElementById('chart');
+var myChart = echarts.init(dom, null, {
+    renderer: 'canvas',
+    useDirtyRect: false
+});
+var app = {};
+var option;
+
+var img = new Image();
+img.src = 'Fuzhou.webp';
+
+img.onload = function () {
+    $.get(
+        'Fuzhou.svg',
+        function (svg) {
+            echarts.registerMap('sicily', { svg: svg });
+            option = {
+                tooltip: {},
+                geo: [
+                    {
+                        map: 'sicily',
+                        roam: true,
+                        layoutCenter: ['50%', '50%'],
+                        layoutSize: '150%',
+                        selectedMode: 'single',
+                        itemStyle: {
+                            color: undefined
+                        },
+                        emphasis: {
+                            itemStyle: {
+                                color: 'rgba(0, 255, 255, 0.25)',
+                            },
+                            label: {
+                                show: false
+                            }
+                        },
+                        selectedMode: false,
+
+                        regions: [
+                            {
+                                //地图区域的名称
+                                name: "福州市",
+                                // 该区域的多边形样式设置
+                                itemStyle: {
+                                    areaColor: {
+                                        type: 'image',
+                                        image: img,
+                                        repeat: 'no-repeat',
+                                    },
+                                    borderColor: '#111',
+                                    //图形阴影的模糊大小
+                                    shadowBlur: 5,
+                                    //阴影颜色
+                                    shadowColor: "#000",
+                                    //shadowOffsetY
+                                    shadowOffsetY: 5,
+                                    //透明度
+                                    opacity: 1
+                                },
+                                emphasis: {
+                                    itemStyle: {
+                                        areaColor: {
+                                            type: 'image',
+                                            image: img,
+                                            repeat: 'no-repeat',
+                                        },
+                                        borderColor: '#111',
+                                        shadowBlur: 5,
+                                        shadowColor: "#000",
+                                        shadowOffsetY: 5,
+                                        opacity: 1
+                                    },
+                                },
+                                tooltip: {
+                                    show: true,
+                                    confine: true,
+                                    formatter: function () {
+                                        return [];
+                                    }
+                                }
+                            },
+                            {
+                                name: "鼓楼区",
+                                tooltip: {
+                                    show: true,
+                                    confine: true,
+                                    formatter: function () {
+                                        return [
+                                            '鼓楼区',
+                                            '啊！三坊七巷真是太好玩了！'
+                                        ].join('<br/>');
+                                    }
+                                }
+                            },
+                            {
+                                name: "仓山区",
+                                tooltip: {
+                                    show: true,
+                                    confine: true,
+                                    formatter: function () {
+                                        return [
+                                            '仓山区',
+                                            '我们的时代多美好~像朝霞漫天灿烂~'
+                                        ].join('<br/>');
+                                    }
+                                }
+                            },
+                            {
+                                name: "闽侯县",
+                                tooltip: {
+                                    show: true,
+                                    confine: true,
+                                    formatter: function () {
+                                        return [
+                                            '闽侯县',
+                                            '知明行笃~立诚致广~全面求发展~'
+                                        ].join('<br/>');
+                                    }
+                                }
+                            },
+                            {
+                                name: "长乐区",
+                                tooltip: {
+                                    show: true,
+                                    confine: true,
+                                    formatter: function () {
+                                        return [
+                                            '长乐区',
+                                            '闽江江水都流向~流向长乐的海~'
+                                        ].join('<br/>');
+                                    }
+                                }
+                            },
+                        ]
+                    }
+                ],
+            };
+            myChart.setOption(option);
+            myChart.on('selectchanged', function (params) {
+                if (!params.selected.length) {
+                    myChart.dispatchAction({
+                        type: 'hideTip'
+                    });
+                    myChart.dispatchAction({
+                        type: 'geoSelect',
+                        geoIndex: 0
+                        // Use no name to unselect.
+                    });
+                } else {
+                    var btnDataIdx = params.selected[0].dataIndex[0];
+                    var name = option.series.data[btnDataIdx][2];
+                    myChart.dispatchAction({
+                        type: 'geoSelect',
+                        geoIndex: 0,
+                        name: name
+                    });
+                    myChart.dispatchAction({
+                        type: 'showTip',
+                        geoIndex: 0,
+                        name: name
+                    });
+                }
+            });
+        }
+    );
+
+    if (option && typeof option === 'object') {
+        myChart.setOption(option);
+    }
+
+    myChart.on('click', function (params) {
+        // 获取选中项的宽度和高度
+        console.log("选中项: ", params.event);
+    });
+
+    window.addEventListener('resize', myChart.resize);
+};
+```
+

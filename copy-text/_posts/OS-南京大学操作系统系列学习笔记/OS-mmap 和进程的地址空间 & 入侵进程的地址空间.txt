@@ -1,0 +1,228 @@
+---
+title: OS-mmap 和进程的地址空间 & 入侵进程的地址空间
+date: Tue Oct 21 2025 17:44:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - 南京大学《操作系统原理》
+categories: 课程
+description: 学习自 B 站 UP 主绿导师原谅你了。
+---
+
+
+# 资源
+
+-   [2025 南京大学操作系统原理 哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1XZAbeqEyt/)
+-   [Yanyan's Wiki](https://jyywiki.cn/)
+-   [2025春季 操作系统 | Xintao Niu (钮鑫涛)](https://niuxintao.github.io/courses/2025Spring-OS/main/)
+
+# 正文
+
+## 6. 进程的地址空间
+
+在人工智能时代：
+
+- 操作系统依然很重要
+- 编程语言是 “可信可验证” 的桥梁
+  - Markdown, js, Python, ...
+- 操作系统是运行支撑
+  - 虚拟环境、文件系统快照、网络……
+
+对于状态机的生命周期管理 API：`fork`、`execve` 和 `_exit`，在操作系统的视角中，分别代表着状态机的复制、重置和删除。
+
+### 6.1 进程的初始状态
+
+**进程 execve 后的初始状态**
+
+- ABI 中规定的 initial state ([System V ABI](https://jyywiki.cn/OS/manuals/sysv-abi.pdf))
+  - Section 3.4: “Process Initialization”
+  - 只规定了部分寄存器和栈 (argv 和 envp 中的字符串保存在栈中)
+- Binary 中指定的 PT_LOAD 段
+  - 内存是分成 “一段一段” 的
+  - 每一段有访问权限 (rwx)
+
+> ABI（Application Binary Interface，应用二进制接口）告诉你“寄存器和栈该怎么初始化”；
+>
+> ELF（Executable and Linkable Format，可执行与可链接格式）/PT_LOAD 告诉你“内存空间该怎么铺开、每段权限是什么”。
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+
+/* 全局变量（.data 段） */
+int global_var = 42;
+
+/* 未初始化全局变量（.bss 段） */
+int bss_var;
+
+/* 静态局部变量（静态存储期，通常也在 .data 或 .bss） */
+void test_static() {
+    static int static_var = 99;
+    printf("Static variable address: %p, value: %d\n", &static_var, static_var);
+}
+
+int main(int argc, char *argv[], char *envp[]) {
+    /* 局部变量（栈段） */
+    int local_var = 123;
+
+    printf("Program arguments (argv/envp) are on stack:\n");
+    for(int i = 0; i < argc; i++)
+        printf(" argv[%d]: %p -> %s\n", i, (void*)argv[i], argv[i]);
+    printf(" envp[0]: %p -> %s\n", (void*)envp[0], envp[0]);
+
+    printf("\nVariable addresses:\n");
+    printf(" global_var (.data) : %p\n", &global_var);
+    printf(" bss_var    (.bss)  : %p\n", &bss_var);
+    printf(" local_var  (stack) : %p\n", &local_var);
+
+    test_static();
+
+    /* 验证 ABI：输出一些寄存器初值 */
+    unsigned long rsp, rbp;
+    asm volatile(
+        "mov %%rsp, %0\n"
+        "mov %%rbp, %1\n"
+        : "=r"(rsp), "=r"(rbp)
+    );
+    printf("\nRegisters (stack pointer and base pointer):\n");
+    printf(" RSP = %p\n", (void*)rsp);
+    printf(" RBP = %p\n", (void*)rbp);
+
+    return 0;
+}
+```
+
+```sh
+gcc -o test_execve test_execve.c
+./test_execve arg1 arg2
+```
+
+```
+Program arguments (argv/envp) are on stack:
+ argv[0]: 0x7ffd821ac610 -> ./test_execve
+ argv[1]: 0x7ffd821ac61e -> arg1
+ argv[2]: 0x7ffd821ac623 -> arg2
+ envp[0]: 0x7ffd821ac628 -> SHELL=/bin/bash
+
+Variable addresses:
+ global_var (.data) : 0x631eaab3d010
+ bss_var    (.bss)  : 0x631eaab3d01c
+ local_var  (stack) : 0x7ffd821aa300
+Static variable address: 0x631eaab3d014, value: 99
+
+Registers (stack pointer and base pointer):
+ RSP = 0x7ffd821aa2e0
+ RBP = 0x7ffd821aa320
+```
+
+> **验证 ELF/PT_LOAD（内存布局）**：
+>
+> - `global_var` → `.data`
+> - `bss_var` → `.bss`
+> - `local_var` → 栈
+> - `static_var` → `.data` 或 `.bss`（静态存储期）
+>
+> 输出这些变量地址，你会发现它们在内存中分布在不同段，体现了 ELF/PT_LOAD 的作用。
+>
+> **验证 ABI（寄存器和栈初始化）**：
+>
+> - `argv` 和 `envp` 存在于栈上。
+> - 通过内联汇编读取 `RSP`（栈指针）和 `RBP`（基址指针），可以看到栈的初始状态。
+> - 在 `_start` 到 `main` 期间，ABI 已经把栈、寄存器按约定初始化。
+
+### 6.2 进程的地址空间管理
+
+**进程的初始状态**
+
+- 只有**ELF 文件里声明的**内存和一些操作系统分配的内存
+  - 任何其他指针的访问都是非法的
+  - 如果我们从输入读一个 `size`，然后 `malloc(size)`
+    - 内存从拿来呢？
+
+一定有一个**系统调用**可以改变进程的地址空间
+
+- 你会怎么设计？
+
+**Memory Map（大块内存或匿名映射）系统调用**
+
+| 来源        | 何时分配             | 谁分配 | 用途                       |
+| ----------- | -------------------- | ------ | -------------------------- |
+| ELF 段      | execve 时            | 内核   | 代码段、数据段、BSS        |
+| 栈          | execve 时            | 内核   | 参数、局部变量、函数调用   |
+| 堆          | malloc 时 / sbrk/brk | 内核   | 动态分配                   |
+| mmap 匿名页 | malloc 大块 / mmap   | 内核   | 大对象、共享内存、映射文件 |
+
+> `malloc(size)` 请求的内存 **最终都是内核帮进程映射的一块虚拟地址空间**。
+
+**在状态机状态上增加/删除/修改一段可访问的内存**
+
+- MAP_ANONYMOUS: 匿名（申请）内存
+- fd: 把文件 “搬到” 进程地址空间中（例子：加载器）
+- 更多的行为请参考手册（复杂性暴增）
+
+```c
+// 映射
+void *mmap(void *addr, size_t length, int prot, int flags,
+           int fd, off_t offset);
+int munmap(void *addr, size_t length);
+
+// 修改映射权限
+int mprotect(void *addr, size_t length, int prot);
+```
+
+- 我们可以用 pmap 命令查看进程的地址空间
+  - （它是怎么实现的？ ）
+
+**Example 1: 申请大量内存空间**
+
+- 瞬间完成内存分配
+  - mmap/munmap 为 malloc/free 提供了机制
+  - libc 的大 malloc 会直接调用一次 mmap 实现
+- 不妨 strace/gdb 看一下
+
+**Example 2: Everything is a file**
+
+- 映射大文件、只访问其中的一小部分
+
+```c
+with open('/dev/sda', 'rb') as fp:
+    mm = mmap.mmap(fp.fileno(),
+                   prot=mmap.PROT_READ, length=128 << 30)
+    hexdump.hexdump(mm[:512])
+```
+
+### 6.3 入侵进程的地址空间
+
+**进程（状态机）在 “无情执行指令机器” 上执行**
+
+- 状态机是一个封闭世界
+- **但如果允许一个进程对其他进程的地址空间有访问权**？
+  - 意味着可以任意改变另一个程序的行为
+    - 听起来就很 cool
+
+**“入侵” 进程地址空间的例子**
+
+- 调试器 (gdb)
+  - gdb 可以任意观测和修改程序的状态
+
+**金手指：直接物理劫持内存**
+
+![webp](01.webp)
+
+**地址空间那么大，哪个才是 “金钱”？**
+
+- 包含动态分配的内存，每次地址都不一样
+- 思路：**Everything is a state machine**
+  - 观察状态机的 trace，就知道哪个是金钱了
+
+**查找 + Filter**
+
+- 进入游戏时 `exp=4950`
+- 打了个怪 `exp=5100`
+- 符合 `4950→5100` 变化的内存地址是**很少**的
+  - 好了，出门就是满级了
+
+**金山游侠的工作原理**
+
+- 包含非常贴心的 “游戏内呼叫” 功能 (Hack DirectX)
+  - 控制 DirectX 使得游戏暂停
+
+**它就是专为游戏设计的 “调试器”**

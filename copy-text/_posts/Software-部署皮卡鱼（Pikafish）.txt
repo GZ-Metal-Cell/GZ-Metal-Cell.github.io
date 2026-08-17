@@ -1,0 +1,470 @@
+---
+title: Software-部署皮卡鱼（Pikafish）
+date: Sun Dec 01 2024 16:29:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - C#
+  - Unity
+  - 象棋
+  - Python
+categories: 探索
+description: 拳打王天一，脚踢郑惟桐！
+---
+
+
+<style>
+.input {
+  background: #0000ff20;
+  margin: 5px 0;
+  padding: 5px;
+  font-family: fangsong;
+}
+.output {
+  background: #ff000020;
+  margin: 5px 0;
+  padding: 5px;
+  font-family: fangsong;
+}
+</style>
+
+# 资源
+
+- [Pikafish - 皮卡鱼](https://www.pikafish.com/)
+- [official-pikafish/Pikafish: UCI xiangqi engine](https://github.com/official-pikafish/Pikafish)
+- [国际象棋通用引擎协议](https://www.xqbase.com/protocol/uci.htm)
+- [UCI & Commands · official-pikafish/Pikafish Wiki](https://github.com/official-pikafish/Pikafish/wiki/UCI-&-Commands#standard-commands)
+
+# 使用
+
+​	从 [皮卡鱼引擎+鲨鱼界面入门教程(纯小白向).zip - 蓝奏云](https://www.lanzoui.com/iA1hh2acu7tg) 下载得到`皮卡鱼引擎+鲨鱼界面入门教程(纯小白向).zip`！
+
+​	解压后打开 `皮卡鱼-Pikafish_20240917`，将会看到：
+
+- pikafish-avx2
+- pikafish-avx2.exe
+- pikafish-avx512
+- pikafish-avx512.exe
+- pikafish-avx512f
+- pikafish-avx512f.exe
+- pikafish-avxvnni.exe
+- pikafish-bmi2
+- pikafish-bmi2.exe
+- pikafish-sse41-popcnt
+- pikafish-sse41-popcnt.exe
+- pikafish-vnni512
+- pikafish-vnni512.exe
+
+​	`pikafish-XXX.exe` 即为编译好的象棋引擎程序（当然也可以选择自己编译），对应着适配 CPU 的不同种指令集。解释如下：
+
+**x86-64-vnni512**:
+
+- **VNNI** (Vector Neural Network Instructions) 是 Intel 处理器中的一种扩展，专门用于加速神经网络计算，尤其是在深度学习应用中。
+- **512** 表示这些指令可以操作 512 位的 SIMD 寄存器，这是 AVX-512 扩展的一部分。
+
+**x86-64-avx512**:
+
+- **AVX-512** 是 Intel 处理器的一组高级 SIMD 指令集，支持 512 位的寄存器，可以加速浮点运算、向量计算等操作。
+- 这种指令集可用于高性能计算、大数据分析和深度学习等需要大量并行计算的任务。
+- **AMD: Zen 4 and newer** 表明 AMD Ryzen 9 7950X 及以上的处理器支持这些指令集。
+
+**x86-64-avx512f**:
+
+- **AVX512F** 是 AVX-512 指令集的一个子集，提供基础的 AVX-512 支持，主要用于浮点运算和数据并行任务。
+- 这个扩展也适用于支持 AVX-512 的处理器，常见于 Intel 的 Xeon 和高端桌面处理器。
+
+**x86-64-avxvnni**:
+
+- **AVX-VNNI** (AVX Vector Neural Network Instructions) 是针对神经网络加速的 AVX 指令集扩展，用于加速深度学习计算。
+- 它特别适用于加速卷积操作和矩阵乘法，常用于机器学习和推理任务。
+
+**x86-64-bmi2**:
+
+- **BMI2** (Bit Manipulation Instruction Set 2) 是 Intel 的一组指令，专注于位操作（例如位移、与、或、非等），可提高某些算法的性能，尤其是加速数据处理和加密算法。
+- **Intel: 4th Gen and newer** 表明 Intel 第四代及以上的处理器（如 i7-4770K 和 i5-13600K）支持 BMI2。
+- **AMD: Zen 3** 表明 AMD Ryzen 5 5600X 等处理器也支持这一指令集。
+
+**x86-64-avx2**:
+
+- **AVX2** 是 AVX（Advanced Vector Extensions）的一种增强版本，支持 256 位的 SIMD 寄存器，提供了更多的指令用于整数和浮点运算，尤其是在高并行的数学运算中。
+- **AMD: Zen, Zen+, and Zen 2** 表示这些 Zen 架构的处理器（如 Ryzen 5 1600、Ryzen 5 3600）支持 AVX2。
+
+**x86-64-sse41-popcnt**:
+
+- **SSE4.1** 是 Intel 的 SSE 指令集的一部分，增加了多种新的指令，用于加速字符串和位操作。
+- **POPCNT** 是一种指令，用于计算一个数字的二进制表示中 1 的个数（人口计数），常用于加速某些算法，如哈希计算。
+- 这种指令集适用于较早的 Intel 和 AMD 处理器，通常从 Intel Core 2 和后续版本开始支持。
+
+> [!NOTE]
+>
+> ​	对于 **i9-13900HX**，这里 `pikafish-avx2.exe`、`pikafish-bmi2.exe` 和 `pikafish-avxvnni.exe` 打开不会闪退，随便选一个吧。
+
+## 裸奔
+
+​	直接打开 `pikafish-avx2.exe`。将打开一个命令行程序，你输入一行它回一行。
+
+​	皮卡鱼遵循 UCI 协议（而不是 UCCI），参考 [国际象棋通用引擎协议](https://www.xqbase.com/protocol/uci.htm) 给出的命令集，可以对引擎进行交互：
+
+---
+
+​	告诉引擎使用 UCI 协议；
+
+{% div input %}
+
+uci
+
+{% enddiv %}
+
+​	所有可设置的参数已经显示出来，此时引擎可以接收指令；
+
+{% div output %}
+
+id name Pikafish 2024-09-17
+id author the Pikafish developers (see AUTHORS file)
+
+option name Debug Log File type string default
+...
+option name EvalFile type string default pikafish.nnue
+uciok
+
+{% enddiv %}
+
+​	等待引擎初始化；
+
+{% div input %}
+
+isready
+
+{% enddiv %}
+
+​	引擎初始化完成，现在可以让引擎思考了；
+
+{% div output %}
+
+readyok
+
+{% enddiv %}
+
+​	给定开局 `c3c4`（兵七进一）；
+
+{% div input %}
+
+position startpos moves c3c4
+
+{% enddiv %}
+
+​	让电脑思考 5000 毫秒，返回最佳招法；
+
+{% div input %}
+
+go movetime 5000
+
+{% enddiv %}
+
+{% div output %}
+
+info string Available processors: 0-31
+info string Using 1 thread
+info string NNUE evaluation using pikafish.nnue (103MiB, (25920, 2048, 15, 32, 1))
+info depth 1 seldepth 5 multipv 1 score cp -16 wdl 1 949 50 nodes 74 nps 12333 hashfull 0 tbhits 0 time 6 pv b7c7
+
+...
+
+info depth 27 seldepth 39 multipv 1 score cp -8 wdl 1 972 27 upperbound nodes 4164348 nps 832703 hashfull 718 tbhits 0 time 5001 pv b7c7 h2e2
+bestmove b7c7 ponder h2e2
+
+{% enddiv %}
+
+​	查看棋局信息：
+
+{% div input %}
+
+d
+
+{% enddiv %}
+
+​	显示棋盘和 Fen 串；
+
+{% div output %}
+
+ +---+---+---+---+---+---+---+---+---+
+ | r | n | b | a | k | a | b | n | r | 9
+ +---+---+---+---+---+---+---+---+---+
+ |   |   |   |   |   |   |   |   |   | 8
+ +---+---+---+---+---+---+---+---+---+
+ |   | c |   |   |   |   |   | c |   | 7
+ +---+---+---+---+---+---+---+---+---+
+ | p |   | p |   | p |   | p |   | p | 6
+ +---+---+---+---+---+---+---+---+---+
+ |   |   |   |   |   |   |   |   |   | 5
+ +---+---+---+---+---+---+---+---+---+
+ |   |   | P |   |   |   |   |   |   | 4
+ +---+---+---+---+---+---+---+---+---+
+ | P |   |   |   | P |   | P |   | P | 3
+ +---+---+---+---+---+---+---+---+---+
+ |   | C |   |   |   |   |   | C |   | 2
+ +---+---+---+---+---+---+---+---+---+
+ |   |   |   |   |   |   |   |   |   | 1
+ +---+---+---+---+---+---+---+---+---+
+ | R | N | B | A | K | A | B | N | R | 0
+ +---+---+---+---+---+---+---+---+---+
+   a   b   c   d   e   f   g   h   i
+
+Fen: rnbakabnr/9/1c5c1/p1p1p1p1p/9/2P6/P3P1P1P/1C5C1/9/RNBAKABNR b - - 1 1
+Key: 89812FCD5E794D02
+Checkers:
+
+{% enddiv %}
+
+​	退出引擎。
+
+{% div input %}
+
+quit
+
+{% enddiv %}
+
+## GUI（鲨鱼象棋）
+
+![webp](01.webp)
+
+​	就是一个支持读取 UCI 协议引擎的软件，设置好引擎路径就可以用了！将上述的一大串命令转成人看得懂的形式……
+
+## Python
+
+​	通过下面这段代码，实现 Python 与皮卡鱼引擎之间的通信。
+
+```python
+import subprocess
+
+def start_engine(engine_path):
+    """
+    该函数启动指定路径的引擎（如 pikafish-bmi2.exe）。
+    subprocess.Popen 创建一个新的子进程来运行引擎，并通过 stdin 和 stdout 与进程进行交互。
+    stdin=subprocess.PIPE 允许我们向引擎发送命令，stdout=subprocess.PIPE 允许我们读取引擎的输出，text=True 表示输入和输出是文本模式（而不是字节）。
+    """
+    return subprocess.Popen(engine_path, stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
+
+
+def send_command(engine, command):
+    """
+    该函数向引擎发送命令。
+    engine.stdin.write(command + '\n') 将命令写入引擎的标准输入，并加上换行符。
+    engine.stdin.flush() 确保命令被及时发送到引擎。
+    """
+    engine.stdin.write(command + '\n')
+    engine.stdin.flush()
+
+
+def read_response(engine):
+    """
+    该函数读取引擎的标准输出并返回引擎的响应。
+    engine.stdout.readline().strip() 读取一行输出并去除前后的空白字符。
+    如果引擎返回了 'uciok'（表示已成功初始化 UCI 协议），'readyok'（表示引擎准备好），或者以 'bestmove' 开头（表示最佳走法），就退出循环。
+    否则，打印引擎的其他输出。
+    """
+    while True:
+        response = engine.stdout.readline().strip()
+        if response == 'uciok' or response == 'readyok' or response.startswith('bestmove'):
+            break
+        print(response)
+    return response
+
+
+def main():
+    # 启动引擎
+    engine = start_engine(r'D:\User\Downloads\Pikafish_20240917\pikafish-bmi2.exe')
+
+    # 初始化引擎
+    send_command(engine, 'uci')
+    read_response(engine)
+
+    # 设置选项
+    send_command(engine, 'setoption name Threads value 4')
+    send_command(engine, 'setoption name Hash value 256')
+
+    # 确认引擎准备好
+    send_command(engine, 'isready')
+    read_response(engine)
+
+    # 开始新游戏
+    send_command(engine, 'ucinewgame')
+
+    # 设定初始位置
+    send_command(engine, 'position startpos')
+
+    # 让引擎思考并走一步
+    send_command(engine, 'go movetime 5000')
+    best_move = read_response(engine)
+    print(f'Best move: {best_move}')
+
+    # 关闭引擎
+    send_command(engine, 'quit')
+    engine.terminate()
+
+if __name__ == '__main__':
+    main()
+```
+
+## Unity
+
+​	写一个 `PikaFishController.cs` 实现 Unity 与皮卡鱼之间的通信：
+
+```c#
+using System;
+using System.Diagnostics;
+using System.Text;
+using System.Threading;
+using UnityEngine;
+using Debug = UnityEngine.Debug;
+
+public class PikaFishController : MonoBehaviour
+{
+    private Process pikaFishProcess;
+    public string enginePath { get; set; } = "";  // 替换为你的皮卡鱼路径
+    private StringBuilder outputBuffer = new StringBuilder();
+
+    public void Init()
+    {
+        StartEngine();
+        InitializeEngine();
+    }
+
+    private void StartEngine()
+    {
+        pikaFishProcess = new Process();
+        pikaFishProcess.StartInfo.FileName = enginePath;
+        pikaFishProcess.StartInfo.UseShellExecute = false;
+        pikaFishProcess.StartInfo.RedirectStandardInput = true;
+        pikaFishProcess.StartInfo.RedirectStandardOutput = true;
+        pikaFishProcess.StartInfo.CreateNoWindow = true;
+
+        pikaFishProcess.OutputDataReceived += new DataReceivedEventHandler(OutputHandler);
+        pikaFishProcess.Start();
+        pikaFishProcess.BeginOutputReadLine();
+    }
+
+    private void InitializeEngine()
+    {
+        SendCommand("uci");
+        WaitForResponse("uciok");
+
+        // 设置线程数和哈希表大小（根据需要调整）
+        SendCommand("setoption name Threads value 4");
+        SendCommand("setoption name Hash value 256");
+
+        SendCommand("isready");
+        WaitForResponse("readyok");
+
+        SendCommand("ucinewgame");
+    }
+
+    public void SendCommand(string command)
+    {
+        if (pikaFishProcess != null && !pikaFishProcess.HasExited)
+        {
+            pikaFishProcess.StandardInput.WriteLine(command);
+        }
+    }
+
+    private void OutputHandler(object sendingProcess, DataReceivedEventArgs outLine)
+    {
+        if (!string.IsNullOrEmpty(outLine.Data))
+        {
+            outputBuffer.AppendLine(outLine.Data);
+            Debug.Log(outLine.Data);  // 打印引擎输出到 Unity 控制台
+        }
+    }
+
+    private string WaitForResponse(string keyword, int timeout = 5000)
+    {
+        Stopwatch stopwatch = new Stopwatch();
+        stopwatch.Start();
+
+        while (stopwatch.ElapsedMilliseconds < timeout)
+        {
+            if (outputBuffer.ToString().Contains(keyword))
+            {
+                string response = outputBuffer.ToString();
+                outputBuffer.Clear();
+                return response;
+            }
+            Thread.Sleep(100);
+        }
+
+        Debug.LogError($"Timeout waiting for response containing '{keyword}'");
+        return null;
+    }
+
+    void OnDestroy()
+    {
+        if (pikaFishProcess != null && !pikaFishProcess.HasExited)
+        {
+            SendCommand("quit");
+            pikaFishProcess.WaitForExit(1000);
+            if (!pikaFishProcess.HasExited)
+            {
+                pikaFishProcess.Kill();
+            }
+        }
+    }
+}
+```
+
+​	再写一个 `FileOpener` 控制一下 UI。
+
+​	这里引入了 [gkngkc/UnityStandaloneFileBrowser: A native file browser for unity standalone platforms](https://github.com/gkngkc/UnityStandaloneFileBrowser?tab=readme-ov-file) 库弹出文件打开框并设定引擎路径。
+
+```c#
+using SFB;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class FileOpener : MonoBehaviour
+{
+    public PikaFishController pikaFishController;
+    public Text pathText;
+    public InputField input;
+    public Button SetPathButton;
+    public Button SendButton;
+
+    private void Start()
+    {
+        SetPathButton.onClick.AddListener(OnSetPathButton);
+        SendButton.onClick.AddListener(OnSendButton);
+    }
+
+    public void OnSetPathButton()
+    {
+        Debug.Log("OnSetPathButton()");
+        string enginePath = OpenFileAndGetPath();
+        pikaFishController.enginePath = enginePath;
+        pikaFishController.Init();
+        pathText.text = enginePath;
+    }
+
+    public void OnSendButton()
+    {
+        pikaFishController.SendCommand(input.text);
+    }
+
+    private string OpenFileAndGetPath()
+    {
+        string path = StandaloneFileBrowser.OpenFilePanel("选择文件", "", "exe", false)[0];
+
+        // 判断文件是否被选中
+        if (!string.IsNullOrEmpty(path))
+        {
+            return path;  // 返回文件路径
+        }
+        else
+        {
+            return "";
+        }
+    }
+}
+```
+
+​	大功告成！后面的界面交互就交给前端慢慢设计去吧！
+
+![webp](02.webp)

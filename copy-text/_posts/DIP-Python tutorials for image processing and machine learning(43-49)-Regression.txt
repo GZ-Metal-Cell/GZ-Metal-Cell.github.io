@@ -1,0 +1,1167 @@
+---
+title: DIP-Python tutorials for image processing and machine learning(43-49)-Regression
+date: Fri Dec 02 2022 13:43:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - DigitalSreeni
+  - 数字图像处理
+  - Python
+categories: 课程
+description: 学习自 Youtube 博主 DigitalSreeni。
+---
+
+
+# 正文
+
+## 43 - What is machine learning anyway
+
+- Machine Learning 机器学习
+  - Supervised Learning 监督学习
+    - Classification problem 分类问题
+      - Support Vector Machines 支持向量机
+      - Discriminant Analysis 判别分析法
+      - Naive Bayes 朴素贝叶斯
+      - Nearest Neighbor 邻近算法
+    - Regression 回归
+      - Linear Regression, GLM 线性回归，广义线性模型
+      - SVR, GPR 支持向量回归，高斯过程回归
+      - Ensemble Methods 集成学习算法
+      - Decision Trees 决策树
+      - Neural Networks 神经网络
+  - Unsupervised Learning 无监督学习
+    - Clustering 聚类
+      - K-Means, K-Medoids, Fuzzy C-Means
+      - Hierarchical 层次聚类
+      - Gaussian Mixture 高斯混合模型
+      - Neural Networks 神经网络
+      - Hidden Markov Model 隐马尔科夫模型
+
+---
+
+- Machine Learning VS Deep Learning
+
+![png](43_1.png)
+
+​	在数据量大的情况下使用深度学习效果更好。
+
+![png](43_2.png)
+
+## 44 - What is linear regression
+
+​	介绍了下线性回归以及损失函数。
+
+## 45 - Linear regression using Sci-Kit Learn in Python
+
+```python
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn import linear_model
+
+df = pd.read_csv('data/cells.csv')
+df
+```
+
+
+
+<table border="1">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>time</th>
+      <th>cells</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0.0</td>
+      <td>205</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0.5</td>
+      <td>225</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1.0</td>
+      <td>238</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>1.5</td>
+      <td>240</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>2.0</td>
+      <td>248</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>2.5</td>
+      <td>260</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>3.0</td>
+      <td>265</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>3.5</td>
+      <td>283</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>4.0</td>
+      <td>301</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>4.5</td>
+      <td>305</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>5.0</td>
+      <td>309</td>
+    </tr>
+  </tbody>
+</table>
+
+
+
+
+```python
+plt.xlabel('time')
+plt.ylabel('cells')
+plt.scatter(df.time, df.cells, color='red', marker='+')
+```
+
+
+
+
+    <matplotlib.collections.PathCollection at 0x2c7bd4eb0d0>
+
+
+![png](45_1.png)
+    
+
+
+- x independent (time)
+
+- y dependent - we are predicting Y 
+
+
+```python
+x_df = df[['time']]
+x_df
+```
+
+
+
+<table border="1">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>time</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0.5</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>1.5</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>2.0</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>2.5</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>3.0</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>3.5</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>4.0</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>4.5</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>5.0</td>
+    </tr>
+  </tbody>
+</table>
+
+
+
+
+```python
+x_df.dtypes
+```
+
+
+
+
+    time    float64
+    dtype: object
+
+
+
+
+```python
+y_df = df.cells
+```
+
+- 创建并训练模型
+
+
+```python
+reg = linear_model.LinearRegression()  # Create an instance of the model
+reg.fit(x_df, y_df)  # Training the model (fitting a line)
+```
+
+
+
+- 预测模型
+
+
+```python
+# Predict
+reg.predict([[2.3]])
+```
+
+    C:\Users\gzjzx\anaconda3\lib\site-packages\sklearn\base.py:450: UserWarning: X does not have valid feature names, but LinearRegression was fitted with feature names
+      warnings.warn(
+
+
+
+    array([257.61090909])
+
+
+
+- 评分
+
+
+```python
+reg.score(x_df, y_df)
+```
+
+
+
+
+    0.9784252641866715
+
+
+
+- Y = mx + C
+
+
+```python
+c = reg.intercept_
+m = reg.coef_
+2.3 * m + c
+```
+
+
+
+
+    array([257.61090909])
+
+
+
+- 预测多个数据
+
+
+```python
+cells_predict_df = pd.read_csv('data/cells_predict.csv')
+cells_predict_df.head()
+```
+
+
+
+<table border="1">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>time</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0.1</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0.2</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0.3</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>0.4</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>0.5</td>
+    </tr>
+  </tbody>
+</table>
+
+
+
+
+```python
+predicted_cells = reg.predict(cells_predict_df)
+predicted_cells
+```
+
+
+
+
+    array([212.33090909, 214.38909091, 216.44727273, 218.50545455,
+           220.56363636, 222.62181818, 224.68      , 226.73818182,
+           228.79636364, 230.85454545, 232.91272727, 234.97090909,
+           237.02909091, 239.08727273, 241.14545455, 243.20363636,
+           245.26181818, 247.32      , 249.37818182, 251.43636364,
+           253.49454545, 255.55272727, 257.61090909, 259.66909091,
+           261.72727273, 263.78545455, 265.84363636, 267.90181818,
+           269.96      , 272.01818182, 274.07636364, 276.13454545,
+           278.19272727, 280.25090909, 282.30909091, 284.36727273,
+           286.42545455, 288.48363636, 290.54181818, 292.6       ])
+
+
+
+- 将预测数据合并并保存
+
+
+```python
+cells_predict_df['cells'] = predicted_cells
+cells_predict_df.head()
+```
+
+
+
+<table border="1">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>time</th>
+      <th>cells</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0.1</td>
+      <td>212.330909</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0.2</td>
+      <td>214.389091</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0.3</td>
+      <td>216.447273</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>0.4</td>
+      <td>218.505455</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>0.5</td>
+      <td>220.563636</td>
+    </tr>
+  </tbody>
+</table>
+
+
+
+
+```python
+cells_predict_df.to_csv('predicted_cells.csv')
+```
+
+
+
+## 46 - Splitting data into training and testing sets for machine learning
+
+```python
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn import linear_model
+```
+
+
+```python
+df = pd.read_csv('data/cells.csv')
+df
+```
+
+
+
+<table border="1">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>time</th>
+      <th>cells</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0.0</td>
+      <td>205</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0.5</td>
+      <td>225</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1.0</td>
+      <td>238</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>1.5</td>
+      <td>240</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>2.0</td>
+      <td>248</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>2.5</td>
+      <td>260</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>3.0</td>
+      <td>265</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>3.5</td>
+      <td>283</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>4.0</td>
+      <td>301</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>4.5</td>
+      <td>305</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>5.0</td>
+      <td>309</td>
+    </tr>
+  </tbody>
+</table>
+
+
+
+
+```python
+x_df = df.drop('cells', axis='columns')
+y_df = df.cells
+```
+
+- 分割训练集(train)和测试集(test)
+
+
+```python
+from sklearn.model_selection import train_test_split
+
+X_train, X_test, y_train, y_test = train_test_split(x_df, y_df, test_size=0.4, random_state=10)
+```
+
+
+```python
+X_train
+```
+
+
+
+<table border="1">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>time</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>10</th>
+      <td>5.0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>1.5</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0.5</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>2.0</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>4.5</td>
+    </tr>
+  </tbody>
+</table>
+
+
+
+
+```python
+reg = linear_model.LinearRegression()
+reg.fit(X_train, y_train)
+
+prediction_test = reg.predict(X_test)
+prediction_test
+```
+
+
+
+
+    array([229.66081871, 270.73684211, 291.2748538 , 260.46783626,
+           281.00584795])
+
+
+
+- 计算均方误差
+
+
+```python
+print('Mean sq. error between y_test and predicted =', np.mean(prediction_test - y_test) ** 2)
+```
+
+    Mean sq. error between y_test and predicted = 7.677112273861912
+
+
+- 计算残差
+
+
+```python
+plt.scatter(prediction_test, prediction_test - y_test)
+plt.hlines(y=0, xmin=200, xmax=310)  # 画一条水平线
+```
+
+
+
+
+    <matplotlib.collections.LineCollection at 0x26a2470d640>
+
+
+![png](46_1.png)
+    
+
+## 47 - Multiple Linear Regression with SciKit-Learn in Python
+
+```python
+import pandas as pd
+
+df = pd.read_excel('data/images_analyzed.xlsx')
+df.head()
+```
+
+
+
+<table border="1">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>User</th>
+      <th>Time</th>
+      <th>Coffee</th>
+      <th>Age</th>
+      <th>Images_Analyzed</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1</td>
+      <td>8</td>
+      <td>0</td>
+      <td>23</td>
+      <td>20</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1</td>
+      <td>13</td>
+      <td>0</td>
+      <td>23</td>
+      <td>14</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1</td>
+      <td>17</td>
+      <td>0</td>
+      <td>23</td>
+      <td>18</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>1</td>
+      <td>22</td>
+      <td>0</td>
+      <td>23</td>
+      <td>15</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>1</td>
+      <td>8</td>
+      <td>2</td>
+      <td>23</td>
+      <td>22</td>
+    </tr>
+  </tbody>
+</table>
+
+
+
+
+```python
+import seaborn as sns
+
+sns.lmplot(x='Time', y='Images_Analyzed', data=df, hue='Age')
+```
+
+
+
+
+    <seaborn.axisgrid.FacetGrid at 0x238adc47910>
+
+
+![png](47_1.png)
+    
+
+```python
+import numpy as np
+from sklearn import linear_model
+
+reg = linear_model.LinearRegression()
+reg.fit(df[['Time', 'Coffee', 'Age']], df.Images_Analyzed)
+
+reg.coef_, reg.intercept_
+```
+
+
+
+
+    (array([-0.35642282, -0.3475    , -0.04279945]), 25.189636192124166)
+
+
+
+
+```python
+reg.predict([[13, 2, 23]])
+```
+
+    C:\Users\gzjzx\anaconda3\lib\site-packages\sklearn\base.py:450: UserWarning: X does not have valid feature names, but LinearRegression was fitted with feature names
+      warnings.warn(
+
+
+
+    array([18.8767522])
+
+
+
+## 48 - What is logistic regression
+
+虽然是 Regression，不过主要用于 Classfication （二分类问题）。
+
+[逻辑回归（Logistic Regression）（一） - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/28408516)
+
+## 49 - Logistic Regression using scikit-learn in Python
+
+- **STEP1: DATA READING AND UNDERSTANDING**
+
+
+```python
+import pandas as pd
+from matplotlib import pyplot as plt
+
+df = pd.read_csv('data/images_analyzed_productivity1.csv')
+df.head()
+```
+
+
+
+<table border="1">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>User</th>
+      <th>Time</th>
+      <th>Coffee</th>
+      <th>Age</th>
+      <th>Images_Analyzed</th>
+      <th>Productivity</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1</td>
+      <td>8</td>
+      <td>0</td>
+      <td>23</td>
+      <td>20</td>
+      <td>Good</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1</td>
+      <td>13</td>
+      <td>0</td>
+      <td>23</td>
+      <td>14</td>
+      <td>Bad</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1</td>
+      <td>17</td>
+      <td>0</td>
+      <td>23</td>
+      <td>18</td>
+      <td>Good</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>1</td>
+      <td>22</td>
+      <td>0</td>
+      <td>23</td>
+      <td>15</td>
+      <td>Bad</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>1</td>
+      <td>8</td>
+      <td>2</td>
+      <td>23</td>
+      <td>22</td>
+      <td>Good</td>
+    </tr>
+  </tbody>
+</table>
+
+
+
+
+```python
+plt.scatter(df.Time, df.Productivity, marker='+', color='red')
+```
+
+
+
+
+    <matplotlib.collections.PathCollection at 0x206c9140bb0>
+
+
+![png](49_1.png)
+    
+
+```python
+sizes = df['Productivity'].value_counts(sort=1)
+plt.pie(sizes, autopct='%1.1f%%')
+```
+
+
+
+
+    ([<matplotlib.patches.Wedge at 0x206cc3afb80>,
+      <matplotlib.patches.Wedge at 0x206cc3b9310>],
+     [Text(-0.08630492316306847, 1.096609073570804, ''),
+      Text(0.08630482049111692, -1.0966090816512493, '')],
+     [Text(-0.04707541263440097, 0.598150403765893, '52.5%'),
+      Text(0.04707535663151831, -0.5981504081734086, '47.5%')])
+
+
+![png](49_2.png)
+    
+
+
+- **STEP2: DROP IRRLEVANT DATA 丢弃无关数据** 
+
+
+```python
+df.drop(['Images_Analyzed'], axis=1, inplace=True)
+df.drop(['User'], axis=1, inplace=True)
+df.head()
+```
+
+
+
+<table border="1">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Time</th>
+      <th>Coffee</th>
+      <th>Age</th>
+      <th>Productivity</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>8</td>
+      <td>0</td>
+      <td>23</td>
+      <td>Good</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>13</td>
+      <td>0</td>
+      <td>23</td>
+      <td>Bad</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>17</td>
+      <td>0</td>
+      <td>23</td>
+      <td>Good</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>22</td>
+      <td>0</td>
+      <td>23</td>
+      <td>Bad</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>8</td>
+      <td>2</td>
+      <td>23</td>
+      <td>Good</td>
+    </tr>
+  </tbody>
+</table>
+
+
+
+- **STEP3: DEAL WITH MISSING VALUES 处理缺失数据**
+
+
+```python
+df = df.dropna()
+```
+
+- **STEP4: CONVERT NON-NUMERIC TO NUMERIC** 
+
+ 将 Good 和 Bad 替换成计算机便于理解的数字类型
+
+
+```python
+df.Productivity[df.Productivity == 'Good'] = 1
+df.Productivity[df.Productivity == 'Bad'] = 2
+df.head()
+```
+
+
+
+<table border="1"">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Time</th>
+      <th>Coffee</th>
+      <th>Age</th>
+      <th>Productivity</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>8</td>
+      <td>0</td>
+      <td>23</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>13</td>
+      <td>0</td>
+      <td>23</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>17</td>
+      <td>0</td>
+      <td>23</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>22</td>
+      <td>0</td>
+      <td>23</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>8</td>
+      <td>2</td>
+      <td>23</td>
+      <td>1</td>
+    </tr>
+  </tbody>
+</table>
+
+
+
+- **STEP 5: PREPARE THE DATA(define indep/dep variables)**
+
+
+```python
+Y = df['Productivity'].values
+Y = Y.astype('int')
+Y
+```
+
+
+
+
+    array([1, 2, 1, 2, 1, 2, 1, 1, 1, 2, 1, 1, 1, 2, 2, 2, 1, 2, 1, 2, 1, 2,
+           1, 2, 1, 2, 1, 2, 1, 2, 2, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 1,
+           1, 2, 2, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 2, 2, 1, 2,
+           1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 2, 2])
+
+
+
+
+```python
+X = df.drop(labels=['Productivity'], axis=1)
+X.head()
+```
+
+
+
+<table border="1">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Time</th>
+      <th>Coffee</th>
+      <th>Age</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>8</td>
+      <td>0</td>
+      <td>23</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>13</td>
+      <td>0</td>
+      <td>23</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>17</td>
+      <td>0</td>
+      <td>23</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>22</td>
+      <td>0</td>
+      <td>23</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>8</td>
+      <td>2</td>
+      <td>23</td>
+    </tr>
+  </tbody>
+</table>
+
+
+
+- **STEP 6: SPLIT DATA**
+
+
+```python
+from sklearn.model_selection import train_test_split
+
+X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.1, random_state=20)
+X_train.head()
+```
+
+
+
+<table border="1">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Time</th>
+      <th>Coffee</th>
+      <th>Age</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>42</th>
+      <td>18</td>
+      <td>4</td>
+      <td>31</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>13</td>
+      <td>2</td>
+      <td>23</td>
+    </tr>
+    <tr>
+      <th>54</th>
+      <td>17</td>
+      <td>2</td>
+      <td>45</td>
+    </tr>
+    <tr>
+      <th>12</th>
+      <td>8</td>
+      <td>6</td>
+      <td>23</td>
+    </tr>
+    <tr>
+      <th>78</th>
+      <td>17</td>
+      <td>6</td>
+      <td>52</td>
+    </tr>
+  </tbody>
+</table>
+
+
+
+- **STEP 7: DEFINE THE MODEL**
+
+
+```python
+from sklearn.linear_model import LogisticRegression
+
+model = LogisticRegression()
+model.fit(X_train, y_train)
+```
+
+
+
+- **STEP 8: TESTING THE MODEL**
+
+
+```python
+prediction_test = model.predict(X_test)
+prediction_test
+```
+
+
+
+
+    array([2, 2, 2, 1, 1, 2, 1, 2])
+
+
+
+- **STEP 9: VERIFY THE ACCURACY 验证准确性**
+
+
+```python
+from sklearn import metrics
+
+print('Accuracy =', metrics.accuracy_score(y_test, prediction_test))
+```
+
+    Accuracy = 0.75
+
+
+- **STEP 10: WEIGHTS**
+
+
+```python
+model.coef_
+```
+
+
+
+
+    array([[0.18788991, 0.19204588, 0.0200644 ]])
+
+
+
+
+```python
+weights = pd.Series(model.coef_[0], index=X.columns.values)
+weights
+```
+
+
+
+
+    Time      0.187890
+    Coffee    0.192046
+    Age       0.020064
+    dtype: float64
+

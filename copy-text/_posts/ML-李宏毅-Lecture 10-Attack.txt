@@ -1,0 +1,234 @@
+---
+title: ML-李宏毅-Lecture 10-Attack
+date: Sun Mar 19 2023 20:13:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - 李宏毅
+categories: 课程
+description: 李宏毅《机器学习2022》课程学习笔记。
+---
+
+
+# Preparation
+
+## 【機器學習 2021】來自人類的惡意攻擊 -Adversarial Attack- -上- – 基本概念
+
+### Motivation
+
+![png](P1.1.png)
+
+- 你训练了很多神经网络。
+- 我们寻求在现实世界中部署神经网络。
+- 网络对那些用来欺骗他们的输入是否稳健？
+  - 适用于垃圾邮件分类、恶意软件检测、网络入侵检测等。
+
+​	比如垃圾邮件的发送者识图绕开 EMAIL FILTER 系统的检测发送垃圾邮件。
+
+### Example of Attack
+
+![png](P1.2.png)
+
+攻击在原始图像（Benign Image）$[x_1, x_2, x_3, ...]$ 中添加一些微小的向量 $[\Delta x_1, \Delta x_2, \Delta x_3, ...]$，得到 Attacked Image。
+
+攻击分为两种：
+
+- Non-targeted
+  - 让神经网络输出的不是”猫”
+- Targeted
+  - 让神经网络输出某些特定的标签
+
+![png](P1.3.png)
+
+​	通过加入一些微小的、特定的噪声，使得神经网络识别结果完全不合人类逻辑。
+
+![png](P1.4.png)
+
+​	如果给图片随机添加噪声，并不会给神经网络造成太大的影响。
+
+### How to Attack
+
+![png](P1.5.png)
+
+​	对于 **Non-targeted** 任务，要求受攻击神经网络的输出 $y=f(x)$ 与真实答案 $\hat y$ 尽可能远，因此攻击神经网络的目标为：
+
+$$x^*=arg \min_{d(x^0,x)\le \varepsilon}L(x)$$
+
+​	其中，损失函数 $L(x)=-e(y,\hat y)$
+
+​	对于 **Targeted** 任务，不仅要使受攻击神经网络的输出 $y=f(x)$ 与真实答案 $\hat y$ 尽可能远，还要使受攻击网络得到错误的输出 $y^{target}$。
+
+$$L(x)=-e(y, \hat y+e(y, y^{target}))$$
+
+​	所添加的信息 $x$ 往往与原图 $x^0$ 差距要足够小，使人难以辨别，因此有附加条件 $d(x^0,x)\le \varepsilon$，$\varepsilon$ 是人为设定的阈值。 
+
+### Non-perceivable
+
+![png](P1.6.png)
+
+​	给图片添加的信息要是人难以感知（Non-perceivable）的，即 $d(x^0,x)\le\varepsilon$。
+
+- 使用 **L2-norm**：$d(x^0,x)=||\Delta x||_2=(\Delta x_1)^2+(\Delta x_2)^2+(\Delta x_3)^2...$
+- 使用 **L-infinity**：$d(x^0,x)=||\Delta x||_{\infty}=\max\{|\Delta x_1|,|\Delta x_2|,|\Delta x_3|,...\}$
+
+​	使用 **L-infinty** 更为合适：给每个像素一个很小的变化（人不易察觉）和对某些像素很大的变化（人容易察觉），其 L2-norm 可能相同，但 L-$\infty$ 不同。
+
+### Attack Approach
+
+![png](P1.7.png)
+
+​	如何训练攻击神经网络？$x^*=arg\min_{d(x^0,x)\le\varepsilon} L(x)$，使用梯度下降即可。对于 $d(x^0,x)\le\varepsilon$，作一个阈值限制。
+
+![png](P1.8.png)
+
+有一个应用上述思想的简单算法为 FGSM [[1412.6572\] Explaining and Harnessing Adversarial Examples (arxiv.org)](https://arxiv.org/abs/1412.6572)，其特点在于：
+
+- 它只迭代一次
+- 它的学习率设为我们限制的距离大小
+- 它的梯度计算出来后会对每一个分量加上一个 sign 函数，使其成为正负 1
+
+![png](P1.9.png)
+
+- [[1607.02533\] Adversarial examples in the physical world (arxiv.org)](https://arxiv.org/abs/1607.02533)
+
+## 【機器學習 2021】來自人類的惡意攻擊 -Adversarial Attack- -下- – 類神經網路能否躲過人類深不見底的惡意？
+
+### White Box vs Black Box
+
+![png](P2.1.png)
+
+- 在之前的攻击中，我们知道网络参数 $\theta$。
+  - 这被称为**白盒攻击**。
+- 但是多数情况你只能获得 online API 而不能获得模型参数。
+- 如果我们不开源模型，是否安全？
+- 否，**黑盒攻击**也是可能的。
+
+### Black Box Attack
+
+![png](P2.2.png)
+
+​	如果我们不知道受攻击网络，但是知道他们所用的训练集，我们可以根据训练集模仿一个受攻击网络（proxy network）。
+
+​	但如果我们不知道训练集呢？
+
+![png](P2.3.png)
+
+- [[1611.02770\] Delving into Transferable Adversarial Examples and Black-box Attacks (arxiv.org)](https://arxiv.org/abs/1611.02770)
+
+​	通过攻击相似网络得到的攻击神经网络，再攻击受攻击网络，也可以得到很好的攻击效果（受攻击）。
+
+### The attack is so easy！Why？
+
+![png](P2.4.png)
+
+- [[1611.02770\] Delving into Transferable Adversarial Examples and Black-box Attacks (arxiv.org)](https://arxiv.org/abs/1611.02770)
+
+​	攻击似乎很容易？不同的网络面对同一个数据集似乎拟合出相似的分布。
+
+​	被攻击不是神经网络的漏洞，是数据集的特性。
+
+- [[1905.02175\] Adversarial Examples Are Not Bugs, They Are Features (arxiv.org)](https://arxiv.org/abs/1905.02175)
+
+### One pixel attack
+
+![png](P2.5.png)
+
+- [[1710.08864\] One pixel attack for fooling deep neural networks (arxiv.org)](https://arxiv.org/abs/1710.08864)
+
+​	只改变一个像素就能进行模型攻击也是可能的。
+
+### Universal Adversarial Attack
+
+![png](P2.6.png)
+
+​	只用一张噪声图，就可以改变所有图片的识别结果。
+
+- [[1610.08401\] Universal adversarial perturbations (arxiv.org)](https://arxiv.org/abs/1610.08401)
+
+### Beyond Images
+
+![png](P2.7.png)
+
+​	攻击在语音识别和 NLP 中的应用：
+
+- [[1908.07125\] Universal Adversarial Triggers for Attacking and Analyzing NLP (arxiv.org)](https://arxiv.org/abs/1908.07125)
+
+### Attack in the Physical World
+
+![png](P2.8.png)
+
+​	通过带上特制的眼镜，破坏人脸识别的结果。
+
+- 攻击者需要找到超越单个图像的扰动。
+- 扰动中相邻像素之间的极端差异不太可能被相机准确捕捉到。
+- 希望制作主要由打印机可再现的颜色组成的扰动。
+
+![png](P2.9.png)
+
+- [[1707.08945\] Robust Physical-World Attacks on Deep Learning Models (arxiv.org)](https://arxiv.org/abs/1707.08945)
+
+​	通过给路牌添加某些标记，改变自动驾驶识别车牌的结果。
+
+![png](P2.10.png)
+
+​	给 35mph 车牌的 3 延长一点，识别器就会认为是限速 85mph。
+
+### Adversarial Reprogramming
+
+![png](P2.11.png)
+
+- [[1806.11146\] Adversarial Reprogramming of Neural Networks (arxiv.org)](https://arxiv.org/abs/1806.11146)
+
+### “Backdoor” in Model
+
+![png](P2.12.png)
+
+	- [[1804.00792\] Poison Frogs! Targeted Clean-Label Poisoning Attacks on Neural Networks (arxiv.org)](https://arxiv.org/abs/1804.00792)
+
+​	在训练集上就可以做到模型攻击。
+
+![png](P2.13.png)
+
+### Passive Defense
+
+![png](P2.14.png)
+
+​	事先给输入的图片加一点模糊操作，使得攻击信号减弱。
+
+![png](P2.15.png)
+
+​	但这也有可能影响原先的识别性能。
+
+![png](P2.16.png)
+
+​	使用图像压缩的方式/生成的方式减弱攻击信号。
+
+- [[1804.00792\] Poison Frogs! Targeted Clean-Label Poisoning Attacks on Neural Networks (arxiv.org)](https://arxiv.org/abs/1804.00792)
+- [[1802.06816\] Shield: Fast, Practical Defense and Vaccination for Deep Learning using JPEG Compression (arxiv.org)](https://arxiv.org/abs/1802.06816)
+- [[1805.06605\] Defense-GAN: Protecting Classifiers Against Adversarial Attacks Using Generative Models (arxiv.org)](https://arxiv.org/abs/1805.06605)
+
+### Passive Defense - Randomization
+
+![png](P2.17.png)
+
+​	如果攻击者知道模型会事先作模糊操作，可能还会改进攻击操作使攻击更有效。通过随机化的方式使网络难以受攻击。
+
+- [[1711.01991\] Mitigating Adversarial Effects Through Randomization (arxiv.org)](https://arxiv.org/abs/1711.01991)
+
+### Proactive Defense
+
+![png](P2.18.png)
+
+​	Proactive Defense 主动防御
+
+​	在训练的时候从攻击算法中修改数据进行训练。这也是数据增强的一种方式。但是对新的攻击算法不好使。
+
+- [[1904.12843\] Adversarial Training for Free! (arxiv.org)](https://arxiv.org/abs/1904.12843)
+
+### Concluding Remarks
+
+![png](P2.19.png)
+
+- 攻击：给定网络参数，攻击非常容易
+- 甚至黑匣子攻击也是可能的
+- 防御：被动和主动
+- 攻击/防御仍在发展
+

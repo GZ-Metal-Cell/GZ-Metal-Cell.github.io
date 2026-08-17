@@ -1,0 +1,237 @@
+---
+title: Web-视差滚动
+date: Sat Jan 13 2024 18:19:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - 前端
+categories: 探索
+description: 转自 B 站 UP 主前端小小陈。
+---
+
+
+# 资源
+
+- [【附源码】视差滚动网站｜Html CSS JS_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV18v4y1D79U)
+
+# 演示
+
+<iframe title="ParallaxScrolling" style="margin: 10px 0;" src="./ParallaxScrolling.html" width="100%" height="400px">
+    <p>如果您看到此消息，则表示您的浏览器不支持 iframes。</p>
+</iframe>
+
+# 代码
+
+{% tabs code %}
+<!-- tab HTML -->
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Parallax Scrolling Website</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <a href="#" class="logo">Logo</a>
+    <ul>
+      <li><a href="#" class="active">Home</a></li>
+      <li><a href="#">About</a></li>
+      <li><a href="#">Work</a></li>
+      <li><a href="#">Contact</a></li>
+    </ul>
+  </header>
+  <section>
+    <img src="images/stars.png" id="stars">
+    <img src="images/moon.png" id="moon">
+    <img src="images/mountains_behind.png" id="mountains_behind">
+    <h2 id="text">Moon Light</h2>
+    <a href="#sec" id="btn">Explore</a>
+    <img src="images/mountains_front.png" id="mountains_front">
+  </section>
+  <div class="sec" id="sec">
+    <h2>Parallax Scrolling Effects</h2>
+    <p>....</p>
+  </div>
+  <script>XXX</script>
+</body>
+</html>
+```
+<!-- endtab -->
+
+<!-- tab CSS -->
+```css
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+  /* 当用户手动导航或者 CSSOM scrolling API 触发滚动操作时 */
+  scroll-behavior: smooth; 
+}
+
+body {
+  min-height: 100vh;
+  overflow-x: hidden;
+  background: linear-gradient(#2b1055,#7597de);
+}
+
+header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 30px 100px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 10000;
+}
+
+header .logo {
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+  font-size: 2em;
+  text-transform: uppercase; /* 大写 */
+  letter-spacing: 2px; /* 字符间距 */
+}
+
+header ul {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+header ul li {
+  list-style: none;
+  margin-left: 20px;
+}
+
+header ul li a {
+  text-decoration: none;
+  padding: 6px 15px;
+  color: #fff;
+  border-radius: 20px;
+}
+
+header ul li a:hover,
+header ul li a.active {
+  background: #fff;
+  color: #2b1055;
+}
+
+section {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  padding: 100px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+section::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 100px;
+  background: linear-gradient(to top, #1c0522, transparent);
+  z-index: 1000;
+}
+
+section img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  /* object-fit CSS 属性指定可替换元素（例如：<img> 或 <video>）的内容应该如何适应到其使用高度和宽度确定的框。*/
+  object-fit: cover;
+  pointer-events: none;
+}
+
+section img#moon {
+  /* mix-blend-mode CSS 属性描述了元素的内容应该与元素的直系父元素的内容和元素的背景如何混合。*/ 
+  mix-blend-mode: screen;
+}
+
+section img#mountains_front {
+  z-index: 10;
+}
+
+#text {
+  position: absolute;
+  right: -350px;
+  color: #fff;
+  white-space: nowrap;
+  font-size: 7.5vw;
+  z-index: 9;
+}
+
+#btn {
+  text-decoration: none;
+  display: inline-block;
+  padding: 8px 30px;
+  border-radius: 40px;
+  background: #fff;
+  color: #2b1055;
+  font-size: 1.5em;
+  z-index: 9;
+  transform: translateY(100px);
+}
+
+.sec {
+  position: relative;
+  padding: 100px;
+  background: #1c0522;
+}
+
+.sec h2 {
+  font-size: 3.5em;
+  margin-bottom: 10px;
+  color: #fff;
+}
+
+.sec p {
+  font-size: 1em;
+  color: #fff;
+}
+```
+<!-- endtab -->
+
+<!-- tab JAVASCRIPT -->
+```javascript
+let stars = document.getElementById('stars')
+let moon = document.getElementById('moon')
+let mountains_behind = document.getElementById('mountains_behind')
+let text = document.getElementById('text')
+let btn = document.getElementById('btn')
+let mountains_front = document.getElementById('mountains_front')
+let header = document.querySelector('header')
+
+window.addEventListener('scroll', function(){
+  let value = window.scrollY;
+  stars.style.left = value * 0.25 + 'px'
+  moon.style.top = value * 1.05 + 'px'
+  mountains_behind.style.top = value * 0.5 + 'px'
+  mountains_front.style.top = value * 0 + 'px'
+  text.style.marginRight = value * 4 + 'px'
+  text.style.marginTop = value * 1.5 + 'px'
+  btn.style.marginTop = value * 1.5 + 'px'
+  header.style.top = value * 0.5 + 'px'
+})
+```
+> 这段 JavaScript 代码实现了视差滚动效果。具体来说：
+>
+> - `let` 关键字声明了一些变量，如 `stars`、`moon`、`mountains_behind` 等等，使用 `document.getElementById()` 方法获取了每个元素的引用。
+> - `window.addEventListener('scroll', function(){...})` 给窗口添加了一个滚动事件监听器。当用户滚动页面时，回调函数将被触发。
+> - 在回调函数中，通过 `window.scrollY` 获取当前滚动的垂直距离，并将其赋值给变量 `value`。
+> - 接下来，根据 `value` 的值，通过修改元素的样式属性来实现视差滚动效果。例如，`stars.style.left` 将 `stars` 元素的左侧偏移量设置为 `value * 0.25 + 'px'`，`moon.style.top` 将 `moon` 元素的顶部偏移量设置为 `value * 1.05 + 'px'`，以此类推。
+> - 通过修改不同元素的样式属性，可以创建出不同速度和方向的滚动效果，从而实现视差效果。
+>
+> 总体来说，这段代码使得页面中的一些元素在用户滚动页面时以不同的速度和方向移动，从而营造出立体感和动态效果。
+
+<!-- endtab -->
+{% endtabs %}

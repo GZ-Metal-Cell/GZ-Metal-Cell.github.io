@@ -1,0 +1,185 @@
+---
+title: AI-Video2Text
+date: Wed Jun 03 2026 20:09:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - Whisper
+  - AI应用
+categories: 探索
+description: 基于 Whisper 模型。
+---
+
+
+# 前言
+
+​	现在好像没啥时间看网课了……如果把网课转成 Markdown 格式就可以快速领会网课精神，也可方便拿网课文档与 AI 对线！
+
+# 资源
+
+- 从 B 站下载视频：[Releases · iuroc/bilidown](https://github.com/iuroc/bilidown/releases)
+
+- 语音转文字：[Releases · openai/whisper](https://github.com/openai/whisper/releases)
+
+# 正文
+
+​	想法是将网课视频下载到本地，用 Whisper 识别网课中的字幕，再从网课视频中截图，将字幕文本与截图合并成 Markdown。
+
+​	Vibe Coding 一个这样的环境，由于 Whisper 可以本地 GPU 推理，向 AI 强调一下一定要用 GPU；由于 Whisper 可能下载不下来，向 AI 强调一下可以将本地路径作为模型路径。
+
+<FileTreeViewer title="video2notes">
+    <FileTreeViewerFile
+        name="run.py"
+        path="./run.py"
+        defaultSelected
+    />
+    <FileTreeViewerFile
+        name="pyproject.toml"
+        path="./pyproject.toml"
+    />
+    <FileTreeViewerFolder name="src">
+        <FileTreeViewerFolder name="video2notes">
+            <FileTreeViewerFile
+                name="__init__.py"
+                path="./src/video2notes/__init__.py"
+            />
+            <FileTreeViewerFile
+                name="__main__.py"
+                path="./src/video2notes/__main__.py"
+            />
+            <FileTreeViewerFile
+                name="cli.py"
+                path="./src/video2notes/cli.py"
+            />
+            <FileTreeViewerFile
+                name="transcriber.py"
+                path="./src/video2notes/transcriber.py"
+            />
+            <FileTreeViewerFile
+                name="screenshotter.py"
+                path="./src/video2notes/screenshotter.py"
+            />
+            <FileTreeViewerFile
+                name="markdown_gen.py"
+                path="./src/video2notes/markdown_gen.py"
+            />
+        </FileTreeViewerFolder>
+    </FileTreeViewerFolder>
+</FileTreeViewer>
+
+```mermaid
+graph TD
+    %% 入口
+    A[📁 视频课程目录] --> B{运行模式}
+    
+    %% 四种模式
+    B -->|默认: 完整 Pipeline| C[🎬 完整处理<br/>transcribe + screenshot + markdown]
+    B -->|--transcribe-only| D[🎤 仅语音识别<br/>只生成 subtitle.srt]
+    B -->|--screenshot-only| E[📸 仅截图/关键帧<br/>只生成 screenshots/]
+    B -->|--markdown-only| F[📝 仅生成笔记<br/>从已有 SRT+截图 生成 notes.md]
+    
+    %% 完整 Pipeline
+    subgraph 完整 Pipeline
+        direction TB
+        C --> C1[Step 1: 语音转文字<br/>Whisper 模型]
+        C1 --> C2[Step 2: 提取关键帧]
+        C2 --> C3[Step 3: 生成 Markdown 笔记]
+    end
+    
+    %% 仅转录
+    subgraph 仅转录模式
+        direction TB
+        D --> D1[Whisper 语音识别<br/>--model/--device/--language]
+        D1 --> D2[📄 输出: subtitle.srt]
+    end
+    
+    %% 仅截图
+    subgraph 仅截图模式
+        direction TB
+        E --> E1{截图模式}
+        E1 -->|默认: 固定间隔| E2[⏱️ 每隔 N 秒一张<br/>--interval 120]
+        E1 -->|--scene-detect| E3[🔍 场景变化检测<br/>--scene-threshold 0.2]
+        E2 --> E4[📸 输出: screenshots/]
+        E3 --> E4
+    end
+    
+    %% 仅 Markdown
+    subgraph 仅 Markdown 模式
+        direction TB
+        F --> F1[读取已有 subtitle.srt]
+        F1 --> F2[读取已有 screenshots/]
+        F2 --> F3[自动检测截图模式]
+        F3 --> F4[📝 输出: notes.md]
+    end
+    
+    %% 样式
+    classDef full fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    classDef transcribe fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
+    classDef screenshot fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef markdown fill:#e0f7fa,stroke:#00838f,stroke-width:2px
+    classDef decision fill:#fff9c4,stroke:#f9a825,stroke-width:2px
+    
+    class C,C1,C2,C3 full
+    class D,D1,D2 transcribe
+    class E,E1,E2,E3,E4 screenshot
+    class F,F1,F2,F3,F4 markdown
+    class B,E1 decision
+```
+
+​	环境配置：
+
+```shell
+uv sync
+```
+
+| 参数                | 默认值     | 说明                                                         |
+| ------------------- | ---------- | ------------------------------------------------------------ |
+| `-i, --input-dir`   | —          | 输入视频目录，支持 .mp4/.mkv/.avi/.mov；`--markdown-only` 模式可不填 |
+| `-o, --output-dir`  | **(必填)** | 输出根目录                                                   |
+| `--model`           | `tiny`     | Whisper 模型名 (`tiny`/`base`/`small`/`medium`/`large`) 或 `.pt` 模型文件路径，如 `models/medium.pt` |
+| `--device`          | 自动检测   | `cpu` 或 `cuda`                                              |
+| `--language`        | 自动检测   | 语言代码，如 `zh`。中文课程自动识别                          |
+| `--interval`        | `120`      | 固定间隔模式的截图间隔（秒），如 `30`、`60`、`300`           |
+| `--scene-detect`    | 关闭       | 启用场景变化检测关键帧模式（替代固定间隔）                   |
+| `--scene-threshold` | `0.1`      | 场景变化灵敏度 (0.0–1.0)，越低越敏感、帧越多                 |
+| `--format`          | `jpg`      | 截图/关键帧格式：`jpg`（体积小）或 `png`（无损）             |
+| `--force`           | —          | 重新处理所有视频（忽略已存在的输出）                         |
+| `--markdown-only`   | —          | 仅从已存在的 SRT + 截图重新生成 Markdown（无需 `-i`）        |
+| `--transcribe-only` | —          | 仅运行语音识别，生成 `subtitle.srt`（不截图、不生成笔记）    |
+| `--screenshot-only` | —          | 仅提取截图/关键帧（跳过语音识别）                            |
+
+
+​	开跑示例，tiny 模型效果不太行，medium 模型足够用了：
+
+```shell
+# 场景变化检测默认阈值 0.1，适合大多数课程视频（medium 模型 + GPU）
+uv run video2notes -i "D:\Videos\我的课程" -o "D:\Output\我的课程" --model medium --scene-detect
+
+# 自行设置场景变化检测阈值
+uv run video2notes -i "D:\Videos\课程" -o "D:\Output\课程" --model medium --scene-detect --scene-threshold 0.2
+
+# 使用 PNG 无损格式
+uv run video2notes -i "D:\Videos\课程" -o "D:\Output\课程" --scene-detect --format png
+
+# 自动检测 GPU/CPU，每 2 分钟截一张图（默认）
+uv run video2notes -i "D:\Videos\我的课程" -o "D:\Output\我的课程" --model medium
+
+# CPU 模式
+uv run video2notes -i "D:\Videos\课程" -o "D:\Output\课程" --model tiny --device cpu
+
+# 自定义截图间隔（每 30 秒一张图）
+uv run video2notes -i "D:\Videos\课程" -o "D:\Output\课程" --interval 30
+
+# 仅语音识别（只生成 subtitle.srt）
+uv run video2notes -i "D:\Videos\课程" -o "D:\Output\课程" --transcribe-only --model medium
+
+# 仅截图（只生成 screenshots/，跳过转录）
+uv run video2notes -i "D:\Videos\课程" -o "D:\Output\课程" --screenshot-only --scene-detect
+
+# 仅重新生成 Markdown（从已有的 .srt + 截图生成 notes.md，无需 -i）
+uv run video2notes -o "D:\Output\课程" --markdown-only
+```
+
+​	一阵计算后，得到相应的字幕、截图和合并后的笔记，有空慢慢看（或是拿去与 AI 对线）吧：
+
+![webp](01.webp)
+
+​	還會把台灣老師講的課識別成繁體字，真的很棒棒喔！

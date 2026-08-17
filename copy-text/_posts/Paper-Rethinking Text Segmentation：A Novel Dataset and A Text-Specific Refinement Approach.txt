@@ -1,0 +1,617 @@
+---
+title: Paper-Rethinking Text Segmentation：A Novel Dataset and A Text-Specific Refinement Approach
+date: Thu May 04 2023 17:09:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - 代码复现
+  - Pytorch
+  - Python
+  - 图像分割
+categories: 论文
+description: 论文阅读。
+---
+
+
+# 资源
+
+- 原文：[[2011.14021v1] Rethinking Text Segmentation: A Novel Dataset and A Text-Specific Refinement Approach (arxiv.org)](https://arxiv.org/abs/2011.14021v1)
+
+- 代码：[SHI-Labs/Rethinking-Text-Segmentation: [CVPR 2021] Rethinking Text Segmentation: A Novel Dataset and A Text-Specific Refinement Approach (github.com)](https://github.com/SHI-Labs/Rethinking-Text-Segmentation)
+
+# 笔记
+
+**文本分割（text segmentation）**是很多任务的先决条件！如**文本样式迁移（text style transfer）**和**场景文本移除（scene text removal）**。
+
+## TextSeg
+
+最近一次公共文本分割挑战在 2013-2015 年，由 ICDAR 主办。只有数据集：
+
+- Total Text
+- COCO TS
+- MLT_S
+
+都只有场景文本，没有艺术设计文本。
+
+目前数据集太少了啊啊啊啊！但是我们提出了一种新的数据集 ***TextSeg***！
+
+- 4024 张图像
+  - 2646 训练集
+  - 340 验证集
+  - 1038 测试集
+
+- 具有六种类型的注释：
+
+  - 单词 word
+
+  - 字符 character
+
+  - 边界多边形 bounding polygons
+
+  - 蒙版 masks
+
+  - 转录 transcriptions
+
+  - 阴影、3D、光晕等也进行了注释
+
+- 先进之处：
+
+  - 来自不同来源，样式更多
+  - 注释更全面
+  - accurate masks 更准确
+
+## TexRNet
+
+早期都是用**阈值法**进行分割，对复杂颜色和纹理的场景文本图像就 GG。深度学习方法：SMANet。
+
+提出了一种新的文本分割网络：***TexRNet***！
+
+![png](3.png)
+
+- 适应了文本的独特特性，如非凸边界、不同纹理等。
+- DeeplabV3+ 或 HRNet
+  - ResNet101-DeeplabV3+ 和 HRNetV-W48 是语义分割领域的里程碑和最先进的作品
+- 有效的网络模块：**关键特征池（key features pooling）**和**基于注意力的相似性检查（attention-based similarity checking）**
+  - 关键特征池：使用余弦相似性学习文本纹理
+  - 基于注意力的相似性检查，使用一个注意力层，用 $v$ 作为关键字，$x_f$ 作为查询，并通过点积和 softmax 来计算查询关键字的相似性 $x_{att}$：$x_{att}=\mathrm{Softmax}(v^T\cdot x_f),x_{att}\in \mathbb{R}^{c\times n}$
+- 引入了**三映射（trimap loss）**和**鉴别器（glyph discriminator）**损失
+  - 关注边界的损失函数将进一步提高文本的精度
+    - $\mathcal L_{tri}=\mathrm{WCE}(x_{rfn},x_{gt},w_{tri})\\\mathrm{WCE}(x,y,m)=-\frac{\sum^m_{j=1}w_j\sum^c_{j=1}x_{i,j}\log(y_{i,j})}{\sum^n_{j=1}w_j}$
+      - $w_{tri}$ 是文本边界上值为 1、其他地方为 0 的二进制映射
+      - $\mathrm{WCE}(x,y,w)$ 是由空间映射 $w$ 加权的 $x$ 和 $y$ 之间的交叉熵
+
+  - 预训练用于字符识别的分类器，有 37 个类，包含 26 个字母，10 个数字和 misc
+  - 最终损失函数：$\mathcal L = \mathcal L_{sem} +\alpha\mathcal L_{rfn} +\beta\mathcal L_{tri} +\gamma\mathcal L_{dis}$
+
+---
+
+实验结果：
+
+| Method                      | TextSeg(Ours)   | ICDAR13 FST     | COCO_TS         | MLT_S           | Total-Text      |
+| --------------------------- | --------------- | --------------- | --------------- | --------------- | --------------- |
+| 指标                        | fgIoU/F-score   | fgIoU/F-score   | fgIoU/F-score   | fgIoU/F-score   | fgIoU/F-score   |
+| DeeplabV3+                  | 84.07/0.914     | 69.27/0.802     | 72.07/0.641     | 84.63/0.837     | 74.44/0.824     |
+| HRNetV2-W48                 | 85.03/0.914     | 70.98/0.822     | 68.93/0.629     | 83.26/0.836     | 75.29/0.825     |
+| HRNetV2-W48 + OCR           | 85.98/0.918     | 72.45/0.830     | 69.54/0.627     | 83.49/0.838     | 76.23/0.832     |
+| Ours: TexRNet + DeeplabV3+  | 86.06/0.921     | 72.16/0.835     | **73.98/0.722** | **86.31**/0.830 | 76.53/0.844     |
+| Ours: TexRNet + HRNetV2-W48 | **86.84/0.924** | **73.38/0.850** | 72.39/0.720     | 86.09/**0.865** | **78.47/0.848** |
+
+# 代码
+
+## TextSeg
+
+> 我们的数据集（TextSeg）仅供学术界使用，不能用于任何商业项目和研究。要下载数据，请向 *[textseg.dataset@gmail.com](mailto:textseg.dataset@gmail.com)* 发送请求电子邮件，并告诉我们您隶属于哪所学校。
+
+但是网上居然还是能找到下载地址……：[TextSeg 大规模文本检测及分割数据集 - 数据集下载 - 超神经 (hyper.ai)](https://hyper.ai/datasets/15774)
+
+---
+
+![png](C1.png)
+
+- `image.tar.gz`包含 4024 张图像。
+
+- `annotation.tar.gz`
+
+  与图像对应的标签。包括以下三种类型的文件：
+
+  - `[dataID]_anno.json` 包含所有单词和字符级别的翻译以及边界多边形。
+  - `[dataID]_mask.png` 包含所有字符掩码。字符掩码标签值将从 1 到 n 排序。标签值 0 表示背景，255 表示忽略。
+  - `[dataID]_maskeff.png` 包含所有**具有效果的**字符掩码。
+  - `Adobe_Research_License_TextSeg.txt` 许可证文件。
+
+- `semantic_label.tar.gz`
+
+  包含所有字级（语义级）掩码。它包含：
+
+  - `[dataID]_maskfg.png` 0 表示背景，100 表示单词，200 表示单词效果，255 表示忽略。（也可以使用`[dataID]_maskfg.png`、`[dataID]_mask.png`  和 `[dataID]_maskeff.png`)
+
+- `split.json` 训练集，验证集和测试集的官方拆分。
+
+- [可选]我们论文中使用的旧版本标签。可以下载它以复制我们的论文结果。`semantic_label_v1.tar.gz`
+
+## TexRNet
+
+有两种 Backbone，效果各有千秋？
+
+- HENetV-W48
+- DeeplabV3+
+
+从 [TexRNet - Google Drive](https://drive.google.com/drive/folders/1EvGNvI5R6NKsW0YTy_0YHD9dpvtM0HDi) 下载相应内容：
+
+- 测试：`texrnet_hrnet.pth` 或 `texrnet_deeplab.pth`
+
+- 训练：`init/*`
+
+## 配置
+
+1. 新建一个 conda 环境：
+
+```shell
+conda create -n texrnet python=3.7
+```
+
+```shell
+conda activate texrnet
+```
+
+2. 使用离线安装方式安装 `pytorch`（被坑了 n 次逐渐熟练了 orz，还是离线安装的方式好使），从 [download.pytorch.org/whl/torch_stable.html](https://download.pytorch.org/whl/torch_stable.html) 下载对应版本的 `pytorch` 和 `torchvision`：
+
+- `torch-1.13.1+cu117-cp37-cp37m-win_amd64.whl`
+- `torchvision-0.14.1+cu117-cp37-cp37m-win_amd64.whl`
+
+不知道为什么今天 edge 下载得特别慢，用迅雷了。
+
+![png](C2.png)
+
+```shell
+pip install torch-1.13.1+cu117-cp37-cp37m-win_amd64.whl -i https://pypi.tuna.tsinghua.edu.cn/simple
+```
+
+```shell
+pip install torchvision-0.14.1+cu117-cp37-cp37m-win_amd64.whl -i https://pypi.tuna.tsinghua.edu.cn/simple
+```
+
+![png](C3.png)
+
+3. 拉取仓库：[SHI-Labs/Rethinking-Text-Segmentation: [CVPR 2021] Rethinking Text Segmentation: A Novel Dataset and A Text-Specific Refinement Approach (github.com)](https://github.com/SHI-Labs/Rethinking-Text-Segmentation)
+
+4. 在仓库目录下，将 `requirement.txt` 里的 `torch==1.6` 和 `torchvision==0.7` 删掉，然后执行：
+
+```shell
+pip install -r requirement.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+```
+
+6. 在仓库目录下，新建好下列文件夹：
+
+- `pretrained`
+  - `pretrained/init`
+- `data`
+- `log`
+
+![png](C4.png)
+
+7. 放置数据库在 `data/TextSeg` 中：
+
+![png](C5.png)
+
+## 测试
+
+1. 先改代码！Windows 下踩坑：[Pytorch 报错解决——（亲测有效）RuntimeError: Distributed package doesn‘t have NCCL built in_康康好老啊的博客-CSDN 博客](https://blog.csdn.net/m0_61787307/article/details/129638108)。pycharm 中 `ctrl+shift+r` 将所有 `nccl` 替换为 `gloo`
+
+2. 设置参数：`--eval --pth pretrained/texrnet_hrnet.pth --hrnet --gpu 0 --dsname textseg`
+
+![png](C6.png)
+
+3. 能跑，GPU 风扇疯狂转，吓得我赶紧停了😅。还是用服务器吧呜呜呜……
+
+![png](C7.png)
+
+## 训练
+
+1. 设置参数：`--hrnet --gpu 0 --dsname textseg --trainwithcls`
+
+![png](C8.png)
+
+2. 踩坑，在 `data\TextSeg` 中，把 `annotation` 文件夹名称修改为 `bpoly_label`
+
+![png](C9.png)
+
+3. ~~应该能 train 吧，显示显存不够是真的牛逼😅。还是用服务器吧呜呜呜……（是不是调成 gloo 的问题？该好好学 linux 了呜呜呜）~~
+
+![png](C10.png)
+
+我说婷婷！在 `train_utils.py` 里把 `cfg.DATA.NUM_WORKERS_PER_GPU` 调小就又可以跑了！
+
+```python
+if not cfg.DEBUG:
+    cfg.DATA.NUM_WORKERS_PER_GPU = 2
+    cfg.TRAIN.BATCH_SIZE_PER_GPU = 2
+cfg.TRAIN.OPTIM_MANAGER_LRSCALE = {
+    'hrnet':1, 'texrnet': 10}
+return cfg
+```
+
+好吧还是跑不了，giao！<font color="red">  File "D:\Study\XXXXX\Rethinking-Text-Segmentation\lib\torchutils.py", line 262, in _\_call_\_
+    return y
+UnboundLocalError: local variable 'y' referenced before assignment</font>
+
+## 阅读
+
+感觉这个仓库的代码写的很隐秘……一层又一层的。
+
+### main.py
+
+`--eval --pth pretrained/texrnet_hrnet.pth --hrnet --gpu 0 --dsname textseg`
+
+表示：
+
+- 开启 eval 模式
+- 预训练模型路径：`pretrained/texrnet_hrnet.pth`
+- 使用 HRNet 模型
+- 使用 0 号 GPU
+- 数据集：`textseg`
+
+设置 parser 参数：
+
+| name           | type | default   | help                                                         |
+| -------------- | ---- | --------- | ------------------------------------------------------------ |
+| --debug        | bool | False     | 是否启动 debug 模式                                          |
+| --hrnet        | bool | False     | 是否使用 HRNet 模型                                          |
+| --eval         | bool | False     | 是否开启 eval 模式                                           |
+| --pth          | str  |           | 保存的权重文件路径，即预训练模型的路径                       |
+| --gpu          |      |           | 使用哪些 GPU                                                 |
+| --port         | int  | 11233     | 分布式处理的端口号                                           |
+| --dsname       | str  | 'textseg' | 数据集名称，可选：'textseg'、'cocots'、'mlt'、'icdar13'、'totaltext' |
+| --trainwithcls | bool | False     | 是否使用分类器来训练                                         |
+
+`istrain = not args.eval`，如果不开启 eval 模式，那就是开启 train 模式。
+
+```python
+# 设置训练模式
+if istrain:
+    cfg = copy.deepcopy(cfg_train)
+else:
+    cfg = copy.deepcopy(cfg_test)
+
+if istrain:
+    # 运行在训练模式下，则调用 get_experiment_id()函数获取一个新的实验 ID，并将其赋值给 cfg.EXPERIMENT_ID。
+    # 每次运行程序时，都会产生一个新的实验 ID，以便在训练多个模型时能够区分它们之间的差异
+    cfg.EXPERIMENT_ID = get_experiment_id()
+else:
+    # 表示当前不处于任何实验中
+    cfg.EXPERIMENT_ID = None
+
+# 设置数据集
+if args.dsname == "textseg":
+    cfg_data = cfg_textseg
+elif args.dsname == "cocots":
+    cfg_data = cfg_cocots
+elif args.dsname == "mlt":
+    cfg_data = cfg_mlt
+elif args.dsname == "icdar13":
+    cfg_data = cfg_icdar13
+elif args.dsname == "totaltext":
+    cfg_data = cfg_totaltext
+else:
+    raise ValueError
+
+cfg.DEBUG = args.debug
+cfg.DIST_URL = 'tcp://127.0.0.1:{}'.format(args.port)
+if args.gpu is None:
+    # 如果不设置 GPU，就都用了
+    cfg.GPU_DEVICE = 'all'
+else:
+    # 使用指定的 GPU
+    cfg.GPU_DEVICE = args.gpu
+
+# 加载模型和数据
+cfg.MODEL = copy.deepcopy(cfg_mdel)
+cfg.DATA  = copy.deepcopy(cfg_data)
+
+if istrain:
+    cfg = set_cfg_train(cfg, dsname=args.dsname)
+    if args.hrnet:
+        # 调用 set_cfg_hrnetw48_train 函数对 HRNet-W48 模型进行配置
+        cfg = set_cfg_hrnetw48_train(cfg)
+else:
+    cfg = set_cfg_eval(cfg, dsname=args.dsname)
+    if args.hrnet:
+        cfg = set_cfg_hrnetw48_eval(cfg)
+    # 加载预训练模型
+    cfg.MODEL.TEXRNET.PRETRAINED_PTH = args.pth
+
+# 设置数据集模式
+if istrain:
+    if args.dsname == "textseg":
+        cfg.DATA.DATASET_MODE = 'train+val'
+    elif args.dsname == "cocots":
+        cfg.DATA.DATASET_MODE = 'train'
+    elif args.dsname == "mlt":
+        cfg.DATA.DATASET_MODE = 'trainseg'
+    elif args.dsname == "icdar13":
+        cfg.DATA.DATASET_MODE = 'train_fst'
+    elif args.dsname == "totaltext":
+        cfg.DATA.DATASET_MODE = 'train'
+    else:
+        raise ValueError
+else:
+    if args.dsname == "textseg":
+        cfg.DATA.DATASET_MODE = 'test'
+    elif args.dsname == "cocots":
+        cfg.DATA.DATASET_MODE = 'val'
+    elif args.dsname == "mlt":
+        cfg.DATA.DATASET_MODE = 'valseg'
+    elif args.dsname == "icdar13":
+        cfg.DATA.DATASET_MODE = 'test_fst'
+    elif args.dsname == "totaltext":
+        cfg.DATA.DATASET_MODE = 'test'
+    else:
+        raise ValueError
+        
+if istrain:
+    if args.trainwithcls:  # 启动分布式训练
+        if args.dsname == 'textseg':  # 数据集
+            cfg.DATA.LOADER_PIPELINE = [
+                'NumpyImageLoader',   # 使用 numpy 模块读取图像数据
+                'TextSeg_SeglabelLoader',  # 加载文本区域分割标签数据
+                'CharBboxSpLoader',]  # 加载字符边界框数据。这些数据都是用于文本检测或分割任务的
+            cfg.DATA.RANDOM_RESIZE_CROP_SIZE = [32, 32]  # 随机裁剪的尺寸
+            cfg.DATA.RANDOM_RESIZE_CROP_SCALE = [0.8, 1.2]  # 缩放比例
+            cfg.DATA.RANDOM_RESIZE_CROP_RATIO = [3/4, 4/3]  # 宽高比范围
+            cfg.DATA.TRANS_PIPELINE = [
+                'UniformNumpyType',  # 将图像数据类型转换为相同的类型，以便进行后续的处理
+                'TextSeg_RandomResizeCropCharBbox',  # 对文本区域分割标签和字符边界框等数据进行随机尺度变换和裁剪操作，以增强模型鲁棒性
+                'NormalizeUint8ToZeroOne',   # 将像素值范围从[0, 255]归一化到[0, 1]
+                'Normalize',  # 进行零均值和单位方差的标准化处理
+                'RandomScaleOneSide',  # 对图像数据进行单边缩放，以增加模型对图像尺度的鲁棒性
+                'RandomCrop',   # 对图像数据进行随机裁剪操作
+            ]
+        elif args.dsname == 'icdar13':
+            cfg.DATA.LOADER_PIPELINE = [
+                'NumpyImageLoader',   # 使用 numpy 模块读取图像数据
+                'SeglabelLoader',  # 加载文本区域分割标签数据
+                'CharBboxSpLoader',]  # 加载字符边界框数据
+            cfg.DATA.TRANS_PIPELINE = [
+                'UniformNumpyType',  # 将图像数据类型转换为相同的类型，以便进行后续的处理
+                'NormalizeUint8ToZeroOne',   # 将像素值范围从[0, 255]归一化到[0, 1]
+                'Normalize',  # 进行零均值和单位方差的标准化处理
+                'RandomScaleOneSide',  # 对图像数据进行单边缩放，以增加模型对图像尺度的鲁棒性
+                'RandomCrop',  # 对图像数据进行随机裁剪操作
+            ]
+        else:
+            raise ValueError
+        # 将文本数据格式化为文本区域和字符边界框标签，以便进行检测和识别任务的训练
+        cfg.DATA.FORMATTER = 'SemChinsChbbxFormatter'
+        # 用于将字符边界框转化成方形，以方便进行 RoI 池化
+        cfg.DATA.LOADER_SQUARE_BBOX = True
+        # 表示随机裁剪操作从哪个阶段开始，这里设为'sem'即从语义分割的阶段开始
+        cfg.DATA.RANDOM_RESIZE_CROP_FROM = 'sem'
+        # 表示网络在训练过程中从哪个阶段进行预测得到输出结果，这里设为'sem'也是从语义分割的阶段开始
+        cfg.MODEL.TEXRNET.INTRAIN_GETPRED_FROM = 'sem'
+        # the one with 93.98% and trained on semantic crops
+        # 分类器的预训练模型路径
+        cfg.TRAIN.CLASSIFIER_PATH = osp.join(
+            'pretrained', 'init', 'resnet50_textcls.pth',
+        )
+        # RoI 池化时边界框的扩充方式，这里采用 semcrop
+        cfg.TRAIN.ROI_BBOX_PADDING_TYPE = 'semcrop'
+        # RoI 池化后的图像大小
+        cfg.TRAIN.ROI_ALIGN_SIZE = [32, 32]
+        # 是否对分类器进行更新
+        cfg.TRAIN.UPDATE_CLASSIFIER = False
+        # 在训练过程中从语义分割的阶段开始多少次迭代后激活分类器的训练
+        cfg.TRAIN.ACTIVATE_CLASSIFIER_FOR_SEGMODEL_AFTER = 0
+        # 各个损失函数的权重，包括语义分割的损失、RFN 的损失、RFNtri 的损失和分类器的损失
+        cfg.TRAIN.LOSS_WEIGHT = {
+            'losssem'   : 1, 
+            'lossrfn'   : 0.5,
+            'lossrfntri': 0.5,
+            'losscls'   : 0.1,
+        }
+
+if istrain:
+    # 是否采用 HRNet 作为语义分割网络模型，如果不采用，就用 deeplab
+    if args.hrnet:
+        cfg.TRAIN.SIGNATURE = ['texrnet', 'hrnet']
+    else:
+        cfg.TRAIN.SIGNATURE = ['texrnet', 'deeplab']
+    # 'LOG_DIR'：日志文件所在目录，如果是训练模式则创建一个新的实验文件夹，并将日志文件保存在该目录下的'train.log'中
+    cfg.LOG_DIR = experiment_folder(cfg, isnew=True, sig=cfg.TRAIN.SIGNATURE)
+    cfg.LOG_FILE = osp.join(cfg.LOG_DIR, 'train.log')
+else:
+    # 如果是评估模式则将日志文件保存在'eval.log'中
+    cfg.LOG_DIR = osp.join(cfg.MISC_DIR, 'eval')
+    cfg.LOG_FILE = osp.join(cfg.LOG_DIR, 'eval.log')
+    cfg.TEST.SUB_DIR = None
+
+if cfg.DEBUG:
+    # 如果开启了调试模式，则将实验 ID 设置为 999999999999，方便跟踪调试结果
+    cfg.EXPERIMENT_ID = 999999999999
+    # 每个 GPU 使用的数据加载器线程数
+    cfg.DATA.NUM_WORKERS_PER_GPU = 0
+    # 每个 GPU 使用的 batch size 大小
+    cfg.TRAIN.BATCH_SIZE_PER_GPU = 2
+
+cfg = common_initiates(cfg)  # 该函数用于加载训练和测试数据，并进行数据预处理、标准化等操作
+
+if istrain:
+    if args.trainwithcls:
+        # 执行训练操作的时间戳。如果使用分类器，则调用 ts_with_classifier()函数进行时间戳设置
+        exec_ts = ts_with_classifier()
+    else:
+        # 调用 ts()函数进行时间戳设置
+        exec_ts = ts()
+    # 训练器对象
+    trainer = train(cfg)
+    # 向训练器对象注册不同的训练阶段，包括数据加载、前向传播、反向传播、参数更新等流程
+    trainer.register_stage(exec_ts)
+
+    # trainer(0)
+    # 使用多进程方式进行训练，设置 nprocs 为 GPU_COUNT 即可利用 GPU 并行加速训练过程。
+    # 最后，join=True 表示程序会一直阻塞在这里，直到所有进程都完成并退出后才会继续往下执行
+    mp.spawn(trainer,
+                args=(),
+                nprocs=cfg.GPU_COUNT,
+                join=True)
+else:
+    # 执行测试操作的时间戳
+    exec_es = es()
+    # 测试器对象
+    tester = eval(cfg)
+    # 向测试器对象注册不同的测试阶段，包括数据加载、前向传播、评估等流程
+    tester.register_stage(exec_es)
+
+    # tester(0)
+    # 使用多进程方式进行测试，设置 nprocs 为 GPU_COUNT 即可利用 GPU 并行加速测试过程。
+    # 最后，join=True 表示程序会一直阻塞在这里，直到所有进程都完成并退出后才会继续往下执行
+    mp.spawn(tester,
+            args=(),
+            nprocs=cfg.GPU_COUNT,
+            join=True)
+```
+
+开跑时，会显示各种参数的情况：
+
+```json
+{'COMPUTER_NAME': 'OMEN',  // 电脑名称
+ 'CUDA': True,  // CUDA 是否可用
+ 'DATA': {'ALIGN_CORNERS': True,  // 是否对齐图像的四个角
+          'CLASS_NAME': ['background', 'text'],  // 类别名称。在本例中，有两类分别为'background'和'text'
+          'CLASS_NUM': 2,  // 类别数量
+          'DATASET_MODE': 'train+val',  // 数据集模式。在本例中，是训练数据集和验证数据集结合在一起使用
+          'DATASET_NAME': 'textseg',  // 数据集名称，在本例中为'textseg'
+          'EFFECTIVE_CLASS_NUM': 2,  // 有效的类别数量
+          'FORMATTER': 'SemChinsChbbxFormatter',  // 数据格式化器的名称，在本例中为'SemChinsChbbxFormatter'
+          'IGNORE_LABEL': 999,  // 忽略的标签值，在本例中为 999
+          'IM_MEAN': [0.485, 0.456, 0.406],  // 图像各个通道的均值
+          'IM_STD': [0.229, 0.224, 0.225],  // 图像各个通道的标准差
+          'LOADER_DERIVED_CLS_MAP_TO': 'bg',  // 加载程序映射的类名
+          'LOADER_PIPELINE': ['NumpyImageLoader',  // 加载数据的处理流程
+                              'TextSeg_SeglabelLoader',
+                              'CharBboxSpLoader'],
+          'LOADER_SQUARE_BBOX': True,  // 是否在加载时将字符的 bbox 转换为正方形
+          'LOAD_BACKEND_IMAGE': 'pil',  // 读取图像的库名称
+          'LOAD_IS_MC_IMAGE': False,  // 是否是多通道图像
+          'LOAD_IS_MC_SEGLABEL': True,  // 加载的标签是否是多通道的
+          'NUM_WORKERS': 5,  // 加载数据的线程数
+          'NUM_WORKERS_PER_GPU': 5,  // 每个 GPU 上加载数据的线程数
+          'RANDOM_CROP_FILL': {'image': [0, 0, 0], 'seglabel': [999]},  // 对图像进行随机 crop 时需要填充的内容
+          'RANDOM_CROP_PADDING_MODE': 'random',  // 填充模式，在本例中为'random'
+          'RANDOM_CROP_SIZE': [513, 513],  // 进行随机 crop 时输出的尺寸大小
+          'RANDOM_RESIZE_CROP_FROM': 'sem',  // 将 semantic label resize 到指定大小后再进行随机 crop
+          'RANDOM_RESIZE_CROP_RATIO': [0.75, 1.3333333333333333],  // 进行 resize 时的纵横比范围
+          'RANDOM_RESIZE_CROP_SCALE': [0.8, 1.2],  // 进行 resize 时的缩放比例范围
+          'RANDOM_RESIZE_CROP_SIZE': [32, 32],  // 在进行 resize 前需要保证 semantic label 的最小尺寸大小
+          'RANDOM_SCALE_ONESIDE_ALIGN_CORNERS': True,  // 是否对齐图像的四个角
+          'RANDOM_SCALE_ONESIDE_DIM': 'shortside',  // 进行缩放的维度，在本例中为长边
+          'RANDOM_SCALE_ONESIDE_RANGE': [513, 1025],  // 进行缩放时的尺寸范围
+          'ROOT_DIR': 'D:\\Study\\XXX\\TextSeg',  // 数据集所在目录
+          'SEGLABEL_IGNORE_LABEL': 999,  // 忽略的标签值，在本例中为 999
+          'SEMANTIC_PICK_CLASS': 'all',  // 要选择的语义类别，在本例中为'all'
+          'TRANS_PIPELINE': ['UniformNumpyType',  // 图像的预处理流程
+                             'TextSeg_RandomResizeCropCharBbox',
+                             'NormalizeUint8ToZeroOne',
+                             'Normalize',
+                             'RandomScaleOneSide',
+                             'RandomCrop'],
+          'TRY_SAMPLE': None},  // 尝试样本的数量
+ 'DEBUG': False,  // 是否开启调试模式
+ 'DIST_BACKEND': 'gloo',  // 分布式训练的后端，本例中为'gloo'
+ 'DIST_URL': 'tcp://127.0.0.1:11233',  // 分布式训练的 URL
+ 'EXPERIMENT_ID': 168471973979,  // 实验的 ID
+ 'GPU_COUNT': 1,  // 使用的 GPU 数量
+ 'GPU_DEVICE': [0],  // 使用的 GPU 编号
+ 'LOG_DIR': 'D:\\Study\\XXXX\\Rethinking-Text-Segmentation\\log\\texrnet_textseg\\168471973979_texrnet_hrnet',  // 日志存储的目录路径
+ 'LOG_FILE': 'D:\\Study\\XXXX\Rethinking-Text-Segmentation\\log\\texrnet_textseg\\168471973979_texrnet_hrnet\\train.log',  // 日志输出的文件路径
+ 'MAINLOOP_EXECUTE': True,  // 是否执行主循环
+ 'MAIN_CODE': ['main.py', 'train_utils.py', 'eval_utils.py'],  // 主要的代码文件
+ 'MAIN_CODE_PATH': 'D:\\Study\\XXXX\\Rethinking-Text-Segmentation',  // 代码所在的路径
+ 'MATPLOTLIB_MODE': 'Agg',  // Matplotlib 模式
+ 'MISC_DIR': 'D:\\Study\\XXXX\\Rethinking-Text-Segmentation\\log',  // 杂项文件的存储目录路径
+ // 模型的配置文件，包含了 HRNet 模型的距离参数和结构
+ 'MODEL': {'HRNET': {'ALIGN_CORNERS': True,  // 是否使用 align_corners 参数对齐角点
+                     'BN_MOMENTUM': 'hardcoded to 0.1',  // Batch Normalization 层的动量
+                     'FINAL_CONV_KERNEL': 1,  // 最终卷积核的大小
+                     'IGNORE_LABEL': 999,  // 忽略标签的数值
+                     'INTRAIN_GETPRED': False,  // 是否在训练时计算预测结果
+                     'LOSS_TYPE': 'ce',  // 使用的损失函数类型
+                     'MODEL_TAGS': ['v0', 'base'],  // 模型标签
+                     'OUTPUT_CHANNEL_NUM': 720,  // 模型输出通道数
+                     'PRETRAINED_PTH': 'D:\\Study\\XXXX\\Rethinking-Text-Segmentation\\pretrained\\init\\hrnetv2_w48_imagenet_pretrained.pth.base',  // 预训练模型的路径
+                     'STAGE1_PARA': {'BLOCK': 'BOTTLENECK',  // HRNet 中所使用的块的类型
+                                     'FUSE_METHOD': 'SUM',  // HRNet 的每个分支上进行特征融合的方法
+                                     'NUM_BLOCKS': [4],  // 每个分支中块的数量
+                                     'NUM_BRANCHES': 1,  // 使用的分支数
+                                     'NUM_CHANNELS': [64],  // 每个分支的通道数
+                                     'NUM_MODULES': 1},  // 使用的模块数
+                     'STAGE2_PARA': {'BLOCK': 'BASIC',
+                                     'FUSE_METHOD': 'SUM',
+                                     'NUM_BLOCKS': [4, 4],
+                                     'NUM_BRANCHES': 2,
+                                     'NUM_CHANNELS': [48, 96],
+                                     'NUM_MODULES': 1},
+                     'STAGE3_PARA': {'BLOCK': 'BASIC',
+                                     'FUSE_METHOD': 'SUM',
+                                     'NUM_BLOCKS': [4, 4, 4],
+                                     'NUM_BRANCHES': 3,
+                                     'NUM_CHANNELS': [48, 96, 192],
+                                     'NUM_MODULES': 4},
+                     'STAGE4_PARA': {'BLOCK': 'BASIC',
+                                     'FUSE_METHOD': 'SUM',
+                                     'NUM_BLOCKS': [4, 4, 4, 4],
+                                     'NUM_BRANCHES': 4,
+                                     'NUM_CHANNELS': [48, 96, 192, 384],
+                                     'NUM_MODULES': 3}},
+           'MODEL_NAME': 'texrnet',  // 模型名称
+           'TEXRNET': {'ALIGN_CORNERS': True,  // 是否使用 align_corners 参数对齐角点
+                       'BIAS_ATTENTION_TYPE': 'cossim',  // 偏置注意力的类型
+                       'BN_TYPE': 'bn',  // Batch Normalization 层的类型
+                       'CONV_TYPE': 'conv',  // 卷积层的类型
+                       'INIT_BIAS_ATTENTION_WITH': None,  // 哪个注意力层进行初始化偏置注意力
+                       'INPUT_CHANNEL_NUM': 720,  // 输入 Tensor 的通道数
+                       'INTRAIN_GETPRED_FROM': 'sem',  // 在训练时计算预测结果的来源。此处为'sem'，表示来自语义分割
+                       'MODEL_TAGS': ['hrnet'],  // 模型标签
+                       'PRETRAINED_PTH': None,  // 预训练模型的路径
+                       'REFINEMENT_CHANNEL_NUM': [725, 64, 64],  // 精细化模块中各层输出通道数
+                       'REFINEMENT_LOSS_TYPE': {'lossrfn': 'ce',  // 精细化模块中各损失函数类型
+                                                'lossrfntri': 'trimapce'},
+                       'RELU_TYPE': 'relu',  // ReLU 激活函数的类型
+                       'SEMANTIC_CLASS_NUM': 2,  // 语义分割的类别数
+                       'SEMANTIC_IGNORE_LABEL': 999,  // 语义分割中被忽略的标签
+                       'SEMANTIC_LOSS_TYPE': 'ce'}},  // 语义分割中使用的损失函数类型
+ 'RND_RECORDING': False,  // 是否记录随机数生成器的状态
+ 'RND_SEED': 2,  // 随机数种子
+ 'SAVE_CODE': True,  // 是否保存代码
+ 'TORCH_VERSION': '1.13.1+cu117',  // 使用的 PyTorch 版本号
+ 'TRAIN': {'ACTIVATE_CLASSIFIER_FOR_SEGMODEL_AFTER': 0,  // 在第几次迭代后为分割模型激活分类器
+           'ACTIVATE_REFINEMENT_AT_ITER': 0,  // 在第几次迭代后激活精细化模块
+           'BATCH_SIZE': 5,  // 每个 GPU 上的 batch 大小
+           'BATCH_SIZE_PER_GPU': 5,
+           'CKPT_EVERY': inf,  // 每多少 epoch 保存一次模型权重
+           'CLASSIFIER_PATH': 'pretrained\\init\\resnet50_textcls.pth',  // 分类器的路径
+           'COMMENT': '>>>>later<<<<',  // 训练过程中的注释信息
+           'DISPLAY': 10,  // 每隔多少次迭代输出一次日志信息
+           'LOSS_WEIGHT': {'losscls': 0.1,  // 不同损失函数的权重
+                           'lossrfn': 0.5,
+                           'lossrfntri': 0.5,
+                           'losssem': 1},
+           'LOSS_WEIGHT_NORMALIZED': False,  // 是否使用归一化的损失权重
+           'LR_BASE': 0.01,  // 学习率的基础值
+           'LR_ITER_BY': 'iter',  // 学习率的迭代方式。此处为'iter'，表示按照迭代次数更新学习率
+           'LR_TYPE': [('linear', 0, 0.01, 500), ('ploy', 0.01, 0, 20000, 0.9)],  // 学习率的更新方式。包含了两种类型：'linear'和'ploy'
+           'MAX_STEP': 20500,  // 最大迭代次数或 epoch 数
+           'MAX_STEP_TYPE': 'iter',  // 最大迭代次数或 epoch 数的类型。此处为'iter'，表示按照迭代次数来计算。
+           'OPTIMIZER': 'sgd',  // 优化器的类型。此处为'sgd'，表示随机梯度下降法
+           'OPTIM_MANAGER_LRSCALE': {'hrnet': 1, 'texrnet': 10},  // 不同模型在优化器中学习率的比例。包含了'texrnet'和'hrnet'两个键，分别对应不同模型
+           'OVERFIT_A_BATCH': False,  // 是否以一个 batch 进行过拟合实验
+           'ROI_ALIGN_SIZE': [32, 32],  // 表示 Region of Interest (ROI) Align 的大小
+           'ROI_BBOX_PADDING_TYPE': 'semcrop',  // 表示 ROI Align 时的填充类型
+           'SAVE_CODE': True,  // 是否保存代码
+           'SAVE_INIT_MODEL': True,  // 是否保存初始化模型
+           'SGD_MOMENTUM': 0.9,  // SGD 优化器的动量
+           'SGD_WEIGHT_DECAY': 0.0005,  // SGD 优化器的权重衰减因子
+           'SIGNATURE': ['texrnet', 'hrnet'],  // 模型签名
+           'SKIP_PARTIAL': True,  // 是否跳过部分数据
+           'UPDATE_CLASSIFIER': False,  // 是否更新分类器参数
+           'USE_OPTIM_MANAGER': True,  // 是否使用优化器管理器
+           'VISUAL': False}}  // 是否可视化
+```
+

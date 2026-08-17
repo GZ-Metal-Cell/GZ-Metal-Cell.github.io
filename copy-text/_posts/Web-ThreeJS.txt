@@ -1,0 +1,2230 @@
+---
+title: Web-ThreeJS
+date: Sun Feb 04 2024 14:34:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - 前端
+  - JavaScript
+categories: 探索
+description: 给网页整点牛逼的！
+---
+
+
+# 资源
+
+- 官网：[Three.js – JavaScript 3D Library (threejs.org)](https://threejs.org/)
+
+- three.js 中文网：[Three.js 中文网 (webgl3d.cn)](http://www.webgl3d.cn/)
+
+- 电子书：[《探索 three.js》(discoverthreejs.com)](https://discoverthreejs.com/zh/)
+
+- GitHub：[mrdoob/three.js: JavaScript 3D Library. (github.com)](https://github.com/mrdoob/three.js)
+
+# 0
+
+## 0.4 GitHub 上的 three.js - 魔法出现的地方
+
+- [GitHub 上的 three.js - 魔法出现的地方 | Discover three.js (discoverthreejs.com)](https://discoverthreejs.com/zh/book/introduction/github-repo/)
+
+[mrdoob/three.js: JavaScript 3D Library. (github.com)](https://github.com/mrdoob/three.js) 中：
+
+- `build/three.module.js` 是运行所需的文件。
+- `examples/` 代码示例。
+- `src/` 源代码。
+
+## 0.5 如何在你的项目中引入 three.js
+
+- [如何在你的项目中引入 three.js | Discover three.js (discoverthreejs.com)](https://discoverthreejs.com/zh/book/introduction/get-threejs/)
+
+{% tabs install %}
+<!-- tab Node.js -->
+
+在项目文件夹中，初始化 npm：
+
+```shell
+npm init
+```
+
+安装 three.js:
+
+```shell
+npm install --save three
+```
+
+导入：
+
+```javascript
+import {XXX, XXX, XXX} from 'three/build/three.module.js';
+```
+
+<!-- endtab -->
+
+<!-- tab 直接导入 -->
+
+直接从 [mrdoob/three.js: JavaScript 3D Library. (github.com)](https://github.com/mrdoob/three.js) 里下载 `build/three.module.js`
+
+要引入的话，直接：
+
+```html
+<script type="module" src="three.module.js"></script>
+```
+
+<!-- endtab -->
+
+{% endtabs %}
+
+# 1-入门：真正的乐趣从这里开始！
+
+## 1.1 Three.js 应用的结构
+
+- 如果按[Three.js 应用的结构 | Discover three.js (discoverthreejs.com)](https://discoverthreejs.com/zh/book/first-steps/app-structure/)所规定（为了保证这篇博客的结构，我在这里并没有完全按照它来做）：
+
+{% tabs construction %}
+<!-- tab index.html -->
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<link href="./styles/main.css" rel="stylesheet" type="text/css">
+
+<body>
+    <div id="scene-container">
+        <!-- Our <canvas> will be inserted here -->
+    </div>
+</body>
+
+<script type="module" src="./src/main.js"></script>
+
+</html>
+```
+
+<!-- endtab -->
+
+<!-- tab main.css -->
+
+```css
+body {
+    /* remove margins and scroll bars */
+    margin: 0;
+    overflow: hidden;
+
+    /* style text */
+    text-align: center;
+    font-size: 12px;
+    font-family: Sans-Serif;
+
+    /* color text */
+    color: #444;
+}
+
+h1 {
+    /* position the heading */
+    position: absolute;
+    width: 100%;
+
+    /* make sure that the heading is drawn on top */
+    z-index: 1;
+}
+
+#scene-container {
+    /* tell our scene container to take up the full page */
+    position: absolute;
+    width: 100%;
+    height: 100%;
+
+    /* Set the container's background color to the same as the scene's background to prevent flashing on load */
+    background-color: skyblue;
+}
+```
+
+<!-- endtab -->
+
+<!-- tab main.js -->
+
+npm 方式导入：
+
+```javascript
+import {
+Camera,
+Group,
+Scene,
+} from 'three';
+
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+```
+
+---
+
+cdn 方式导入：
+
+```javascript
+import { Camera, Group, Scene } from "https://cdn.skypack.dev/three@0.132.2";
+import { OrbitControls } from "https://cdn.skypack.dev/three@0.132.2/examples/jsm/controls/OrbitControls.js?module";
+import { GLTFLoader } from "https://cdn.skypack.dev/three@0.132.2/examples/jsm/loaders/GLTFLoader.js?module";
+```
+
+---
+
+直接从 [mrdoob/three.js: JavaScript 3D Library. (github.com)](https://github.com/mrdoob/three.js) 里下载 `build/three.module.js`，放在`vendor/three/build/` 下，本地导入：
+
+```javascript
+// 导入 Three.js 模块
+import {
+	XXX,
+    XXX
+} from '../vendor/three/build/three.module.js';
+
+...自由操作...
+```
+
+<!-- endtab -->
+
+<!-- tab vendor/ -->
+
+放置**其他人**编写的 JS 文件的地方。
+
+<!-- endtab -->
+
+<!-- tab assets -->
+
+**使用的任何非 HTML、CSS 或 JavaScript 的东西都在这里**：纹理、3D 模型、字体、声音等等。
+
+<!-- endtab -->
+
+{% endtabs %}
+
+## 1.2 你的第一个 three.js 场景：你好，立方体！
+
+- [你的第一个 three.js 场景：你好，立方体！| Discover three.js (discoverthreejs.com)](https://discoverthreejs.com/zh/book/first-steps/first-scene/)
+
+编写 `main.js`：
+
+- 导入模块：
+
+```javascript
+// 导入 Three.js 模块
+import {
+    Scene,
+    PerspectiveCamera,
+    WebGLRenderer,
+    BoxGeometry,
+    MeshBasicMaterial,
+    Mesh,
+    Color
+} from '../vendor/three/build/three.module.js';
+```
+
+- 获取画布所在容器：
+
+```javascript
+const container = document.querySelector('#scene-container');
+```
+
+- 创建一个新的场景：
+
+```javascript
+const scene = new Scene();
+```
+
+- 设置背景为天蓝色：
+
+```javascript
+scene.background = new Color('skyblue');
+```
+
+- 定义一个透视相机：
+  - `fov`：视野范围
+  - `aspect`：摄影机宽高比（容器的宽高比）
+  - `near`：近裁剪面的距离。只有在这个距离之后的物体才会被摄像机捕捉到，太近的物体会被忽略。这个值应该设置为正数，并且尽可能小以避免裁剪近处的重要细节，但过小的值可能会导致深度缓冲问题。
+  - `far`：远裁剪面的距离。任何在这个距离之外的物体都不会被摄像机捕捉到。这个值决定了摄像机可以看到多远的场景，设置得过大可能会影响渲染性能和深度缓冲的精度。
+- 定义好后，放在场景的 $(0, 0, 10)$ 处。
+
+```javascript
+const fov = 35; // AKA Field of View
+const aspect = container.clientWidth / container.clientHeight;
+const near = 0.1; // the near clipping plane
+const far = 100; // the far clipping plane
+
+const camera = new PerspectiveCamera(fov, aspect, near, far);
+camera.position.set(0, 0, 10);
+```
+
+- 定义一个立方体网格，尺寸设为 $(2, 2, 2)$：
+
+```javascript
+// 注意这里使用的是 BoxGeometry
+const geometry = new BoxGeometry(2, 2, 2);
+```
+
+- 定义材质：
+
+```javascript
+const material = new MeshBasicMaterial({ color: 0x44aa88 });
+```
+
+- 一个 Mesh 对象——由网格和材质组成：
+
+```javascript
+const cube = new Mesh(geometry, material);
+```
+
+- 往场景中添加这个立方体：
+
+```javascript
+scene.add(cube);
+```
+
+- 接下来是渲染操作：
+
+  - `const renderer = new WebGLRenderer();`：创建了一个新的 `WebGLRenderer` 实例。
+
+    `WebGLRenderer `是 Three.js 中用于在网页上渲染 3D 图形的渲染器。它使用 WebGL API 来绘制场景和模型。默认情况下，这个渲染器会创建一个 `<canvas>` 元素，用于显示渲染的 3D 图形。
+
+    - `renderer.setSize(container.clientWidth, container.clientHeight);`：使用`setSize`方法设置渲染器的大小，以适应容器（通常是某个 HTML 元素）的尺寸。
+
+      `container.clientWidth` 和 `container.clientHeight` 分别获取容器的宽度和高度，确保渲染的 3D 场景能够充满整个容器，不会出现拉伸或压缩的情况。
+
+    - `renderer.setPixelRatio(window.devicePixelRatio);`：
+
+      通过 `setPixelRatio` 方法设置渲染器的像素比，使用 `window.devicePixelRatio` 来适配不同设备的屏幕分辨率。这样可以确保在具有高像素密度的显示屏（如 Retina 屏幕）上也能获得清晰的渲染效果。
+
+    - `container.appendChild(renderer.domElement);`：
+
+      渲染器创建的 `<canvas>` 元素可以通过 `renderer.domElement` 访问。这行代码将这个 `<canvas>` 元素添加到之前指定的 HTML 容器中，使得渲染的 3D 场景能够显示在网页上的该容器内。
+
+    - `renderer.render(scene, camera);`：
+
+      最后，使用 `render` 方法渲染场景。这个方法接受两个参数：`scene`（场景）和 `camera`（摄像机）。场景包含了所有要渲染的 3D 对象，而摄像机定义了观察场景的视角。调用这个方法时，Three.js 会根据提供的场景和摄像机参数，计算并绘制最终的图像到 `<canvas>` 元素上。
+
+```javascript
+const renderer = new WebGLRenderer();
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
+
+container.appendChild(renderer.domElement);
+
+renderer.render(scene, camera);
+```
+
+​	<a href="pages/01_1" target="_blank"><b>演示</b></a>
+
+我想，这段代码在 Blender 里的实现：
+
+```python
+import bpy
+import numpy as np
+
+# 删除默认场景中的所有物体
+bpy.ops.object.select_all(action='SELECT')
+bpy.ops.object.delete(use_global=False)
+
+# 设置使用 Cycles 渲染引擎，也可以设置为'Eevee'
+bpy.context.scene.render.engine = 'CYCLES'
+
+# 获取当前世界
+world = bpy.data.worlds['World']
+# 确保使用节点
+world.use_nodes = True
+# 获取节点树和节点
+nodes = world.node_tree.nodes
+# 清除所有现有节点
+nodes.clear()
+# 创建一个新的背景节点
+bg_node = nodes.new(type='ShaderNodeBackground')
+# 设置背景颜色为天蓝色
+bg_node.inputs[0].default_value = (135/255, 206/235, 235/255, 1)  # RGBA
+# 创建一个世界输出节点
+world_output_node = nodes.new(type='ShaderNodeOutputWorld')
+# 链接背景节点到世界输出节点
+links = world.node_tree.links
+link = links.new(bg_node.outputs[0], world_output_node.inputs[0])
+
+# 创建一个立方体
+bpy.ops.mesh.primitive_cube_add(size=2, location=(0, 0, 0))
+# 获取刚刚添加的立方体对象
+cube = bpy.context.object
+# 创建一个新的材质
+mat = bpy.data.materials.new(name="CubeMaterial")
+# 设置材质的基础颜色
+mat.diffuse_color = (68/255, 170/255, 136/255, 1)  # RGB + Alpha
+# 将材质分配给立方体
+if not cube.data.materials:
+    cube.data.materials.append(mat)
+else:
+    cube.data.materials[0] = mat
+
+# 添加摄像机并直接获取引用
+bpy.ops.object.camera_add(location=(0, 0, 10))
+camera = bpy.context.object  # 获取刚刚添加的摄像机对象
+
+# 设置摄像机的 fov, near 和 far 参数
+camera.data.angle = 35 * (np.pi / 180)  # Blender 中使用弧度，Three.js 使用度
+camera.data.clip_start = 0.1
+camera.data.clip_end = 100
+
+# 摄像机位置已经在添加时设置，这里不需要重复设置
+# camera.location = (0, 0, 10)
+
+# 设置渲染分辨率
+bpy.context.scene.render.resolution_x = 1848
+bpy.context.scene.render.resolution_y = 1206
+bpy.context.scene.render.resolution_percentage = 100
+```
+
+![Blender](images/01_2.png)
+
+## 1.3 介绍世界应用程序
+
+- [介绍世界应用程序 | Discover three.js (discoverthreejs.com)](https://discoverthreejs.com/zh/book/first-steps/world-app/)
+
+这章主要是将之前的代码模块化。
+
+![模块化](images/01_3.png)
+
+{% tabs moudle %}
+<!-- tab main.js -->
+
+获取 `container`，导入 `World.js`：
+
+```javascript
+import { World } from './World/world.js';
+
+function main() {
+    // Get a reference to the container element
+    const container = document.querySelector('#scene-container');
+
+    // 1. Create an instance of the World app
+    const world = new World(container);
+
+    // 2. Render the scene
+    world.render();
+}
+
+// call main to start the app
+main();
+```
+
+<!-- endtab -->
+
+<!-- tab world.js -->
+
+把之前定义摄像机、创建立方体、设置场景环境、渲染器、窗口适应之类的全扔进去。
+
+```javascript
+import { createCamera } from './components/camera.js';
+import { createCube } from './components/cube.js';
+import { createScene } from './components/scene.js';
+
+import { createRenderer } from './systems/renderer.js';
+import { Resizer } from './systems/resizer.js';
+
+// These variables are module-scoped: we cannot access them
+// from outside the module
+let camera;
+let renderer;
+let scene;
+
+class World {
+    constructor(container) {
+        camera = createCamera();
+        scene = createScene();
+        renderer = createRenderer();
+        container.append(renderer.domElement);
+
+        const cube = createCube();
+
+        scene.add(cube);
+
+        const resizer = new Resizer(container, camera, renderer);
+    }
+
+    render() {
+        // draw a single frame
+        renderer.render(scene, camera);
+    }
+}
+
+export { World };
+```
+
+<!-- endtab -->
+
+<!-- tab renderer.js -->
+
+渲染器系统：
+
+```javascript
+import { WebGLRenderer } from 'three';
+
+function createRenderer() {
+    const renderer = new WebGLRenderer();
+
+    return renderer;
+}
+
+export { createRenderer };
+```
+
+<!-- endtab -->
+
+<!-- tab scene.js -->
+
+场景组件：
+
+```javascript
+import { Color, Scene } from 'three';
+
+function createScene() {
+    const scene = new Scene();
+
+    scene.background = new Color('skyblue');
+
+    return scene;
+}
+
+export { createScene };
+```
+
+<!-- endtab -->
+
+<!-- tab camera.js -->
+
+相机组件：
+
+```javascript
+import { PerspectiveCamera } from 'three';
+
+function createCamera() {
+    const camera = new PerspectiveCamera(
+        35, // fov = Field Of View
+        1, // aspect ratio (dummy value)
+        0.1, // near clipping plane
+        100, // far clipping plane
+    );
+
+    // move the camera back so we can view the scene
+    camera.position.set(0, 0, 10);
+
+    return camera;
+}
+
+export { createCamera };
+```
+
+<!-- endtab -->
+
+<!-- tab cube.js -->
+
+立方体组件，它包括创建 几何体、材质和 网格。
+
+```javascript
+import { BoxBufferGeometry, Mesh, MeshBasicMaterial } from 'three';
+
+function createCube() {
+    // create a geometry
+    const geometry = new BoxBufferGeometry(2, 2, 2);
+
+    // create a default (white) Basic material
+    const material = new MeshBasicMaterial();
+
+    // create a Mesh containing the geometry and material
+    const cube = new Mesh(geometry, material);
+
+    return cube;
+}
+
+export { createCube };
+```
+
+<!-- endtab -->
+
+<!-- tab resizer.js -->
+
+使得场景可以占据整个窗口的大小：
+
+```javascript
+class Resizer {
+  constructor(container, camera, renderer) {
+    // Set the camera's aspect ratio
+    camera.aspect = container.clientWidth / container.clientHeight;
+
+    // update the camera's frustum
+    camera.updateProjectionMatrix();
+
+    // update the size of the renderer AND the canvas
+    renderer.setSize(container.clientWidth, container.clientHeight);
+
+    // set the pixel ratio (for mobile devices)
+    renderer.setPixelRatio(window.devicePixelRatio);
+  }
+}
+```
+
+<!-- endtab -->
+
+{% endtabs %}
+
+## 1.4 基于物理的渲染和照明
+
+- [基于物理的渲染和照明 | Discover three.js (discoverthreejs.com)](https://discoverthreejs.com/zh/book/first-steps/physically-based-rendering/)
+
+three.js 也是使用**基于物理的渲染 (PBR)**的。
+
+根据之前模块化后的程序，继续修改：
+
+{% tabs light %}
+
+<!-- tab renderer.js -->
+
+告诉渲染器启动基于物理的渲染。
+
+```javascript
+function createRenderer() {
+    const renderer = new WebGLRenderer({ antialias: true });
+
+    renderer.physicallyCorrectLights = true;
+
+    return renderer;
+}
+
+export { createRenderer };
+```
+
+<!-- endtab -->
+
+<!-- tab light.js -->
+
+定义一个灯光：
+
+- 光强设为 $8$
+- 位置在 $(10, 10, 10)$，照向原点
+
+```javascript
+import { DirectionalLight } from 'three';
+
+function createLights() {
+    // Create a directional light
+    const light = new DirectionalLight('white', 8);
+
+    // move the light right, up, and towards us
+    light.position.set(10, 10, 10);
+
+    return light;
+}
+
+export { createLights };
+```
+
+<!-- endtab -->
+
+<!-- tab World.js -->
+
+`scene.add()` 里给场景添加光源！
+
+```javascript
+import { createCamera } from './components/camera.js';
+import { createCube } from './components/cube.js';
+import { createScene } from './components/scene.js';
+import { createLights } from './components/lights.js';
+import { createRenderer } from './systems/renderer.js';
+import { Resizer } from './systems/resizer.js';
+
+// These variables are module-scoped: we cannot access them
+// from outside the module
+let camera;
+let renderer;
+let scene;
+
+class World {
+    constructor(container) {
+        camera = createCamera();
+        scene = createScene();
+        renderer = createRenderer();
+        container.append(renderer.domElement);
+
+        const cube = createCube();
+        const light = createLights();
+
+        scene.add(cube, light);
+
+        const resizer = new Resizer(container, camera, renderer);
+    }
+
+    render() {
+        // draw a single frame
+        renderer.render(scene, camera);
+    }
+}
+
+export { World };
+```
+
+<!-- endtab -->
+
+{% endtabs %}
+
+​	<a href="pages/01_4" target="_blank"><b>演示</b></a>
+
+## 1.5 变换、坐标系和场景图
+
+- [变换和坐标系 | Discover three.js (discoverthreejs.com)](https://discoverthreejs.com/zh/book/first-steps/transformations/)
+
+emmm 跟 Unity 里差不多吧。
+
+`cube.js` 中可以修改 cube 的 `position`、`rotation` 和 `scale`：
+
+```javascript
+import {
+    BoxBufferGeometry,
+    MathUtils,
+    Mesh,
+    MeshStandardMaterial,
+} from 'three';
+
+function createCube() {
+    const geometry = new BoxBufferGeometry(2, 2, 2);
+
+    const material = new MeshStandardMaterial({ color: 'purple' });
+
+    const cube = new Mesh(geometry, material);
+
+    cube.position.x = -0.5;
+    cube.position.y = -0.1;
+    cube.position.z = 1;
+
+    // equivalent to:
+    // cube.position.set(-0.5, -0.1, 1);
+
+    cube.scale.x = 1.25;
+    cube.scale.y = 0.25;
+    cube.scale.z = 0.5;
+
+    // equivalent to:
+    // cube.scale.set(1.25, 0.25, 0.5);
+
+    // to rotate using degrees, they must
+    // first be converted to radians
+    cube.rotation.x = MathUtils.degToRad(-60);
+    cube.rotation.y = MathUtils.degToRad(-45);
+    cube.rotation.z = MathUtils.degToRad(60);
+
+    return cube;
+}
+
+export { createCube };
+```
+
+还可以把对象放在其他对象中，作其子对象：
+
+![套娃！](images/01_5.svg)
+
+```javascript
+scene.add(mesh);
+
+// the children array contains the mesh we added
+scene.children; // -> [mesh]
+
+// now, add a light:
+scene.add(light);
+
+// the children array now contains both the mesh and the light
+scene.children; // -> [mesh, light];
+
+// now you can access the mesh and light using array indices
+scene.children[0]; // -> mesh
+scene.children[1]; // -> light
+```
+
+## 1.6 使我们的场景具有响应性（以及处理 Jaggies）
+
+- [使我们的场景具有响应性（以及处理锯齿）| Discover three.js (discoverthreejs.com)](https://discoverthreejs.com/zh/book/first-steps/responsive-design/)
+
+**抗锯齿**
+
+`renderer.js` 中启用抗锯齿：
+
+```javascript
+const renderer = new WebGLRenderer({ antialias: true });
+```
+
+**无缝处理浏览器窗口大小变化**
+
+修改 `resizer.js`：
+
+- 将 `setSize` 封装成一个函数，当用户改变窗口大小（触发 `window.addEventListener('resize', () => {});`）时，重新 `setSize()`
+- 定义一个 `onResize()` 函数，便于引用的时候重写它。
+
+```javascript
+const setSize = (container, camera, renderer) => {
+    camera.aspect = container.clientWidth / container.clientHeight;
+    camera.updateProjectionMatrix();
+
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+};
+
+class Resizer {
+    constructor(container, camera, renderer) {
+        // set initial size on load
+        setSize(container, camera, renderer);
+
+        window.addEventListener('resize', () => {
+            // set the size again if a resize occurs
+            setSize(container, camera, renderer);
+            // perform any custom actions
+            this.onResize();
+        });
+    }
+
+    onResize() { }
+}
+
+export { Resizer };
+```
+
+修改 `World.js`：
+
+- 重写 `onResize()` 的逻辑，窗口变换时，重新渲染画面：
+
+```javascript
+import { createCamera } from './components/camera.js';
+import { createCube } from './components/cube.js';
+import { createScene } from './components/scene.js';
+import { createLights } from './components/lights.js';
+import { createRenderer } from './systems/renderer.js';
+import { Resizer } from './systems/resizer.js';
+
+let camera;
+let renderer;
+let scene;
+
+class World {
+    constructor(container) {
+        camera = createCamera();
+        scene = createScene();
+        renderer = createRenderer();
+        container.append(renderer.domElement);
+
+        const cube = createCube();
+        const light = createLights();
+
+        scene.add(cube, light);
+
+        const resizer = new Resizer(container, camera, renderer);
+        resizer.onResize = () => {
+            this.render();
+        };
+    }
+
+    render() {
+        // draw a single frame
+        renderer.render(scene, camera);
+    }
+}
+
+export { World };
+```
+
+​	<a href="pages/01_6" target="_blank"><b>演示</b></a>
+
+## 1.7 动画循环
+
+- [动画循环 | Discover three.js (discoverthreejs.com)](https://discoverthreejs.com/zh/book/first-steps/animation-loop/)
+
+{% tabs animation %}
+<!-- tab systems/Loops.js -->
+
+创建一个 `Loops.js` 用于循环：
+
+- `constructor()` 构造函数：
+  - `camera` 摄像机。
+  - `scene` 场景。
+  - `renderer` 渲染器。
+  - `updatables` 要在循环中更新的对象的列表。
+- `start()`  使用 `this.renderer.setAnimationLoop(() => {});`  开启循环。
+  - `this.tick();` 开启计时器。
+  - `this.renderer.render(this.scene, this.camera);` 循环中不断渲染帧。
+- `stop()` 清空循环：`this.renderer.setAnimationLoop(null);`
+- `tick()`：
+  - `const delta = clock.getDelta();`  用于衡量渲染渲染一帧花了多少时间（单位：秒）。
+  - 随后调用 `this.updatables` 里物体的 `tick()`（类似 Unity 里的 `Update()`）。
+
+```javascript
+import { Clock } from "three";
+
+const clock = new Clock();
+
+class Loop {
+    constructor(camera, scene, renderer) {
+        this.camera = camera;
+        this.scene = scene;
+        this.renderer = renderer;
+        this.updatables = [];
+    }
+
+    start() {
+        this.renderer.setAnimationLoop(() => {
+            // tell every animated object to tick forward one frame
+            this.tick();
+
+            // render a frame
+            this.renderer.render(this.scene, this.camera);
+        });
+    }
+
+    stop() {
+        this.renderer.setAnimationLoop(null);
+    }
+
+    tick() {
+        // only call the getDelta function once per frame!
+        const delta = clock.getDelta();
+
+        // console.log(
+        //   `The last frame rendered in ${delta * 1000} milliseconds`,
+        // );
+
+        for (const object of this.updatables) {
+            object.tick(delta);
+        }
+    }
+}
+
+export { Loop };
+```
+
+<!-- endtab -->
+
+<!-- tab World.js -->
+
+- `import { Loop } from './systems/Loop.js';` 导入相应 JS。
+- `let loop;` 和 `loop = new Loop(camera, scene, renderer);` 将循环创建为**模块作用域变量**，如 `camera`、`renderer` 和 `scene` 一样，因为我们不希望从 `World` 类外部访问它。
+- `loop.updatables.push(cube);`  将 `cube` 压入 `loop.updatables` 中，使其可以循环。
+- `start()` 和 `stop()` 分别就是 `loop` 中的 `start()` 和 `stop()`。
+
+```javascript
+import { createCamera } from './components/camera.js';
+import { createCube } from './components/cube.js';
+import { createLights } from './components/lights.js';
+import { createScene } from './components/scene.js';
+import { createRenderer } from './systems/renderer.js';
+import { Resizer } from './systems/Resizer.js';
+import { Loop } from './systems/Loop.js';
+
+let camera;
+let renderer;
+let scene;
+let loop;
+
+class World {
+    constructor(container) {
+        camera = createCamera();
+        renderer = createRenderer();
+        scene = createScene();
+        loop = new Loop(camera, scene, renderer);
+        container.append(renderer.domElement);
+
+        const cube = createCube();
+        const light = createLights();
+
+        loop.updatables.push(cube);
+
+        scene.add(cube, light);
+
+        const resizer = new Resizer(container, camera, renderer);
+    }
+
+    render() {
+        // draw a single frame
+        renderer.render(scene, camera);
+    }
+
+    start() {
+        loop.start();
+    }
+
+    stop() {
+        loop.stop();
+    }
+}
+
+export { World };
+```
+
+<!-- endtab -->
+
+<!-- tab main.js -->
+
+渲染的入口改为 `world.start();`。
+
+```javascript
+import { World } from './World/World.js';
+
+function main() {
+  // Get a reference to the container element
+  const container = document.querySelector('#scene-container');
+
+  // create a new world
+  const world = new World(container);
+
+  // draw the scene
+  world.start();
+}
+
+main();
+```
+
+<!-- endtab -->
+
+<!-- tab cube.js -->
+
+定义 `cube.tick`：每秒旋转 $30^\circ$。
+
+```javascript
+import { BoxGeometry, Mesh, MeshStandardMaterial, MathUtils } from 'three';
+
+function createCube() {
+    // create a geometry
+    const geometry = new BoxGeometry(2, 2, 2);
+
+    // create a default (white) Basic material
+    const material = new MeshStandardMaterial({ color: "purple" });
+
+    // create a Mesh containing the geometry and material
+    const cube = new Mesh(geometry, material);
+
+    cube.rotation.set(-0.5, -0.1, 0.8);
+
+    const radiansPerSecond = MathUtils.degToRad(30);
+    // this method will be called once per frame
+    cube.tick = (delta) => {
+        // increase the cube's rotation each frame
+        cube.rotation.z += radiansPerSecond * delta;
+        cube.rotation.x += radiansPerSecond * delta;
+        cube.rotation.y += radiansPerSecond * delta;
+    };
+
+    return cube;
+}
+
+export { createCube };
+```
+
+<!-- endtab -->
+
+{% endtabs %}
+
+​	<a href="pages/01_7" target="_blank"><b>演示</b></a>
+
+## 1.8 纹理映射
+
+- [纹理映射简介 | Discover three.js (discoverthreejs.com)](https://discoverthreejs.com/zh/book/first-steps/textures-intro/)
+
+给立方体贴图：
+
+![立方体贴图](pages/01_8/assets/textures/uv-test-bw.png)
+
+修改 `components/cube.js`：
+
+- 定义 `createMaterial()`，将控制物体材质的代码移到另一个函数中。
+  - `const textureLoader = new TextureLoader();` 定义一个加载纹理贴图的类。
+  - `const texture = textureLoader.load('./assets/textures/uv-test-bw.png',);`  加载贴图，使其转换成能材质类读取的形式。
+  - `const material = new MeshStandardMaterial({map: texture,});` 定义材质。
+
+```javascript
+import { BoxGeometry, Mesh, MeshStandardMaterial, MathUtils, TextureLoader } from 'three';
+
+function createMaterial() {
+    // create a texture loader.
+    const textureLoader = new TextureLoader();
+    // load a texture
+    const texture = textureLoader.load(
+        './assets/textures/uv-test-bw.png',
+    );
+    // create a "standard" material using
+    // the texture we just loaded as a color map
+    const material = new MeshStandardMaterial({
+        map: texture,
+    });
+
+    return material;
+}
+
+function createCube() {
+    // create a geometry
+    const geometry = new BoxGeometry(2, 2, 2);
+
+    // create a default (white) Basic material
+    const material = createMaterial();
+
+    // create a Mesh containing the geometry and material
+    const cube = new Mesh(geometry, material);
+
+    cube.rotation.set(-0.5, -0.1, 0.8);
+
+    const radiansPerSecond = MathUtils.degToRad(30);
+    // this method will be called once per frame
+    cube.tick = (delta) => {
+        // increase the cube's rotation each frame
+        cube.rotation.z += radiansPerSecond * delta;
+        cube.rotation.x += radiansPerSecond * delta;
+        cube.rotation.y += radiansPerSecond * delta;
+    };
+
+    return cube;
+}
+
+export { createCube };
+```
+
+​	<a href="pages/01_8" target="_blank"><b>演示</b></a>
+
+## 1.9 使用相机控制插件扩展 three.js
+
+- [使用相机控制插件扩展 three.js | Discover three.js (discoverthreejs.com)](https://discoverthreejs.com/zh/book/first-steps/camera-controls/)
+
+本节将使用新插件：`three/examples/jsm/controls/OrbitControls.js`！
+
+> OrbitControls 是 Three.js 库中的一个辅助控制器，允许用户通过鼠标操作来旋转、缩放和平移场景中的相机，从而实现对场景的交互式查看。
+
+![新插件！](images/01_9.png)
+
+如果是本地加载的，还要修改一下 `OrbitControls.js` 里的导入逻辑：
+
+```javascript
+import {
+	EventDispatcher,
+	MOUSE,
+	Quaternion,
+	Spherical,
+	TOUCH,
+	Vector2,
+	Vector3,
+	Plane,
+	Ray,
+	MathUtils
+} from '../../../build/three.module.js';
+```
+
+{% tabs animation %}
+<!-- tab controls.js -->
+
+- `const controls = new OrbitControls(camera, canvas);`：通过传入相机（`camera`）和 canvas 元素（`canvas`），创建了一个新的 `OrbitControls` 实例。
+- `controls.enableDamping = true;`：启用阻尼效果（惯性），使相机移动更加平滑自然。阻尼效果需要在动画循环中不断更新控制器状态。
+- `controls.tick = () => controls.update();`：在控制器上添加了一个名为`tick`的方法，这个方法简单地调用了`controls.update()`。这是因为当启用阻尼或自动旋转时，需要在每一帧更新控制器的状态以获得平滑的动画效果。在主动画循环中调用此`tick`方法可以达到这个目的。
+
+```javascript
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+
+function createControls(camera, canvas) {
+    const controls = new OrbitControls(camera, canvas);
+
+    // damping and auto rotation require
+    // the controls to be updated each frame
+
+    // this.controls.autoRotate = true;
+    controls.enableDamping = true;
+
+    controls.tick = () => controls.update();
+
+    return controls;
+}
+
+export { createControls };
+```
+
+<!-- endtab -->
+
+<!-- tab World.js -->
+
+- `import { createControls } from './systems/controls.js';` 导入 `controls.js`。
+- `const controls = createControls(camera, renderer.domElement);` 将参数传给 `createControls()` 以激活辅助控制器。
+- `loop.updatables.push(controls);` 使得场景能够更新。
+
+```javascript
+import { createCamera } from './components/camera.js';
+import { createCube } from './components/cube.js';
+import { createLights } from './components/lights.js';
+import { createScene } from './components/scene.js';
+
+import { createControls } from './systems/controls.js';
+import { createRenderer } from './systems/renderer.js';
+import { Resizer } from './systems/Resizer.js';
+import { Loop } from './systems/Loop.js';
+
+let camera;
+let renderer;
+let scene;
+let loop;
+
+class World {
+    constructor(container) {
+        camera = createCamera();
+        renderer = createRenderer();
+        scene = createScene();
+        loop = new Loop(camera, scene, renderer);
+        container.append(renderer.domElement);
+
+        const controls = createControls(camera, renderer.domElement);
+
+        const cube = createCube();
+        const light = createLights();
+
+        loop.updatables.push(controls);
+
+        // stop the cube's animation
+        // loop.updatables.push(cube);
+
+        scene.add(cube, light);
+
+        const resizer = new Resizer(container, camera, renderer);
+    }
+
+    render() {
+        // draw a single frame
+        renderer.render(scene, camera);
+    }
+
+    start() {
+        loop.start();
+    }
+
+    stop() {
+        loop.stop();
+    }
+}
+
+export { World };
+```
+
+<!-- endtab -->
+
+{% endtabs %}
+
+​	<a href="pages/01_9" target="_blank"><b>演示</b></a>
+
+**按需渲染**
+
+如果只使用相机控制插件，而不使用任何动画，那么使用按需渲染可以节约资源。
+
+{% tabs render_on_demand %}
+<!-- tab World.js -->
+
+- `controls.addEventListener('change', () => {renderer.render(scene, camera);});` 设置事件监听，当用户控制相机时，重新渲染画面（而不是循环渲染画面）。
+
+```javascript
+import { createCamera } from './components/camera.js';
+import { createCube } from './components/cube.js';
+import { createLights } from './components/lights.js';
+import { createScene } from './components/scene.js';
+
+import { createControls } from './systems/controls.js';
+import { createRenderer } from './systems/renderer.js';
+import { Resizer } from './systems/Resizer.js';
+// import { Loop } from './systems/Loop.js';
+
+let camera;
+let renderer;
+let scene;
+// let loop;
+
+class World {
+    constructor(container) {
+        camera = createCamera();
+        renderer = createRenderer();
+        scene = createScene();
+        // loop = new Loop(camera, scene, renderer);
+        container.append(renderer.domElement);
+
+        const controls = createControls(camera, renderer.domElement);
+        controls.addEventListener('change', () => {
+            renderer.render(scene, camera);
+        });
+
+        const cube = createCube();
+        const light = createLights();
+
+        // loop.updatables.push(controls);
+
+        // stop the cube's animation
+        // loop.updatables.push(cube);
+
+        scene.add(cube, light);
+
+        const resizer = new Resizer(container, camera, renderer);
+    }
+
+    render() {
+        // draw a single frame
+        renderer.render(scene, camera);
+    }
+
+    // start() {
+    //     loop.start();
+    // }
+
+    // stop() {
+    //     loop.stop();
+    // }
+}
+
+export { World };
+```
+
+<!-- endtab -->
+
+<!-- tab main.js -->
+
+取消动画循环：
+
+```javascript
+import { World } from './World/World.js';
+
+function main() {
+  // Get a reference to the container element
+  const container = document.querySelector('#scene-container');
+
+  // create a new world
+  const world = new World(container);
+
+  // draw the scene
+  world.render();
+}
+
+main();
+```
+
+<!-- endtab -->
+
+{% endtabs %}
+
+​	<a href="pages/01_9_2" target="_blank"><b>演示</b></a>
+
+**OrbitControls 配置**
+
+- [OrbitControls – three.js docs (threejs.org)](https://threejs.org/docs/index.html#examples/zh/controls/OrbitControls)
+
+可以通过设置参数以配置 OrbitControls 的功能：[使用相机控制插件扩展 three.js | Discover three.js (discoverthreejs.com)](https://discoverthreejs.com/zh/book/first-steps/camera-controls/#启用或禁用控件)
+
+## 1.10 环境光：来自各个方向的光照
+
+之前的立方体背面完全是黑色，这是因为缺少环境光。
+
+{% tabs ambient_light %}
+
+<!-- tab light.js -->
+
+> [`AmbientLight`](https://threejs.org/docs/#api/en/lights/AmbientLight)是在 three.js 中伪造间接照明的最廉价的方法。这种类型的光会从各个方向向场景中的每个对象添加恒定数量的光照。
+
+- `const ambientLight = new AmbientLight('white', 2);`
+
+> 来自 [`HemisphereLight`](https://threejs.org/docs/#api/en/lights/HemisphereLight)的光在场景顶部的天空颜色和场景底部的地面颜色之间渐变。与`AmbientLight`一样，此灯不尝试物理精度。相反，`HemisphereLight`是在观察到在您发现人类的许多情况下创建的，最亮的光来自场景的顶部，而来自地面的光通常不太亮。
+
+- `const ambientLight = new HemisphereLight('white', 'darkslategrey', 5, );` 创建一个 `HemisphereLight` 作为环境光
+  - 天空颜色：`white` 
+  - 地面颜色：`darkslategrey`
+  - 强度：`5`
+- `return { ambientLight, mainLight };` 返回场景光与主光源。
+
+```javascript
+import { AmbientLight, DirectionalLight, HemisphereLight } from 'three';
+
+function createLights() {
+    const ambientLight = new HemisphereLight(
+        'white', // bright sky color
+        'darkslategrey', // dim ground color
+        5, // intensity
+    );
+
+    const mainLight = new DirectionalLight('white', 5);
+    mainLight.position.set(10, 10, 10);
+
+    return { ambientLight, mainLight };
+}
+
+export { createLights };
+```
+
+<!-- endtab -->
+
+<!-- tab World.js -->
+
+- `const { ambientLight, mainLight } = createLights();`：获取函数返回的光源对象。（是否可以修改成列表以减少耦合性？）
+- `scene.add(ambientLight, mainLight, cube);`：将这些光源和立方体对象加入场景。
+
+```javascript
+import { createCamera } from './components/camera.js';
+import { createCube } from './components/cube.js';
+import { createLights } from './components/lights.js';
+import { createScene } from './components/scene.js';
+
+import { createControls } from './systems/controls.js';
+import { createRenderer } from './systems/renderer.js';
+import { Resizer } from './systems/Resizer.js';
+import { Loop } from './systems/Loop.js';
+
+let camera;
+let renderer;
+let scene;
+let loop;
+
+class World {
+    constructor(container) {
+        camera = createCamera();
+        renderer = createRenderer();
+        scene = createScene();
+        loop = new Loop(camera, scene, renderer);
+        container.append(renderer.domElement);
+
+        const controls = createControls(camera, renderer.domElement);
+
+        const cube = createCube();
+        const { ambientLight, mainLight } = createLights();
+
+        loop.updatables.push(controls);
+        scene.add(ambientLight, mainLight, cube);
+
+        const resizer = new Resizer(container, camera, renderer);
+    }
+
+    render() {
+        // draw a single frame
+        renderer.render(scene, camera);
+    }
+
+    start() {
+        loop.start();
+    }
+
+    stop() {
+        loop.stop();
+    }
+}
+
+export { World };
+```
+
+<!-- endtab -->
+
+{% endtabs %}
+
+​	<a href="pages/01_10" target="_blank"><b>演示</b></a>
+
+## 1.11 组织你的场景
+
+- [组织你的场景 | Discover three.js (discoverthreejs.com)](https://discoverthreejs.com/zh/book/first-steps/organizing-with-group/)
+
+{% tabs mesh_group %}
+
+<!-- tab meshGroup.js -->
+
+> 源教程使用的是 `SphereBufferGeometry` 在我这里似乎已经过期，应该改成 `SphereGeometry`。（用于创建球体形状的几何体）
+
+- `const group = new Group();` 使用 `Group` 类创建一个新的组合对象 `group`。这个组合将用来容纳所有的球体，但它自身是不可见的。
+
+- `const geometry = new SphereGeometry(0.25, 16, 16);` 使用 `Group `类创建一个新的组合对象 `group`。这个组合将用来容纳所有的球体，但它自身是不可见的。（就是个空节点）
+
+- `group.add(protoSphere);` 将这个 `const protoSphere = new Mesh(geometry, material);` 作为 `group` 的子对象。
+
+- `for (let i = 0; i < 1; i += 0.05) {}`：创建更多球体。
+
+  - `const sphere = protoSphere.clone();` 克隆球体 `protoSphere`，克隆的对象将具有与原始对象相同的位置、旋转和缩放。
+
+    > **几何体和材质不是克隆的，它们是共享的**。如果我们对共享材质进行任何更改，例如，更改其颜色，**所有克隆的网格将与原始网格一起更改**。如果您对几何体进行任何更改，这同样适用。（这跟 Unity 也可像）
+    >
+    > 您可以给一个克隆一个全新的材料，而原来的材料不会受到影响。
+
+  - 变换新的几何体的 transform
+
+  - `group.add(sphere);` 将最后得到的几何体加入 `group` 中。
+
+- `group.scale.multiplyScalar(2);`：将整个组合的大小放大两倍。
+
+---
+
+- `const radiansPerSecond = MathUtils.degToRad(30);` 尝试将整个 `group` 每秒旋转 $30^\circ$。
+- `group.tick = (delta) => {group.rotation.z -= delta * radiansPerSecond;};`：应用动画。
+
+```javascript
+import {
+    SphereGeometry,
+    Group,
+    MathUtils,
+    Mesh,
+    MeshStandardMaterial,
+} from 'three';
+
+function createMeshGroup() {
+    // a group holds other objects
+    // but cannot be seen itself
+    const group = new Group();
+
+    const geometry = new SphereGeometry(0.25, 16, 16);
+
+    const material = new MeshStandardMaterial({
+        color: 'indigo',
+    });
+
+    const protoSphere = new Mesh(geometry, material);
+
+    // add the protoSphere to the group
+    group.add(protoSphere);
+
+    // create twenty clones of the protoSphere
+    // and add each to the group
+    for (let i = 0; i < 1; i += 0.05) {
+        const sphere = protoSphere.clone();
+
+        // position the spheres on around a circle
+        sphere.position.x = Math.cos(2 * Math.PI * i);
+        sphere.position.y = Math.sin(2 * Math.PI * i);
+
+        sphere.scale.multiplyScalar(0.01 + i);
+
+        group.add(sphere);
+    }
+
+    // every sphere inside the group will be scaled
+    group.scale.multiplyScalar(2);
+
+    const radiansPerSecond = MathUtils.degToRad(30);
+
+    // each frame, rotate the entire group of spheres
+    group.tick = (delta) => {
+        group.rotation.z -= delta * radiansPerSecond;
+    };
+
+    return group;
+}
+
+export { createMeshGroup };
+```
+
+<!-- endtab -->
+
+<!-- tab World.js -->
+
+把之前的 `cube` 换成了 `meshGroup`。
+
+```javascript
+import { createCamera } from './components/camera.js';
+import { createLights } from './components/lights.js';
+import { createMeshGroup } from './components/meshGroup.js';
+import { createScene } from './components/scene.js';
+
+import { createControls } from './systems/controls.js';
+import { createRenderer } from './systems/renderer.js';
+import { Resizer } from './systems/Resizer.js';
+import { Loop } from './systems/Loop.js';
+
+let camera;
+let renderer;
+let scene;
+let loop;
+
+class World {
+    constructor(container) {
+        camera = createCamera();
+        renderer = createRenderer();
+        scene = createScene();
+        loop = new Loop(camera, scene, renderer);
+        container.append(renderer.domElement);
+
+        const controls = createControls(camera, renderer.domElement);
+        const { ambientLight, mainLight } = createLights();
+        const meshGroup = createMeshGroup();
+
+        loop.updatables.push(controls, meshGroup);
+        scene.add(ambientLight, mainLight, meshGroup);
+
+        const resizer = new Resizer(container, camera, renderer);
+    }
+
+    render() {
+        renderer.render(scene, camera);
+    }
+
+    start() {
+        loop.start();
+    }
+
+    stop() {
+        loop.stop();
+    }
+}
+
+export { World };
+```
+
+<!-- endtab -->
+
+{% endtabs %}
+
+​	<a href="pages/01_11" target="_blank"><b>演示</b></a>
+
+## 1.12 使用内置几何体获得创意
+
+- [内置几何体 | Discover three.js (discoverthreejs.com)](https://discoverthreejs.com/zh/book/first-steps/built-in-geometries/)
+
+文件组织结构如下：
+
+- `components/Train/`：创建一个火车类
+  - `Train.js`：组装火车，并设置轮子移动动画。
+  - `geometries.js`：定义构成火车的组件。
+  - `materials.js`：定义火车的材质。
+  - `meshes.js`：设置火车的组建的 transform。
+- `components/helpers.js`：在场景中显示坐标系。
+
+![文件结构](images/01_12.png)
+
+{% tabs train1 %}
+
+<!-- tab World.js -->
+
+- `import {createAxesHelper, createGridHelper,} from './components/helpers.js';` 和 `import { Train } from './components/Train/Train.js';`：导入相关库。
+- ` const train = new Train();`、`loop.updatables.push(controls, train);`、`scene.add(ambientLight, mainLight, train);`：定义火车类，加载动画并放置在场景中。
+- `scene.add(createAxesHelper(), createGridHelper());`：在场景中显示坐标轴。
+
+```javascript
+import { createCamera } from './components/camera.js';
+import {
+    createAxesHelper,
+    createGridHelper,
+} from './components/helpers.js';
+import { createLights } from './components/lights.js';
+import { createScene } from './components/scene.js';
+import { Train } from './components/Train/Train.js';
+
+import { createControls } from './systems/controls.js';
+import { createRenderer } from './systems/renderer.js';
+import { Resizer } from './systems/Resizer.js';
+import { Loop } from './systems/Loop.js';
+
+let camera;
+let renderer;
+let scene;
+let loop;
+
+class World {
+    constructor(container) {
+        camera = createCamera();
+        renderer = createRenderer();
+        scene = createScene();
+        loop = new Loop(camera, scene, renderer);
+        container.append(renderer.domElement);
+
+        const controls = createControls(camera, renderer.domElement);
+        const { ambientLight, mainLight } = createLights();
+        const train = new Train();
+
+        loop.updatables.push(controls, train);
+        scene.add(ambientLight, mainLight, train);
+
+        const resizer = new Resizer(container, camera, renderer);
+
+        scene.add(createAxesHelper(), createGridHelper());
+    }
+
+    render() {
+        renderer.render(scene, camera);
+    }
+
+    start() {
+        loop.start();
+    }
+
+    stop() {
+        loop.stop();
+    }
+}
+
+export { World };
+```
+
+<!-- endtab -->
+
+<!-- tab helpers.js -->
+
+- `function createAxesHelper() {}`：创建坐标轴。
+  - `const helper = new AxesHelper(3);`：显示的坐标轴长度为 $3$。
+  - `helper.position.set(-3.5, 0, -3.5);`：将坐标轴放置在 $(-3.5, 0, -3.5)$ 的位置。
+- `function createGridHelper() {}`：创建网格。
+  - `const helper = new GridHelper(6);`：在 $xOz$ 平面创建 $6 \times 6$ 的网格，大小为 $1$。
+
+```javascript
+import { AxesHelper, GridHelper } from 'three';
+
+function createAxesHelper() {
+    const helper = new AxesHelper(3);
+    helper.position.set(-3.5, 0, -3.5);
+    return helper;
+}
+
+function createGridHelper() {
+    const helper = new GridHelper(6);
+    return helper;
+}
+
+export { createAxesHelper, createGridHelper };
+```
+
+<!-- endtab -->
+
+{% endtabs %}
+
+---
+
+{% tabs train2%}
+
+<!-- tab Train.js -->
+
+- 从 `./meshes.js` 导入 `createMeshes`，将这些 `meshes` 放在自己节点下。
+- `tick(delta) {}` 让车轮以每秒 $24^\circ$ 的速度旋转。
+
+```javascript
+import { Group, MathUtils } from 'three';
+
+import { createMeshes } from './meshes.js';
+
+const wheelSpeed = MathUtils.degToRad(24);
+
+class Train extends Group {
+    constructor() {
+        super();
+
+        this.meshes = createMeshes();
+
+        this.add(
+            this.meshes.nose,
+            this.meshes.cabin,
+            this.meshes.chimney,
+            this.meshes.smallWheelRear,
+            this.meshes.smallWheelCenter,
+            this.meshes.smallWheelFront,
+            this.meshes.bigWheel,
+        );
+    }
+
+    tick(delta) {
+        this.meshes.bigWheel.rotation.y += wheelSpeed * delta;
+        this.meshes.smallWheelRear.rotation.y += wheelSpeed * delta;
+        this.meshes.smallWheelCenter.rotation.y += wheelSpeed * delta;
+        this.meshes.smallWheelFront.rotation.y += wheelSpeed * delta;
+    }
+}
+
+export { Train };
+```
+
+<!-- endtab -->
+
+<!-- tab geometries.js -->
+
+> 原教程使用的是 `BoxGeometry` 和 `CylinderBufferGeometry`，这似乎已弃用，应分别改为 `BoxGeometry,` 和 `CylinderGeometry`。
+
+- `const cabin = new BoxGeometry(2, 2.25, 1.5);`：创建一个立方体几何体，参数`2`, `2.25`, `1.5`分别对应立方体的宽度、高度和深度。
+- `const wheel = new CylinderGeometry(0.4, 0.4, 1.75, 16);`：创建一个圆柱形几何体。
+  - 第一个和第二个参数`0.75`, `0.75`分别是圆柱的顶部半径和底部半径。
+  - 第三个参数`3`是圆柱的高度。
+  - 第四个参数`12`定义了圆柱周围的面数，更高的值会使圆柱看起来更加圆滑。
+  - `const chimney = new CylinderGeometry(0.3, 0.1, 0.5);` 同理。
+
+```javascript
+import { BoxGeometry, CylinderGeometry } from 'three';
+
+function createGeometries() {
+    const cabin = new BoxGeometry(2, 2.25, 1.5);
+
+    const nose = new CylinderGeometry(0.75, 0.75, 3, 12);
+
+    // we can reuse a single cylinder geometry for all 4 wheels
+    const wheel = new CylinderGeometry(0.4, 0.4, 1.75, 16);
+
+    // different values for the top and bottom radius creates a cone shape
+    const chimney = new CylinderGeometry(0.3, 0.1, 0.5);
+
+    return {
+        cabin,
+        nose,
+        wheel,
+        chimney,
+    };
+}
+
+export { createGeometries };
+```
+
+<!-- endtab -->
+
+<!-- tab materials.js -->
+
+- `new MeshStandardMaterial({});` 创建一个标准材质。
+  - `flatShading: true,`：开启平滑着色。
+
+```javascript
+import { MeshStandardMaterial } from 'three';
+
+function createMaterials() {
+    const body = new MeshStandardMaterial({
+        color: 'firebrick',
+        flatShading: true,
+    });
+
+    const detail = new MeshStandardMaterial({
+        color: 'darkslategray',
+        flatShading: true,
+    });
+
+    return { body, detail };
+}
+
+export { createMaterials };
+```
+
+<!-- endtab -->
+
+<!-- tab meshes.js -->
+
+- `function createMeshes() {}`：根据 `import { createGeometries } from './geometries.js';` 和 `import { createMaterials } from './materials.js';`，调整各组件的 transform，组装成小火车。
+
+```javascript
+import { Mesh } from 'three';
+
+import { createGeometries } from './geometries.js';
+import { createMaterials } from './materials.js';
+
+function createMeshes() {
+    const geometries = createGeometries();
+    const materials = createMaterials();
+
+    const cabin = new Mesh(geometries.cabin, materials.body);
+    cabin.position.set(1.5, 1.4, 0);
+
+    const chimney = new Mesh(geometries.chimney, materials.detail);
+    chimney.position.set(-2, 1.9, 0);
+
+    const nose = new Mesh(geometries.nose, materials.body);
+    nose.position.set(-1, 1, 0);
+    nose.rotation.z = Math.PI / 2;
+
+    const smallWheelRear = new Mesh(geometries.wheel, materials.detail);
+    smallWheelRear.position.y = 0.5;
+    smallWheelRear.rotation.x = Math.PI / 2;
+
+    const smallWheelCenter = smallWheelRear.clone();
+    smallWheelCenter.position.x = -1;
+
+    const smallWheelFront = smallWheelRear.clone();
+    smallWheelFront.position.x = -2;
+
+    const bigWheel = smallWheelRear.clone();
+    bigWheel.position.set(1.5, 0.9, 0);
+    bigWheel.scale.set(2, 1.25, 2);
+
+    return {
+        nose,
+        cabin,
+        chimney,
+        smallWheelRear,
+        smallWheelCenter,
+        smallWheelFront,
+        bigWheel,
+    };
+}
+
+export { createMeshes };
+```
+
+<!-- endtab -->
+
+{% endtabs %}
+
+​	<a href="pages/01_12" target="_blank"><b>演示</b></a>
+
+## 1.13 以 glTF 格式加载 3D 模型
+
+- [以 glTF 格式加载 3D 模型 | Discover three.js (discoverthreejs.com)](https://discoverthreejs.com/zh/book/first-steps/load-models/)
+
+> 在过去三十年左右的时间里，人们在创建标准 3D **资源交换格式**方面进行了许多尝试。直到最近，[FBX](https://threejs.org/examples/webgl_loader_fbx.html)、[OBJ (Wavefront)](https://threejs.org/examples/#webgl_loader_obj_mtl) 和 [DAE (Collada)](https://threejs.org/examples/?q=collada#webgl_loader_collada_skinning) 格式仍然是其中最受欢迎的格式，尽管它们都存在阻碍其广泛采用的问题。比如 OBJ 不支持动画，FBX 是属于 Autodesk 的封闭格式，Collada 规范过于复杂，导致大文件难以加载。
+>
+> 然而，最近，一个名为 **glTF** 的新成员已成为在网络上交换 3D 资源的事实上的标准格式。[glTF](https://www.khronos.org/gltf/)（**GL 传输格式**），有时被称为 *3D 中的 JPEG*，由 [Kronos Group ](https://www.khronos.org/)创建，他们负责 WebGL、OpenGL 和一大堆其他图形 API。glTF 最初于 2017 年发布，现在是在网络和许多其他领域交换 3D 资源的最佳格式。**在本书中，我们将始终使用 glTF，如果可能，您也应该这样做**。它专为在网络上共享模型而设计，因此文件大小尽可能小，并且您的模型将快速加载。
+>
+> 但是，由于 glTF 相对较新，您最喜欢的应用程序可能还没有导出器。在这种情况下，您可以在使用模型之前将它们转换为 glTF，或者使用其他加载器，例如 `FBXLoaderor` 或者 `OBJLoader`。所有 three.js 加载器的工作方式相同，因此如果您确实需要使用另一个加载器，本章中的所有内容仍然适用，只有细微差别。
+
+原文极力推荐 `.glb` 格式，好吧，依他。
+
+![Loader](images/01_13_1.png)
+
+可以看到 three.js 支持好多种格式的文件，我们使用 `GLTFLoader.js`，它还需要依赖项 `'../utils/BufferGeometryUtils.js'`。
+
+如果是本地加载，还应修改其相对地址：
+
+```javascript
+import {XXX} from '../../../build/three.module.js';
+```
+
+文件组织结构如下：
+
+- `assets/models`：存放着 3D 模型（`.glb` 格式）。
+- `src/World/components/birds/`：
+  - `birds.js`：导入模型，创建鸟对象。
+  - `setupModel.js`：处理加载的数据。
+
+![文件结构](images/01_13_2.png)
+
+{% tabs gitf %}
+<!-- tab main.js -->
+
+- `await world.init();`：等待模型加载完毕，才开始渲染。
+
+```javascript
+import { World } from './World/World.js';
+
+async function main() {
+    // Get a reference to the container element
+    const container = document.querySelector('#scene-container');
+
+    // create a new world
+    const world = new World(container);
+
+    // complete async tasks
+    await world.init();
+
+    // start the animation loop
+    world.start();
+}
+
+main().catch((err) => {
+    console.error(err);
+});
+```
+
+<!-- endtab -->
+
+<!-- tab World.js -->
+
+- `async init() {}`：等待模型加载完毕，才开始渲染。
+  - `const { parrot, flamingo, stork } = await loadBirds();` 异步加载模型。
+  - `controls.target.copy(parrot.position);`：将场景控制的目标位置设置为 `parrot` 模型的位置。这通常用于确保相机能够围绕指定的点进行旋转或焦点对准，从而使用户的视角集中在这个点上。
+  - `scene.add(parrot, flamingo, stork);` 将三只鸟加入场景。
+
+```javascript
+import { loadBirds } from './components/birds/birds.js';
+import { createCamera } from './components/camera.js';
+import { createLights } from './components/lights.js';
+import { createScene } from './components/scene.js';
+
+import { createControls } from './systems/controls.js';
+import { createRenderer } from './systems/renderer.js';
+import { Resizer } from './systems/Resizer.js';
+import { Loop } from './systems/Loop.js';
+
+let camera;
+let controls;
+let renderer;
+let scene;
+let loop;
+
+class World {
+    constructor(container) {
+        camera = createCamera();
+        renderer = createRenderer();
+        scene = createScene();
+        loop = new Loop(camera, scene, renderer);
+        container.append(renderer.domElement);
+        controls = createControls(camera, renderer.domElement);
+
+        const { ambientLight, mainLight } = createLights();
+
+        loop.updatables.push(controls);
+        scene.add(ambientLight, mainLight);
+
+        const resizer = new Resizer(container, camera, renderer);
+    }
+
+    async init() {
+        const { parrot, flamingo, stork } = await loadBirds();
+
+        // move the target to the center of the front bird
+        controls.target.copy(parrot.position);
+
+        scene.add(parrot, flamingo, stork);
+    }
+
+    render() {
+        renderer.render(scene, camera);
+    }
+
+    start() {
+        loop.start();
+    }
+
+    stop() {
+        loop.stop();
+    }
+}
+
+export { World };
+```
+
+<!-- endtab -->
+
+<!-- tab setupModel.js -->
+
+![火烈鸟](images/01_13_3.png)
+
+Blender 打开这个 `.glb` 模型，可以看到 `Mesh_0` 节点在 `Object_0` 下面，我们只需要 `Mesh_0` 这个节点，把它选取出来：
+
+```javascript
+function setupModel(data) {
+    const model = data.scene.children[0];
+
+    return model;
+}
+
+export { setupModel };
+```
+
+<!-- endtab -->
+
+<!-- tab birds.js -->
+
+- `async function loadBirds() {}`：异步加载。
+
+  - `const loader = new GLTFLoader();`：使得程序具有加载 `.glb` 文件的能力。
+
+  - `const [parrotData, flamingoData, storkData] = await Promise.all([...]);`：异步加载模型。
+  - `const parrot = setupModel(parrotData);`：生成 `parrot` 对象。
+  - `parrot.position.set(0, 0, 2.5);`：设置对象位置。
+
+```javascript
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+
+import { setupModel } from './setupModel.js';
+
+async function loadBirds() {
+    const loader = new GLTFLoader();
+
+    const [parrotData, flamingoData, storkData] = await Promise.all([
+        loader.loadAsync('assets/models/Parrot.glb'),
+        loader.loadAsync('assets/models/Flamingo.glb'),
+        loader.loadAsync('assets/models/Stork.glb'),
+    ]);
+
+    console.log('Squaaawk!', parrotData);
+
+    const parrot = setupModel(parrotData);
+    parrot.position.set(0, 0, 2.5);
+
+    const flamingo = setupModel(flamingoData);
+    flamingo.position.set(7.5, 0, -10);
+
+    const stork = setupModel(storkData);
+    stork.position.set(0, -2.5, -10);
+
+    return {
+        parrot,
+        flamingo,
+        stork,
+    };
+}
+
+export { loadBirds };
+```
+
+<!-- endtab -->
+
+{% endtabs %}
+
+​	<a href="pages/01_13_1" target="_blank"><b>演示</b></a>
+
+试试自己的模型：
+
+blender 把自己之前创建的模型导出成 `.glb` 格式：
+
+![戴珍珠耳环的女孩](images/01_13_4.png)
+
+代码就照葫芦画瓢了！
+
+​	<a href="pages/01_13_2" target="_blank"><b>演示</b></a>
+
+## 1.14 three.js 动画系统
+
+- [three.js 动画系统 | Discover three.js (discoverthreejs.com)](https://discoverthreejs.com/zh/book/first-steps/animation-system/)
+
+创建动画涉及三个元素：关键帧、`KeyframeTrack`和`AnimationClip`。
+
+{% tabs animation3%}
+<!-- tab 关键帧 -->
+
+> 动画系统中最底层的概念级别是[关键帧](https://en.wikipedia.org/wiki/Key_frame)。每个关键帧由三部分信息组成：时间 ***time***、属性 ***property*** 和值 ***value***。
+
+<!-- endtab -->
+
+<!-- tab KeyframeTrack -->
+
+> 没有代表单个关键帧的类。相反，**关键帧是存储在两个数组中的原始数据**，*时间*和*值*，在 [`KeyframeTrack`](https://threejs.org/docs/#api/en/animation/KeyframeTrack)中。
+
+<p style="text-align: right;">创建一个代表<b>不透明度</b>的数字关键帧轨迹，包含五个关键帧</p>
+
+```javascript
+import { NumberKeyframeTrack } from "three";
+
+const times = [0, 1, 2, 3, 4];
+const values = [0, 1, 0, 1, 0];
+
+const opacityKF = new NumberKeyframeTrack(".material.opacity", times, values);
+```
+
+<p style="text-align: right;">创建一个表示<b>位置</b>的矢量关键帧轨迹，包含三个关键帧</p>
+
+```javascript
+import { VectorKeyframeTrack } from "three";
+
+const times = [0, 3, 6];
+const values = [0, 0, 0, 2, 2, 2, 0, 0, 0];
+
+const positionKF = new VectorKeyframeTrack(".position", times, values);
+```
+
+<!-- endtab -->
+
+<!-- tab AnimationClip -->
+
+动画剪辑是附加到单个对象的**任意数量的关键帧**的集合，表示剪辑的类是 [`AnimationClip`](https://threejs.org/docs/#api/en/animation/AnimationClip)。
+
+<p style="text-align: right;">动画位置和不透明度的剪辑</p>
+
+```javascript
+import { AnimationClip, NumberKeyframeTrack, VectorKeyframeTrack } from "three";
+
+const positionKF = new VectorKeyframeTrack(
+  ".position",
+  [0, 3, 6],
+  [0, 0, 0, 2, 2, 2, 0, 0, 0]
+);
+
+const opacityKF = new NumberKeyframeTrack(
+  ".material.opacity",
+  [0, 1, 2, 3, 4, 5, 6],
+  [0, 1, 0, 1, 0, 1, 0]
+);
+
+const moveBlinkClip = new AnimationClip("move-n-blink", -1, [
+  positionKF,
+  opacityKF,
+]);
+```
+
+<!-- endtab -->
+
+{% endtabs %}
+
+---
+
+{% tabs animation3 %}
+<!-- tab World.js -->
+
+- `loop.updatables.push(parrot, flamingo, stork);`：将 `parrot`、`flamingo` 和 `stork` 加入 Loop 中以播放动画。
+
+```javascript
+import { loadBirds } from './components/birds/birds.js';
+import { createCamera } from './components/camera.js';
+import { createLights } from './components/lights.js';
+import { createScene } from './components/scene.js';
+
+import { createControls } from './systems/controls.js';
+import { createRenderer } from './systems/renderer.js';
+import { Resizer } from './systems/Resizer.js';
+import { Loop } from './systems/Loop.js';
+
+let camera;
+let controls;
+let renderer;
+let scene;
+let loop;
+
+class World {
+    constructor(container) {
+        camera = createCamera();
+        renderer = createRenderer();
+        scene = createScene();
+        loop = new Loop(camera, scene, renderer);
+        container.append(renderer.domElement);
+        controls = createControls(camera, renderer.domElement);
+
+        const { ambientLight, mainLight } = createLights();
+
+        loop.updatables.push(controls);
+        scene.add(ambientLight, mainLight);
+
+        const resizer = new Resizer(container, camera, renderer);
+    }
+
+    async init() {
+        const { parrot, flamingo, stork } = await loadBirds();
+
+        // move the target to the center of the front bird
+        controls.target.copy(parrot.position);
+
+        loop.updatables.push(parrot, flamingo, stork);
+        scene.add(parrot, flamingo, stork);
+    }
+
+    render() {
+        renderer.render(scene, camera);
+    }
+
+    start() {
+        loop.start();
+    }
+
+    stop() {
+        loop.stop();
+    }
+}
+
+export { World };
+```
+
+<!-- endtab -->
+
+<!-- tab setupModel.js -->
+
+- `const clip = data.animations[0];`：获取 `data` 中的第一个动画（`animations[0]`），存储在变量 `clip` 中。
+- `const mixer = new AnimationMixer(model);`：使用刚刚获取的模型(`model`)创建一个`AnimationMixer`实例。这个实例将用于管理模型的动画。
+- `const action = mixer.clipAction(clip);`：使用 `mixer.clipAction(clip)` 创建一个针对特定动画片段（`clip`）的动画操作（`action`）。
+- `action.play();`：开始播放这个动画。
+- `model.tick = (delta) => mixer.update(delta);`：更新动画。
+
+```javascript
+import { AnimationMixer } from 'three';
+
+function setupModel(data) {
+  const model = data.scene.children[0];
+  const clip = data.animations[0];
+
+  const mixer = new AnimationMixer(model);
+  const action = mixer.clipAction(clip);
+  action.play();
+
+  model.tick = (delta) => mixer.update(delta);
+
+  return model;
+}
+
+export { setupModel };
+```
+
+<!-- endtab -->
+
+{% endtabs %}
+
+​	<a href="pages/01_14" target="_blank"><b>演示</b></a>

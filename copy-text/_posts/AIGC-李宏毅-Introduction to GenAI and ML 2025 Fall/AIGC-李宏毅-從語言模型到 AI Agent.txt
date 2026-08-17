@@ -1,0 +1,284 @@
+---
+title: AIGC-李宏毅-從語言模型到 AI Agent
+date: Mon Dec 22 2025 18:59:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - 李宏毅
+  - 李宏毅Agent
+categories: 课程
+description: 李宏毅《生成式人工智慧與機器學習導論2025》课程学习笔记。
+---
+
+
+# 资源
+
+- [Introduction to GenAI and ML 2025 Fall](https://speech.ee.ntu.edu.tw/~hylee/GenAI-ML/2025-fall.php)
+- [第二講：AI 使用工具概念介紹.ipynb - Colab](https://colab.research.google.com/drive/1t347cQEyMikpHUHV_ap83A-mq9PMSl3O?usp=sharing)
+
+# 正文
+
+## 课程
+
+![webp](01.webp)
+
+如果 LLM 的输出 $f(x)$ 不达预期，而模型参数 $f$ 无法被改变，唯一可以做的就是提供合适的输入 $x$。
+
+- [[2206.03931\] Learning to Generate Prompts for Dialogue Generation through Reinforcement Learning](https://arxiv.org/abs/2206.03931)
+  - 对于 GPT-3，输入一些特定提示词能够让模型输出更长的内容
+- [Does Offering ChatGPT a Tip Cause it to Generate Better Text? An Analysis | Max Woolf's Blog](https://minimaxir.com/2024/02/chatgpt-tips-analysis/)
+  - 分析不同提示词对模型输出的影响
+
+![webp](02.webp)
+
+提供更好的上下文让模型更好地理解问题并输出上下文。
+
+| User Prompt          | Example                                                      |
+| -------------------- | ------------------------------------------------------------ |
+| 任务说明             | “写一封信跟老师说 meeting 要请假”                            |
+| 详细指引（optional） | “开头先道歉，然后说明迟到理由（因为身体不适），最后说之后再找时间跟老师更新进度” |
+| 额外条件             | “100 字以内”                                                 |
+| 输出风格             | “非常严肃”                                                   |
+
+| 项目           | System Prompt（系统提示）                                    | User Prompt（用户提示）                  |
+| -------------- | ------------------------------------------------------------ | ---------------------------------------- |
+| **定义**       | 模型的行为规范或角色设定                                     | 用户提出的具体问题或任务                 |
+| **作用**       | 决定模型的语气、风格、角色和回答范围                         | 决定模型需要生成的具体内容               |
+| **谁设置**     | 系统或开发者                                                 | 用户                                     |
+| **用户可见性** | 一般不可见                                                   | 用户直接输入，可随时修改                 |
+| **示例**       | “你是一个专业的前端工程师，请用简明易懂的方式回答技术问题。” | “帮我写一段 Python 代码，实现快速排序。” |
+| **特点**       | 持续影响对话中的所有回答                                     | 每次对话输入只影响当前轮回答             |
+
+| 项目         | Dialogue History（对话历史）                     | Long-term Memory（长期记忆）                   |
+| ------------ | ------------------------------------------------ | ---------------------------------------------- |
+| **定义**     | 模型当前对话会话中已经发生的所有交流记录         | 模型跨会话、长期保存的用户信息或偏好           |
+| **作用**     | 提供上下文，使模型能理解前文内容、延续对话逻辑   | 保留用户偏好、长期信息，实现个性化或持续性互动 |
+| **存储时间** | 临时，仅在当前会话有效                           | 长期，可跨多个会话使用                         |
+| **内容类型** | 前几轮的 System prompt、User prompt 和模型的回答 | 用户资料、兴趣偏好、历史问题、长期项目数据等   |
+| **示例**     | 对话中用户问过的问题、模型的回答                 | 用户喜欢的语言风格、常问的技术领域、项目偏好   |
+| **特点**     | 用于维持对话连贯性和上下文理解                   | 用于长期个性化和记忆追踪，可以影响未来对话     |
+
+（让 LLM 调用工具的一种方法）用一些特殊的 token 表示语言模型使用相关工具，将工具返回的结果整合得到最终的结果。
+
+![webp](03.webp)
+
+- [隆重介紹 ChatGPT 智慧體：串聯研究與行動 | OpenAI](https://openai.com/zh-Hant/index/introducing-chatgpt-agent/)
+  - 可以让语言模型使用键盘、鼠标操控电脑
+
+完整描述上下文的 token 通常很多，容易干扰到模型的判断，Context Engineering  可以将需要的信息从中过滤出来。常用方法：
+
+- Select
+  - 挑选关键字
+  - 挑选工具
+  - 挑选记忆
+- Compress
+- Multi-Agent
+  - [OpenBMB/ChatDev: Create Customized Software using Natural Language Idea (through LLM-powered Multi-Agent Collaboration)](https://github.com/OpenBMB/ChatDev)
+
+![webp](04.webp)
+
+## 代码
+
+初始化：
+
+```python
+from transformers import pipeline
+import json
+import torch
+from huggingface_hub import login
+
+login(token="hf_LXXXV", new_session=False)
+pipe = pipeline(
+    "text-generation",
+   "google/gemma-3-4b-it"
+)
+```
+
+定义乘和除工具：
+
+```python
+def multiply(a, b):
+  return a * b
+
+def devide(a, b):
+  return a / b
+```
+
+![webp](05.webp)
+
+使用工具：
+
+```python
+tool_use = """
+      有必要可以使用工具，每一個工具都是函式。
+      使用工具的方式為輸出 "<tool>[使用工具指令]</tool>"。
+      你會得到回傳結果 "<tool_output>[工具回傳的結果]</tool_output>"。
+      如果有使用工具的話，你應該告訴使用者工具回傳的結果。
+
+      可用工具：
+      multiply(a,b): 回傳 a 乘以 b
+      devide(a,b): 回傳 a 除以 b
+      """
+
+user_input = "111 x 222 / 777 =? " #正確答案是 31.71428...
+# user_input = "你好嗎?"
+
+messages = [
+             {
+        "role": "system",
+        "content": [
+            {"type": "text", "text": tool_use}
+        ]
+    },
+                   {
+        "role": "user",
+        "content": [
+            {"type": "text", "text": user_input}
+        ]
+    }
+]
+
+while True:
+
+  outputs = pipe(messages, max_new_tokens=1000) #跑語言模型
+
+  response = outputs[0]["generated_text"][-1]['content'] #語言模型實際的輸出
+
+  if ("</tool>" in response): #如果輸出有要「使用工具」，我們需要剖析語言模型要用甚麼工具，並且幫忙執行工具
+    commend = response.split("<tool>")[1].split("</tool>")[0] #從字串 response 中，抓取第一個 <tool> 和 </tool> 之間的內容，並把它存到變數 commend 裡
+    print("呼叫工具:", commend)
+    tool_output = str(eval(commend)) #eval(commend) 才能真的去執行 commend 這段程式碼
+    print("工具回傳:", tool_output)
+
+    response  =  response.split("</tool>")[0] + "</tool>" #把</tool>之後的內容截掉
+    messages.append(      {
+        "role": "assistant",
+        "content": [
+            {"type": "text", "text": response} #使用工具
+        ]
+    }
+    )
+
+    output = "<tool_output>" + tool_output + "</tool_output>"   #加入把工具執行結果
+    messages.append(      {
+        "role": "user",
+        "content": [
+            {"type": "text", "text": output} #工具回傳
+        ]
+    }
+    )
+  else:
+    print("最终輸出：", response)
+    break
+```
+
+```
+呼叫工具: multiply(111, 222)
+工具回傳: 24642
+呼叫工具: devide(24642, 777)
+工具回傳: 31.714285714285715
+最终輸出： 111 x 222 / 777 = 31.714285714285715
+```
+
+```mermaid
+flowchart TD
+    Start([开始]) --> A[用户输入: '111 x 222 / 777 =?']
+    A --> B[构建初始 messages<br/>包含 system 提示和 user 输入]
+    B --> C[进入 while True 循环]
+    C --> D[调用模型生成响应<br/>pipe messages, max_new_tokens=1000]
+    D --> E[提取模型输出到 response 变量]
+    E --> F{response 中<br/>包含 '&lt;/tool&gt;' 吗?}
+    
+    F -- 是 --> G[解析工具指令<br/>从 &lt;tool&gt; 和 &lt;/tool&gt; 间提取 commend]
+    G --> H[打印: '呼叫工具: commend']
+    H --> I[执行工具: eval commend]
+    I --> J[得到 tool_output 结果]
+    J --> K[打印: '工具回傳: tool_output']
+    K --> L[截取 response 到 &lt;/tool&gt; 为止]
+    L --> M[将 assistant 消息追加到 messages<br/>内容为截取后的 response]
+    M --> N[构建 tool_output 消息<br/>'&lt;tool_output&gt;' + 结果 + '&lt;/tool_output&gt;']
+    N --> O[将 user 消息追加到 messages<br/>内容为 tool_output]
+    O --> C
+    
+    F -- 否 --> P[打印: '最终輸出: response']
+    P --> Q[break 跳出循环]
+    Q --> End([结束])
+    
+    style Start fill:#90EE90
+    style End fill:#FFB6C1
+    style F fill:#FFE4B5
+    style C fill:#E6E6FA
+```
+
+```python
+def get_temperature(city,time):
+  return city + "在" + time + "的氣溫是攝氏 30000000000 度"
+
+tool_use = """
+      有必要可以使用工具，每一個工具都是函式。
+      使用工具的方式為輸出 "<tool>[使用工具指令]</tool>"。
+      你會得到回傳結果 "<tool_output>[工具回傳的結果]</tool_output>"。
+      如果有使用工具的話，你應該告訴使用者工具回傳的結果。
+
+      可用工具：
+      multiply(a,b): 回傳 a 乘以 b
+      devide(a,b): 回傳 a 除以 b
+      get_temperature(city,time): 回傳 city 在 time 的氣溫，注意 city 和 time 都是字串
+      """
+
+#user_input = "111 x 222 / 777 =? " #正確答案是 31.71428...
+#user_input = "你好嗎?"
+user_input = "告訴我长崎 12/32 天氣如何啊?"
+
+messages = [
+             {
+        "role": "system",
+        "content": [
+            {"type": "text", "text": tool_use}
+        ]
+    },
+                   {
+        "role": "user",
+        "content": [
+            {"type": "text", "text": user_input}
+        ]
+    }
+]
+
+while True:
+
+  outputs = pipe(messages, max_new_tokens=1000) #跑語言模型
+
+  response = outputs[0]["generated_text"][-1]['content'] #語言模型實際的輸出
+
+  if ("</tool>" in response): #如果輸出有要「使用工具」，我們需要剖析語言模型要用甚麼工具，並且幫忙執行工具
+    commend = response.split("<tool>")[1].split("</tool>")[0] #從字串 response 中，抓取第一個 <tool> 和 </tool> 之間的內容，並把它存到變數 commend 裡
+    print("呼叫工具:", commend)
+    tool_output = str(eval(commend)) #eval(commend) 才能真的去執行 commend 這段程式碼
+    print("工具回傳:", tool_output)
+
+    response  =  response.split("</tool>")[0] + "</tool>" #把</tool>之後的內容截掉
+    messages.append(      {
+        "role": "assistant",
+        "content": [
+            {"type": "text", "text": response} #使用工具
+        ]
+    }
+    )
+
+    output = "<tool_output>" + tool_output + "</tool_output>"   #加入把工具執行結果
+    messages.append(      {
+        "role": "user",
+        "content": [
+            {"type": "text", "text": output} #工具回傳
+        ]
+    }
+    )
+  else:
+    print("LLM的輸出(不顯示使用工具的過程)：", response)
+    break
+```
+
+```
+呼叫工具: get_temperature(city="長崎", time="12/32")
+工具回傳: 長崎在12/32的氣溫是攝氏 30000000000 度
+LLM的輸出(不顯示使用工具的過程)： 哇，長崎12/32的天氣非常熱！ 攝氏30000000000度！
+```

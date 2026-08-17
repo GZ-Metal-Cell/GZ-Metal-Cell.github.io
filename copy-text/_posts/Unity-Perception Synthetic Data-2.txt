@@ -1,0 +1,245 @@
+---
+title: Unity-Perception Synthetic Data-2
+date: Thu May 25 2023 07:26:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - Unity
+  - 数据集
+  - Perception
+categories: 论文
+description: Unity Perception 插件学习笔记。
+---
+
+
+# 正文
+
+> 在教程的第 1 阶段，我们学习了如何使用 Perception 软件包捆绑的 Randomizers。使用包含的 Randomizers，我们生成了 background 和 foreground 对象，随机化了它们的 position、rotation、texture 和 hue offset（色调偏移）（color）。在这个阶段，我们将为 `Directional Light` 对象构建一个自定义的灯光随机化器，它将控制 Scenario 的每个迭代中的灯光 intensity 和 color。我们还将学习如何将数据和逻辑捆绑在随机对象（如灯光）内，以便在每个对象的基础上更明确地定义和限制随机行为。
+
+## Building a Light Randomizer
+
+> 我们需要为光随机化创建两个 C# 类，`MyLightRandomizer` 和 `MyLightRandomizerTag`。（存放在一个 `.cs` 文件中）
+>
+> 第一类 `MyLightRandomizer` 将随机值进行采样，并将其分配给光的强度和颜色。
+>
+> 第二类 `MyLightRandomizer` 是将其添加到 `Directional Light` 的组件，使其成为 `MyLightRandomizer` 脚本的目标。
+
+​	在 `Assets` 文件夹下，`Create`-`Perception`-`C# Randomizer and RandomizerTag `，这将新建一个 `.cs` 文件，将其命名为 `MyLightRandomizerTag.cs`。打开它，修改其中的代码：
+
+```c#
+using System;
+using UnityEngine;
+using UnityEngine.Perception.Randomization.Parameters;
+using UnityEngine.Perception.Randomization.Randomizers;
+using UnityEngine.Perception.Randomization.Samplers;
+
+// Can only attach to GameObjects which also have a Light component attached
+// 连接且仅能连接到含有 Light 组件的 GameObject
+[RequireComponent(typeof(Light))]
+// This tag is used to "target" which objects in the scene will be randomized
+// MyLightRandomizerTag 是一个标记类，用于指定哪些物体可以被随机化器控制
+public class MyLightRandomizerTag : RandomizerTag { }
+
+[Serializable]
+// MyLightRandomizer 是一个随机化器类，用于在运行时间随机化物体属性。
+// 它使用 [AddRandomizerMenu("MyLightRandomizer")] 标签在 Perception 插件菜单中注册自己。
+[AddRandomizerMenu("MyLightRandomizer")]
+public class MyLightRandomizer : Randomizer
+{
+    // A parameter whose value uniformly ranges from 2 to 10 when sampled
+    // 采样时其值统一在 2 到 10 之间的参数
+    // 变量 lightIntensity 声明了一个名为 lightIntensity 的 FloatParameter 对象，
+    // 它将在随机化过程中表示光强度值，并且可以设置默认值。
+    // 其中，这个值的分布由 UniformSampler（均匀采样器）控制，范围是 0~1。
+    public FloatParameter lightIntensity = new() { value = new UniformSampler(0, 1) };
+
+    // Run this every randomization iteration
+    // 每次随机化迭代都运行此操作
+    protected override void OnIterationStart()
+    {
+        // Get all MyLightRandomizerTag's in the scene
+        // 获取场景中所有的 MyLightRandomizerTag
+        var tags = tagManager.Query<MyLightRandomizerTag>();
+        foreach (var tag in tags)
+        {
+            // Get the light attached to the object
+            // 获得其 Light 组件
+            var tagLight = tag.GetComponent<Light>();
+            // 获取其附加的 Light 组件并将其强度值设置为从 lightIntensity 随机采样的值
+            tagLight.intensity = lightIntensity.Sample();
+        }
+    }
+}
+```
+
+​	给 `SimulationScenario` 添加新的 Randomizers：`MyLightRandomizer`，将其 Range 设为 `(0.5, 3)`。
+
+![png](01.png)
+
+​	在 `Directional Light` 里添加组件 `My Light Randomizer Tag`
+
+![png](02.png)
+
+> 为了让我们的定向光成为场景中唯一的光源，这样我们就可以清楚地看到我们工作的效果，还有一件事要做。默认情况下，HDRP 使用环境照明。要禁用它：
+
+​	在之前绑定 `Motion Blur` 组件的对象中，确保 `Intenstiy=0`。新建组件 `Visual environment`，将 `Sky type` 打勾，设为 `None`。
+
+![png](03.png)
+
+​	开跑！
+
+![png](04.png)
+
+> 现在，让我们通过随机化光的颜色来增加更多的变化。
+
+​	操作：返回`MyLightRandomizerTag.cs`，在 `MyLightRandomizer` 类内，定义一个新的 `ColorRgbParameter`，在 `MyLightRandomizer` 类里定义新的变量：
+
+```c#
+public ColorRgbParameter color;
+```
+
+​	在遍历 `tags` 里添加：
+
+```c#
+tagLight.color = color.Sample();
+```
+
+![png](05.png)
+
+> 如果您现在检查 `MyLightRandomizer` 的 UI 片段，您会注意到添加了一个名为 `Color` 的新参数。此参数包括“红色”、“绿色”、“蓝色”和“阿尔法”的四个独立随机化值**请注意，所有这些值的有效范围是 0-1（而不是 0-255）**。您可以看到，红色、绿色和蓝色的采样范围当前设置为 0-1，这意味着“参数”覆盖了整个颜色范围。具有（0,0,0）RGB 分量的颜色基本上不发光。所以，让我们将最小值提高一点，以避免出现这种情况。
+
+​	将灯光颜色的最小值设在 0.4：
+
+![png](06.png)
+
+​	开跑！观察颜色变化：
+
+![png](07.png)
+
+## Bundle Data and Logic Inside RandomizerTags
+
+> 您有时可能需要将某些与随机化相关的数据或逻辑绑定到对象中，这些数据或逻辑是对象本身固有的。例如，Scene 中可能有多个灯光，但希望每个灯光都有**自己独特的强度范围**。为每个灯光添加一个新的“参数”到灯光随机化器中只是为了实现这一点，这将是非常乏味的。此外，这会使您的光随机化器过度地针对一个用例进行定制，从而限制随机化器的可重用性。
+
+> 在某些情况下，您可能需要在对象中包含某些逻辑，以便使随机化器代码更易于重用和维护。例如，您可能想要构建一把办公椅预设，以便在各种模拟中使用。这把椅子可能支持对其各个部分（靠背角度、座椅角度、座椅高度等）的一系列自定义。与其直接将“旋转参数”从随机化器映射到椅子内靠背角度对象的旋转，不如让椅子以 0 到 1 之间的简单浮动形式显示可能的角度范围。使用这种方法，随机化器只需要对浮点参数进行采样并将其指定给椅子。反过来，椅子上会附上一个脚本，知道如何将这个单一的浮子映射到某个合理的后角。你甚至可以将这个浮点映射到椅子的一个更复杂的状态。您的随机化器仍然只需要一个浮点参数。
+
+​	选择对象 `Directional Light`，`Ctrl+D` 复制出一个新的对象 `Directional Light (1)`，将 `Directional Light` 的 `Y rotation` 设为 `60`；将 `Directional Light (1)` 的 `Y rotation` 设为 `-60`。
+
+![png](08.png)
+
+> 这使得两个灯光从相反的角度照亮场景。请注意，`Directional Lights` 在 Unity 中的 position 不会影响它们照亮场景的方式，只会影响它们的 rotation。
+
+​	修改 `MyLightRandomizerTag.cs` 中的 `MyLightRandomizerTag` 类：
+
+```c#
+public class MyLightRandomizerTag : RandomizerTag {
+    public float minIntensity;  // 光源强度的最小值
+    public float maxIntensity;  // 光源强度的最大值
+
+    public void SetIntensity(float rawIntensity)
+    {
+        var tagLight = GetComponent<Light>();
+        // 接受一个原始强度值（rawIntensity），并按比例将其缩放到 [minIntensity, maxIntensity] 区间内的一个值
+        // 使用该值设置该游戏对象所连接的 Light 组件的强度
+        var scaledIntensity = rawIntensity * (maxIntensity - minIntensity) + minIntensity;
+        // 使用该值设置该游戏对象所连接的 Light 组件的强度
+        tagLight.intensity = scaledIntensity;
+    }
+}
+```
+
+> 在上面的代码中，我们创建了一个新的 `SetIntensity` 函数，它首先将 incoming intensity（假设在 0 到 1 之间）缩放到我们想要的范围，然后将其分配给光的强度。`Light` 组件现在是从这个 `Randomizer` 标签所附的 `GameObject` 中提取的。这之所以有效，是因为这个标签组件和 `Light` 分量都附在场景中的同一个对象上（这是我们创建的 directional lights 之一）。
+
+> 该组件已添加到我们的两个灯光中。我们现在需要设置所需的最小和最大强度，这可以通过_**Inspector**_视图来完成。
+
+![png](09.png)
+
+​	打开 `MyLightRandomizerTag.cs` 修改 `Randomizer` 类中的 `for` 循环：
+
+```c#
+var tags = tagManager.Query<MyLightRandomizerTag>();
+foreach (var tag in tags)
+{
+    // Get the light attached to the object
+    // 获得其 Light 组件
+    var tagLight = tag.GetComponent<Light>();
+    tagLight.color = color.Sample();
+    // Call the SetIntensity function we defined in the tag instead!
+    tag.SetIntensity(lightIntensity.Sample());
+}
+```
+
+​	开跑！
+
+![png](10.png)
+
+> 我们已经学会了如何：
+>
+> 1. 下载 Unity Editor 并安装 Perception Package
+> 2. 使用 Scenario 和 Randomizers 设置场景以生成合成数据
+> 3. 使用 Perception 附带的 Randomizers 对模拟进行随机化
+> 4. 在 C# 中创建自定义随机化器，以满足更复杂/特定的随机化需求
+
+---
+
+​	`MyLightRandomizerTag.cs` 完整代码：
+
+```c#
+using System;
+using UnityEngine;
+using UnityEngine.Perception.Randomization.Parameters;
+using UnityEngine.Perception.Randomization.Randomizers;
+using UnityEngine.Perception.Randomization.Samplers;
+
+// Can only attach to GameObjects which also have a Light component attached
+// 连接且仅能连接到含有 Light 组件的 GameObject
+[RequireComponent(typeof(Light))]
+// This tag is used to "target" which objects in the scene will be randomized
+// MyLightRandomizerTag 是一个标记类，用于指定哪些物体可以被随机化器控制
+public class MyLightRandomizerTag : RandomizerTag
+{
+    public float minIntensity;  // 光源强度的最小值
+    public float maxIntensity;  // 光源强度的最大值
+
+    public void SetIntensity(float rawIntensity)
+    {
+        var tagLight = GetComponent<Light>();
+        // 接受一个原始强度值（rawIntensity），并按比例将其缩放到 [minIntensity, maxIntensity] 区间内的一个值
+        // 使用该值设置该游戏对象所连接的 Light 组件的强度
+        var scaledIntensity = rawIntensity * (maxIntensity - minIntensity) + minIntensity;
+        // 使用该值设置该游戏对象所连接的 Light 组件的强度
+        tagLight.intensity = scaledIntensity;
+    }
+}
+
+[Serializable]
+// MyLightRandomizer 是一个随机化器类，用于在运行时间随机化物体属性。
+// 它使用 [AddRandomizerMenu("MyLightRandomizer")] 标签在 Perception 插件菜单中注册自己。
+[AddRandomizerMenu("MyLightRandomizer")]
+public class MyLightRandomizer : Randomizer
+{
+    // A parameter whose value uniformly ranges from 2 to 10 when sampled
+    // 采样时其值统一在2到10之间的参数
+    // 变量 lightIntensity 声明了一个名为 lightIntensity 的 FloatParameter 对象，
+    // 它将在随机化过程中表示光强度值，并且可以设置默认值。
+    // 其中，这个值的分布由 UniformSampler（均匀采样器）控制，范围是0~1。
+    public FloatParameter lightIntensity = new() { value = new UniformSampler(0, 1) };
+    public ColorRgbParameter color;
+
+    // Run this every randomization iteration
+    // 每次随机化迭代都运行此操作
+    protected override void OnIterationStart()
+    {
+        // Get all MyLightRandomizerTag's in the scene
+        // 获取场景中所有的 MyLightRandomizerTag
+        var tags = tagManager.Query<MyLightRandomizerTag>();
+        foreach (var tag in tags)
+        {
+            // Get the light attached to the object
+            // 获得其 Light 组件
+            var tagLight = tag.GetComponent<Light>();
+            tagLight.color = color.Sample();
+            // Call the SetIntensity function we defined in the tag instead!
+            tag.SetIntensity(lightIntensity.Sample());
+        }
+    }
+}
+```
+

@@ -1,0 +1,2032 @@
+---
+title: Unity-Deckbuilding Card Game in Unity
+date: Tue Mar 25 2025 15:13:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - Unity
+  - C#
+categories: 开发
+description: 学习自 Youtube 博主 Sinuous。
+---
+
+
+# 资源
+
+- [How to Make a Roguelike Deckbuilding Card Game in Unity | Ep. 1 - Card Data - YouTube](https://www.youtube.com/watch?v=j36rIYTvLkI&list=PLK8cTgLAUsQHkfCF73d43jhn185fu5h5c&index=1&ab_channel=Sinuous)
+- [DeckbuilderTutorialProject - 12.zip - Google Drive](https://drive.google.com/file/d/1h_B1e_3hshfNGe5jidOSTR3UESL8ShfX/view)
+- [Learn game development w/ Unity | Courses & tutorials in game design, VR, AR, & Real-time 3D | Unity Learn](https://learn.unity.com/)
+
+# 正文
+
+## Ep. 1 - Card Data
+
+新建一个 2D 项目，创建 `Assets/Scripts/Card.cs`：定义卡牌的属性。
+
+```c#
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace SinuousProductions
+{
+    [CreateAssetMenu(fileName = "New Card", menuName = "Card")]
+    public class Card : ScriptableObject
+    {
+        public string cardName;
+        public List<CardType> cardType;
+        public int health;
+        public int damageMin;
+        public int damageMax;
+        public Sprite cardSprite;
+        public List<DamageType> damageType;
+
+        public enum CardType
+        {
+            Fire,
+            Earth,
+            Water,
+            Dark,
+            Light,
+            Air
+        }
+
+        public enum DamageType
+        {
+            Fire,
+            Earth,
+            Water,
+            Dark,
+            Light,
+            Air
+        }
+
+    }
+}
+```
+
+如此做，便可在面板中创建一个序列化对象：
+
+![webp](1.1.webp)
+
+![webp](1.2.webp)
+
+## Ep. 2 - Card Prefab
+
+`Project Settings` 中开启 `TextMesh Pro`：
+
+![webp](2.1.webp)
+
+从 [Episode 2 - Google Drive](https://drive.google.com/drive/folders/1yG2ALBMraXyQEOmVcxkdreDnaFFH0rb8) 获取 `TutorialCard1.png` 放置在 `Assets/Sprites/` 下。
+
+从 [Neon Sans Font | GGBotNet | FontSpace](https://www.fontspace.com/neon-sans-font-f67056) 获取 `NeonSans-m2YEx.ttf` 放置在 `Assets/Fonts/` 下。右键之以创建 `Font Asset`。
+
+![webp](2.2.webp)
+
+场景中创建 `EventSystem`。
+
+从 [Modern RPG - Free icons pack | 2D 图标 | Unity Asset Store](https://assetstore.unity.com/packages/2d/gui/icons/modern-rpg-free-icons-pack-264706) 导入资产。
+
+![webp](2.3.webp)
+
+如此设置 UI 的布局并保存成 `CardPrefab`。`CardCanvas` 的 `Render Mode`  为 `World Space`。`CardImage` 的 `Witdh` 为 `2.5`，`Height` 为 `3.5`。
+
+## Ep. 3 - Card Display Script
+
+创建 `Assets/Scripts/CardDisplay.cs`：将 `Card` 中的信息显示出来。
+
+```c#
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+using SinuousProductions;
+
+public class CardDisplay : MonoBehaviour
+{
+    public Card cardData;
+    public Image cardImage;
+    public TMP_Text nameText;
+    public TMP_Text healthText;
+    public TMP_Text damageText;
+    public Image[] typeImages;
+
+    private Color[] cardColors =
+    {
+        Color.red,  // Fire
+        new Color(0.8f, 0.52f, 0.24f),  // Earth
+        Color.blue,  // Water
+        new Color(0.2327043f, 0.057181015f, 0.2052875f), // Dark
+        Color.yellow,  // Light
+        Color.cyan  // Air
+    };
+
+    private Color[] typeColors =
+    {
+        Color.red, // Fire
+        new Color(0.8f, 0.52f, 0.24f),  // Earth
+        Color.blue,  // Water
+        new Color(0.47f, 0f, 0.4f),  // Dark
+        Color.yellow,  // Light
+        Color.cyan  // Air
+    };
+
+    void Start()
+    {
+        UpdateCardDisplay();    
+    }
+
+    public void UpdateCardDisplay()
+    {
+        cardImage.color = typeColors[(int)cardData.cardType[0]];
+        nameText.text = cardData.cardName;
+        healthText.text = cardData.health.ToString();
+        damageText.text = $"{cardData.damageMin} - {cardData.damageMax}";
+
+        for (int i = 0; i < typeImages.Length; i++)
+        {
+            if (i < cardData.cardType.Count)
+            {
+                typeImages[i].gameObject.SetActive(true);
+                typeImages[i].color = typeColors[(int)cardData.cardType[i]];
+            }
+        }
+    }
+}
+```
+
+将 `CardDisplay` 绑到 `CardPrefab` 上。
+
+![webp](3.1.webp)
+
+## Ep. 4 - Hand Manager
+
+场景中创建如下的对象结构：
+
+-   `Canvas`
+    -   `HandManager`
+    -   `HandPosition`
+    -   `DeckManager`
+
+`Canvas` 如此设置：`Render Mode` 设为 `Screen Space - Overlay`，`UI Scale Mode` 设为 `Scale With Screen Size`。
+
+![webp](4.1.webp)
+
+>   [!Note]
+>
+>   | `Render Mode`            | 适用场景                                             |
+>   | ------------------------ | ---------------------------------------------------- |
+>   | `Screen Space - Overlay` | UI 始终在前面，不受摄像机影响（HUD、菜单）。         |
+>   | `Screen Space - Camera`  | UI 受摄像机影响，可与 3D 物体有深度关系（FPS HUD）。 |
+>   | `World Space`            | UI 作为 3D 物体放置在场景中（3D UI，NPC 头顶血条）。 |
+>
+>   | `UI Scale Mode`          | 适用场景                                  |
+>   | ------------------------ | ----------------------------------------- |
+>   | `Constant Pixel Size`    | UI 大小固定，适用于固定分辨率游戏。       |
+>   | `Scale With Screen Size` | UI 适应不同分辨率，常用于跨平台游戏。     |
+>   | `Constant Physical Size` | UI 依据设备 DPI 缩放，适用于 AR/VR 应用。 |
+
+创建 `Assets/Scripts/HandManager.cs`，用于将卡牌创建到 `HandPosition` 处。
+
+```c# 
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using SinuousProductions;
+
+public class HandManager : MonoBehaviour
+{
+    public GameObject cardPrefab;
+    public Transform handTransform;
+    public float fanSpread = 7.5f;
+    public float cardSpacing = 100f;
+    public float verticalSpacing = 10f;
+    public List<GameObject> cardsInHand = new List<GameObject>();
+
+    public void AddCardToHand(Card cardData)
+    {
+        GameObject newCard = Instantiate(cardPrefab, handTransform.position, Quaternion.identity, handTransform);
+        cardsInHand.Add(newCard);
+
+        newCard.GetComponent<CardDisplay>().cardData = cardData;
+
+        UpdateHandVisuals();
+    }
+
+    private void UpdateHandVisuals()
+    {
+        int cardCount = cardsInHand.Count;
+
+        if (cardCount == 1)
+        {
+            cardsInHand[0].transform.localRotation = Quaternion.Euler(0f, 0f, 0f);
+            cardsInHand[0].transform.localPosition = new Vector3(0f, 0f, 0f);
+            return;
+        }
+
+        for(int i = 0; i < cardCount; i++)
+        {
+            float rotationAngle = (fanSpread * (i / (cardCount - 1) / 2f));
+            cardsInHand[i].transform.localRotation = Quaternion.Euler(0f, 0f, rotationAngle);
+
+            float horizontalOffset = (cardSpacing * (i - (cardCount - 1) / 2f));
+            float normalizedPosition = (2f * i / (cardCount - 1) - 1f);
+            float verticalOffset = verticalSpacing * (1 - normalizedPosition * normalizedPosition);
+            cardsInHand[i].transform.localPosition = new Vector3(horizontalOffset, verticalOffset, 0f);
+        }
+    }
+}
+```
+
+创建 `Assets/Scripts/DeckManager.cs`：控制牌库以及从牌库中抽牌的逻辑。
+
+```c#
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using SinuousProductions;
+
+public class DeckManager : MonoBehaviour
+{
+    public List<Card> allCards = new List<Card>();
+    private int currentIndex = 0;
+
+    public void DrawCard(HandManager handManager)
+    {
+        if (allCards.Count == 0)
+            return;
+        Card nextCard = allCards[currentIndex];
+        handManager.AddCardToHand(nextCard);
+        currentIndex = (currentIndex + 1) % allCards.Count;
+    }
+}
+```
+
+创建 `Assets/Editor/DeckManagerEditor.cs`：给 `DeckManager` 加一个抽牌按钮的 UI。
+
+```c#
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+#if UNITY_EDITOR
+using UnityEditor;
+[CustomEditor(typeof(DeckManager))]
+public class DeckManagerEditor : Editor
+{
+    public override void OnInspectorGUI()
+    {
+        DrawDefaultInspector();
+        DeckManager deckManager = (DeckManager)target;
+        if (GUILayout.Button("Draw Next Card"))
+        {
+            HandManager handManager = FindObjectOfType<HandManager>();
+            if (handManager != null)
+            {
+                deckManager.DrawCard(handManager);
+            }
+        }
+    }
+}
+#endif
+```
+
+调整各个对象的 Transform（`CardPrefab` 中 `Scale` 的 `X` 和 `Y` 设为 `100`），得到如图的效果。
+
+![webp](4.2.webp)
+
+## Ep. 5 - Card Movement
+
+从 [Episode 5 - Google Drive](https://drive.google.com/drive/folders/1oQKA3ZhhmtrXPIpkSW1BcaPq34IgwSmv) 中导入 `Assets/Sprites/TutorialCardHighlight.png` 和 `Assets/Scripts/DragUIObject.cs`。
+
+将 `TutorialCardHighlight.png` 的 `Pixels Per Unit` 设为 `256`（**每 256 像素宽度的图片，在 Unity 中相当于 1 个单位**（而非默认的 100 像素 = 1 单位））。
+
+![webp](5.1.webp)
+
+在 `CardPrefab` 中创建一个 `CardHighlight` 的 `Image`。
+
+将场景中的 `Canvas Scaler` 的 `Screen Match Mode` 设为 `Expand`。
+
+![webp](5.2.webp)
+
+>   [!Note]
+>
+>   | 模式                      | 作用                                                         | 适用场景                                                     |
+>   | ------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+>   | **Match Width Or Height** | 让 UI 根据宽度、高度比例进行缩放。                           | 适用于不同屏幕比例的 UI 适配。                               |
+>   | **Expand**                | 如果屏幕比参考分辨率 **更大**，则 UI **扩展** 以填满屏幕；如果屏幕更小，则 UI 按原比例缩小。 | UI 需要 **填满整个屏幕**，但不会裁剪任何部分（如全屏 UI）。  |
+>   | **Shrink**                | 如果屏幕比参考分辨率 **更大**，UI 保持原比例，不放大；如果屏幕更小，则 UI 缩小以适应屏幕。 | UI 需要 **完全显示**，但可能不会填满整个屏幕（如 UI 不能超出某个范围）。 |
+
+![webp](5.3.webp)
+
+给 `CardPrefab` 添加 `Box Collider 2D` 和 `Drag UI Object`。
+
+创建一个 `Assets/Scripts/CardMovement.cs`：
+
+```c#
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.EventSystems;
+
+public class CardMovement : MonoBehaviour, IDragHandler, IPointerDownHandler, IPointerEnterHandler, IPointerExitHandler
+{
+    private RectTransform rectTransform;
+    private Canvas canvas;
+    private Vector2 originalLocalPointerPosition;
+    private Vector3 originalPanelLocalPosition;
+    private Vector3 originalScale;
+    private int currentState = 0;
+    private Quaternion originalRotation;
+    private Vector3 originalPosition;
+
+    [SerializeField] private float selectScale = 1.1f;
+    [SerializeField] private Vector2 cardPlay;
+    [SerializeField] private Vector3 playPosition;
+    [SerializeField] private GameObject glowEffect;
+    [SerializeField] private GameObject playArrow;
+
+    void Awake()
+    {
+        // 记录初始位置
+        rectTransform = GetComponent<RectTransform>();
+        canvas = GetComponentInParent<Canvas>();
+        originalScale = rectTransform.localScale;
+        originalPosition = rectTransform.localPosition;
+        originalRotation = rectTransform.localRotation;
+    }
+    
+    void Update()
+    {
+        // 处理状态机
+        switch (currentState)
+        {
+            case 1:
+                HandleHoverState();  // 处理悬停状态
+                break;
+            case 2:
+                HandleDragState();  // 处理拖拽状态
+                if (!Input.GetMouseButton(0))  // 如果鼠标松开
+                {
+                    TransitionToState0();  // 恢复默认状态
+                }
+                break;
+            case 3:
+                HandlePlayState();  // 处理放置状态
+                if (!Input.GetMouseButton(0))  // 如果鼠标松开
+                {
+                    TransitionToState0();  // 恢复默认状态
+                }
+                break;
+        }
+    }
+
+    private void TransitionToState0()
+    {
+        currentState = 0;
+        rectTransform.localScale = originalScale;
+        rectTransform.localRotation = originalRotation;
+        rectTransform.localPosition = originalPosition;
+        glowEffect.SetActive(false);
+        playArrow.SetActive(false);
+    }
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if (currentState == 0)
+        {
+            originalPosition = rectTransform.localPosition;
+            originalRotation = rectTransform.localRotation;
+            originalScale = rectTransform.localScale;
+            currentState = 1;
+        }
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        if (currentState == 1)
+        {
+            currentState = 0;
+            TransitionToState0();
+        }
+    }
+
+    public void OnPointerDown(PointerEventData eventData)
+    {
+        if (currentState == 1)
+        {
+            currentState = 2;
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(canvas.GetComponent<RectTransform>(),
+                eventData.position, eventData.pressEventCamera, out originalLocalPointerPosition);
+            originalPanelLocalPosition = rectTransform.localPosition;
+        }
+    }
+
+    public void OnDrag(PointerEventData eventData)
+    {
+        if (currentState == 2)
+        {
+            Vector2 localPointerPosition;
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(canvas.GetComponent<RectTransform>(),
+                eventData.position, eventData.pressEventCamera, out localPointerPosition))
+            {
+                rectTransform.position = Input.mousePosition;
+
+                if (rectTransform.localPosition.y > cardPlay.y)
+                {
+                    currentState = 3;
+                    playArrow.SetActive(true);
+                    rectTransform.localPosition = playPosition;
+                }
+            }
+        }
+    }
+
+    private void HandleHoverState()
+    {
+        glowEffect.SetActive(true);
+        rectTransform.localScale = originalScale * selectScale;
+    }
+
+    private void HandleDragState()
+    {
+        rectTransform.localRotation = Quaternion.identity;
+    }
+
+    private void HandlePlayState()
+    {
+        rectTransform.localPosition = playPosition;
+        rectTransform.localRotation = Quaternion.identity;
+
+        if (Input.mousePosition.y < cardPlay.y)
+        {
+            currentState = 2;
+            playArrow.SetActive(false);
+        }
+    }
+}
+```
+
+>   [!Note]
+>
+>   `IDragHandler`：处理拖拽事件（`OnDrag`）。
+>
+>   `IPointerDownHandler`：处理鼠标按下事件（`OnPointerDown`）。
+>
+>   `IPointerEnterHandler`：处理鼠标悬停事件（`OnPointerEnter`）。
+>
+>   `IPointerExitHandler`：处理鼠标移出事件（`OnPointerExit`）。
+>
+>   ---
+>
+>   **悬停**：鼠标进入时，卡牌变大并高亮。
+>
+>   **拖拽**：鼠标按下后，卡牌可拖动。
+>
+>   **放置**：如果拖到一定高度，卡牌会被固定到 `playPosition`，并显示 `playArrow`。
+
+在 `CardPrefab` 上绑定 `Card Movement`。
+
+![webp](5.4.webp)
+
+展示效果：
+
+![webp](5.5.webp)
+
+## Ep. 6 - Arc Renderer
+
+创建 `ArrowHead.prefab`：
+
+![webp](6.1.webp)
+
+创建 `Dot.prefab`：
+
+![webp](6.2.webp)
+
+创建 `Assets/Scripts/ArcRenderer.cs`：
+
+```c#
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class ArcRenderer : MonoBehaviour
+{
+    public GameObject arrowPrefab;  // 箭头头部
+    public GameObject dotPrefab;  // 点
+    public int poolSize = 50;  // 最多由多少个点组成箭头柄部
+    private List<GameObject> dotPool = new List<GameObject>();
+    private GameObject arrowInstance;  // 箭头
+
+    public float spacing = 50;  // 点间距
+    public float arrowAngleAdjustment = 0;  // 箭头方向调整
+    public int dotsToSkip = 1;
+    private Vector3 arrowDirection;  // 箭头指向
+
+    void Start()
+    {
+        arrowInstance = Instantiate(arrowPrefab, transform);
+        arrowInstance.transform.localPosition = Vector3.zero;
+        InitializeDotPool(poolSize);
+    }
+
+    // 更新抛物线
+    void Update()
+    {
+        Vector3 mousePos = Input.mousePosition;
+        mousePos.z = 0;
+        Vector3 startPos = transform.position;
+        Vector3 midPoint = CalculateMidPoint(startPos, mousePos);
+
+        UpdateArc(startPos, midPoint, mousePos);
+        PositionAndRotateArrow(mousePos);
+    }
+
+    // 计算抛物线轨迹
+    void UpdateArc(Vector3 start, Vector3 mid, Vector3 end)
+    {
+        int numDots = Mathf.CeilToInt(Vector3.Distance(start, end) / spacing);
+
+        for(int i = 0; i < numDots && i < dotPool.Count; i++)
+        {
+            float t = i / (float)numDots;
+            t = Mathf.Clamp(t, 0f, 1f);
+            Vector3 position = QuadraticBezierPoint(start, mid, end, t);
+
+            if (i != numDots - dotsToSkip)
+            {
+                dotPool[i].transform.position = position;
+                dotPool[i].SetActive(true);
+            }
+
+            if (i == numDots - (dotsToSkip + 1) && i - dotsToSkip + 1 >= 0)
+            {
+                arrowDirection = dotPool[i].transform.position;
+            }
+        }
+
+        for(int i = numDots - dotsToSkip; i < dotPool.Count; i++)
+        {
+            if (i > 0)
+            {
+                dotPool[i].SetActive(false);
+            }
+        }
+    }
+
+    // 让箭头朝向正确方向
+    void PositionAndRotateArrow(Vector3 position)
+    {
+        arrowInstance.transform.position = position;
+        Vector3 direction = arrowDirection - position;
+        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+        angle += arrowAngleAdjustment;
+        arrowInstance.transform.rotation = Quaternion.AngleAxis(angle, Vector3.forward);
+    }
+
+    // 计算抛物线中间控制点
+    Vector3 CalculateMidPoint(Vector3 start, Vector3 end)
+    {
+        Vector3 midpoint = (start + end) / 2;
+        float arcHeight = Vector3.Distance(start, end) / 3f;
+        midpoint.y += arcHeight;
+        return midpoint;
+    }
+
+    // 计算贝塞尔曲线上的点
+    Vector3 QuadraticBezierPoint(Vector3 start, Vector3 control, Vector3 end, float t)
+    {
+        float u = 1 - t;
+        float tt = t * t;
+        float uu = u * u;
+
+        Vector3 point = uu * start;
+        point += 2 * u * t * control;
+        point += tt * end;
+        return point;
+    }
+
+    // 初始化对象池
+    void InitializeDotPool(int count)
+    {
+        for (int i = 0; i < count; i++)
+        {
+            GameObject dot = Instantiate(dotPrefab, Vector3.zero, Quaternion.identity, transform);
+            dot.SetActive(false);
+            dotPool.Add(dot);
+        }
+    }
+}
+```
+
+>   [!Note]
+>
+>   计算 **二次贝塞尔曲线** 的插值公式：
+>   $$
+>   P(t) = (1-t)^2 P_0 + 2(1-t)t P_1 + t^2 P_2
+>   $$
+>   `P_0`：起点
+>
+>   `P_1`：中间控制点
+>
+>   `P_2`：终点
+>
+>   `t`：插值参数（范围 `0 ~ 1`）。
+
+`CardPreab` 下的 `PlayArrow` 绑定好逻辑：
+
+![webp](6.3.webp)
+
+运行结果：
+
+![webp](6.4.webp)
+
+## Ep. 7 - Game Manager
+
+创建以下类：
+
+-   `Assets/Scripts/OptionsManager.cs`
+-   `Assets/Scripts/AudioManager.cs`
+-   `Assets/Scripts/GameManager.cs`
+
+给 `AudioManager`、`DeckManager` 和 `OptionsManager` 绑成预制体，放入 `Assets/Resources/Prefabs/` 下。
+
+![webp](7.1.webp)
+
+>   [!Note]
+>
+>   在 Unity 中，`Resources/` 目录下的文件具有以下特点：
+>
+>   **1. 可在运行时动态加载**
+>
+>   -   `Resources/` 目录下的资源可以使用 `Resources.Load()`、`Resources.LoadAsync()` 等方法在运行时动态加载。
+>   -   适用于需要按需加载的资源，比如 UI 界面、音效、材质等。
+>
+>   **2. 打包进最终构建**
+>
+>   -   `Resources/` 目录下的所有文件都会被打包到最终的游戏构建（Build）中，即使它们没有被场景直接引用。
+>   -   这意味着即使一个资源在场景中未使用，只要它在 `Resources/` 里，就会被包含在游戏中，可能会增加游戏包体积。
+>
+>   **3. 无法按需卸载**
+>
+>   -   `Resources.Load()` 加载的资源不会自动被卸载，必须手动调用 `Resources.UnloadUnusedAssets()` 或 `Resources.UnloadAsset()` 来释放不再使用的资源。
+>   -   这可能导致内存占用增加，特别是在移动端或资源密集型应用中要注意管理。
+>
+>   **4. 无法通过 Addressables 直接管理**
+>
+>   -   Unity 推荐使用 **Addressables** 进行资源管理，而不是 `Resources/`，因为 `Resources/` 目录的资源无法动态更新，也不能按需加载和卸载得很好。
+>
+>   **5. 路径限制**
+>
+>   -   `Resources.Load()` 加载资源时，不需要写 `Resources/`，但需要写相对路径（不带后缀）。
+>
+>   -   例如，`Resources/Textures/MyTexture.png` 需要通过：
+>
+>       ```c#
+>       Texture2D texture = Resources.Load<Texture2D>("Textures/MyTexture");
+>       ```
+>
+>       来加载，而不是 `Resources.Load("Resources/Textures/MyTexture.png")`。
+>
+>   **6. 适用场景**
+>
+>   -   适用于一些小型的、不会动态更新的资源，如游戏内置的默认 UI 图标、音效等。
+>   -   不适用于大规模资源管理，Unity 推荐使用 **Addressables** 进行更灵活的资源管理。
+>
+>   **总结：** `Resources/` 目录适用于少量、固定的资源，适合简单的项目或临时加载需求。但由于无法有效管理内存和包体积，在复杂项目中，推荐使用 **Addressables** 或 **AssetBundles** 代替。
+
+编辑 `GameManager`，使用单例模式：
+
+```c#
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class GameManager : MonoBehaviour
+{
+    public static GameManager Instance { get; private set; }
+
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else if (Instance != this)
+        {
+            Destroy(gameObject);
+        }
+    }
+}
+```
+
+>   [!Note]
+>
+>   **`private set` 限制外部修改**
+>
+>   -   `Instance` 只有 **类内部**（`GameManager` 内部）可以修改，外部代码不能直接赋值：
+>
+>       ```c#
+>       GameManager.Instance = new GameManager(); // ❌ 错误，外部无法修改
+>       ```
+>
+>   -   这样可以避免其他类意外修改单例实例，提高安全性。
+
+继续写 `GameManager`：
+
+```c#
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class GameManager : MonoBehaviour
+{
+    public static GameManager Instance { get; private set; }
+
+    private int playerHealth;
+    private int playerXP;
+    private int difficulty = 5;
+
+    public OptionsManager OptionsManager { get; private set; }
+    public AudioManager AudioManager { get; private set; }
+    public DeckManager DeckManager { get; private set; }
+
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+            InitializeManagers();
+        }
+        else if (Instance != this)
+        {
+            Destroy(gameObject);
+        }
+    }
+
+    private void InitializeManagers()
+    {
+        OptionsManager = GetComponentInChildren<OptionsManager>();
+        AudioManager = GetComponentInChildren<AudioManager>();
+        DeckManager = GetComponentInChildren<DeckManager>();
+
+        if (OptionsManager == null)
+        {
+            GameObject prefab = Resources.Load<GameObject>("Prefabs/OptionsManager");
+            if (prefab != null)
+            {
+                Instantiate(prefab, transform.position, Quaternion.identity, transform);
+                OptionsManager = GetComponentInChildren<OptionsManager>();
+            } else
+            {
+                Debug.LogError("OptionsManager prefab not found!");
+            }
+        }
+
+        if (AudioManager == null)
+        {
+            GameObject prefab = Resources.Load<GameObject>("Prefabs/AudioManager");
+            if (prefab != null)
+            {
+                Instantiate(prefab, transform.position, Quaternion.identity, transform);
+                AudioManager = GetComponentInChildren<AudioManager>();
+            }
+            else
+            {
+                Debug.LogError("AudioManager prefab not found!");
+            }
+        }
+
+        if (DeckManager == null)
+        {
+            GameObject prefab = Resources.Load<GameObject>("Prefabs/DeckManager");
+            if (prefab != null)
+            {
+                Instantiate(prefab, transform.position, Quaternion.identity, transform);
+                DeckManager = GetComponentInChildren<DeckManager>();
+            }
+            else
+            {
+                Debug.LogError("DeckManager prefab not found!");
+            }
+        }
+    }
+
+    public int PlayerHealth
+    {
+        get { return playerHealth; }
+        set { playerHealth = value; }
+    }
+
+    public int PlayerXP
+    {
+        get { return playerXP; }
+        set { playerXP = value; }
+    }
+
+    public int Difficulty
+    {
+        get { return difficulty; }
+        set { difficulty = value; }
+    }
+}
+
+```
+
+![webp](7.2.webp)
+
+## Ep. 8 - Grid Manager
+
+从 [Episode 8 - Google Drive](https://drive.google.com/drive/folders/1_AMgvNg6kv922x4tRBaYSdB8BQYsI43y) 处获取 `GridOutline.png`，放在 `Assets/Sprites` 下。
+
+太大了，我压缩一下。
+
+![png](GridOutline.png)
+
+设置一下 `Pixels Per Unit` 及 `Border`：
+
+![webp](8.1.webp)
+
+创建 `Assets/Scripts/GridCell.cs`：
+
+```c#
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class GridCell : MonoBehaviour
+{
+    public Vector2 gridIndex;
+    public bool cellFull = false;
+    public GameObject objectInCell;
+}
+```
+
+创建 `Assets/Prefabs/GridCellPrefab.prefab`：
+
+![webp](8.2.webp)
+
+创建 `Assets/Scripts/GridManager.cs`：
+
+```c#
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class GridManager : MonoBehaviour
+{
+    public int width = 8;
+    public int height = 4;
+    public GameObject gridCellPrefab;
+    public List<GameObject> gridObjects = new List<GameObject>();
+    public GameObject[,] gridCells;
+
+    private void Start()
+    {
+        CreateGrid();
+    }
+
+    private void CreateGrid()
+    {
+        gridCells = new GameObject[width, height];
+        Vector2 centerOffset = new Vector2(width / 2.0f - 0.5f, height / 2.0f - 0.5f);
+
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                Vector2 gridPosition = new Vector2(x, y);
+                Vector2 spawnPosition = gridPosition - centerOffset;
+
+                GameObject gridCell = Instantiate(gridCellPrefab, spawnPosition, Quaternion.identity);
+
+                gridCell.transform.SetParent(transform);
+
+                gridCell.GetComponent<GridCell>().gridIndex = gridPosition;
+
+                gridCells[x, y] = gridCell;
+            }
+        }
+    }
+
+    public bool AddObjectToGrid(GameObject obj, Vector2 gridPosition)
+    {
+        if (gridPosition.x >= 0 && gridPosition.x < width && gridPosition.y >= 0 && gridPosition.y < height)
+        {
+            GridCell cell = gridCells[(int)gridPosition.x, (int)gridPosition.y].GetComponent<GridCell>();
+
+            if (cell.cellFull)
+                return false;
+            else
+            {
+                GameObject newObj = Instantiate(obj, cell.GetComponent<Transform>().position, Quaternion.identity);
+                newObj.transform.SetParent(transform);
+                gridObjects.Add(newObj);
+                cell.objectInCell = newObj;
+                cell.cellFull = true;
+                return true;
+            }
+        }
+        return false;
+    }
+}
+
+```
+
+效果：
+
+![webp](8.3.webp)
+
+## Ep. 9 - Grid Population
+
+下载这些内容：
+
+-   [Free Golem Chibi 2D Game Sprites - CraftPix.net](https://craftpix.net/freebies/free-golems-chibi-2d-game-sprites/)
+-   [Free Fallen Angel Chibi 2D Game Sprites - CraftPix.net](https://craftpix.net/freebies/free-fallen-angel-chibi-2d-game-sprites/)
+-   [Free Golem Tiny Style 2D Character Sprites - CraftPix.net](https://craftpix.net/freebies/free-golem-tiny-style-2d-character-sprites/)
+-   [Free Wraith Tiny Style 2D Sprites - CraftPix.net](https://craftpix.net/freebies/free-wraith-tiny-style-2d-sprites/)
+-   [Free Minotaur Tiny Style 2D Sprites - CraftPix.net](https://craftpix.net/freebies/free-minotaur-tiny-style-2d-sprites/)
+-   [Free Reaper Man Chibi 2D Game Sprites - CraftPix.net](https://craftpix.net/freebies/free-reaper-man-chibi-2d-game-sprites/)
+
+往项目中导入 `craftpix-net-563568-free-wraith-tiny-style-2d-sprites.zip/Unity Package/Wraith_01.unitypackage`：
+
+（原教程说在导入非 Asset Store 的资产时，最好新建一个空白工程再导入，以避免导入过程中修改了什么关键设置）
+
+![webp](9.1.webp)
+
+整理文件结构：
+
+![webp](9.2.webp)
+
+更新 `Assets/Scripts/Card.cs`，添加一点卡牌数据：
+
+```c#
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace SinuousProductions
+{
+    [CreateAssetMenu(fileName = "New Card", menuName = "Card")]
+    public class Card : ScriptableObject
+    {
+        public string cardName;
+        public List<CardType> cardType;
+        public int health;
+        public int damageMin;
+        public int damageMax;
+        public Sprite cardSprite;
+        public List<DamageType> damageType;
+        public GameObject prefab;
+        public int range;
+        public AttackPattern attackPattern;
+        public PriorityTarget priorityTarget;
+
+        public enum CardType
+        {
+            Fire,
+            Earth,
+            Water,
+            Dark,
+            Light,
+            Air
+        }
+
+        public enum DamageType
+        {
+            Fire,
+            Earth,
+            Water,
+            Dark,
+            Light,
+            Air
+        }
+
+        public enum AttackPattern
+        {
+            Single,
+            Multitarget,
+            Cross,
+            Column,
+            Row,
+            TwoByTwo,
+            FourByFour
+        }
+
+        public enum PriorityTarget
+        {
+            Close,
+            Far,
+            LeastCurrentHealth,
+            MostCurrentHealth,
+            MostMaxHealth,
+            MostDamage
+        }
+    }
+}
+```
+
+![webp](9.3.webp)
+
+更新 `Assets/Scripts/HandManager.cs`：
+
+```c#
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using SinuousProductions;
+
+public class HandManager : MonoBehaviour
+{
+    public GameObject cardPrefab;
+    public Transform handTransform;
+    public float fanSpread = 7.5f;
+    public float cardSpacing = 100f;
+    public float verticalSpacing = 10f;
+    public int maxHandSize = 12;
+    public List<GameObject> cardsInHand = new List<GameObject>();
+
+    public void AddCardToHand(Card cardData)
+    {
+        GameObject newCard = Instantiate(cardPrefab, handTransform.position, Quaternion.identity, handTransform);
+        cardsInHand.Add(newCard);
+
+        newCard.GetComponent<CardDisplay>().cardData = cardData;
+        newCard.GetComponent<CardDisplay>().UpdateCardDisplay();
+
+        UpdateHandVisuals();
+    }
+
+    private void UpdateHandVisuals()
+    {
+        int cardCount = cardsInHand.Count;
+
+        if (cardCount == 1)
+        {
+            cardsInHand[0].transform.localRotation = Quaternion.Euler(0f, 0f, 0f);
+            cardsInHand[0].transform.localPosition = new Vector3(0f, 0f, 0f);
+            return;
+        }
+
+        for(int i = 0; i < cardCount; i++)
+        {
+            float rotationAngle = (fanSpread * (i / (cardCount - 1) / 2f));
+            cardsInHand[i].transform.localRotation = Quaternion.Euler(0f, 0f, rotationAngle);
+
+            float horizontalOffset = (cardSpacing * (i - (cardCount - 1) / 2f));
+            float normalizedPosition = (2f * i / (cardCount - 1) - 1f);
+            float verticalOffset = verticalSpacing * (1 - normalizedPosition * normalizedPosition);
+            cardsInHand[i].transform.localPosition = new Vector3(horizontalOffset, verticalOffset, 0f);
+        }
+    }
+}
+```
+
+更新 `Assets/Scripts/CardDisplay.cs`：
+
+```c#
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using SinuousProductions;
+
+public class HandManager : MonoBehaviour
+{
+    public GameObject cardPrefab;
+    public Transform handTransform;
+    public float fanSpread = 7.5f;
+    public float cardSpacing = 100f;
+    public float verticalSpacing = 10f;
+    public int maxHandSize = 12;
+    public List<GameObject> cardsInHand = new List<GameObject>();
+
+    public void AddCardToHand(Card cardData)
+    {
+        GameObject newCard = Instantiate(cardPrefab, handTransform.position, Quaternion.identity, handTransform);
+        cardsInHand.Add(newCard);
+
+        newCard.GetComponent<CardDisplay>().cardData = cardData;
+        newCard.GetComponent<CardDisplay>().UpdateCardDisplay();
+
+        UpdateHandVisuals();
+    }
+
+    public void UpdateHandVisuals()
+    {
+        int cardCount = cardsInHand.Count;
+
+        if (cardCount == 1)
+        {
+            cardsInHand[0].transform.localRotation = Quaternion.Euler(0f, 0f, 0f);
+            cardsInHand[0].transform.localPosition = new Vector3(0f, 0f, 0f);
+            return;
+        }
+
+        for (int i = 0; i < cardCount; i++)
+        {
+            float rotationAngle = (fanSpread * (i / (cardCount - 1) / 2f));
+            cardsInHand[i].transform.localRotation = Quaternion.Euler(0f, 0f, rotationAngle);
+
+            float horizontalOffset = (cardSpacing * (i - (cardCount - 1) / 2f));
+            float normalizedPosition = (2f * i / (cardCount - 1) - 1f);
+            float verticalOffset = verticalSpacing * (1 - normalizedPosition * normalizedPosition);
+            cardsInHand[i].transform.localPosition = new Vector3(horizontalOffset, verticalOffset, 0f);
+        }
+    }
+}
+```
+
+![webp](9.4.webp)
+
+更新 `Assets/Scripts/GridManager.cs`，当棋盘上有对象时，更新数组：
+
+```c#
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class GridManager : MonoBehaviour
+{
+    public int width = 8;
+    public int height = 4;
+    public GameObject gridCellPrefab;
+    public List<GameObject> gridObjects = new List<GameObject>();
+    public GameObject[,] gridCells;
+
+    private void Start()
+    {
+        CreateGrid();
+    }
+
+    private void CreateGrid()
+    {
+        gridCells = new GameObject[width, height];
+        Vector2 centerOffset = new Vector2(width / 2.0f - 0.5f, height / 2.0f - 0.5f);
+
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                Vector2 gridPosition = new Vector2(x, y);
+                Vector2 spawnPosition = gridPosition - centerOffset;
+
+                GameObject gridCell = Instantiate(gridCellPrefab, spawnPosition, Quaternion.identity);
+
+                gridCell.transform.SetParent(transform);
+
+                gridCell.GetComponent<GridCell>().gridIndex = gridPosition;
+
+                gridCells[x, y] = gridCell;
+            }
+        }
+    }
+
+    public bool AddObjectToGrid(GameObject obj, Vector2 gridPosition)
+    {
+        if (gridPosition.x >= 0 && gridPosition.x < width && gridPosition.y >= 0 && gridPosition.y < height)
+        {
+            GridCell cell = gridCells[(int)gridPosition.x, (int)gridPosition.y].GetComponent<GridCell>();
+
+            if (cell.cellFull)
+                return false;
+            else
+            {
+                GameObject newObj = Instantiate(obj, cell.GetComponent<Transform>().position, Quaternion.identity);
+                newObj.transform.SetParent(transform);
+                gridObjects.Add(newObj);
+                cell.objectInCell = newObj;
+                cell.cellFull = true;
+                return true;
+            }
+        }
+        return false;
+    }
+}
+```
+
+更新 `Assets/Scripts/CardMovement.cs`，更新 `HandlePlayState()`，射线检测是否点击到了格子，随后将卡牌放到对应格子中：
+
+```c#
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.EventSystems;
+
+public class CardMovement : MonoBehaviour, IDragHandler, IPointerDownHandler, IPointerEnterHandler, IPointerExitHandler
+{
+    private RectTransform rectTransform;
+    private Canvas canvas;
+    private Vector2 originalLocalPointerPosition;
+    private Vector3 originalPanelLocalPosition;
+    private Vector3 originalScale;
+    private int currentState = 0;
+    private Quaternion originalRotation;
+    private Vector3 originalPosition;
+    private RectTransform canvasRectTransform;
+    private GridManager gridManager;
+
+    [SerializeField] private float selectScale = 1.1f;
+    [SerializeField] private Vector2 cardPlay;
+    [SerializeField] private Vector3 playPosition;
+    [SerializeField] private GameObject glowEffect;
+    [SerializeField] private GameObject playArrow;
+
+    void Awake()
+    {
+        // 记录初始位置
+        rectTransform = GetComponent<RectTransform>();
+        canvas = GetComponentInParent<Canvas>();
+
+        if (canvas != null)
+        {
+            canvasRectTransform = canvas.GetComponent<RectTransform>();
+        }
+
+        originalScale = rectTransform.localScale;
+        originalPosition = rectTransform.localPosition;
+        originalRotation = rectTransform.localRotation;
+        gridManager = FindObjectOfType<GridManager>();
+    }
+
+    void Update()
+    {
+        // 处理状态机
+        switch (currentState)
+        {
+            case 1:
+                HandleHoverState();  // 处理悬停状态
+                break;
+            case 2:
+                HandleDragState();  // 处理拖拽状态
+                if (!Input.GetMouseButton(0))  // 如果鼠标松开
+                {
+                    TransitionToState0();  // 恢复默认状态
+                }
+                break;
+            case 3:
+                HandlePlayState();  // 处理放置状态
+                if (!Input.GetMouseButton(0))  // 如果鼠标松开
+                {
+                    TransitionToState0();  // 恢复默认状态
+                }
+                break;
+        }
+    }
+
+    private void TransitionToState0()
+    {
+        currentState = 0;
+        rectTransform.localScale = originalScale;
+        rectTransform.localRotation = originalRotation;
+        rectTransform.localPosition = originalPosition;
+        glowEffect.SetActive(false);
+    }
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if (currentState == 0)
+        {
+            originalPosition = rectTransform.localPosition;
+            originalRotation = rectTransform.localRotation;
+            originalScale = rectTransform.localScale;
+            currentState = 1;
+        }
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        if (currentState == 1)
+        {
+            currentState = 0;
+            TransitionToState0();
+        }
+    }
+
+    public void OnPointerDown(PointerEventData eventData)
+    {
+        if (currentState == 1)
+        {
+            currentState = 2;
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(canvas.GetComponent<RectTransform>(),
+                eventData.position, eventData.pressEventCamera, out originalLocalPointerPosition);
+            originalPanelLocalPosition = rectTransform.localPosition;
+        }
+    }
+
+    public void OnDrag(PointerEventData eventData)
+    {
+        if (currentState == 2)
+        {
+            Vector2 localPointerPosition;
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(canvas.GetComponent<RectTransform>(),
+                eventData.position, eventData.pressEventCamera, out localPointerPosition))
+            {
+                rectTransform.position = Input.mousePosition;
+
+                if (rectTransform.localPosition.y > cardPlay.y)
+                {
+                    currentState = 3;
+                    playArrow.SetActive(true);
+                    rectTransform.localPosition = playPosition;
+                }
+            }
+        }
+    }
+
+    private void HandleHoverState()
+    {
+        glowEffect.SetActive(true);
+        rectTransform.localScale = originalScale * selectScale;
+    }
+
+    private void HandleDragState()
+    {
+        rectTransform.localRotation = Quaternion.identity;
+    }
+
+    private void HandlePlayState()
+    {
+        rectTransform.localPosition = playPosition;
+        rectTransform.localRotation = Quaternion.identity;
+
+        if(!Input.GetMouseButton(0))
+        {
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            RaycastHit2D hit = Physics2D.Raycast(ray.origin, ray.direction);
+
+            if (hit.collider != null && hit.collider.GetComponent<GridCell>())
+            {
+                GridCell cell = hit.collider.GetComponent<GridCell>();
+                Vector2 targetPos = cell.gridIndex;
+                if (gridManager.AddObjectToGrid(GetComponent<CardDisplay>().cardData.prefab, targetPos))
+                {
+                    HandManager handManager = FindObjectOfType<HandManager>();
+                    handManager.cardsInHand.Remove(gameObject);
+                    handManager.UpdateHandVisuals();
+                }
+            }
+        }
+
+        if (Input.mousePosition.y < cardPlay.y)
+        {
+            currentState = 2;
+            playArrow.SetActive(false);
+        }
+    }
+}
+```
+
+![webp](9.5.webp)
+
+## Ep. 10a - Grid Cell Display
+
+给 `GameManager` 中添加一个变量：
+
+```c#
+public bool PlayingCard = false;
+```
+
+在 `CardMovement` 类中的 `TransitionToState0()` 访问它：
+
+```c#
+private void TransitionToState0()
+{
+    currentState = 0;
+    GameManager.Instance.PlayingCard = false;
+    rectTransform.localScale = originalScale;
+    rectTransform.localRotation = originalRotation;
+    rectTransform.localPosition = originalPosition;
+    glowEffect.SetActive(false);
+    playArrow.SetActive(false);
+}
+```
+
+`HandlePlayState()`：
+
+```c#
+private void HandlePlayState()
+{
+    if (!GameManager.Instance.PlayingCard)
+    {
+        GameManager.Instance.PlayingCard = true;
+    }
+    ...
+}
+```
+
+修改 `CardMovement.cs`，添加 `maxColumn` 及其相关逻辑：
+
+```c#
+public class CardMovement : MonoBehaviour, IDragHandler, IPointerDownHandler, IPointerEnterHandler, IPointerExitHandler
+{
+
+    private readonly int maxColumn = 2;
+
+    ...
+
+    private void HandlePlayState()
+    {
+		...
+
+        if(!Input.GetMouseButton(0))
+        {
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            RaycastHit2D hit = Physics2D.Raycast(ray.origin, ray.direction);
+
+            if (hit.collider != null && hit.collider.GetComponent<GridCell>())
+            {
+                GridCell cell = hit.collider.GetComponent<GridCell>();
+                Vector2 targetPos = cell.gridIndex;
+                if (cell.gridIndex.x < maxColumn && gridManager.AddObjectToGrid(GetComponent<CardDisplay>().cardData.prefab, targetPos))
+                {
+                    HandManager handManager = FindObjectOfType<HandManager>();
+                    handManager.cardsInHand.Remove(gameObject);
+                    handManager.UpdateHandVisuals();
+                }
+            }
+        }
+
+		...
+    }
+}
+```
+
+创建一个 `Square` 的 `Sprites`。
+
+![webp](10.1.webp)
+
+调整 `GridCellPrefab`，颜色一个深一个浅。
+
+![webp](10.2.webp)
+
+对于 `Assets/Prefabs/GridCellPrefab.prefab`，为其绑定一个 `Assets/Scripts/GridCellDisplay.cs`，控制 `GridCellPrefab.prefab` 的显示逻辑：
+
+```c#
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+[RequireComponent(typeof(SpriteRenderer))]
+public class GridCellDisplay : MonoBehaviour
+{
+    private SpriteRenderer spriteRenderer;
+    public Color highlightColor = Color.cyan;
+    public Color posColor = Color.green;
+    public Color negColor = Color.red;
+    private Color originalColor;
+    public GameObject[] backgrounds;
+    private bool setBackground = false;
+    public GridCell gridCell;
+
+    void Awake()
+    {
+        spriteRenderer = GetComponent<SpriteRenderer>();
+        gridCell = GetComponent<GridCell>();
+        originalColor = spriteRenderer.color;
+    }
+
+    void Update()
+    {
+        if (!setBackground)
+            SetBackground();
+    }
+
+    private void OnMouseEnter()
+    {
+        if (!GameManager.Instance.PlayingCard)
+        {
+            spriteRenderer.color = highlightColor;
+        } else if (gridCell.cellFull || gridCell.gridIndex.x > 1)
+        {
+            spriteRenderer.color = negColor;
+        } else
+        {
+            spriteRenderer.color = posColor;
+        }
+    }
+
+    private void OnMouseExit()
+    {
+        spriteRenderer.color = originalColor;
+    }
+
+    private void SetBackground()
+    {
+        if (gridCell.gridIndex.x % 2 != 0)
+        {
+            backgrounds[0].SetActive(true);
+        }
+        if (gridCell.gridIndex.y % 2 != 0)
+        {
+            backgrounds[1].SetActive(true);
+        }
+        setBackground = true;
+    }
+}
+```
+
+最终效果（鼠标移到表格上面边框会高亮）：
+
+![webp](10.3.webp)
+
+## Ep. 10b - Piles
+
+创建弃牌堆 `Assets/Scripts/DiscardManager.cs`：
+
+```c#
+using System.Collections;
+using System.Collections.Generic;
+using SinuousProductions;
+using TMPro;
+using UnityEngine;
+
+public class DiscardManager : MonoBehaviour
+{
+    [SerializeField] public List<Card> discardCards = new List<Card>();
+    public TextMeshProUGUI discardCount;
+    public int discardCardsCount;
+
+    private void Awake()
+    {
+        UpdateDiscardCount();
+    }
+
+    private void UpdateDiscardCount()
+    {
+        discardCount.text = discardCards.Count.ToString();
+        discardCardsCount = discardCards.Count;
+    }
+
+    public void AddToDiscard(Card card)
+    {
+        if (card != null)
+        {
+            discardCards.Add(card);
+            UpdateDiscardCount();
+        }
+    }
+
+    public Card PullFromDiscard()
+    {
+        if (discardCards.Count > 0)
+        {
+            Card cardToReturn = discardCards[discardCards.Count - 1];
+            discardCards.RemoveAt(discardCards.Count - 1);
+            UpdateDiscardCount();
+            return cardToReturn;
+        } else
+        {
+            return null;
+        }
+    }
+
+    public bool PullSelectCardFromDiscard(Card card)
+    {
+        if (discardCards.Count > 0 && discardCards.Contains(card))
+        {
+            discardCards.Remove(card);
+            UpdateDiscardCount();
+            return true;
+        } else
+        {
+            return false;
+        }
+    }
+
+    public List<Card> PullAllFromDiscard()
+    {
+        if (discardCards.Count > 0)
+        {
+            List<Card> cardsToReturn = new List<Card>(discardCards);
+            discardCards.Clear();
+            UpdateDiscardCount();
+            return cardsToReturn;
+        } else
+        {
+            return new List<Card>();
+        }
+    }
+}
+```
+
+![webp](10.4.webp)
+
+创建 `Assets/Scripts/Utility.cs`：
+
+```c#
+using System.Collections.Generic;
+
+namespace SinuousProductions
+{
+    public static class Utility
+    {
+        public static void Shuffle<T>(List<T> list)
+        {
+            System.Random random = new System.Random();
+            int n = list.Count;
+            for(int i = n - 1; i > 0; i--)
+            {
+                int j = random.Next(i + 1);
+                (list[j], list[i]) = (list[i], list[j]);
+            }
+        }
+    }
+}
+```
+
+创建（抽）牌堆 `Assets/Scripts/DrawPileManager.cs`：
+
+```c#
+using System.Collections.Generic;
+using SinuousProductions;
+using TMPro;
+using UnityEngine;
+
+public class DrawPileManager : MonoBehaviour
+{
+    public List<Card> drawPile = new List<Card>();
+
+    private int currentIndex = 0;
+    public int maxHandSize;
+    public int currentHandSize;
+    private HandManager handManager;
+    private DiscardManager discardManager;
+
+    public TextMeshProUGUI drawPileCounter;
+
+    void Start()
+    {
+        handManager = FindObjectOfType<HandManager>();
+    }
+
+    void Update()
+    {
+        if (handManager != null)
+        {
+            currentHandSize = handManager.cardsInHand.Count;
+        }
+    }
+
+    public void MakeDrawPile(List<Card> cardsToAdd)
+    {
+        drawPile.AddRange(cardsToAdd);
+        Utility.Shuffle(drawPile);
+        UpdateDrawPileCount();
+    }
+
+    public void BattleSetup(int numberOfCardsToDraw, int setMaxHandSize)
+    {
+        maxHandSize = setMaxHandSize;
+        for (int i = 0; i < numberOfCardsToDraw; i++)
+        {
+            DrawCard(handManager);
+        }
+    }
+
+    public void DrawCard(HandManager handManager)
+    {
+        if (drawPile.Count == 0)
+        {
+            RefillDeckFromDiscard();
+        }
+
+        if (drawPile.Count > 0 && currentHandSize < maxHandSize)
+        {
+            Card nextCard = drawPile[currentIndex];
+            handManager.AddCardToHand(nextCard);
+            drawPile.RemoveAt(currentIndex);
+            if (drawPile.Count > 0) currentIndex %= drawPile.Count; // Ensure currentIndex is always valid
+        }
+        UpdateDrawPileCount();
+    }
+
+    private void RefillDeckFromDiscard()
+    {
+        if (discardManager == null)
+        {
+            discardManager = FindObjectOfType<DiscardManager>();
+        }
+
+        if (discardManager != null && discardManager.discardCardsCount > 0)
+        {
+            drawPile = discardManager.PullAllFromDiscard();
+            Utility.Shuffle(drawPile);
+            currentIndex = 0;
+        }
+        UpdateDrawPileCount();
+    }
+
+    private void UpdateDrawPileCount()
+    {
+        drawPileCounter.text = drawPile.Count.ToString();
+    }
+}
+
+```
+
+更新 `Assets/Scripts/DeckManager.cs`：
+
+```c#
+using System.Collections.Generic;
+using SinuousProductions;
+using UnityEngine;
+
+public class DeckManager : MonoBehaviour
+{
+    public List<Card> allCards = new List<Card>();
+
+    public int startingHandSize = 6;
+    public int maxHandSize = 12;
+    private HandManager handManager;
+    private DrawPileManager drawPileManager;
+    private bool startBattleRun = true;
+
+    void Start()
+    {
+        // Load all card assets from the Resources folder
+        Card[] cards = Resources.LoadAll<Card>("Cards");
+
+        // Add the loaded cards to the allCards list
+        allCards.AddRange(cards);
+    }
+
+    void Awake()
+    {
+        if (drawPileManager == null)
+        {
+            drawPileManager = FindObjectOfType<DrawPileManager>();
+        }
+        if (handManager == null)
+        {
+            handManager = FindObjectOfType<HandManager>();
+        }
+    }
+
+    void Update()
+    {
+        if (startBattleRun)
+        {
+            BattleSetup();
+        }
+    }
+
+    public void BattleSetup()
+    {
+        handManager.BattleSetup(maxHandSize);
+        drawPileManager.MakeDrawPile(allCards);
+        drawPileManager.BattleSetup(startingHandSize, maxHandSize);
+        startBattleRun = false;
+    }
+}
+```
+
+往 `Assets/Scripts/HandManager.cs` 中添加 `BattleSetup()`：
+
+```c#
+public void BattleSetup(int setMaxHandSize)
+{
+    maxHandSize = setMaxHandSize;
+}
+```
+
+编辑 `Assets/Editor/DeckManagerEditor.cs`：
+
+```c#
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+#if UNITY_EDITOR
+using UnityEditor;
+[CustomEditor(typeof(DrawPileManager))]
+public class DeckManagerEditor : Editor
+{
+    public override void OnInspectorGUI()
+    {
+        DrawDefaultInspector();
+        DrawPileManager deckManager = (DrawPileManager)target;
+        if (GUILayout.Button("Draw Next Card"))
+        {
+            HandManager handManager = FindObjectOfType<HandManager>();
+            if (handManager != null)
+            {
+                deckManager.DrawCard(handManager);
+            }
+        }
+    }
+}
+#endif
+```
+
+设置牌堆：
+
+![webp](10.5.webp)
+
+![webp](10.6.webp)
+
+## Unity Troubleshooting Tutorial | Ep. 1
+
+这篇视频是为了解决卡牌的 UI 遮挡住网格导致鼠标射线检测失效的问题。
+
+创建一个 `Grid` 层。
+
+![webp](T1.1.webp)
+
+给 `GridCellPrefab` 设为 `Grid` 层。
+
+![webp](T1.2.webp)
+
+修改 `Assets/Scripts/CardMovement.cs`，使其值只检测 `Grid` 层。
+
+```c#
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.EventSystems;
+
+public class CardMovement : MonoBehaviour, IDragHandler, IPointerDownHandler, IPointerEnterHandler, IPointerExitHandler
+{
+    private RectTransform rectTransform;
+    private Canvas canvas;
+    private Vector2 originalLocalPointerPosition;
+    private Vector3 originalPanelLocalPosition;
+    private Vector3 originalScale;
+    private int currentState = 0;
+    private Quaternion originalRotation;
+    private Vector3 originalPosition;
+    private RectTransform canvasRectTransform;
+    private GridManager gridManager;
+    private readonly int maxColumn = 2;
+
+    [SerializeField] private float selectScale = 1.1f;
+    [SerializeField] private Vector2 cardPlay;
+    [SerializeField] private Vector3 playPosition;
+    [SerializeField] private GameObject glowEffect;
+    [SerializeField] private GameObject playArrow;
+
+    private LayerMask gridLayerMask;
+
+    void Awake()
+    {
+        // 记录初始位置
+        rectTransform = GetComponent<RectTransform>();
+        canvas = GetComponentInParent<Canvas>();
+
+        if (canvas != null)
+        {
+            canvasRectTransform = canvas.GetComponent<RectTransform>();
+        }
+
+        originalScale = rectTransform.localScale;
+        originalPosition = rectTransform.localPosition;
+        originalRotation = rectTransform.localRotation;
+        gridManager = FindObjectOfType<GridManager>();
+
+        gridLayerMask = LayerMask.GetMask("Grid");
+    }
+
+    void Update()
+    {
+        // 处理状态机
+        switch (currentState)
+        {
+            case 1:
+                HandleHoverState();  // 处理悬停状态
+                break;
+            case 2:
+                HandleDragState();  // 处理拖拽状态
+                if (!Input.GetMouseButton(0))  // 如果鼠标松开
+                {
+                    TransitionToState0();  // 恢复默认状态
+                }
+                break;
+            case 3:
+                HandlePlayState();  // 处理放置状态
+                if (!Input.GetMouseButton(0))  // 如果鼠标松开
+                {
+                    TransitionToState0();  // 恢复默认状态
+                }
+                break;
+        }
+    }
+
+    private void TransitionToState0()
+    {
+        currentState = 0;
+        GameManager.Instance.PlayingCard = false;
+        rectTransform.localScale = originalScale;
+        rectTransform.localRotation = originalRotation;
+        rectTransform.localPosition = originalPosition;
+        glowEffect.SetActive(false);
+        playArrow.SetActive(false);
+    }
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if (currentState == 0)
+        {
+            originalPosition = rectTransform.localPosition;
+            originalRotation = rectTransform.localRotation;
+            originalScale = rectTransform.localScale;
+            currentState = 1;
+        }
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        if (currentState == 1)
+        {
+            currentState = 0;
+            TransitionToState0();
+        }
+    }
+
+    public void OnPointerDown(PointerEventData eventData)
+    {
+        if (currentState == 1)
+        {
+            currentState = 2;
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(canvas.GetComponent<RectTransform>(),
+                eventData.position, eventData.pressEventCamera, out originalLocalPointerPosition);
+            originalPanelLocalPosition = rectTransform.localPosition;
+        }
+    }
+
+    public void OnDrag(PointerEventData eventData)
+    {
+        if (currentState == 2)
+        {
+            Vector2 localPointerPosition;
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(canvas.GetComponent<RectTransform>(),
+                eventData.position, eventData.pressEventCamera, out localPointerPosition))
+            {
+                rectTransform.position = Input.mousePosition;
+
+                if (rectTransform.localPosition.y > cardPlay.y)
+                {
+                    currentState = 3;
+                    playArrow.SetActive(true);
+                    rectTransform.localPosition = playPosition;
+                }
+            }
+        }
+    }
+
+    private void HandleHoverState()
+    {
+        glowEffect.SetActive(true);
+        rectTransform.localScale = originalScale * selectScale;
+    }
+
+    private void HandleDragState()
+    {
+        rectTransform.localRotation = Quaternion.identity;
+    }
+
+    private void HandlePlayState()
+    {
+        if (!GameManager.Instance.PlayingCard)
+        {
+            GameManager.Instance.PlayingCard = true;
+        }
+        rectTransform.localPosition = playPosition;
+        rectTransform.localRotation = Quaternion.identity;
+
+        if(!Input.GetMouseButton(0))
+        {
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            RaycastHit2D hit = Physics2D.Raycast(ray.origin, ray.direction, Mathf.Infinity, gridLayerMask);
+
+            if (hit.collider != null && hit.collider.GetComponent<GridCell>())
+            {
+                GridCell cell = hit.collider.GetComponent<GridCell>();
+                Vector2 targetPos = cell.gridIndex;
+                if (cell.gridIndex.x < maxColumn && gridManager.AddObjectToGrid(GetComponent<CardDisplay>().cardData.prefab, targetPos))
+                {
+                    HandManager handManager = FindObjectOfType<HandManager>();
+                    handManager.cardsInHand.Remove(gameObject);
+                    handManager.UpdateHandVisuals();
+                }
+            }
+        }
+
+        if (Input.mousePosition.y < cardPlay.y)
+        {
+            currentState = 2;
+            playArrow.SetActive(false);
+        }
+    }
+}
+```
+
+## Ep. 11 - Spell Cards
+
+创建一个额外的法术卡类继承卡牌类。
+
+## Ep.12 - Spell Effects
+
+鼠标移到玩家上时会出现属性提示。

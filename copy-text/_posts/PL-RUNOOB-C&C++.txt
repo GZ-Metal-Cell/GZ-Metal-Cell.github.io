@@ -1,0 +1,2413 @@
+---
+title: PL-RUNOOB-C&C++
+date: Tue Nov 18 2025 17:52:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - C
+  - C++
+  - RUNOOB
+categories: 课程
+description: 该好好工作了，小骑士！
+---
+
+
+# 资源
+
+- [C 语言教程 | 菜鸟教程](https://www.runoob.com/cprogramming/c-tutorial.html)
+- [C++ 教程 | 菜鸟教程](https://www.runoob.com/cplusplus/cpp-tutorial.html)
+
+只记录自认为不太熟悉的部分。
+
+# 正文
+
+## 工具概念
+
+### 编译器
+
+**语法检查**：编译器会在编译阶段检查语法和类型错误。
+
+**代码优化**：
+
+- 常量折叠
+- 循环展开
+- 内联函数
+
+**多平台支持**：不同编译器对目标操作系统和 CPU 架构支持不同。
+
+**链接库**：
+
+- 静态库（`.lib` / `.a`）
+- 动态库（`.dll` / `.so` / `.dylib`）
+
+**标准兼容性**：支持 C++11/14/17/20 等标准，或 C89/C99/C11 等。
+
+| 编译器                              | 特点                               | 平台                       |
+| ----------------------------------- | ---------------------------------- | -------------------------- |
+| **GCC (GNU Compiler Collection)**   | 免费开源、支持多种语言、优化能力强 | Linux/Windows(MinGW)/macOS |
+| **Clang/LLVM**                      | 语法错误提示友好、快速、模块化     | Linux/macOS/Windows        |
+| **MSVC (Microsoft Visual C++)**     | 与 Windows/Visual Studio 紧密结合  | Windows                    |
+| **Intel C++ Compiler (ICC/oneAPI)** | 高性能优化，适合科学计算           | Windows/Linux              |
+| **TinyCC (TCC)**                    | 极小，编译速度快                   | Linux/Windows              |
+
+### gcc/g++
+
+VSC 的终端（Powershell）使用 gcc 快速编译并执行（PowerShell 调用 cmd命令）：
+
+```shell
+cmd /c "gcc main.c -o main.exe && main.exe"
+```
+
+![webp](01.webp)
+
+Linux 下：
+
+```shell
+gcc main.c -o main && ./main
+```
+
+**如果是 C++，则需要用 g++：**
+
+```shell
+cmd /c "g++ main.cpp -o main.exe && main.exe"
+```
+
+#### C/C++互相调用编译
+
+项目结构如下：
+
+```
+interop/
+├── main.c       // C 文件，调用 C++ 函数
+├── helper.cpp   // C++ 文件，调用 C 函数
+├── helper.h     // C 函数头文件
+└── cppfunc.h    // C++ 函数声明给 C 调用
+```
+
+**helper.h**（C 头文件，给 C++ 调用）
+
+```c
+#ifndef HELPER_H
+#define HELPER_H
+
+#ifdef __cplusplus
+extern "C" {  // 避免 C++ 名字修饰
+#endif
+
+int c_add(int a, int b);
+int c_subtract(int a, int b);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // HELPER_H
+```
+
+**helper.cpp**（C++ 文件，实现 C 函数，并定义 C++ 函数）
+
+```c++
+#include "helper.h"
+#include <iostream>
+
+// C 函数实现（被 C++ 调用）
+int c_add(int a, int b) {
+    return a + b;
+}
+
+int c_subtract(int a, int b) {
+    return a - b;
+}
+
+// C++ 函数（准备被 C 调用）
+extern "C" int cpp_multiply(int a, int b) {
+    return a * b;
+}
+
+extern "C" void cpp_hello() {
+    std::cout << "Hello from C++!" << std::endl;
+}
+```
+
+**cppfunc.h**（给 C 调用 C++ 函数的头文件）
+
+```c++
+#ifndef CPPFUNC_H
+#define CPPFUNC_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+int cpp_multiply(int a, int b);
+void cpp_hello();
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // CPPFUNC_H
+
+```
+
+**main.c**（C 文件，调用 C++ 函数，同时测试 C++ 调用 C 函数）
+
+```c
+#include <stdio.h>
+#include "cppfunc.h"
+#include "helper.h"
+
+int main() {
+    int a = 10, b = 5;
+
+    // C 调用 C++ 函数
+    int prod = cpp_multiply(a, b);
+    printf("C calling C++ multiply: %d\n", prod);
+
+    cpp_hello(); // 调用 C++ 输出
+
+    // C++ 调用 C 函数
+    int sum = c_add(a, b);
+    int diff = c_subtract(a, b);
+    printf("C++ calling C add: %d\n", sum);
+    printf("C++ calling C subtract: %d\n", diff);
+
+    return 0;
+}
+```
+
+编译并运行：
+
+```shell
+g++ -c helper.cpp       # 编译 C++ 文件
+gcc -c main.c           # 编译 C 文件
+g++ main.o helper.o -o interop_example   # 链接生成可执行文件
+./interop_example
+```
+
+```shell
+C calling C++ multiply: 50
+Hello from C++!
+C++ calling C add: 15
+C++ calling C subtract: 5
+```
+
+**C++ 调用 C**
+
+- C 头文件使用 `extern "C"` 包装，避免名字修饰。
+
+**C 调用 C++**
+
+- C++ 函数也用 `extern "C"` 对外暴露，否则 C 编译器找不到符号。
+
+**编译顺序**
+
+- 先单独编译 C++ 和 C 文件，再用 **g++** 链接。
+- 使用 g++ 链接可以自动处理 C++ 标准库。
+
+### CMake
+
+| 角色       | 功能                                   |
+| ---------- | -------------------------------------- |
+| **CMake**  | 生成构建系统文件（Makefile / VS 工程） |
+| **编译器** | 将源码编译成目标文件和可执行文件       |
+| **链接器** | 将目标文件与库链接成最终可执行程序     |
+
+CMake 是 “指挥官”，编译器是 “工人”，链接器是 “装配工”。
+
+#### 快速开始
+
+工程结构如下：
+
+```
+MyProject/
+├── CMakeLists.txt
+├── src/
+│   ├── foo.cpp
+│   └── main.cpp
+└── include/
+    └── foo.h
+```
+
+`main.cpp`：
+
+```c++
+#include <iostream>
+#include "foo.h"
+
+int main() {
+    print_message("Hello from foo.cpp!");
+    int result = add(3, 5);
+    std::cout << "3 + 5 = " << result << std::endl;
+    return 0;
+}
+```
+
+`foo.cpp`：
+
+```c++
+#include "foo.h"
+#include <iostream>
+
+void print_message(const std::string& msg) {
+    std::cout << "[Message] " << msg << std::endl;
+}
+
+int add(int a, int b) {
+    return a + b;
+}
+```
+
+`foo.h`：
+
+```c++
+#pragma once
+#include <string>
+
+void print_message(const std::string& msg);
+int add(int a, int b);
+```
+
+`CMakeLists.txt`：
+
+```cmake
+# 1. 指定 CMake 最低版本
+cmake_minimum_required(VERSION 3.10)
+
+# 2. 定义项目名称和语言
+project(MyProject VERSION 1.0 LANGUAGES CXX)
+
+# 3. 指定 C++ 标准
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+
+# 4. 查找 src 目录下所有 cpp 文件
+file(GLOB SOURCES "src/*.cpp")
+
+# 5. 添加可执行文件
+add_executable(${PROJECT_NAME} ${SOURCES})
+
+# 6. 添加 include 目录
+target_include_directories(${PROJECT_NAME} PRIVATE include)
+
+# 7. 设置编译选项
+if(MSVC)
+    # 所有配置都开启警告等级 4
+    target_compile_options(${PROJECT_NAME} PRIVATE /W4)
+
+    # 仅 Release 配置开启优化
+    target_compile_options(${PROJECT_NAME} PRIVATE
+        $<$<CONFIG:Release>:/O2>
+    )
+
+    # 仅 Debug 配置开启运行时检查
+    target_compile_options(${PROJECT_NAME} PRIVATE
+        $<$<CONFIG:Debug>:/RTC1>
+    )
+
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    # GCC / Clang
+    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra)
+    target_compile_options(${PROJECT_NAME} PRIVATE
+        $<$<CONFIG:Release>:-O2>
+    )
+endif()
+
+```
+
+编译并运行（VS2022）：
+
+```shell
+mkdir build
+cd build
+cmake -G "Visual Studio 17 2022" ..
+```
+
+```
+-- The CXX compiler identification is MSVC 19.44.35213.0
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: D:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Configuring done (5.4s)
+-- Generating done (0.1s)
+-- Build files have been written to: D:/Users/Documents/Study/C/build
+```
+
+```
+cmake --build . --config Release
+```
+
+```
+适用于 .NET Framework MSBuild 版本 17.14.14+a129329f1
+
+  1>Checking Build System
+  Building Custom Rule D:/Users/Documents/Study/C/CMakeLists.txt
+  foo.cpp
+  main.cpp
+  正在生成代码...
+  MyProject.vcxproj -> D:\Users\Documents\Study\C\build\Release\MyProject.exe
+  Building Custom Rule D:/Users/Documents/Study/C/CMakeLists.txt
+```
+
+```shell
+cd Release
+MyProject.exe
+```
+
+```
+[Message] Hello from foo.cpp!
+3 + 5 = 8
+```
+
+### Makefile
+
+| 特性         | Makefile   | CMake              |
+| ------------ | ---------- | ------------------ |
+| 定位         | 编译脚本   | 构建系统生成器     |
+| 复杂项目支持 | 较弱       | 非常强大           |
+| 跨平台       | 不太行     | 出色               |
+| 难度         | 写起来复杂 | 语法简单，且模块化 |
+| 工程可维护性 | 较差       | 优秀               |
+
+小项目可用 Makefile，大项目用 CMake。
+
+| 功能         | Bazel        | CMake          | Make     | Maven/Gradle       |
+| ------------ | ------------ | -------------- | -------- | ------------------ |
+| 定位         | 完整构建系统 | 构建文件生成器 | 编译脚本 | Java 构建/依赖管理 |
+| 增量构建速度 | ⭐⭐⭐⭐⭐        | ⭐⭐             | ⭐        | ⭐⭐⭐                |
+| 多语言支持   | 优秀         | 中等           | 弱       | 弱（Java 周边）    |
+| 适合项目规模 | 超大型       | 中/大型        | 小型     | 中型               |
+| 学习成本     | 高           | 中             | 低       | 中                 |
+
+#### 快速开始
+
+在上一个文件项目结构中，创建 `Makefile`：
+
+```makefile
+# ------------------------------
+# Makefile for Windows + MinGW
+# ------------------------------
+
+# 编译器
+CC = gcc
+CXX = g++
+
+# 编译选项
+CFLAGS = -Wall -Iinclude
+CXXFLAGS = -Wall -Iinclude
+
+# 源文件目录
+SRCDIR = src
+
+# 所有源文件
+C_SOURCES = $(wildcard $(SRCDIR)/*.c)
+CPP_SOURCES = $(wildcard $(SRCDIR)/*.cpp)
+
+# 对应的目标文件
+C_OBJS = $(C_SOURCES:.c=.o)
+CPP_OBJS = $(CPP_SOURCES:.cpp=.o)
+
+# 最终可执行文件
+TARGET = main.exe
+
+# ------------------------------
+# 默认目标
+# ------------------------------
+all: $(TARGET)
+
+# ------------------------------
+# 链接 C/C++ 对象文件
+# ------------------------------
+$(TARGET): $(C_OBJS) $(CPP_OBJS)
+ifeq ($(CPP_OBJS),)
+	$(CC) -o $@ $(C_OBJS)
+else
+	$(CXX) -o $@ $(C_OBJS) $(CPP_OBJS)
+endif
+
+# ------------------------------
+# 编译 C 源文件
+# ------------------------------
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# ------------------------------
+# 编译 C++ 源文件
+# ------------------------------
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# ------------------------------
+# 清理
+# ------------------------------
+.PHONY: clean
+clean:
+	del /Q $(SRCDIR)\*.o $(TARGET)
+```
+
+编译：
+
+```
+mingw32-make
+```
+
+```
+g++ -Wall -Iinclude -c src/main.cpp -o src/main.o
+g++ -Wall -Iinclude -c src/foo.cpp -o src/foo.o
+g++ -o main.exe  src/main.o src/foo.o
+```
+
+### Keil
+
+> Keil = 针对嵌入式 MCU 的 C/C++ IDE + 编译器 + 调试工具。
+
+- **Keil 是 IDE + 编译器 + 调试器**，自带 ARMCC/ARMCLANG 编译器。
+
+- **GCC / Clang / CMake** 更通用，适合 PC 应用或跨平台项目。
+
+在嵌入式开发中，有些团队会用 **CMake + ARM GCC** 替代 Keil 的 ARMCC，方便自动化和跨平台构建。
+
+---
+
+Keil uVision 工程主要由两个文件组成：
+
+1. **`.uvprojx`**
+   - XML 格式，包含工程全局配置、源文件、宏定义、头文件路径等。
+2. **`.uvoptx`**
+   - XML 格式，包含调试、仿真、优化设置。
+
+| 文件类型   | 后缀       | 描述               | 格式                               | 支持的 Keil 版本     |
+| ---------- | ---------- | ------------------ | ---------------------------------- | -------------------- |
+| `.uvproj`  | `.uvproj`  | 旧版 Keil 工程文件 | 文本格式，但结构较简单（类似 INI） | Keil uVision4 及以前 |
+| `.uvprojx` | `.uvprojx` | 新版 Keil 工程文件 | **XML 格式**，更规范、更可扩展     | Keil uVision5 及以后 |
+
+### VSC IntelliSense
+
+| 差别             | VSCode                                         | Keil                       |
+| ---------------- | ---------------------------------------------- | -------------------------- |
+| 编辑器类型       | 轻量、插件化                                   | 全功能 IDE                 |
+| 引用错误提示来源 | IntelliSense 静态分析                          | 真正编译器解析             |
+| 宏和头文件解析   | 依赖配置（includePath, defines, compilerPath） | 工程配置 + 编译器内置宏    |
+| 错误提示准确性   | **可能和真实编译器不一致**                     | 精准一致                   |
+| 文件管理         | 通过文件夹 + Makefile/CMake                    | 工程文件管理，依赖关系明确 |
+
+- VSCode 更灵活、轻量，但 IntelliSense 只是“模拟编译”，可能提示错误但编译成功，或者反之。
+
+- Keil 的错误提示就是“真实编译器反馈”，完全一致，更适合嵌入式开发和 ARM 工程。
+
+#### c_cpp_properties.json
+
+> VSCode **默认不会自动创建**这个文件。
+>
+> 只有当你在 **C/C++ 项目中配置 IntelliSense** 或者尝试 **生成配置** 时才会创建。
+>
+> 如果只是安装了 C/C++ 扩展，但没有明确配置 Include Path 或编译器，VSCode 会使用 **默认 IntelliSense 模式**，并不会生成文件。
+
+若如此配置项目结构和 `.vscode/c_cpp_properties.json`：
+
+```json
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/include",
+                "C:/MinGW/include",
+                "C:/MinGW/lib/gcc/mingw32/6.3.0/include",
+            ],
+            "defines": [
+                "UNICODE",
+                "_DEBUG"
+            ],
+            "compilerPath": "C:/MinGW/bin/gcc.exe",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "gcc-x64"
+        }
+    ],
+    "version": 4
+}
+```
+
+其中的关键配置项：
+
+| 配置项                          | 作用                                                         | 建议 / 说明                                                  |
+| ------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| **`includePath`**               | 告诉 IntelliSense 去哪些路径查找头文件                       | 将 Keil 工程中所有相关头文件路径加入，如 CMSIS、HAL、StdPeriph 和工程自定义头文件。这样 IntelliSense 才能正确解析类型、函数声明和宏。 |
+| **`defines`**                   | 告诉 IntelliSense 工程中定义了哪些宏，类似 `#define FOO 1`   | 同步 Keil 工程里的宏定义，确保条件编译（`#ifdef`、`#if`）解析一致。 |
+| **`compilerPath`**              | 指向编译器的实际可执行文件，如 Keil 的 `armcc.exe` 或 `armclang.exe` | IntelliSense 可以根据真实编译器解析宏、内置类型和关键字。    |
+| **`cStandard` / `cppStandard`** | 指定 C/C++ 标准版本，例如 C99、C11、C++14、C++17             | 确保 IntelliSense 解析代码时遵循与实际编译器一致的标准。     |
+
+![webp](02.webp)
+
+IntelliSense 将会找不到 `foo.h` 而出现报错提示：
+
+![webp](03.webp)
+
+添加 `includePath` 即可消除这个报错提示，但是如果不正确地配置编译器，编译还是出现错误。
+
+VSCode 也可以配合 CMake Tools 或 Makefile 插件来设置 IntelliSense。
+
+![webp](04.webp)
+
+#### 同步 Keil 与 VSC 的错误提示
+
+思路如下：
+
+- 配置 VSC 的 IntelliSense 与 Keil 一致
+
+> 修改 `.vscode/c_cpp_properties.json`，配置：
+>
+> - `"includePath"`：加入 Keil 工程里的所有头文件路径（CMSIS、HAL、StdPeriph、工程自定义头文件）。
+> - `"defines"`：加入 Keil 工程里的宏定义。
+> - `"compilerPath"`：指向 Keil 的编译器路径（如 `armcc.exe` 或 `armclang.exe`）。
+> - `"cStandard"` / `"cppStandard"`：和 Keil 工程设置一致（C99/C11, C++14/C++17）。
+
+因此可以写一个 python 脚本分析项目工程中的 `.uvprojx`以生成对应的 `.vscode/c_cpp_properties.json` 来实现同步错误提示的效果。
+
+```python
+import xml.etree.ElementTree as ET
+import json
+import os
+
+# 配置部分
+uvprojx_file = "${workspaceFolder}/Project/XXX.uvprojx"
+workspace_folder = "${workspaceFolder}"  # VSCode 工作区变量
+output_vscode_file = ".vscode/c_cpp_properties.json"
+
+compiler_path = "arm-none-eabi-gcc"  # "C:/Keil_v5/ARM/ARMCC/bin/armcc.exe"
+c_standard = "c11"
+cpp_standard = "c++17"
+
+# 解析 UVPROJX 文件
+ws_abs_path = os.getcwd()
+uvprojx_file_abs = uvprojx_file.replace("${workspaceFolder}", ws_abs_path)
+
+tree = ET.parse(uvprojx_file_abs)
+root = tree.getroot()
+
+uvprojx_dir = os.path.dirname(uvprojx_file_abs)
+include_paths = set()
+defines = set()
+
+for target in root.findall(".//Target"):
+    # IncludePath
+    for path in target.findall(".//IncludePath"):
+        if path.text:
+            for p in path.text.split(";"):
+                if p.strip():
+                    abs_path = os.path.normpath(os.path.join(uvprojx_dir, p.strip()))
+                    rel_path = os.path.relpath(abs_path, start=ws_abs_path)
+                    include_paths.add(os.path.join(workspace_folder, rel_path).replace("\\", "/"))
+
+    # Define
+    for define in target.findall(".//Define"):
+        if define.text:
+            for d in define.text.split(";"):
+                if d.strip():
+                    defines.add(d.strip())
+
+# 拆分宏中逗号分隔的项
+final_defines = []
+for d in defines:
+    for item in d.split(","):
+        item = item.strip()
+        if item:
+            item = item.replace("\\\"", "\"")
+            final_defines.append(item)
+
+# 生成 VSCode 配置
+vscode_config = {
+    "configurations": [
+        {
+            "name": "Keil",
+            "includePath": sorted(list(include_paths)),
+            "defines": sorted(final_defines),
+            "compilerPath": compiler_path,
+            "cStandard": c_standard,
+            "cppStandard": cpp_standard
+        }
+    ],
+    "version": 4
+}
+
+os.makedirs(os.path.dirname(output_vscode_file), exist_ok=True)
+with open(output_vscode_file, "w", encoding="utf-8") as f:
+    json.dump(vscode_config, f, indent=4)
+
+print(f"已生成 VSCode 配置: {output_vscode_file}")
+```
+
+## C
+
+### 头文件
+
+**头文件（Header File）是 C/C++ 中 `.h` 或者没有扩展名的文件，用于声明**程序中要使用的函数、类、宏、常量、数据类型等。它本身通常不包含具体的函数实现（C++ 中可以有模板实现或 inline 函数）。
+
+主要作用：
+
+1. **函数声明**：告诉编译器函数的名称、参数类型和返回类型，以便在调用时进行类型检查。
+2. **宏定义**：定义常用的宏，例如 `#define PI 3.14159`。
+3. **结构体/类声明**：让源文件知道某个类型的存在。
+4. **代码复用**：将公共声明放在头文件中，多个源文件可以共享。
+5. **避免重复定义**：通过 `#ifndef/#define/#endif` 防止头文件被多次包含。
+
+| 特性           | C/C++                        | Java/C#                          |
+| -------------- | ---------------------------- | -------------------------------- |
+| 文件组织       | 函数/类声明和定义可以分开    | 类声明和定义通常在同一文件       |
+| 编译模型       | 分文件编译，需要先声明再调用 | 编译器可直接读取类文件或中间表示 |
+| 是否需要头文件 | 是，用于声明接口             | 否，类文件本身就是接口和实现     |
+| 分析依赖       | 头文件 + 源文件              | 类引用 + import/using            |
+
+**C/C++ 的头文件是历史遗留和编译模型的产物**，而 Java/C# 的编译器更智能，能直接处理完整类信息，不需要额外的“声明文件”。
+
+### 数据类型
+
+```c
+#include <stdio.h>
+#include <limits.h>
+#include <float.h>
+
+int main() {
+    // Integer types
+    printf("char: %zu bytes, range: %d to %d\n", sizeof(char), CHAR_MIN, CHAR_MAX);
+    printf("unsigned char: %zu bytes, range: 0 to %u\n", sizeof(unsigned char), UCHAR_MAX);
+
+    printf("short: %zu bytes, range: %d to %d\n", sizeof(short), SHRT_MIN, SHRT_MAX);
+    printf("unsigned short: %zu bytes, range: 0 to %u\n", sizeof(unsigned short), USHRT_MAX);
+
+    printf("int: %zu bytes, range: %d to %d\n", sizeof(int), INT_MIN, INT_MAX);
+    printf("unsigned int: %zu bytes, range: 0 to %u\n", sizeof(unsigned int), UINT_MAX);
+
+    printf("long: %zu bytes, range: %ld to %ld\n", sizeof(long), LONG_MIN, LONG_MAX);
+    printf("unsigned long: %zu bytes, range: 0 to %lu\n", sizeof(unsigned long), ULONG_MAX);
+
+    printf("long long: %zu bytes, range: %lld to %lld\n", sizeof(long long), LLONG_MIN, LLONG_MAX);
+    printf("unsigned long long: %zu bytes, range: 0 to %llu\n", sizeof(unsigned long long), ULLONG_MAX);
+
+    // Floating point types
+    printf("float: %zu bytes, range: %e to %e\n", sizeof(float), FLT_MIN, FLT_MAX);
+    printf("double: %zu bytes, range: %e to %e\n", sizeof(double), DBL_MIN, DBL_MAX);
+    printf("long double: %zu bytes, range: %Le to %Le\n", sizeof(long double), LDBL_MIN, LDBL_MAX);
+
+    // Boolean type
+    printf("bool/_Bool: %zu bytes\n", sizeof(_Bool));
+
+    // Pointer size
+    printf("int*: %zu bytes\n", sizeof(int*));
+
+    return 0;
+}
+```
+
+当前的 C 环境 = Windows + MinGW (32-bit) + LLP64 + ILP32 类型模型：
+
+```
+char: 1 bytes, range: -128 to 127
+unsigned char: 1 bytes, range: 0 to 255
+short: 2 bytes, range: -32768 to 32767
+unsigned short: 2 bytes, range: 0 to 65535
+int: 4 bytes, range: -2147483648 to 2147483647
+unsigned int: 4 bytes, range: 0 to 4294967295
+long: 4 bytes, range: -2147483648 to 2147483647
+unsigned long: 4 bytes, range: 0 to 4294967295
+long long: 8 bytes, range: -9223372036854775808 to 9223372036854775807
+unsigned long long: 8 bytes, range: 0 to 18446744073709551615
+float: 4 bytes, range: 1.175494e-038 to 3.402823e+038
+double: 8 bytes, range: 2.225074e-308 to 1.797693e+308
+long double: 12 bytes, range: -0.000000e+000 to -1.#QNAN0e+000
+bool/_Bool: 1 bytes
+int*: 4 bytes
+```
+
+当前的 C 环境 = 64 位 Linux / macOS（或 MinGW-w64 64 位）且符合 LP64 模型：
+
+```
+char: 1 bytes, range: -128 to 127
+unsigned char: 1 bytes, range: 0 to 255
+short: 2 bytes, range: -32768 to 32767
+unsigned short: 2 bytes, range: 0 to 65535
+int: 4 bytes, range: -2147483648 to 2147483647
+unsigned int: 4 bytes, range: 0 to 4294967295
+long: 8 bytes, range: -9223372036854775808 to 9223372036854775807
+unsigned long: 8 bytes, range: 0 to 18446744073709551615
+long long: 8 bytes, range: -9223372036854775808 to 9223372036854775807
+unsigned long long: 8 bytes, range: 0 to 18446744073709551615
+float: 4 bytes, range: 1.175494e-38 to 3.402823e+38
+double: 8 bytes, range: 2.225074e-308 to 1.797693e+308
+long double: 16 bytes, range: 3.362103e-4932 to 1.189731e+4932
+bool/_Bool: 1 bytes
+int*: 8 bytes
+```
+
+### 变量定义与声明
+
+定义会：
+
+- **分配内存**
+- **创建变量本体**
+
+```c
+int a;   // 这是定义——分配内存
+int b = 10;  // 定义 + 初始化
+```
+
+声明只告诉编译器：
+
+> “这个变量在别处存在，我这里只是提前告诉你它的类型。”
+
+```c
+extern int a;   // 声明，不分配内存，告诉编译器 a 在别处定义
+```
+
+创建 `addtwoumn.c`：
+
+```c
+extern int x;
+extern int y;
+int addtwonum() {
+    return x + y;
+}
+```
+
+创建 `test.c`：
+
+```c
+#include <stdio.h>
+
+int x = 1;
+int y = 2;
+int addtwonum();
+int main(void)
+{
+    int result;
+    result = addtwonum();
+    printf("result is: %d\n", result);
+    return 0;
+}
+```
+
+编译并执行：
+
+```shell
+gcc addtwonum.c test.c -o main
+./main
+```
+
+```
+result is: 3
+```
+
+### 变量存放区域
+
+| 数据类型/变量类型         | 存放区域              | 说明                       |
+| ------------------------- | --------------------- | -------------------------- |
+| **局部变量（非 static）** | 栈 Stack              | 函数内部定义的普通变量     |
+| **函数参数**              | 栈 Stack              | 参数也在栈里               |
+| **静态局部变量 static**   | Data/BSS              | 不在栈上，整个程序生命周期 |
+| **全局变量（已初始化）**  | Data 段               | 程序加载时就存在           |
+| **全局变量（未初始化）**  | BSS 段                | 程序加载时为 0             |
+| **const 全局变量**        | Data / RO Data        | 只读区域或普通 data        |
+| **字符串字面量 "abc"**    | 只读段（text/rodata） | 不可修改（修改会 crash）   |
+| **malloc/new 分配**       | 堆 Heap               | 运行时动态分配             |
+| **函数代码本身**          | Text 段               | 存的是机器指令             |
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+
+int g_init = 10; // data 段
+int g_uninit;    // bss 段
+
+static int s_init = 20; // data 段
+static int s_uninit;    // bss 段
+
+const int g_const = 30; // rodata 或 data
+
+void test_function()
+{
+    int local = 1;                   // 栈
+    static int local_static = 2;     // data/bss
+    int *heap = malloc(sizeof(int)); // 堆
+    *heap = 3;
+
+    const char *str = "hello"; // 字符串常量 → rodata
+
+    printf("【函数内变量】\n");
+    printf(" local (stack)            = %p\n", (void *)&local);
+    printf(" local_static (data/bss)  = %p\n", (void *)&local_static);
+    printf(" heap (heap)              = %p\n", (void *)heap);
+    printf(" str literal (rodata)     = %p\n", (void *)str);
+
+    free(heap);
+}
+
+int main()
+{
+    printf("【全局变量】\n");
+    printf(" g_init (data)            = %p\n", (void *)&g_init);
+    printf(" g_uninit (bss)           = %p\n", (void *)&g_uninit);
+    printf(" s_init (data)            = %p\n", (void *)&s_init);
+    printf(" s_uninit (bss)           = %p\n", (void *)&s_uninit);
+    printf(" g_const (rodata/data)    = %p\n", (void *)&g_const);
+
+    printf("\n");
+    test_function();
+
+    return 0;
+}
+```
+
+```c
+【全局变量】
+ g_init (data)            = 00404004
+ g_uninit (bss)           = 00407074
+ s_init (data)            = 00404008
+ s_uninit (bss)           = 00407020
+ g_const (rodata/data)    = 00405064
+
+【函数内变量】
+ local (stack)            = 0061FEF4
+ local_static (data/bss)  = 0040400C
+ heap (heap)              = 00B91468
+ str literal (rodata)     = 00405068
+```
+
+- **栈地址**（local）通常最高（靠近顶部）
+
+- **堆地址**（malloc）通常在中间
+
+- **data/bss**（全局、static）在低地址
+
+- **rodata**（字符串常量）比 data/bss 更低
+
+- **text 段**（代码）更低
+
+当局部变量被定义时，系统不会对其初始化，必须自行对其初始化。定义全局变量时，系统会自动对其初始化。
+
+### 数组
+
+```c
+#include <stdio.h>
+
+#define LENGTH(array) (sizeof(array) / sizeof(array[0]))
+
+int main() {
+    int array2[] = {1, 2, 3, 4, 5};
+    int length = LENGTH(array2);
+
+    printf("Array length: %d\n", length);
+
+    return 0;
+}
+```
+
+```
+Array length: 5
+```
+
+### 指针
+
+指针就是 **存储变量地址的变量**。
+
+- 用 `*` 表示指针类型
+- 用 `&` 取变量地址
+- 用 `*` 解引用（访问指针指向的值）
+
+```c
+#include <stdio.h>
+
+int main() {
+    int a = 10;       // normal integer variable
+    int *p = &a;      // define pointer p pointing to a's address
+
+    printf("Value of variable a: %d\n", a);          
+    printf("Address of variable a: %p\n", (void*)&a); 
+    printf("Address stored in pointer p: %p\n", (void*)p); 
+    printf("Value accessed through pointer p: %d\n", *p);    
+
+    // modify the value through pointer
+    *p = 20;
+    printf("Value of a after modification: %d\n", a); 
+
+    // address of the pointer itself
+    printf("Address of pointer p: %p\n", (void*)&p);
+
+    return 0;
+}
+```
+
+```
+Value of variable a: 10
+Address of variable a: 0061FF1C
+Address stored in pointer p: 0061FF1C
+Value accessed through pointer p: 10
+Value of a after modification: 20
+Address of pointer p: 0061FF18
+```
+
+复杂用法：
+
+| 类型          | 用途                       |
+| ------------- | -------------------------- |
+| 指针数组      | 保存多个变量地址           |
+| 指向指针      | 多级访问，修改指针本身     |
+| 函数指针      | 动态调用函数，回调         |
+| 动态二维数组  | 矩阵、多维动态数据         |
+| 指针 + 结构体 | 链表、树、图等动态数据结构 |
+
+#### 指针数组（Array of Pointers）
+
+指针数组是一个数组，每个元素都是一个指针。
+
+```c
+#include <stdio.h>
+
+int main() {
+    int a = 1, b = 2, c = 3;
+    int *arr[3] = {&a, &b, &c}; // array of pointers
+
+    for (int i = 0; i < 3; i++) {
+        printf("arr[%d] points to value = %d\n", i, *arr[i]);
+    }
+
+    return 0;
+}
+```
+
+```
+arr[0] points to value = 1
+arr[1] points to value = 2
+arr[2] points to value = 3
+```
+
+#### 指向指针的指针（Pointer to Pointer）
+
+```c
+#include <stdio.h>
+
+int main() {
+    int a = 10;
+    int *p = &a;
+    int **pp = &p; // pointer to a pointer
+
+    printf("a = %d\n", a);
+    printf("*p = %d\n", *p);
+    printf("**pp = %d\n", **pp);
+
+    **pp = 20; // modify a through double pointer
+    printf("a after modification = %d\n", a);
+
+    return 0;
+}
+```
+
+```
+a = 10
+*p = 10
+**pp = 10
+a after modification = 20
+```
+
+#### 指针和函数（函数指针）
+
+函数指针可以存储函数地址，实现动态调用。
+
+```c
+#include <stdio.h>
+
+int add(int a,int b){ return a+b; }
+int sub(int a,int b){ return a-b; }
+
+int main() {
+    int (*func)(int,int); // 函数指针
+
+    func = add;
+    printf("add: %d\n", func(5,3));
+    printf("add address: %p\n", (void*)func);  // 打印函数地址
+
+    func = sub;
+    printf("sub: %d\n", func(5,3));
+    printf("sub address: %p\n", (void*)func);  // 打印函数地址
+
+    return 0;
+}
+```
+
+```
+add: 8
+add address: 00401460
+sub: 2
+sub address: 0040146D
+```
+
+```c
+#include <stdlib.h>  
+#include <stdio.h>
+ 
+void populate_array(int *array, size_t arraySize, int (*getNextValue)(void))
+{
+    for (size_t i=0; i<arraySize; i++)
+        array[i] = getNextValue();
+}
+ 
+// 获取随机值
+int getNextRandomValue(void)
+{
+    return rand();
+}
+ 
+int main(void)
+{
+    int myarray[10];
+    /* getNextRandomValue 不能加括号，否则无法编译，因为加上括号之后相当于传入此参数时传入了 int , 而不是函数指针*/
+    populate_array(myarray, 10, getNextRandomValue);
+    for(int i = 0; i < 10; i++) {
+        printf("%d ", myarray[i]);
+    }
+    printf("\n");
+    return 0;
+}
+```
+
+```
+41 18467 6334 26500 19169 15724 11478 29358 26962 24464 
+```
+
+#### 动态二维数组
+
+用途：二维/多维动态数组、矩阵运算。
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+
+int main()
+{
+    int rows = 2, cols = 3;
+    int **matrix = malloc(rows * sizeof(int *)); // 行指针
+    for (int i = 0; i < rows; i++)
+        matrix[i] = malloc(cols * sizeof(int)); // 每行分配列
+
+    matrix[0][0] = 1;
+    matrix[1][2] = 9;
+
+    printf("%d %d\n", matrix[0][0], matrix[1][2]);
+
+    // 释放内存
+    for (int i = 0; i < rows; i++)
+        free(matrix[i]);
+    free(matrix);
+
+    return 0;
+}
+```
+
+```
+1 9
+```
+
+#### 指针和结构体（复杂数据结构）
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct Node
+{
+    int val;
+    struct Node *next;
+} Node;
+
+int main()
+{
+    Node *head = malloc(sizeof(Node));
+    head->val = 10;
+    head->next = malloc(sizeof(Node));
+    head->next->val = 20;
+    head->next->next = NULL;
+
+    Node *p = head;
+    while (p)
+    {
+        printf("%d -> ", p->val);
+        p = p->next;
+    }
+    printf("NULL\n");
+
+    // 释放内存
+    free(head->next);
+    free(head);
+
+    return 0;
+}
+```
+
+```
+10 -> 20 -> NULL
+```
+
+### 字符串
+
+| 定义方式                                   | 内存位置        | 是否可修改      | 特点                          |
+| ------------------------------------------ | --------------- | --------------- | ----------------------------- |
+| `char str[] = "Hello";`                    | 栈              | 可修改          | 自动加 `\0`                   |
+| `char str[10] = "Hi";`                     | 栈              | 可修改          | 数组大小固定，未用空间填 `\0` |
+| `char str[] = {'H','e','l','l','o','\0'};` | 栈              | 可修改          | 手动控制每个字符              |
+| `char *str = "Hello";`                     | 只读数据段      | 不可修改        | 指针指向字面量，节省内存      |
+| `char str[] = "";` 或 `char *str = "";`    | 栈 / 只读数据段 | 可修改/不可修改 | 空字符串初始化                |
+
+```c
+#include <stdio.h>
+
+int main()
+{
+    // 1. 自动加 '\0'
+    char str1[] = "Hello";
+    str1[0] = 'h'; // 可修改
+    printf("str1 = %s\n", str1);
+
+    // 2. 指定大小初始化
+    char str2[10] = "Hi";
+    str2[2] = '!';
+    str2[3] = '\0'; // 手动补 '\0'
+    printf("str2 = %s\n", str2);
+
+    // 3. 逐个字符初始化
+    char str3[] = {'H', 'e', 'l', 'l', 'o', '\0'};
+    str3[0] = 'h'; // 可修改
+    printf("str3 = %s\n", str3);
+
+    // 4. 指针指向字面量
+    char *str4 = "Hello";
+    printf("str4 = %s\n", str4);
+    // str4[0] = 'h'; // ⚠️ 不可修改，运行可能崩溃
+
+    // 5. 空字符串
+    char str5[1] = ""; // 栈上的空字符串
+    char *str6 = "";   // 只读数据段的空字符串
+    printf("str5 = '%s', str6 = '%s'\n", str5, str6);
+
+    return 0;
+}
+```
+
+```
+str1 = hello
+str2 = Hi!
+str3 = hello
+str4 = Hello
+str5 = '', str6 = ''
+```
+
+`string.h` 提供了操作字符串和内存块的常用函数，包括：
+
+| 函数                    | 功能                          | 示例                           |
+| ----------------------- | ----------------------------- | ------------------------------ |
+| `strlen(s)`             | 返回字符串长度（不包含 '\0'） | `int len = strlen(str1);`      |
+| `strcpy(dest, src)`     | 字符串复制                    | `strcpy(dest, src);`           |
+| `strncpy(dest, src, n)` | 指定长度复制                  | `strncpy(dest, src, 3);`       |
+| `strcat(dest, src)`     | 字符串拼接                    | `strcat(dest, "World");`       |
+| `strcmp(s1, s2)`        | 比较两个字符串                | `strcmp("a","b") < 0`          |
+| `strncmp(s1, s2, n)`    | 比较前 n 个字符               | `strncmp("abc","abd",2)`       |
+| `strchr(s, c)`          | 查找字符首次出现              | `strchr("abc",'b')`            |
+| `strrchr(s, c)`         | 查找字符最后出现              | `strrchr("abcb",'b')`          |
+| `strstr(s1, s2)`        | 查找子串                      | `strstr("HelloWorld","World")` |
+| `memset(ptr, val, n)`   | 内存填充                      | `memset(arr, 0, sizeof(arr))`  |
+| `memcpy(dest, src, n)`  | 内存拷贝                      | `memcpy(dest, src, 5)`         |
+
+```c
+#include <stdio.h>
+#include <string.h>
+
+int main() {
+    char str1[20] = "Hello";
+    char str2[] = "World";
+    char str3[20];
+
+    // strlen
+    printf("Length of str1: %lu\n", strlen(str1));
+
+    // strcpy
+    strcpy(str3, str1);
+    printf("str3 = %s\n", str3);
+
+    // strcat
+    strcat(str3, str2);
+    printf("After concatenation, str3 = %s\n", str3);
+
+    // strcmp
+    if(strcmp(str1, str2) < 0) {
+        printf("str1 < str2\n");
+    }
+
+    // strchr
+    char *p = strchr(str3, 'o');
+    if(p) {
+        printf("'o' appears at position: %ld\n", p - str3);
+    }
+
+    // memset
+    memset(str3, '*', 5);
+    str3[5] = '\0';
+    printf("After memset, str3 = %s\n", str3);
+
+    return 0;
+}
+```
+
+```
+Length of str1: 5
+str3 = Hello
+After concatenation, str3 = HelloWorld
+str1 < str2
+'o' appears at position: 4
+After memset, str3 = *****
+```
+
+### 结构体
+
+```c
+#include <stdio.h>
+#include <string.h>
+
+typedef struct
+{
+    char name[50];
+    int age;
+    float score;
+} Student;
+
+int main()
+{
+    // 初始化结构体
+    Student s1 = {"Alice", 20, 95.5};
+
+    // 访问成员
+    printf("Name: %s\n", s1.name);
+    printf("Age: %d\n", s1.age);
+    printf("Score: %.2f\n", s1.score);
+
+    // 修改成员
+    s1.age = 21;
+    strcpy(s1.name, "Alice Zhang");
+    printf("Updated Name: %s, Age: %d\n", s1.name, s1.age);
+
+    // 结构体数组
+    Student class[2] = {{"Bob", 22, 88.0}, {"Charlie", 19, 92.5}};
+    for (int i = 0; i < 2; i++)
+    {
+        printf("%s - %d - %.2f\n", class[i].name, class[i].age, class[i].score);
+    }
+
+    return 0;
+}
+```
+
+```
+Name: Alice
+Age: 20
+Score: 95.50
+Updated Name: Alice Zhang, Age: 21
+Bob - 22 - 88.00
+Charlie - 19 - 92.50
+```
+
+#### 结构体指针
+
+| 特性     | 说明                                     |
+| -------- | ---------------------------------------- |
+| 定义     | `Student *p = &s1;`                      |
+| 访问成员 | `(*p).age` 或 `p->age`                   |
+| 函数传递 | 用指针避免结构体拷贝                     |
+| 动态分配 | `malloc(sizeof(Student))` 分配结构体内存 |
+
+```c
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+typedef struct
+{
+    char name[50];
+    int age;
+    float score;
+} Student;
+
+void printStudent(Student *p)
+{
+    printf("%s - %d - %.2f\n", p->name, p->age, p->score);
+}
+
+int main()
+{
+    Student s1 = {"Alice", 20, 95.5};
+    Student *p = &s1;
+
+    // 通过指针访问
+    printf("Name: %s, Age: %d\n", p->name, p->age);
+
+    // 修改成员
+    p->score = 100.0;
+    printStudent(p);
+
+    // 动态分配
+    Student *p2 = (Student *)malloc(sizeof(Student));
+    strcpy(p2->name, "Bob");
+    p2->age = 22;
+    p2->score = 88.0;
+    printStudent(p2);
+
+    free(p2);
+    return 0;
+}
+```
+
+```
+Name: Alice, Age: 20
+Alice - 20 - 100.00
+Bob - 22 - 88.00
+```
+
+### 共用体
+
+**共用体**是一种特殊的数据类型，它允许多个成员 **共享同一块内存**。
+
+同一时刻，**union 只能存储其中一个成员的值**。
+
+```c
+#include <stdio.h>
+#include <string.h>
+
+union Data {
+    int i;
+    float f;
+    char str[20];
+};
+
+int main() {
+    union Data data;
+
+    data.i = 10;
+    printf("data.i = %d\n", data.i);
+
+    data.f = 3.14;   // i 的值被覆盖
+    printf("data.f = %.2f\n", data.f);
+    printf("data.i = %d\n", data.i); // 输出不可预期
+
+    strcpy(data.str, "Hello");
+    printf("data.str = %s\n", data.str);
+    printf("data.f = %.2f\n", data.f); // 输出不可预期
+
+    printf("Size of union: %zu\n", sizeof(data));
+
+    return 0;
+}
+```
+
+```
+data.i = 10
+data.f = 3.14
+data.i = 1078523331
+data.str = Hello
+data.f = 1143139122437582500000000000.00
+Size of union: 20
+```
+
+### 位域
+
+- 位域允许你在**结构体**中指定 **成员占用的位数**，而不是整个字节或类型的大小。
+- 用途：
+  1. 节省内存（尤其是多个标志位、状态位等）
+  2. 与硬件寄存器对应（嵌入式编程常用）
+
+```c
+#include <stdio.h>
+
+struct Flags {
+    unsigned int flag1 : 1;
+    unsigned int flag2 : 3;
+    unsigned int flag3 : 4;
+};
+
+int main() {
+    struct Flags f;
+
+    f.flag1 = 1;
+    f.flag2 = 5;  // 3 位能存的最大值是 7
+    f.flag3 = 10; // 4 位能存的最大值是 15
+
+    printf("flag1 = %u\n", f.flag1);
+    printf("flag2 = %u\n", f.flag2);
+    printf("flag3 = %u\n", f.flag3);
+
+    return 0;
+}
+```
+
+```
+flag1 = 1
+flag2 = 5
+flag3 = 10
+```
+
+### typedef
+
+给已有类型 **取一个新的名字（别名）**
+
+使代码更清晰，尤其是在使用复杂类型（如结构体、函数指针、数组类型）时
+
+不会创建新类型，只是给现有类型起一个别名
+
+```c
+#include <stdio.h>
+#include <string.h>
+
+// 结构体 typedef
+typedef struct
+{
+    char name[50];
+    int age;
+} Student;
+
+// 数组 typedef
+typedef int IntArray[5];
+
+// 函数指针 typedef
+typedef int (*Operation)(int, int);
+
+int add(int a, int b) { return a + b; }
+int multiply(int a, int b) { return a * b; }
+
+int main()
+{
+    // 使用结构体别名
+    Student s1;
+    strcpy(s1.name, "Alice");
+    s1.age = 20;
+    printf("%s - %d\n", s1.name, s1.age);
+
+    // 使用数组别名
+    IntArray arr = {1, 2, 3, 4, 5};
+    for (int i = 0; i < 5; i++)
+        printf("%d ", arr[i]);
+    printf("\n");
+
+    // 使用函数指针别名
+    Operation op = add;
+    printf("2 + 3 = %d\n", op(2, 3));
+    op = multiply;
+    printf("2 * 3 = %d\n", op(2, 3));
+
+    return 0;
+}
+```
+
+```
+Alice - 20
+1 2 3 4 5 
+2 + 3 = 5
+2 * 3 = 6
+```
+
+### 文件
+
+| 模式   | 含义                                   |
+| ------ | -------------------------------------- |
+| `"r"`  | 只读，文件必须存在                     |
+| `"w"`  | 只写，文件不存在则创建，存在则清空     |
+| `"a"`  | 追加写，文件不存在则创建               |
+| `"r+"` | 读写，文件必须存在                     |
+| `"w+"` | 读写，文件不存在则创建，存在则清空     |
+| `"a+"` | 读写，文件不存在则创建，写入追加到末尾 |
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define FILENAME "example.txt"
+#define MAX_LINE 256
+
+// 创建/写文件
+void write_file() {
+    FILE *fp = fopen(FILENAME, "w"); // 覆盖写
+    if (!fp) { perror("Failed to open file"); return; }
+
+    fprintf(fp, "Alice, 20, 95\n");
+    fprintf(fp, "Bob, 22, 88\n");
+    fprintf(fp, "Charlie, 21, 92\n");
+    fclose(fp);
+    printf("File written successfully.\n");
+}
+
+// 读取文件
+void read_file() {
+    FILE *fp = fopen(FILENAME, "r");
+    if (!fp) { printf("File not found.\n"); return; }
+
+    char line[MAX_LINE];
+    printf("File content:\n");
+    while (fgets(line, sizeof(line), fp)) {
+        printf("%s", line);
+    }
+    fclose(fp);
+}
+
+// 追加写入
+void append_file(const char *text) {
+    FILE *fp = fopen(FILENAME, "a"); // 追加写
+    if (!fp) { perror("Failed to open file"); return; }
+
+    fprintf(fp, "%s\n", text);
+    fclose(fp);
+    printf("Appended: %s\n", text);
+}
+
+// 修改文件内容（替换包含关键字的行）
+void modify_file(const char *keyword, const char *new_text) {
+    FILE *fp = fopen(FILENAME, "r");
+    if (!fp) return;
+
+    FILE *tmp = fopen("tmp.txt", "w");
+    char line[MAX_LINE];
+    int found = 0;
+
+    while (fgets(line, sizeof(line), fp)) {
+        if (strstr(line, keyword)) {
+            fputs(new_text, tmp);
+            fputc('\n', tmp);
+            found = 1;
+        } else {
+            fputs(line, tmp);
+        }
+    }
+
+    fclose(fp);
+    fclose(tmp);
+
+    if (found) {
+        remove(FILENAME);
+        rename("tmp.txt", FILENAME);
+        printf("Modified lines containing: %s\n", keyword);
+    } else {
+        remove("tmp.txt");
+        printf("No line found containing: %s\n", keyword);
+    }
+}
+
+// 删除文件
+void delete_file() {
+    if (remove(FILENAME) == 0) {
+        printf("File deleted successfully.\n");
+    } else {
+        perror("Failed to delete file");
+    }
+}
+
+// 查找包含关键字的行
+void find_in_file(const char *keyword) {
+    FILE *fp = fopen(FILENAME, "r");
+    if (!fp) { printf("File not found.\n"); return; }
+
+    char line[MAX_LINE];
+    int found = 0;
+
+    printf("Search results for \"%s\":\n", keyword);
+    while (fgets(line, sizeof(line), fp)) {
+        if (strstr(line, keyword)) {
+            printf("%s", line);
+            found = 1;
+        }
+    }
+
+    if (!found) printf("No match found.\n");
+    fclose(fp);
+}
+
+int main() {
+    // 创建/写
+    write_file();
+    read_file();
+    printf("\n");
+
+    // 追加
+    append_file("David, 23, 85");
+    read_file();
+    printf("\n");
+
+    // 修改
+    modify_file("Bob", "Bob, 22, 90");
+    read_file();
+    printf("\n");
+
+    // 查找
+    find_in_file("Charlie");
+    printf("\n");
+
+    // 删除
+    delete_file();
+    read_file();
+
+    return 0;
+}
+```
+
+| 操作    | 对应函数                                   |
+| ------- | ------------------------------------------ |
+| 创建/写 | `write_file()` → `fopen("w")`, `fprintf`   |
+| 读取    | `read_file()` → `fopen("r")`, `fgets`      |
+| 追加    | `append_file()` → `fopen("a")`, `fprintf`  |
+| 修改    | `modify_file()` → 读入内存 → 修改 → 覆盖写 |
+| 删除    | `delete_file()` → `remove()`               |
+| 查找    | `find_in_file()` → `fopen("r")`, `strstr`  |
+
+### 可变参数
+
+**可变参数**指函数的参数个数 **不固定**，调用时可以传任意数量的参数。
+
+C 语言通过 `<stdarg.h>` 提供支持。
+
+| 宏                         | 作用                                         |
+| -------------------------- | -------------------------------------------- |
+| `va_list`                  | 定义一个变量，用于存放参数列表信息           |
+| `va_start(ap, last_fixed)` | 初始化 `ap`，`last_fixed` 是最后一个固定参数 |
+| `va_arg(ap, type)`         | 获取参数列表中的下一个参数，指定类型 `type`  |
+| `va_end(ap)`               | 清理 `ap`，完成后必须调用                    |
+
+```c
+#include <stdio.h>
+#include <stdarg.h>
+
+// 可变参数函数：计算 sum
+int sum(int count, ...)
+{
+    int total = 0;
+    va_list args;          // 定义参数列表
+    va_start(args, count); // 初始化
+
+    for (int i = 0; i < count; i++)
+    {
+        int value = va_arg(args, int); // 获取下一个参数
+        total += value;
+    }
+
+    va_end(args); // 清理
+    return total;
+}
+
+int main()
+{
+    printf("sum(1, 2, 3) = %d\n", sum(3, 1, 2, 3));
+    printf("sum(5, 1, 2, 3, 4, 5) = %d\n", sum(5, 1, 2, 3, 4, 5));
+    return 0;
+}
+```
+
+```
+sum(1, 2, 3) = 6
+sum(5, 1, 2, 3, 4, 5) = 15
+```
+
+### 动态内存管理
+
+| 函数      | 初始化     | 返回类型 | 是否可改变大小 | 说明                   |
+| --------- | ---------- | -------- | -------------- | ---------------------- |
+| `malloc`  | 不初始化   | `void*`  | 否             | 分配指定字节内存       |
+| `calloc`  | 初始化为 0 | `void*`  | 否             | 分配 num*size 字节内存 |
+| `realloc` | 保留原内容 | `void*`  | 是             | 改变已分配内存大小     |
+| `free`    | -          | -        | -              | 释放动态内存           |
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+
+int main()
+{
+    // ---------------------------
+    // 1. malloc: allocate uninitialized memory
+    // ---------------------------
+    int *arr1 = (int *)malloc(5 * sizeof(int));
+    if (!arr1)
+    {
+        perror("malloc failed");
+        return 1;
+    }
+    printf("Contents of memory allocated by malloc (uninitialized, may contain garbage values):\n");
+    for (int i = 0; i < 5; i++)
+        printf("%d ", arr1[i]);
+    printf("\n");
+
+    // ---------------------------
+    // 2. calloc: allocate and initialize memory to 0
+    // ---------------------------
+    int *arr2 = (int *)calloc(5, sizeof(int));
+    if (!arr2)
+    {
+        perror("calloc failed");
+        return 1;
+    }
+    printf("Contents of memory allocated by calloc (initialized to 0):\n");
+    for (int i = 0; i < 5; i++)
+        printf("%d ", arr2[i]);
+    printf("\n");
+
+    // ---------------------------
+    // 3. realloc: change memory size
+    // ---------------------------
+    for (int i = 0; i < 5; i++)
+        arr2[i] = i + 1;
+    arr2 = (int *)realloc(arr2, 8 * sizeof(int)); // expand to 8 elements
+    if (!arr2)
+    {
+        perror("realloc failed");
+        return 1;
+    }
+    for (int i = 5; i < 8; i++)
+        arr2[i] = i + 1; // initialize new elements
+    printf("Contents of memory after realloc:\n");
+    for (int i = 0; i < 8; i++)
+        printf("%d ", arr2[i]);
+    printf("\n");
+
+    // ---------------------------
+    // 4. free: release memory
+    // ---------------------------
+    free(arr1);
+    free(arr2);
+    arr1 = NULL;
+    arr2 = NULL;
+    printf("Memory has been freed.\n");
+
+    return 0;
+}
+```
+
+```
+Contents of memory allocated by malloc (uninitialized, may contain garbage values):
+12398976 12393768 0 0 0 
+Contents of memory allocated by calloc (initialized to 0):
+0 0 0 0 0
+Contents of memory after realloc:
+1 2 3 4 5 6 7 8
+Memory has been freed.
+```
+
+### 命令行参数
+
+- **`argc` (argument count)**: 表示命令行参数的数量，包括程序名本身。因此，`argc` 至少为 1。
+- **`argv` (argument vector)**: 是一个指向字符串数组的指针，其中每个字符串是一个命令行参数。数组的第一个元素（即 `argv[0]`）通常是程序的名称。接下来的元素是传递给程序的命令行参数。
+
+```c
+#include <stdio.h>
+
+int main(int argc, char *argv[]) {
+    printf("Number of arguments: %d\n", argc);
+    for (int i = 0; i < argc; i++) {
+        printf("argv[%d] = %s\n", i, argv[i]);
+    }
+    return 0;
+}
+```
+
+### 标准库
+
+| 头文件           | 功能简介                                                     |
+| :--------------- | :----------------------------------------------------------- |
+| **<stdio.h>**    | 标准输入输出库，包含 `printf`、`scanf`、`fgets`、`fputs` 等函数。 |
+| **<stdlib.h>**   | 标准库函数，包含内存分配、程序控制、转换函数等，如 `malloc`、`free`、`exit`、`atoi`、`rand` 等。 |
+| **<string.h>**   | 字符串操作函数，如 `strlen`、`strcpy`、`strcat`、`strcmp` 等。 |
+| **<math.h>**     | 数学函数库，包含各种数学运算函数，如 `sin`、`cos`、`tan`、`exp`、`log`、`sqrt` 等。 |
+| **<time.h>**     | 时间和日期函数，如 `time`、`clock`、`difftime`、`strftime` 等。 |
+| **<ctype.h>**    | 字符处理函数，如 `isalpha`、`isdigit`、`isspace`、`toupper`、`tolower` 等。 |
+| **<limits.h>**   | 定义各种类型的限制值，如 `INT_MAX`、`CHAR_MIN`、`LONG_MAX` 等。 |
+| **<float.h>**    | 定义浮点类型的限制值，如 `FLT_MAX`、`DBL_MIN` 等。           |
+| **<assert.h>**   | 包含宏 `assert`，用于在调试时进行断言检查。                  |
+| **<errno.h>**    | 定义了错误码变量 `errno` 及相关宏，用于表示和处理错误。      |
+| **<stddef.h>**   | 定义了一些通用类型和宏，如 `size_t`、`ptrdiff_t`、`NULL` 等。 |
+| **<signal.h>**   | 定义了处理信号的函数和宏，如 `signal`、`raise` 等。          |
+| **<setjmp.h>**   | 提供非本地跳转功能的宏和函数，如 `setjmp`、`longjmp` 等。    |
+| **<locale.h>**   | 定义了与地域化相关的函数和宏，如 `setlocale`、`localeconv` 等。 |
+| **<stdarg.h>**   | 提供处理可变参数函数的宏，如 `va_start`、`va_arg`、`va_end` 等。 |
+| **<stdbool.h>**  | 定义布尔类型和值 `true` 和 `false`。                         |
+| **<stdint.h>**   | 定义了精确宽度的整数类型，如 `int8_t`、`uint16_t` 等。       |
+| **<inttypes.h>** | 提供与整数类型相关的格式化输出宏和函数。                     |
+| **<complex.h>**  | 提供复数运算的函数和宏，如 `cabs`、`carg` 等。               |
+| **<tgmath.h>**   | 为泛型数学函数提供宏，以简化对不同类型数据的数学运算。       |
+| **<fenv.h>**     | 提供对浮点环境的控制，如舍入模式和异常状态。                 |
+
+## C++
+
+### 数据类型
+
+```c++
+#include <iostream>
+#include <limits> // std::numeric_limits
+
+int main()
+{
+   std::cout << "bool: " << std::numeric_limits<bool>::min() << " to "
+             << std::numeric_limits<bool>::max() << "\n";
+
+   std::cout << "char: " << int(std::numeric_limits<char>::min()) << " to "
+             << int(std::numeric_limits<char>::max()) << "\n";
+
+   std::cout << "unsigned char: " << int(std::numeric_limits<unsigned char>::min()) << " to "
+             << int(std::numeric_limits<unsigned char>::max()) << "\n";
+
+   std::cout << "short: " << std::numeric_limits<short>::min() << " to "
+             << std::numeric_limits<short>::max() << "\n";
+
+   std::cout << "unsigned short: " << std::numeric_limits<unsigned short>::min() << " to "
+             << std::numeric_limits<unsigned short>::max() << "\n";
+
+   std::cout << "int: " << std::numeric_limits<int>::min() << " to "
+             << std::numeric_limits<int>::max() << "\n";
+
+   std::cout << "unsigned int: " << std::numeric_limits<unsigned int>::min() << " to "
+             << std::numeric_limits<unsigned int>::max() << "\n";
+
+   std::cout << "long long: " << std::numeric_limits<long long>::min() << " to "
+             << std::numeric_limits<long long>::max() << "\n";
+
+   std::cout << "unsigned long long: " << std::numeric_limits<unsigned long long>::min() << " to "
+             << std::numeric_limits<unsigned long long>::max() << "\n";
+
+   std::cout << "float: " << std::numeric_limits<float>::min() << " to "
+             << std::numeric_limits<float>::max() << "\n";
+
+   std::cout << "double: " << std::numeric_limits<double>::min() << " to "
+             << std::numeric_limits<double>::max() << "\n";
+             
+   std::cout << "wchar_t: "
+             << std::numeric_limits<wchar_t>::min() << " to "
+             << std::numeric_limits<wchar_t>::max() << "\n";
+   return 0;
+}
+```
+
+`wchar_t` 也是 C++ 的基本字符类型之一，用于表示**宽字符**，可以存储 Unicode 字符。常用于需要支持多语言字符的场景，比如中文、日文等。
+
+```
+bool: 0 to 1
+char: -128 to 127
+unsigned char: 0 to 255
+short: -32768 to 32767
+unsigned short: 0 to 65535
+int: -2147483648 to 2147483647
+unsigned int: 0 to 4294967295
+long long: -9223372036854775808 to 9223372036854775807
+unsigned long long: 0 to 18446744073709551615
+float: 1.17549e-038 to 3.40282e+038
+double: 2.22507e-308 to 1.79769e+308
+wchar_t: 0 to 65535
+```
+
+### 字符串
+
+C++ 标准库提供了 **`std::string`**，是一个**类**，封装了字符数组和常用操作。
+
+| 特性     | C 字符串            | C++ 字符串               |
+| -------- | ------------------- | ------------------------ |
+| 类型     | `char[]` 或 `char*` | `std::string`            |
+| 结尾标志 | `\0`                | 内部管理，不依赖 `\0`    |
+| 内存管理 | 手动                | 自动                     |
+| 拼接     | `strcat()`          | `+` 操作符               |
+| 长度获取 | `strlen()`          | `.length()` 或 `.size()` |
+| 比较     | `strcmp()`          | `==, !=` 等              |
+| 安全性   | 易溢出              | 更安全，异常安全         |
+
+```c++
+#include <iostream>
+#include <string>
+
+int main() {
+    std::string str1 = "Hello";
+    std::string str2 = "World";
+
+    // Concatenate
+    std::string str3 = str1 + " " + str2;
+    
+    // Length
+    std::cout << "Length: " << str3.length() << std::endl;
+
+    // Access characters
+    for (size_t i = 0; i < str3.length(); i++) {
+        std::cout << str3[i] << " ";
+    }
+    std::cout << std::endl;
+
+    // Compare
+    if (str1 != str2) {
+        std::cout << str1 << " and " << str2 << " are different" << std::endl;
+    }
+
+    return 0;
+}
+```
+
+```
+Length: 11
+H e l l o   W o r l d
+Hello and World are different
+```
+
+### 引用
+
+引用是一种 **别名机制**，即给已有变量取一个别名。
+
+```c++
+#include <iostream>
+
+void addOne(int &x) { x += 1; }
+
+int main()
+{
+   int a = 5;
+   addOne(a);
+   std::cout << a << std::endl;
+}
+```
+
+```
+6
+```
+
+### Vector
+
+`vector` 是 C++ 标准模板库（STL）提供的 **动态数组容器**，属于 **顺序容器**。
+
+它的特点是：
+
+1. **动态大小**：可以根据需要自动增长或缩小，不需要像普通数组一样预先指定长度。
+2. **连续内存存储**：和数组类似，支持通过下标访问元素，访问速度快。
+3. **提供丰富接口**：支持插入、删除、查找、排序等操作。
+4. **类型安全**：`vector` 是模板类，存储特定类型的元素。
+
+| 功能         | Python `list`          | C++ `vector`                                   |
+| ------------ | ---------------------- | ---------------------------------------------- |
+| 动态大小     | 可以随时增加或删除元素 | `push_back()`、`pop_back()` 等操作             |
+| 下标访问     | `lst[i]`               | `v[i]` 或 `v.at(i)`                            |
+| 遍历         | `for x in lst:`        | `for (auto x : v)`                             |
+| 末尾添加     | `append()`             | `push_back()`                                  |
+| 删除元素     | `pop()` / `remove()`   | `pop_back()` / `erase()`                       |
+| 支持任意类型 | 可以存对象             | 模板类型，例如 `vector<int>`、`vector<string>` |
+
+```c++
+#include <iostream>
+#include <vector>
+using namespace std;
+
+int main()
+{
+   vector<int> v;   // 类似 Python list
+   v.push_back(10); // append
+   v.push_back(20);
+   v.push_back(30);
+
+   // 遍历
+   for (auto x : v)
+      cout << x << " ";
+   cout << endl;
+
+   // 删除末尾
+   v.pop_back();
+
+   // 插入
+   v.insert(v.begin() + 1, 15); // 类似 Python list.insert(1, 15)
+
+   // 输出最终内容
+   for (auto x : v)
+      cout << x << " ";
+   cout << endl;
+
+   return 0;
+}
+```
+
+```
+10 20 30 
+10 15 20
+```
+
+### 面向对象
+
+C++ 是**多范式语言**，支持 **面向对象编程**，OOP 的核心理念是将数据和操作封装在“对象”中。
+
+| 特性                      | 描述                                                         | 示例                       |
+| ------------------------- | ------------------------------------------------------------ | -------------------------- |
+| **封装（Encapsulation）** | 将数据（成员变量）和操作（成员函数）封装在类里，并通过访问控制保护数据 | `private`、`public`        |
+| **继承（Inheritance）**   | 新的类可以继承已有类的属性和方法，实现代码重用               | `class 子类 : public 父类` |
+| **多态（Polymorphism）**  | 同一个接口可以有不同实现（运行时多态通常通过虚函数实现）     | `virtual` + 覆盖函数       |
+
+#### 封装
+
+```c++
+#include <iostream>
+#include <string>
+using namespace std;
+
+// 类定义
+class Person {
+private:
+    string name;   // 私有成员，封装数据
+    int age;
+
+public:
+    // 构造函数
+    Person(string n, int a) : name(n), age(a) {}
+
+    // 公有成员函数
+    void introduce() {
+        cout << "我是 " << name << "，今年 " << age << " 岁。" << endl;
+    }
+
+    // 设置年龄（封装示例）
+    void setAge(int a) {
+        if (a >= 0) age = a;
+    }
+
+    int getAge() { return age; }
+};
+
+int main() {
+    Person p1("Alice", 20); // 创建对象
+    p1.introduce();
+
+    p1.setAge(21);
+    cout << "修改年龄后: " << p1.getAge() << endl;
+
+    return 0;
+}
+```
+
+#### 继承
+
+```c++
+class Student : public Person { // 公有继承
+private:
+    string school;
+
+public:
+    Student(string n, int a, string s) : Person(n, a), school(s) {}
+
+    void showSchool() {
+        cout << "学校: " << school << endl;
+    }
+};
+
+int main() {
+    Student s1("Bob", 18, "清华大学");
+    s1.introduce();   // 继承父类方法
+    s1.showSchool();  // 子类方法
+}
+```
+
+#### 多态
+
+```c++
+class Animal {
+public:
+    virtual void sound() { // 虚函数
+        cout << "动物叫声" << endl;
+    }
+};
+
+class Dog : public Animal {
+public:
+    void sound() override { // 重写父类虚函数
+        cout << "汪汪汪" << endl;
+    }
+};
+
+class Cat : public Animal {
+public:
+    void sound() override {
+        cout << "喵喵喵" << endl;
+    }
+};
+
+void makeSound(Animal* a) {
+    a->sound(); // 根据对象实际类型调用
+}
+
+int main() {
+    Dog dog;
+    Cat cat;
+
+    makeSound(&dog); // 汪汪汪
+    makeSound(&cat); // 喵喵喵
+}
+
+```
+
+### 重载
+
+#### 函数重载
+
+```c++
+#include <iostream>
+using namespace std;
+
+// 普通函数重载
+int add(int a, int b) {
+    return a + b;
+}
+
+double add(double a, double b) {
+    return a + b;
+}
+
+int add(int a, int b, int c) {
+    return a + b + c;
+}
+
+int main() {
+    cout << add(1, 2) << endl;        // 调用 int add(int,int)
+    cout << add(1.5, 2.3) << endl;    // 调用 double add(double,double)
+    cout << add(1, 2, 3) << endl;     // 调用 int add(int,int,int)
+}
+```
+
+```
+3
+3.8
+6
+```
+
+#### 运算符重载
+
+```c++
+#include <iostream>
+using namespace std;
+
+class Point {
+public:
+    int x, y;
+    Point(int a=0, int b=0) : x(a), y(b) {}
+
+    // 重载 + 运算符
+    Point operator+(const Point& p) {
+        return Point(x + p.x, y + p.y);
+    }
+
+    void show() {
+        cout << "(" << x << "," << y << ")" << endl;
+    }
+};
+
+int main() {
+    Point p1(1, 2);
+    Point p2(3, 4);
+    Point p3 = p1 + p2; // 使用重载的 +
+    p3.show();           // 输出 (4,6)
+}
+```
+
+```
+(4,6)
+```
+
+#### 异常处理
+
+C 语言 **没有 `try` 和 `catch`**，也就是说 C 语言没有内置的异常处理机制，这是 C++ 引入的一部分特性。
+
+```c++
+#include <iostream>
+#include <stdexcept>
+using namespace std;
+
+double divide(double a, double b)
+{
+   if (b == 0)
+      throw runtime_error("Division by zero"); // throw exception
+   return a / b;
+}
+
+int main()
+{
+   try
+   {
+      cout << divide(10, 2) << endl; // normal
+      cout << divide(10, 0) << endl; // will throw exception
+   }
+   catch (const exception &e)
+   {
+      cout << "Caught exception: " << e.what() << endl;
+   }
+
+   cout << "Program continues execution" << endl;
+   return 0;
+}
+```
+
+```
+5
+Caught exception: Division by zero
+Program continues execution
+```
+
+### 动态内存
+
+| 特性              | `malloc` (C)     | `new` (C++)          |
+| ----------------- | ---------------- | -------------------- |
+| 类型安全          | 否，需要强制转换 | 是，不需要转换       |
+| 构造函数/析构函数 | 不调用           | 调用                 |
+| 内存释放          | `free`           | `delete / delete[]`  |
+| 失败处理          | 返回 NULL        | 抛出异常 `bad_alloc` |
+| 可重载            | 否               | 是                   |
+
+```c++
+#include <iostream>
+#include <cstdlib> // malloc, free
+using namespace std;
+
+class MyClass
+{
+public:
+   MyClass()
+   {
+      cout << "Constructor called" << endl;
+   }
+   ~MyClass()
+   {
+      cout << "Destructor called" << endl;
+   }
+   void sayHello()
+   {
+      cout << "Hello from MyClass" << endl;
+   }
+};
+
+int main()
+{
+   cout << "=== Using malloc ===" << endl;
+   // malloc 分配内存，但不会调用构造函数
+   MyClass *obj1 = (MyClass *)malloc(sizeof(MyClass));
+   // obj1->sayHello(); // 可能未初始化，调用可能异常
+   free(obj1); // 不会调用析构函数
+
+   cout << "\n=== Using new ===" << endl;
+   // new 分配内存并调用构造函数
+   MyClass *obj2 = new MyClass();
+   obj2->sayHello();
+   delete obj2; // 会调用析构函数
+
+   return 0;
+}
+```
+
+```
+=== Using malloc ===
+
+=== Using new ===
+Constructor called
+Hello from MyClass
+Destructor called
+```
+
+### 命名空间
+
+```c++
+#include <iostream>
+
+namespace A {
+    int x = 5;
+}
+
+namespace B {
+    int x = 10;
+}
+
+int main() {
+    std::cout << A::x << std::endl;  // 输出 5
+    std::cout << B::x << std::endl;  // 输出 10
+}
+```
+
+```
+5
+10
+```
+
+### 模板
+
+```c++
+#include <iostream>
+using namespace std;
+
+// 函数模板
+template <typename T>
+T add(T a, T b) {
+    return a + b;
+}
+
+int main() {
+    cout << add(10, 20) << endl;      // int
+    cout << add(1.5, 2.3) << endl;    // double
+    return 0;
+}
+
+```
+
+```
+30
+3.8
+```
+
+### 标准库
+
+| 类别            | 头文件                 | 简介                                    |
+| --------------- | ---------------------- | --------------------------------------- |
+| 输入输出        | `<iostream>`           | 标准输入输出流                          |
+|                 | `<fstream>`            | 文件输入输出流                          |
+|                 | `<sstream>`            | 字符串流                                |
+|                 | `<iomanip>`            | 输入输出流格式化                        |
+| 容器            | `<array>`              | 定长数组容器                            |
+|                 | `<vector>`             | 动态数组容器                            |
+|                 | `<deque>`              | 双端队列容器                            |
+|                 | `<list>`               | 双向链表容器                            |
+|                 | `<forward_list>`       | 单向链表容器                            |
+|                 | `<stack>`              | 栈容器适配器                            |
+|                 | `<queue>`              | 队列容器适配器                          |
+|                 | `<priority_queue>`     | 优先队列容器适配器                      |
+|                 | `<set>`                | 集合容器（基于平衡二叉树）              |
+|                 | `<unordered_set>`      | 无序集合容器（基于哈希表）              |
+|                 | `<map>`                | 映射容器（键值对，基于平衡二叉树）      |
+|                 | `<unordered_map>`      | 无序映射容器（基于哈希表）              |
+|                 | `<bitset>`             | 二进制位容器                            |
+| 算法与迭代器    | `<algorithm>`          | 常用算法（排序、查找等）                |
+|                 | `<iterator>`           | 迭代器                                  |
+| 函数对象与绑定  | `<functional>`         | 定义函数对象及相关工具                  |
+| 数学与数值运算  | `<numeric>`            | 数值操作（累计、乘积等）                |
+|                 | `<complex>`            | 复数运算                                |
+|                 | `<valarray>`           | 数组类及相关操作                        |
+|                 | `<cmath>`              | 数学函数                                |
+| 字符串与正则    | `<string>`             | 标准字符串类                            |
+|                 | `<regex>`              | 正则表达式                              |
+| 时间与日期      | `<ctime>`              | 时间处理                                |
+|                 | `<chrono>`             | 时间库                                  |
+| 多线程与并发    | `<thread>`             | 多线程支持                              |
+|                 | `<mutex>`              | 互斥量                                  |
+|                 | `<condition_variable>` | 条件变量                                |
+|                 | `<future>`             | 异步编程支持                            |
+|                 | `<atomic>`             | 原子操作                                |
+| 内存管理        | `<memory>`             | 智能指针及动态内存管理                  |
+|                 | `<new>`                | 动态内存分配                            |
+| 类型特性与 RTTI | `<type_traits>`        | 类型特性                                |
+|                 | `<typeinfo>`           | 运行时类型识别                          |
+| 异常处理        | `<exception>`          | 异常处理基类及相关工具                  |
+|                 | `<stdexcept>`          | 常用异常类（如 `std::runtime_error`）   |
+| C 风格输入输出  | `<cstdio>`             | C 风格输入输出                          |
+| 其他工具        | `<cstdint>`            | 定长整数类型                            |
+|                 | `<utility>`            | 通用工具（如 `std::pair`、`std::move`） |
+|                 | `<random>`             | 随机数生成                              |
+|                 | `<locale>`             | 本地化支持                              |
+|                 | `<codecvt>`            | 字符编码转换                            |
+|                 | `<cassert>`            | 断言                                    |
+|                 | `<cctype>`             | 字符处理                                |
+|                 | `<cstring>`            | 字符串处理                              |
+|                 | `<cwchar>`             | 宽字符处理                              |
+|                 | `<climits>`            | 数值极限                                |
+|                 | `<cfloat>`             | 浮点极限                                |
+|                 | `<cstdlib>`            | 常用工具（如 `std::rand`、`std::abs`）  |
