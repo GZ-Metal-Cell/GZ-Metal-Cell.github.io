@@ -1,0 +1,2164 @@
+---
+title: Software-Unreal 虚幻 C++ 零基础入门
+date: Thu Mar 14 2024 08:10:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - UE4
+  - C++
+categories: 探索
+description: 学习自 siki 学院。我要写代码！
+---
+
+
+# 资源
+
+- [001-课程介绍与学前必读_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1u8411u7FC/)
+
+- [Unreal 入门第一季 - 虚幻 C++基础训练 - SiKi 学院|SiKi 学堂 - unity|u3d|虚幻|ue4/5|java|python|人工智能|视频教程|在线课程 (sikiedu.com)](https://www.sikiedu.com/my/course/518)
+
+#  环境配置
+
+​	还是把版本换成 UE4.27 吧，让它支持 VS2022。
+
+# 课程
+
+## 202-Unreal 项目文件结构解读
+
+- [UE4 C++基础 - 工程目录结构 - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/160917246)
+
+> 一些子目录是在引擎和游戏项目目录之间通用的：
+>
+> - **Binaries -** 包含可执行文件或编译期间创建的其他文件。
+>
+> - **Build** - 包含构建引擎或游戏所需的文件，包括创建特定于平台的构建版所需的文件。
+>
+> - **Config** - 配置文件，用于设置用来控制引擎行为的值。项目 Config 文件中设置的值会覆盖 Engine\Config 目录中设置的值。
+>
+> - **Content** - 保存引擎或游戏的内容，包括资源包和贴图。
+>
+> - **DerivedDataCache** - 包含加载时针对引用内容生成的派生数据文件。引用内容没有相应的缓存文件会导致加载时间显著延长。
+>
+> - **Intermediate** - 包含构建引擎或游戏时生成的临时文件。在游戏目录中，着色器存储在 Intermediate 目录中。
+>
+> - **Saved** - 包含自动保存、配置（.ini）文件和日志文件。此外，Engine\Saved 目录还包含崩溃日志、硬件信息和 Swarm 选项与数据。
+>
+> - **Source** - 包含引擎或游戏的所有源文件，包括引擎源代码、工具和游戏类等。
+>
+> - - **Engine** - Engine 目录中的源文件组织结构如下：
+>
+>   - - **Developer** - 编辑器和引擎共同使用的文件。
+>     - **Editor** - 仅供编辑器使用的文件。
+>     - **Programs** - 引擎或编辑器使用的外部工具。
+>     - **Runtime** - 仅供引擎使用的文件。
+>
+>   - **Game** - 游戏项目源码，建议按模块的方式进行组织。
+
+​	迁移项目最小的单元是 `Config`、`Content` 和 `XXX.uproject`。
+
+## 203-Unreal 缓存数据解读
+
+![png](203.1.png)
+
+​	Epic 中修改保管库的缓存位置。
+
+![png](203.2.png)
+
+​	这个路径存放着着色器的缓存。
+
+## 209-C++ 与蓝图的关系与选择
+
+> **C++ 与蓝图**
+>
+> - 两者关系
+>   - 蓝图建立在 C++ 代码之上
+>   - 蓝图与 C++ 可以很好地协作
+> - 理论平衡
+>   - C++ 由游戏逻辑程序员使用
+>     - 完成虚幻尚未封装的功能
+>     - 完成根据项目需求需要自定义的功能
+>   - 蓝图由游戏设计人员使用
+>     - 设计其他游戏资源
+>     - 功能测试时使用
+>     - 项目快速迭代时使用
+>     - 调用编写好的 C++ 代码
+
+> **什么是蓝图可视化脚本**
+>
+> - 蓝图可视化脚本简称“蓝图”、“蓝图脚本”
+> - 蓝图是一种可视化编程
+>   - 实际上，你使用蓝图的时候就是在编程
+>   - 蓝图是一种需要编译的面向对象的可视化编程语言
+> - 蓝图完全集成在虚幻 4 中
+> - 通过节点与连线工作
+
+> **什么是蓝图系统**
+>
+> - 蓝图系统俗称“蓝图”、“蓝图类”
+> - 将蓝图类想象成游戏内容的容器
+>   - 其可以包含组件
+>   - 其可以包含脚本
+>   - 其可以仅仅包含数据
+
+## 301-C++ 基础回顾与虚幻 C++ 类的继承结构
+
+> **虚幻引擎 C++ 类层级结构 (Hierarchy)**
+>
+> - Object
+>
+>   - 存放数据
+>
+>   - 不能被放置到场景 (Level) 中
+>
+> - Actor
+>   - 能放置在场景 (Level) 中
+>   - 可以有视觉表现/可以被看到
+> - Pawn
+>   - 可以被控制器 (Controller) 持有 (Possess)
+> - Character
+>   - 有角色移动组件 (CharacterMovementComponent)
+>   - 具有适合角色的封装好的一系列功能
+
+> 一个 Object 不是 (Is NOT a) Actor
+>
+> 一个 Object 不是一个 (Is NOT a) Pawn
+>
+> 一个 Actor 是一个 (ls a) Object
+>
+> 一个 Actor 不是一个 (Is NOT a) Pawn
+>
+> 一个 Pawn 是 (ls a) Actor
+>
+> 一个 Pawn 是 (ls a) Object
+
+![png](301.1.png)
+
+​	`Package`、`World`、`Level` 和 `Actor` 之间的关系。
+
+## 302-使用宏参与虚幻的反射与垃圾回收系统
+
+> ​	UE4 的反射系统允许在运行时获取类的信息、动态创建对象、调用函数等操作，而无需提前知道类的具体类型。通过反射系统，可以实现诸如蓝图编辑、插件系统、序列化和反序列化等功能。在 UE4 中，反射系统主要基于宏（macros）和元数据（metadata）来实现，开发者可以利用它来实现更灵活的代码设计和功能扩展。（在蓝图脚本中调用 C++ 的内容）
+>
+> ​	UE4 的垃圾回收系统负责管理动态分配的内存，在运行时自动释放不再需要的内存空间，防止内存泄漏和提高性能。UE4 使用基于引用计数（reference counting）和标记-清除（mark and sweep）算法的混合方式来进行垃圾回收，确保及时释放不再使用的对象，并最大程度地减少性能损耗。
+
+![png](302.1.png)
+
+​	在定义类、变量、函数前分别加上 `UCLASS()`、`UPROPERTY()` 和 `UFUNCTION()` 这样的宏，就可以参与反射与垃圾回收系统，
+
+​	引用头文件时，`#include "MyActor.generated.h"` 务必放在所有引用的头文件的下方。
+
+## 303-创建自己的第一个 UObject 子类
+
+​	新建一个 C++ 项目。
+
+![png](303.1.png)
+
+​	项目中确保打开了 `Show C++ Classes`。
+
+![png](303.2.png)
+
+​	所有 C++ 类都会被存放到 `C++ Classes/项目名称` 中。
+
+![png](303.3.png)
+
+​	在这个目录下创建一个 C++ class，打开 `Show All Classes`，创建一个 `Object` 类。
+
+![png](303.4.png)
+
+​	名字取为 `MyObject`，则会生成 `MyObject.cpp` 和 `MyObject.h` 两个文件。
+
+​	`.cpp` 文件是写逻辑用的，`.h` 文件是写声明用的。
+
+​	修改 `MyObject.h` 文件，然后保存：
+
+```c++
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "UObject/NoExportTypes.h"
+#include "MyObject.generated.h"
+
+/**
+ * 
+ */
+UCLASS(Blueprintable)
+class MYPROJECT8_API UMyObject : public UObject
+{
+	GENERATED_BODY()
+};
+```
+
+​	通过在类声明前添加 `UCLASS(Blueprintable)` 宏，可以让该类在 UE4 的蓝图编辑器中可见，允许开发者使用蓝图来创建该类的实例、设置属性和调用函数（在蓝图脚本中调用 C++ 的内容）。
+
+![png](303.5.png)
+
+​	可以用 VS 的生成进行编译（有可能 UE4 没反应过来，但可以方便地显示中文的报错信息）。
+
+![png](303.6.png)
+
+​	也可以用 UE4 的 `Compile` 按钮编译。
+
+![png](303.7.png)
+
+​	此时所创建的类就可以 `Create Blueprint class based on MyObject`。
+
+## 304-加快 Unreal 编译速度
+
+​	UE4.22 中，每次编译都会重新生成反射代码，影响编译速度（不知道 4.27 还有没有……）。
+
+​	课程中提到的解决方案是，安装路径下找到 `Win64/UnrealHeaderTool.target`，往其中的第二行加一个空格……真玄学。
+
+![png](304.1.png)
+
+## 305-创建 UObject 的蓝图类与基础宏参数介绍
+
+![png](305.1.png)
+
+​	对于之前所创建的 `MyObject` 类，选择 `Create Blueprint class based on MyObject` 以创建一个反射的蓝图，命名为 `BP_MyObject`。
+
+​	编写 `MyObject.h` 的代码，给 `MyObject` 定义一个构造函数、`float` 类型变量 `MyFloat`，函数 `MyFunction()`，添加宏 `UPROPERTY(BlueprintReadWrite)` 使得变量和函数能在蓝图类中读写：
+
+```c++
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "UObject/NoExportTypes.h"
+#include "MyObject.generated.h"
+
+/**
+ * 
+ */
+UCLASS(Blueprintable)
+class MYPROJECT8_API UMyObject : public UObject
+{
+	GENERATED_BODY()
+	
+public:
+	
+	UMyObject();
+
+	UPROPERTY(BlueprintReadWrite)
+	float MyFloat;
+
+	UFUNCTION(BlueprintCallable)
+	void MyFunction();
+};
+```
+
+​	在 `MyObject.cpp` 里写实现（暂为空）：
+
+```c++
+#include "MyObject.h"
+
+UMyObject::UMyObject()
+{
+
+}
+
+void UMyObject::MyFunction()
+{
+
+}
+```
+
+​	保存并编译。
+
+![png](305.2.png)
+
+​	此时在对应的蓝图中就可以创建相关的节点。
+
+![png](305.3.png)
+
+​	试一试！
+
+## 306-使用 UE_LOG 打印日志与在蓝图中实例化继承于 Object 的类
+
+​	修改 `MyObject.h`，宏中可以定义变量/函数属于哪个 `Category`：
+
+```c++
+#pragma once
+
+#include "CoreMinimal.h"
+#include "UObject/NoExportTypes.h"
+#include "MyObject.generated.h"
+
+/**
+ * 
+ */
+UCLASS(Blueprintable)
+class MYPROJECT8_API UMyObject : public UObject
+{
+	GENERATED_BODY()
+	
+public:
+	
+	UMyObject();
+
+	UPROPERTY(BlueprintReadWrite, Category = "My Variables")
+	float MyFloat;
+
+	UFUNCTION(BlueprintCallable, Category = "My Functions")
+	void MyFunction();
+};
+```
+
+​	`MyObject.cpp` 中写 `MyFunction()` 的实现，`UE_LOG()` 可以向控制台输出信息：
+
+```c++
+#include "MyObject.h"
+
+UMyObject::UMyObject()
+{
+	MyFloat = 0.0f;
+}
+
+void UMyObject::MyFunction()
+{
+	UE_LOG(LogTemp, Log, TEXT("Hello World!"));
+	UE_LOG(LogTemp, Warning, TEXT("Hello World!"));
+	UE_LOG(LogTemp, Error, TEXT("Hello World!"));
+}
+```
+
+![png](306.1.png)
+
+​	在关卡蓝图中，`Construct Object from Class` 可以将某个类实例化。
+
+![png](306.2.png)
+
+​	这么画关卡蓝图，实例化 `BP_MyObject` 类，调用其中的 `MyFunction()`。
+
+![png](306.3.png)
+
+​	开跑！此时就会在 `OutputLog` 里输出相应信息。
+
+## 307-如何删除自定义的 C++ 类
+
+- [关于 UE4 删除 C++类的流程 - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/589188839)
+
+## 401-创建自己的 Actor 子类与学习类的命名规范
+
+![png](401.1.png)
+
+​	创建一个 `Actor` 的 C++ class。
+
+![png](401.2.png)
+
+​	路径保持默认（源教程在 Path 里添油加醋了个 `/Actor` 结果我这里编译出错，好像不太聪明的样子……算了我还是妥协好了，后来又想了想可能要改一下 `#include "MyActor.h"` 的位置），之后创建好了 `MyActor.h` 和 `MyActor.cpp`。
+
+​	看一下 `MyActor.cpp`，感觉很像 Unity 里的 `Start()` 和 `Update()`：
+
+```c++
+#include "MyActor.h"
+
+// Sets default values
+AMyActor::AMyActor()
+{
+ 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	PrimaryActorTick.bCanEverTick = true;
+}
+
+// Called when the game starts or when spawned
+void AMyActor::BeginPlay()
+{
+	Super::BeginPlay();
+}
+
+// Called every frame
+void AMyActor::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+}
+```
+
+> - 派生自 `Actor` 的类带有 `A` 前缀，如 `AController`。
+> - 派生自 `Object` 的类带有 `U` 前缀，如 `UComponent`。
+> - `Enums` 的前缀是 `E`，如 `EFortificationType`。
+> - `Interface` 的前缀通常是 `I`，如 `lAbilitySystemInterface`。
+> - `Template` 的前缀是 `T`，如 `TArray`。
+> - 派生自 `SWidget` 的类 (`Slate Ul`) 带有前缀 `S`，如 `SButton`。
+> - 其他类的前缀为字母 `F`，如 `FVector`。
+
+​	看一看 `MyActor.h` 里的内容，虽然 `UCLASS()` 没有 `Blueprintable`，但是也可以执行  `Create Blueprint class based on MyObject`，这是因为所继承的类 `AActor` 自带 `Blueprintable`：
+
+```c++
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
+#include "MyActor.generated.h"
+
+UCLASS()
+class MYPROJECT8_API AMyActor : public AActor
+{
+	GENERATED_BODY()
+	
+public:	
+	// Sets default values for this actor's properties
+	AMyActor();
+
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
+public:	
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
+};
+```
+
+## 402-组件简介与使用蓝图类扩展代码的优点
+
+​	略。这个蓝图跟 Unity 里的 `prefab` 蛮像的。
+
+## 403-在 C++ 中创建静态网格组件
+
+​	编辑 `MyActor.h` 里的内容，声明一个变量 `UStaticMeshComponent* MyStaticMesh`：
+
+```c++
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
+#include "MyActor.generated.h"
+
+UCLASS()
+class MYPROJECT8_API AMyActor : public AActor
+{
+	GENERATED_BODY()
+	
+public:	
+	// Sets default values for this actor's properties
+	AMyActor();
+
+	UPROPERTY(VisibleAnywhere, Category = "My Actor Components")
+	UStaticMeshComponent* MyStaticMesh;
+
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
+public:	
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
+};
+
+```
+
+​	编辑 `MyActor.cpp` 里的内容，在构造函数里设置 `MyStaticMesh` 里的值：
+
+```c++
+#include "MyActor.h"
+
+// Sets default values
+AMyActor::AMyActor()
+{
+ 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	PrimaryActorTick.bCanEverTick = true;
+
+	MyStaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MyStaticMesh"));
+}
+
+// Called when the game starts or when spawned
+void AMyActor::BeginPlay()
+{
+	Super::BeginPlay();
+}
+
+// Called every frame
+void AMyActor::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+}
+```
+
+![png](403.1.png)
+
+​	如此做，对应的蓝图里就会显示构造函数创建的 `MyStaticMesh`。
+
+![png](403.2.png)
+
+​	也可以不用蓝图直接将定义的 C++ class 拖到关卡中。
+
+## 404-导入模型与布置场景
+
+​	略。
+
+## 405-使用 SetActorLoction 控制位置与宏参数 EditInstanceOnly 介绍
+
+修改 `MyActor.h` 的内容，添加一个 `FVector` 类型的变量 `InitLocation`，上面添加修饰宏 `UPROPERTY(EditInstanceOnly, Category = "My Actor Properties | Vector")`，让这个值可以在实例中编辑：
+
+```c++
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
+#include "MyActor.generated.h"
+
+UCLASS()
+class MYPROJECT8_API AMyActor : public AActor
+{
+	GENERATED_BODY()
+	
+public:	
+	// Sets default values for this actor's properties
+	AMyActor();
+
+	UPROPERTY(VisibleAnywhere, Category = "My Actor Components")
+	UStaticMeshComponent* MyStaticMesh;
+
+	UPROPERTY(EditInstanceOnly, Category = "My Actor Properties | Vector")
+	FVector InitLocation;
+
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
+public:	
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
+};
+```
+
+​	修改 `MyActor.cpp` 里的内容，在 `BeginPlay()` 中将 `Actor` 的坐标设为 `InitLocation` 的值。
+
+```c++
+#include "MyActor.h"
+
+// Sets default values
+AMyActor::AMyActor()
+{
+ 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	PrimaryActorTick.bCanEverTick = true;
+
+	MyStaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MyStaticMesh"));
+	InitLocation = FVector(0.0f);
+}
+
+// Called when the game starts or when spawned
+void AMyActor::BeginPlay()
+{
+	Super::BeginPlay();
+	
+	SetActorLocation(InitLocation);
+}
+
+// Called every frame
+void AMyActor::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+}
+```
+
+![png](405.1.png)
+
+​	在蓝图实例中多了个设置 `InitLocation` 的地方，运行关卡会发现蓝图实例被正确地移动到了 `InitLocation`  的位置。
+
+## 406-VisibleInstanceOnly 与 EditDefaultsOnly
+
+​	修改 `MyActor.h` 里的内容，引入了两个新的宏参数：
+
+- `VisibleInstanceOnly` 只在实例中可见，不可编辑。
+- `EditDefaultsOnly` 只可在模板中编辑。
+
+​	将 `bool` 变量命名前加上前缀 `b`，UE 会自动识别并把前缀去除。
+
+```c++
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
+#include "MyActor.generated.h"
+
+UCLASS()
+class MYPROJECT8_API AMyActor : public AActor
+{
+	GENERATED_BODY()
+	
+public:	
+	// Sets default values for this actor's properties
+	AMyActor();
+
+	UPROPERTY(VisibleAnywhere, Category = "My Actor Components")
+	UStaticMeshComponent* MyStaticMesh;
+
+	UPROPERTY(EditInstanceOnly, Category = "My Actor Properties | Vector")
+	FVector InitLocation;
+
+	UPROPERTY(VisibleInstanceOnly, Category = "My Actor Properties | Vector")
+	FVector PlacedLocation;
+
+	UPROPERTY(EditDefaultsOnly, Category = "My Actor Properties | Vector")
+	bool bGotoInitLocation;
+
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
+public:	
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
+};
+```
+
+​	修改 `MyActor.cpp` 里的内容：
+
+```c++
+#include "MyActor.h"
+
+// Sets default values
+AMyActor::AMyActor()
+{
+ 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	PrimaryActorTick.bCanEverTick = true;
+
+	MyStaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MyStaticMesh"));
+	InitLocation = FVector(0.0f);
+	PlacedLocation = FVector(0.0f);
+	bGotoInitLocation = false;
+}
+
+// Called when the game starts or when spawned
+void AMyActor::BeginPlay()
+{
+	Super::BeginPlay();
+	
+	PlacedLocation = GetActorLocation();
+	if (bGotoInitLocation)
+		SetActorLocation(InitLocation);
+}
+
+// Called every frame
+void AMyActor::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+}
+```
+
+![png](406.1.png)
+
+​	开跑！可以看到宏变量 `VisibleAnywhere`、`EditInstanceOnly`、`VisibleInstanceOnly` 和 `EditDefaultsOnly` 之间的区别。
+
+## 407-VisibleDefaultsOnly 与 EditAnywhere
+
+​	修改 `MyActor.h` 的内容，引入了两个新的宏参数：
+
+- `VisibleDefaultsOnly` 只在模板中可见（没有地方可以编辑，一般没什么卵用）。
+- `EditAnywhere` 在模板类和实例类中均可编辑。
+
+```c++
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
+#include "MyActor.generated.h"
+
+UCLASS()
+class MYPROJECT8_API AMyActor : public AActor
+{
+	GENERATED_BODY()
+	
+public:	
+	// Sets default values for this actor's properties
+	AMyActor();
+
+	UPROPERTY(VisibleAnywhere, Category = "My Actor Components")
+	UStaticMeshComponent* MyStaticMesh;
+
+	UPROPERTY(EditInstanceOnly, Category = "My Actor Properties | Vector")
+	FVector InitLocation;
+
+	UPROPERTY(VisibleInstanceOnly, Category = "My Actor Properties | Vector")
+	FVector PlacedLocation;
+
+	UPROPERTY(EditDefaultsOnly, Category = "My Actor Properties | Vector")
+	bool bGotoInitLocation;
+
+	UPROPERTY(VisibleDefaultsOnly, Category = "My Actor Properties | Vector")
+	FVector WorldOrigin;
+
+	UPROPERTY(EditAnywhere, Category = "My Actor Properties | Vector")
+	FVector TickLoactionOffset;
+
+	UPROPERTY(EditAnywhere, Category = "My Actor Properties | Vector")
+	bool bShouldMove;
+
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
+public:	
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
+};
+```
+
+​	修改 `MyActor.cpp` 里的内容：
+
+```c++
+#include "MyActor.h"
+
+// Sets default values
+AMyActor::AMyActor()
+{
+ 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	PrimaryActorTick.bCanEverTick = true;
+
+	MyStaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MyStaticMesh"));
+	InitLocation = FVector(0.0f);
+	PlacedLocation = FVector(0.0f);
+	bGotoInitLocation = false;
+	WorldOrigin = FVector(0.0f);
+	TickLoactionOffset = FVector(0.0f);
+	bShouldMove = false;
+}
+
+// Called when the game starts or when spawned
+void AMyActor::BeginPlay()
+{
+	Super::BeginPlay();
+	
+	PlacedLocation = GetActorLocation();
+	if (bGotoInitLocation)
+		SetActorLocation(InitLocation);
+}
+
+// Called every frame
+void AMyActor::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (bShouldMove)
+	{
+		AddActorLocalOffset(TickLoactionOffset);
+	}
+}
+```
+
+![png](407.1.png)
+
+​	开跑！此时实例会每帧沿方向 `(0.1, 0.1, 0.1)` 移动。
+
+## 408-在编辑器中限制输入值的范围与不要将组件指针设为 EditAnywhere
+
+​	**不要将组件指针设为 EditAnywhere**
+
+```c++
+UPROPERTY(EditAnywhere, Category = "My Actor Components")
+UStaticMeshComponent* MyStaticMesh;
+```
+
+​	**不要这么做！生成的界面会十分复杂，不友好！**
+
+---
+
+​	修改 `MyActor.h` 中 `TickLoactionOffset` 的宏，如此做将在面板中限制变量的取值范围：
+
+```c++
+UPROPERTY(EditAnywhere, Category = "My Actor Properties | Vector", meta = (ClampMin = -5.0f, ClampMax = 5.0f, UIMin = -5.0f, UIMax = 5.0f))
+FVector TickLoactionOffset;
+```
+
+![png](408.1.png)
+
+## 409-简单碰撞与复杂碰撞
+
+​	教你认识 UE 里的碰撞，分为 `简单碰撞` 和 `复杂碰撞`。
+
+![png](409.1.png)
+
+## 410-模拟物理与重力
+
+![png](410.1.png)
+
+​	物体中若打开了 `Physics` 下的 `Simulate Physics`，则会开启物理。
+
+![png](410.2.png)
+
+​	给这个物体加一个简单的凸包碰撞。
+
+![png](410.3.png)
+
+​	开跑！按下 ``  ` 键可以打开命令行，输出 `show Collision` 即可在视图中显示碰撞的具体位置。
+
+##   411-通过代码增加力与力矩
+
+​	修改 `MyActor.h` 里的内容，添加了变量力 `FVector InitForce`、力矩 `FVector InitTorque` 和 纯改变加速度（施加力的时候忽略质量）`bAccelChange`：
+
+```c++
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
+#include "MyActor.generated.h"
+
+UCLASS()
+class MYPROJECT8_API AMyActor : public AActor
+{
+	GENERATED_BODY()
+	
+public:	
+	// Sets default values for this actor's properties
+	AMyActor();
+
+	UPROPERTY(VisibleAnywhere, Category = "My Actor Components")
+	UStaticMeshComponent* MyStaticMesh;
+
+	UPROPERTY(EditInstanceOnly, Category = "My Actor Properties | Vector")
+	FVector InitLocation;
+
+	UPROPERTY(VisibleInstanceOnly, Category = "My Actor Properties | Vector")
+	FVector PlacedLocation;
+
+	UPROPERTY(EditDefaultsOnly, Category = "My Actor Properties | Vector")
+	bool bGotoInitLocation;
+
+	UPROPERTY(VisibleDefaultsOnly, Category = "My Actor Properties | Vector")
+	FVector WorldOrigin;
+
+	UPROPERTY(EditAnywhere, Category = "My Actor Properties | Vector", meta = (ClampMin = -5.0f, ClampMax = 5.0f, UIMin = -5.0f, UIMax = 5.0f))
+	FVector TickLoactionOffset;
+
+	UPROPERTY(EditAnywhere, Category = "My Actor Properties | Vector")
+	bool bShouldMove;
+
+	UPROPERTY(EditInstanceOnly, Category = "My Actor Properties | Physics")
+	FVector InitForce;
+
+	UPROPERTY(EditInstanceOnly, Category = "My Actor Properties | Physics")
+	FVector InitTorque;
+
+	UPROPERTY(EditInstanceOnly, Category = "My Actor Properties | Physics")
+	bool bAccelChange;
+
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
+public:	
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
+};
+```
+
+​	修改 `MyActor.cpp` 里的内容：
+
+```c++
+#include "MyActor.h"
+#include "Components/StaticMeshComponent.h"
+
+// Sets default values
+AMyActor::AMyActor()
+{
+ 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	PrimaryActorTick.bCanEverTick = true;
+
+	MyStaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MyStaticMesh"));
+	InitLocation = FVector(0.0f);
+	PlacedLocation = FVector(0.0f);
+	bGotoInitLocation = false;
+	WorldOrigin = FVector(0.0f);
+	TickLoactionOffset = FVector(0.0f);
+	bShouldMove = false;
+	InitForce = FVector(0.0f);
+	InitTorque = FVector(0.0f);
+	bAccelChange = false;
+}
+
+// Called when the game starts or when spawned
+void AMyActor::BeginPlay()
+{
+	Super::BeginPlay();
+	
+	PlacedLocation = GetActorLocation();
+	if (bGotoInitLocation)
+		SetActorLocation(InitLocation);
+	MyStaticMesh->AddForce(InitForce, "NAME_None", bAccelChange);
+	MyStaticMesh->AddTorque(InitForce, "NAME_None", bAccelChange);
+}
+
+// Called every frame
+void AMyActor::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (bShouldMove)
+	{
+		AddActorLocalOffset(TickLoactionOffset);
+	}
+}
+```
+
+​	`MyStaticMesh->` 默认不可用，需从官方文档查找 `UStaticMeshComponent` 的属性：[UStaticMeshComponent | Unreal Engine 5.2 Documentation](https://docs.unrealengine.com/5.3/en-US/API/Runtime/Engine/Components/UStaticMeshComponent/) 得到需引入 `#include "Components/StaticMeshComponent.h"`。
+
+![png](411.1.png)
+
+​	此时在实例类中便可设置给对象初始化的力和力矩。
+
+![png](411.2.png)
+
+## 412-使用 Sweep 在不开启模拟物理的情况下进行碰撞
+
+​	在没有 `Simulate Physics` 的情况下，默认的碰撞是不会有效的，但是可以打开 `Sweep` 在不开启模拟物理的情况下进行碰撞。
+
+![png](412.1.png)
+
+​	修改 `MyActor.cpp`，`AddActorLocalOffset(TickLoactionOffset, true);` 便可在不使用物理的情况下进行碰撞：
+
+```c++
+#include "MyActor.h"
+#include "Components/StaticMeshComponent.h"
+
+// Sets default values
+AMyActor::AMyActor()
+{
+ 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	PrimaryActorTick.bCanEverTick = true;
+
+	MyStaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MyStaticMesh"));
+	InitLocation = FVector(0.0f);
+	PlacedLocation = FVector(0.0f);
+	bGotoInitLocation = false;
+	WorldOrigin = FVector(0.0f);
+	TickLoactionOffset = FVector(0.0f);
+	bShouldMove = false;
+	InitForce = FVector(0.0f);
+	InitTorque = FVector(0.0f);
+	bAccelChange = false;
+}
+
+// Called when the game starts or when spawned
+void AMyActor::BeginPlay()
+{
+	Super::BeginPlay();
+	
+	PlacedLocation = GetActorLocation();
+	if (bGotoInitLocation)
+		SetActorLocation(InitLocation);
+	//MyStaticMesh->AddForce(InitForce, "NAME_None", bAccelChange);
+	//MyStaticMesh->AddTorque(InitForce, "NAME_None", bAccelChange);
+}
+
+// Called every frame
+void AMyActor::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (bShouldMove)
+	{
+		AddActorLocalOffset(TickLoactionOffset, true);
+	}
+}
+```
+
+## 413-碰撞通道与击中信息
+
+![png](413.1.png)
+
+​	`Collision` 可以设置哪些碰撞有效，必须两个碰撞均是 `Block` 才可以阻挡。
+
+---
+
+​	修改 `MyActor.cpp` 里的内容，`FHitResult HitResult` 和 `AddActorLocalOffset(TickLoactionOffset, true, &HitResult);` 可以获取碰撞信息：
+
+```c++
+#include "MyActor.h"
+#include "Components/StaticMeshComponent.h"
+
+// Sets default values
+AMyActor::AMyActor()
+{
+ 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	PrimaryActorTick.bCanEverTick = true;
+
+	MyStaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MyStaticMesh"));
+	InitLocation = FVector(0.0f);
+	PlacedLocation = FVector(0.0f);
+	bGotoInitLocation = false;
+	WorldOrigin = FVector(0.0f);
+	TickLoactionOffset = FVector(0.0f);
+	bShouldMove = false;
+	InitForce = FVector(0.0f);
+	InitTorque = FVector(0.0f);
+	bAccelChange = false;
+}
+
+// Called when the game starts or when spawned
+void AMyActor::BeginPlay()
+{
+	Super::BeginPlay();
+	
+	PlacedLocation = GetActorLocation();
+	if (bGotoInitLocation)
+		SetActorLocation(InitLocation);
+	//MyStaticMesh->AddForce(InitForce, "NAME_None", bAccelChange);
+	//MyStaticMesh->AddTorque(InitForce, "NAME_None", bAccelChange);
+}
+
+// Called every frame
+void AMyActor::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (bShouldMove)
+	{
+		FHitResult HitResult;
+
+		AddActorLocalOffset(TickLoactionOffset, true, &HitResult);
+		UE_LOG(LogTemp, Warning, TEXT("X: %f, Y: %f, Z: %f"), HitResult.Location.X, HitResult.Location.Y, HitResult.Location.Z);
+	}
+}
+```
+
+![png](413.2.png)
+
+​	开跑！`Output Log` 将输出碰撞信息。
+
+## 414-其他常用函数与可探索部分
+
+​	略。
+
+## 501-创建自己的 Pawn 类、自己的根组件并将静态网格组件附加到其上
+
+![png](501.1.png)
+
+​	创建一个 Pawn 类型的 C++ Class，获得 `MyPawn.h` 和 `MyPawn.cpp`。
+
+​	编辑 `MyPawn.h`，定义变量 `class UStaticMeshComponent* MyStaticMesh;`，这个 `class` 可加可不加：
+
+```c++
+#include "CoreMinimal.h"
+#include "GameFramework/Pawn.h"
+#include "MyPawn.generated.h"
+
+UCLASS()
+class MYPROJECT8_API AMyPawn : public APawn
+{
+	GENERATED_BODY()
+
+public:
+	// Sets default values for this pawn's properties
+	AMyPawn();
+
+	UPROPERTY(VisibleAnywhere, Category = "My Pawn Components")
+	class UStaticMeshComponent* MyStaticMesh;
+
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
+public:	
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
+
+	// Called to bind functionality to input
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+```
+
+​	编辑 `MyPawn.cpp`，设置 `RootComponent` 的值（模板自带），设置 `MyStaticMesh` 的值并将其设为 `RootComponent` 的子节点：
+
+```c++
+#include "MyPawn.h"
+#include "Components/StaticMeshComponent.h"
+
+// Sets default values
+AMyPawn::AMyPawn()
+{
+ 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	PrimaryActorTick.bCanEverTick = true;
+
+	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
+	MyStaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MyStaticMesh"));
+	MyStaticMesh->SetupAttachment(GetRootComponent());
+}
+
+// Called when the game starts or when spawned
+void AMyPawn::BeginPlay()
+{
+	Super::BeginPlay();
+}
+
+// Called every frame
+void AMyPawn::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+}
+
+// Called to bind functionality to input
+void AMyPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+}
+```
+
+​	编译。`Create Blueprint class based on MyPawn`。
+
+![png](501.2.png)
+
+​	开跑！
+
+![png](501.3.png)
+
+## 502-为自己的 Pawn 设置相机组件
+
+​	修改 `MyPawn.h`，定义一个新的变量 `class UCameraComponent* MyCamera;`：
+
+```c++
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Pawn.h"
+#include "MyPawn.generated.h"
+
+UCLASS()
+class MYPROJECT8_API AMyPawn : public APawn
+{
+	GENERATED_BODY()
+
+public:
+	// Sets default values for this pawn's properties
+	AMyPawn();
+
+	UPROPERTY(VisibleAnywhere, Category = "My Pawn Components")
+	class UStaticMeshComponent* MyStaticMesh;
+
+	UPROPERTY(VisibleAnywhere, Category = "My Pawn Components")
+	class UCameraComponent* MyCamera;
+
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
+public:	
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
+
+	// Called to bind functionality to input
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+};
+```
+
+​	修改 `MyPawn.cpp`，设置好 `MyCamera` 的属性：
+
+```c++
+#include "MyPawn.h"
+#include "Components/StaticMeshComponent.h"
+#include "Camera/CameraComponent.h"
+
+// Sets default values
+AMyPawn::AMyPawn()
+{
+ 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	PrimaryActorTick.bCanEverTick = true;
+
+	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
+	MyStaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MyStaticMesh"));
+	MyStaticMesh->SetupAttachment(GetRootComponent());
+
+	MyCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("MyCamera"));
+	MyCamera->SetupAttachment(GetRootComponent());
+
+	MyCamera->SetRelativeLocation(FVector(-300.0f, 0.0f, 300.0f));
+	MyCamera->SetRelativeRotation(FRotator(-45.0f, 0.0f, 0.0f));
+}
+
+// Called when the game starts or when spawned
+void AMyPawn::BeginPlay()
+{
+	Super::BeginPlay();
+	
+}
+
+// Called every frame
+void AMyPawn::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+}
+
+// Called to bind functionality to input
+void AMyPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+}
+```
+
+​	开跑！
+
+![png](502.1.png)
+
+## 503-设置 GameMode 并自动持有 Pawn
+
+![png](503.1.png)
+
+​	对于 `C++ Classes` 下的 `GameModeBase`，创建游戏模式蓝图 `Create Blueprint class based on ...`。
+
+![png](503.2.png)
+
+​		在创建的蓝图中的 `Class Defaults`，将 `Default Pawn Class` 设置为 `BP_MyPawn`。
+
+![png](503.3.png)
+
+​	关卡中的 `World Settings`，设置好 `GameMode Override`。
+
+![png](503.4.png)
+
+​	`BP_MyPawn` 中设置好 `Auto Possess Player` 为 `Player 0`，或者直接修改 `MyPawn.cpp`，添加语句 `AutoPossessPlayer = EAutoReceiveInput::Player0;`：
+
+```c++
+#include "MyPawn.h"
+#include "Components/StaticMeshComponent.h"
+#include "Camera/CameraComponent.h"
+
+// Sets default values
+AMyPawn::AMyPawn()
+{
+ 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	PrimaryActorTick.bCanEverTick = true;
+
+	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
+	MyStaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MyStaticMesh"));
+	MyStaticMesh->SetupAttachment(GetRootComponent());
+
+	MyCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("MyCamera"));
+	MyCamera->SetupAttachment(GetRootComponent());
+
+	MyCamera->SetRelativeLocation(FVector(-300.0f, 0.0f, 300.0f));
+	MyCamera->SetRelativeRotation(FRotator(-45.0f, 0.0f, 0.0f));
+
+	AutoPossessPlayer = EAutoReceiveInput::Player0;
+}
+
+// Called when the game starts or when spawned
+void AMyPawn::BeginPlay()
+{
+	Super::BeginPlay();
+	
+}
+
+// Called every frame
+void AMyPawn::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+}
+
+// Called to bind functionality to input
+void AMyPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+}
+```
+
+## 504-按键映射与轴事件绑定
+
+![png](504.1.png)
+
+​	在 `Project Settings` 力设置按键映射。
+
+​	在 `MyPawn.h` 里定义私有的移动函数：
+
+```c++
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Pawn.h"
+#include "MyPawn.generated.h"
+
+UCLASS()
+class MYPROJECT8_API AMyPawn : public APawn
+{
+	GENERATED_BODY()
+
+public:
+	// Sets default values for this pawn's properties
+	AMyPawn();
+
+	UPROPERTY(VisibleAnywhere, Category = "My Pawn Components")
+	class UStaticMeshComponent* MyStaticMesh;
+
+	UPROPERTY(VisibleAnywhere, Category = "My Pawn Components")
+	class UCameraComponent* MyCamera;
+
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
+public:	
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
+
+	// Called to bind functionality to input
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+private:
+	void MoveForward(float Value);
+	void MoveRight(float Value);
+};
+```
+
+​	`MyPawn.cpp` 里将按键映射与轴事件绑定：
+
+```c++
+#include "MyPawn.h"
+#include "Components/StaticMeshComponent.h"
+#include "Camera/CameraComponent.h"
+#include "Components/InputComponent.h"
+
+// Sets default values
+AMyPawn::AMyPawn()
+{
+ 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	PrimaryActorTick.bCanEverTick = true;
+
+	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
+	MyStaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MyStaticMesh"));
+	MyStaticMesh->SetupAttachment(GetRootComponent());
+
+	MyCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("MyCamera"));
+	MyCamera->SetupAttachment(GetRootComponent());
+
+	MyCamera->SetRelativeLocation(FVector(-300.0f, 0.0f, 300.0f));
+	MyCamera->SetRelativeRotation(FRotator(-45.0f, 0.0f, 0.0f));
+
+	AutoPossessPlayer = EAutoReceiveInput::Player0;
+}
+
+// Called when the game starts or when spawned
+void AMyPawn::BeginPlay()
+{
+	Super::BeginPlay();
+	
+}
+
+// Called every frame
+void AMyPawn::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+}
+
+// Called to bind functionality to input
+void AMyPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+	PlayerInputComponent->BindAxis(TEXT("MoveForward"), this, &AMyPawn::MoveForward);
+	PlayerInputComponent->BindAxis(TEXT("MoveRight"), this, &AMyPawn::MoveRight);
+}
+
+void AMyPawn::MoveForward(float Value)
+{
+}
+
+void AMyPawn::MoveRight(float Value)
+{
+}
+```
+
+## 505-使用 Tick 的移动
+
+​	修改 `MyActor.h` 里的内容，定义变量 `MaxSpeed` 和 `Velocity`：
+
+```c++
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Pawn.h"
+#include "MyPawn.generated.h"
+
+UCLASS()
+class MYPROJECT8_API AMyPawn : public APawn
+{
+	GENERATED_BODY()
+
+public:
+	// Sets default values for this pawn's properties
+	AMyPawn();
+
+	UPROPERTY(VisibleAnywhere, Category = "My Pawn Components")
+	class UStaticMeshComponent* MyStaticMesh;
+
+	UPROPERTY(VisibleAnywhere, Category = "My Pawn Components")
+	class UCameraComponent* MyCamera;
+
+	UPROPERTY(EditAnywhere, Category = "My Pawn Movement")
+	float MaxSpeed;
+
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
+public:	
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
+
+	// Called to bind functionality to input
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+private:
+	void MoveForward(float Value);
+	void MoveRight(float Value);
+	FVector Velocity;
+};
+```
+
+​	修改 `MyPawn.cpp` 里的内容，使得物体能够随着输入而移动：
+
+- [AActor::AddActorLocalOffset | Unreal Engine 5.2 Documentation](https://docs.unrealengine.com/5.3/en-US/API/Runtime/Engine/GameFramework/AActor/AddActorLocalOffset/)
+
+```c++
+#include "MyPawn.h"
+#include "Components/StaticMeshComponent.h"
+#include "Camera/CameraComponent.h"
+#include "Components/InputComponent.h"
+
+// Sets default values
+AMyPawn::AMyPawn()
+{
+ 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	PrimaryActorTick.bCanEverTick = true;
+
+	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
+	MyStaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MyStaticMesh"));
+	MyStaticMesh->SetupAttachment(GetRootComponent());
+
+	MyCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("MyCamera"));
+	MyCamera->SetupAttachment(GetRootComponent());
+
+	MyCamera->SetRelativeLocation(FVector(-300.0f, 0.0f, 300.0f));
+	MyCamera->SetRelativeRotation(FRotator(-45.0f, 0.0f, 0.0f));
+
+	AutoPossessPlayer = EAutoReceiveInput::Player0;
+
+	MaxSpeed = 300.0f;
+	Velocity = FVector::ZeroVector;
+}
+
+// Called when the game starts or when spawned
+void AMyPawn::BeginPlay()
+{
+	Super::BeginPlay();
+	
+}
+
+// Called every frame
+void AMyPawn::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	AddActorLocalOffset(Velocity * DeltaTime, true);
+}
+
+// Called to bind functionality to input
+void AMyPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+	PlayerInputComponent->BindAxis(TEXT("MoveForward"), this, &AMyPawn::MoveForward);
+	PlayerInputComponent->BindAxis(TEXT("MoveRight"), this, &AMyPawn::MoveRight);
+}
+
+void AMyPawn::MoveForward(float Value)
+{
+	Velocity.X = FMath::Clamp(Value, -1.0f, 1.0f) * MaxSpeed;
+}
+
+void AMyPawn::MoveRight(float Value)
+{
+	Velocity.Y = FMath::Clamp(Value, -1.0f, 1.0f) * MaxSpeed;
+}
+```
+
+## 506-为何要使用 DeltaTime 进行移动
+
+​	使用 DeltaTime 进行移动可以使得不同帧率下的场景移动速度相等。
+
+> - 设有两玩家，Tick 中增量 $1$ 单位
+>   P1 $10$ FPS，$deltatime=1/10=0.1s$
+>   P2 $5$ FPS，$deltatime=1/ 5=0.2s$
+> - 不使用 $deltatime$ 时
+>   P1: $10\times1$，$1$ 秒内移动了 $10$ 单位
+>   P2: $5\times1$，$1$ 秒内移动了 $5$ 单位
+> - 使用 $deltatime$ 时
+>   P1: $10\times1\times0.1=1$，$1$ 秒内移动了 $1$ 单位
+>   P2: $5\times1\times0.2=1$，$1$ 秒内移动了 $1$ 单位
+> - FPS: Frames Per Second
+>   $60$ FPS 即 $1$ 秒 $60$ 帧
+>   $30$ FPS 即 $1$ 秒 $30$ 帧
+>
+> - Tick 每帧调用
+>   $deltaTime$ 为两帧之间的间隔
+
+![png](506.1.png)
+
+​	视图中这里可以显示 FPS。
+
+![png](506.2.png)
+
+​	`Content Browser` 中按 `` ` 输入命令 `t.MaxFPS 10` 可以将最大帧率设为 `10`。
+
+## 507-添加 SpringArm 组件
+
+​	修改 `MyPawn.h` 里的内容，定义变量 `class USpringArmComponent* MySpringArm;`：
+
+```c++
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Pawn.h"
+#include "MyPawn.generated.h"
+
+UCLASS()
+class MYPROJECT8_API AMyPawn : public APawn
+{
+	GENERATED_BODY()
+
+public:
+	// Sets default values for this pawn's properties
+	AMyPawn();
+
+	UPROPERTY(VisibleAnywhere, Category = "My Pawn Components")
+	class UStaticMeshComponent* MyStaticMesh;
+
+	UPROPERTY(VisibleAnywhere, Category = "My Pawn Components")
+	class UCameraComponent* MyCamera;
+
+	UPROPERTY(VisibleAnywhere, Category = "My Pawn Components")
+	class USpringArmComponent* MySpringArm;
+
+	UPROPERTY(EditAnywhere, Category = "My Pawn Movement")
+	float MaxSpeed;
+
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
+public:	
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
+
+	// Called to bind functionality to input
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+private:
+	void MoveForward(float Value);
+	void MoveRight(float Value);
+	FVector Velocity;
+};
+```
+
+​	修改 `MyPawn.cpp` 里的内容：
+
+> ​	原课程使用了：
+>
+> ```c++
+> MySpringArm->RelativeRotation = FRotator(-45.0f, 0.0f, 0.0f);
+> ```
+>
+> ​	但在我这个版本中这个变量变成了私有，应该为：
+>
+> ```c++
+> MySpringArm->SetRelativeRotation(FRotator(-45.0f, 0.0f, 0.0f));
+> ```
+
+```c++
+#include "MyPawn.h"
+#include "Components/StaticMeshComponent.h"
+#include "Camera/CameraComponent.h"
+#include "Components/InputComponent.h"
+#include "GameFramework/SpringArmComponent.h"
+
+// Sets default values
+AMyPawn::AMyPawn()
+{
+ 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	PrimaryActorTick.bCanEverTick = true;
+
+	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
+	MyStaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MyStaticMesh"));
+	MyStaticMesh->SetupAttachment(GetRootComponent());
+
+	MySpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("MySprintArm"));
+	MySpringArm->SetupAttachment(MyStaticMesh);
+	MySpringArm->SetRelativeRotation(FRotator(-45.0f, 0.0f, 0.0f));
+	MySpringArm->TargetArmLength = 400.0f;
+	MySpringArm->bEnableCameraLag = true;
+	MySpringArm->CameraLagSpeed = 3.0f;
+
+	MyCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("MyCamera"));
+	MyCamera->SetupAttachment(GetRootComponent());
+
+	MyCamera->SetRelativeLocation(FVector(-300.0f, 0.0f, 300.0f));
+	MyCamera->SetRelativeRotation(FRotator(-45.0f, 0.0f, 0.0f));
+	MyCamera->SetupAttachment(MySpringArm);
+
+	AutoPossessPlayer = EAutoReceiveInput::Player0;
+
+	MaxSpeed = 300.0f;
+	Velocity = FVector::ZeroVector;
+}
+
+// Called when the game starts or when spawned
+void AMyPawn::BeginPlay()
+{
+	Super::BeginPlay();
+	
+}
+
+// Called every frame
+void AMyPawn::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	AddActorLocalOffset(Velocity * DeltaTime, true);
+}
+
+// Called to bind functionality to input
+void AMyPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+	PlayerInputComponent->BindAxis(TEXT("MoveForward"), this, &AMyPawn::MoveForward);
+	PlayerInputComponent->BindAxis(TEXT("MoveRight"), this, &AMyPawn::MoveRight);
+}
+
+void AMyPawn::MoveForward(float Value)
+{
+	Velocity.X = FMath::Clamp(Value, -1.0f, 1.0f) * MaxSpeed;
+}
+
+void AMyPawn::MoveRight(float Value)
+{
+	Velocity.Y = FMath::Clamp(Value, -1.0f, 1.0f) * MaxSpeed;
+}
+```
+
+​	删除原有的 `BP_MyPawn`，重新创建一个。然后开跑！
+
+![png](507.1.png)
+
+## 508-使用 C++ 代码设置模型与材质的默认值
+
+​	修改 `MyPawn.h` 里的内容，给 `UStaticMeshComponent` 和 `USpringArmComponent` 添加 Get 函数。
+
+```c++
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Pawn.h"
+#include "MyPawn.generated.h"
+
+UCLASS()
+class MYPROJECT8_API AMyPawn : public APawn
+{
+	GENERATED_BODY()
+
+public:
+	// Sets default values for this pawn's properties
+	AMyPawn();
+
+	UPROPERTY(VisibleAnywhere, Category = "My Pawn Components")
+	class UStaticMeshComponent* MyStaticMesh;
+
+	UPROPERTY(VisibleAnywhere, Category = "My Pawn Components")
+	class UCameraComponent* MyCamera;
+
+	UPROPERTY(VisibleAnywhere, Category = "My Pawn Components")
+	class USpringArmComponent* MySpringArm;
+
+	UPROPERTY(EditAnywhere, Category = "My Pawn Movement")
+	float MaxSpeed;
+
+	FORCEINLINE UStaticMeshComponent* GetStaticMeshComponent() { return MyStaticMesh; }
+	FORCEINLINE USpringArmComponent* GetSpringArmComponent() { return MySpringArm; }
+
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
+public:	
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
+
+	// Called to bind functionality to input
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+private:
+	void MoveForward(float Value);
+	void MoveRight(float Value);
+	FVector Velocity;
+};
+```
+
+​	修改 `MyPawn.cpp` 里的内容：
+
+```c++
+#include "MyPawn.h"
+#include "Components/StaticMeshComponent.h"
+#include "Camera/CameraComponent.h"
+#include "Components/InputComponent.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "UObject/ConstructorHelpers.h"
+
+// Sets default values
+AMyPawn::AMyPawn()
+{
+ 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	PrimaryActorTick.bCanEverTick = true;
+
+	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
+	MyStaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MyStaticMesh"));
+	MyStaticMesh->SetupAttachment(GetRootComponent());
+
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> StaticMeshAsset(TEXT("StaticMesh'/Engine/EngineMeshes/Sphere.Sphere'"));
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> MaterialAsset(TEXT("Material'/Engine/Tutorial/SubEditors/TutorialAssets/TutorialMaterial.TutorialMaterial'"));
+	if (StaticMeshAsset.Succeeded() && MaterialAsset.Succeeded())
+	{
+		MyStaticMesh->SetStaticMesh(StaticMeshAsset.Object);
+		MyStaticMesh->SetMaterial(0, MaterialAsset.Object);
+		MyStaticMesh->SetWorldScale3D(FVector(0.5f));
+	}
+
+	MySpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("MySprintArm"));
+	MySpringArm->SetupAttachment(GetStaticMeshComponent());
+	MySpringArm->SetRelativeRotation(FRotator(-45.0f, 0.0f, 0.0f));
+	MySpringArm->TargetArmLength = 400.0f;
+	MySpringArm->bEnableCameraLag = true;
+	MySpringArm->CameraLagSpeed = 3.0f;
+
+	MyCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("MyCamera"));
+	MyCamera->SetupAttachment(GetRootComponent());
+
+	MyCamera->SetRelativeLocation(FVector(-300.0f, 0.0f, 300.0f));
+	MyCamera->SetRelativeRotation(FRotator(-45.0f, 0.0f, 0.0f));
+	MyCamera->SetupAttachment(GetSpringArmComponent());
+
+	AutoPossessPlayer = EAutoReceiveInput::Player0;
+
+	MaxSpeed = 300.0f;
+	Velocity = FVector::ZeroVector;
+}
+
+// Called when the game starts or when spawned
+void AMyPawn::BeginPlay()
+{
+	Super::BeginPlay();
+	
+}
+
+// Called every frame
+void AMyPawn::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	AddActorLocalOffset(Velocity * DeltaTime, true);
+}
+
+// Called to bind functionality to input
+void AMyPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+	PlayerInputComponent->BindAxis(TEXT("MoveForward"), this, &AMyPawn::MoveForward);
+	PlayerInputComponent->BindAxis(TEXT("MoveRight"), this, &AMyPawn::MoveRight);
+}
+
+void AMyPawn::MoveForward(float Value)
+{
+	Velocity.X = FMath::Clamp(Value, -1.0f, 1.0f) * MaxSpeed;
+}
+
+void AMyPawn::MoveRight(float Value)
+{
+	Velocity.Y = FMath::Clamp(Value, -1.0f, 1.0f) * MaxSpeed;
+}
+```
+
+![png](508.1.png)
+
+​	`StaticMeshAsset(TEXT())` 的里的值可以以此法获得。
+
+![png](508.2.png)
+
+​	`MaterialAsset(TEXT())` 的里的值可以以此法获得。
+
+![png](508.3.png)
+
+​	编译后删除蓝图，重新构建 `BP_MyPawn`。
+
+## 509-Sweep 仅对根组件生效
+
+​	之前的代码中：
+
+```c++
+AddActorLocalOffset(Velocity * DeltaTime, true);
+```
+
+​	开启了 `Sweep` 却不能使得碰撞生效，这是因为 `Sweep` 只能对跟组件生效，因此要修改 `MyPawn.cpp`，将 `MyStaticMesh` 设为根组件：
+
+```c++
+#include "MyPawn.h"
+#include "Components/StaticMeshComponent.h"
+#include "Camera/CameraComponent.h"
+#include "Components/InputComponent.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "UObject/ConstructorHelpers.h"
+
+// Sets default values
+AMyPawn::AMyPawn()
+{
+ 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	PrimaryActorTick.bCanEverTick = true;
+
+	// RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
+	MyStaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MyStaticMesh"));
+	RootComponent = MyStaticMesh;
+	MyStaticMesh->SetCollisionProfileName(TEXT("Pawn"));
+
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> StaticMeshAsset(TEXT("StaticMesh'/Engine/EngineMeshes/Sphere.Sphere'"));
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> MaterialAsset(TEXT("Material'/Engine/Tutorial/SubEditors/TutorialAssets/TutorialMaterial.TutorialMaterial'"));
+	if (StaticMeshAsset.Succeeded() && MaterialAsset.Succeeded())
+	{
+		MyStaticMesh->SetStaticMesh(StaticMeshAsset.Object);
+		MyStaticMesh->SetMaterial(0, MaterialAsset.Object);
+		MyStaticMesh->SetWorldScale3D(FVector(0.5f));
+	}
+
+	MySpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("MySprintArm"));
+	MySpringArm->SetupAttachment(GetStaticMeshComponent());
+	MySpringArm->SetRelativeRotation(FRotator(-45.0f, 0.0f, 0.0f));
+	MySpringArm->TargetArmLength = 400.0f;
+	MySpringArm->bEnableCameraLag = true;
+	MySpringArm->CameraLagSpeed = 3.0f;
+
+	MyCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("MyCamera"));
+	MyCamera->SetupAttachment(GetRootComponent());
+
+	MyCamera->SetRelativeLocation(FVector(-300.0f, 0.0f, 300.0f));
+	MyCamera->SetRelativeRotation(FRotator(-45.0f, 0.0f, 0.0f));
+	MyCamera->SetupAttachment(GetSpringArmComponent());
+
+	AutoPossessPlayer = EAutoReceiveInput::Player0;
+
+	MaxSpeed = 300.0f;
+	Velocity = FVector::ZeroVector;
+}
+
+// Called when the game starts or when spawned
+void AMyPawn::BeginPlay()
+{
+	Super::BeginPlay();
+	
+}
+
+// Called every frame
+void AMyPawn::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	AddActorLocalOffset(Velocity * DeltaTime, true);
+}
+
+// Called to bind functionality to input
+void AMyPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+	PlayerInputComponent->BindAxis(TEXT("MoveForward"), this, &AMyPawn::MoveForward);
+	PlayerInputComponent->BindAxis(TEXT("MoveRight"), this, &AMyPawn::MoveRight);
+}
+
+void AMyPawn::MoveForward(float Value)
+{
+	Velocity.X = FMath::Clamp(Value, -1.0f, 1.0f) * MaxSpeed;
+}
+
+void AMyPawn::MoveRight(float Value)
+{
+	Velocity.Y = FMath::Clamp(Value, -1.0f, 1.0f) * MaxSpeed;
+}
+```
+
+## 510-控制视野上下查看
+
+![png](510.1.png)
+
+​	`Project Settings` 里添加两个轴 `LookUp` 和 `LookRight`。
+
+​	修改 `MyPawn.h` 里的内容，定义函数 `LookUp()` 和 `LookRight()`，鼠标的输入 `MouseInput`：
+
+```c++
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Pawn.h"
+#include "MyPawn.generated.h"
+
+UCLASS()
+class MYPROJECT8_API AMyPawn : public APawn
+{
+	GENERATED_BODY()
+
+public:
+	// Sets default values for this pawn's properties
+	AMyPawn();
+
+	UPROPERTY(VisibleAnywhere, Category = "My Pawn Components")
+	class UStaticMeshComponent* MyStaticMesh;
+
+	UPROPERTY(VisibleAnywhere, Category = "My Pawn Components")
+	class UCameraComponent* MyCamera;
+
+	UPROPERTY(VisibleAnywhere, Category = "My Pawn Components")
+	class USpringArmComponent* MySpringArm;
+
+	UPROPERTY(EditAnywhere, Category = "My Pawn Movement")
+	float MaxSpeed;
+
+	FORCEINLINE UStaticMeshComponent* GetStaticMeshComponent() { return MyStaticMesh; }
+	FORCEINLINE USpringArmComponent* GetSpringArmComponent() { return MySpringArm; }
+
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
+public:	
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
+
+	// Called to bind functionality to input
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+private:
+	void MoveForward(float Value);
+	void MoveRight(float Value);
+	FVector Velocity;
+
+	void LookUp(float Value);
+	void LookRight(float Value);
+	FVector2D MouseInput;
+};
+```
+
+​	修改 `MyPawn.cpp` 里的内容，完成视野随鼠标向上下查看的功能：
+
+```c++
+#include "MyPawn.h"
+#include "Components/StaticMeshComponent.h"
+#include "Camera/CameraComponent.h"
+#include "Components/InputComponent.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "UObject/ConstructorHelpers.h"
+
+// Sets default values
+AMyPawn::AMyPawn()
+{
+ 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	PrimaryActorTick.bCanEverTick = true;
+
+	// RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
+	MyStaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MyStaticMesh"));
+	RootComponent = MyStaticMesh;
+	MyStaticMesh->SetCollisionProfileName(TEXT("Pawn"));
+
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> StaticMeshAsset(TEXT("StaticMesh'/Engine/EngineMeshes/Sphere.Sphere'"));
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> MaterialAsset(TEXT("Material'/Engine/Tutorial/SubEditors/TutorialAssets/TutorialMaterial.TutorialMaterial'"));
+	if (StaticMeshAsset.Succeeded() && MaterialAsset.Succeeded())
+	{
+		MyStaticMesh->SetStaticMesh(StaticMeshAsset.Object);
+		MyStaticMesh->SetMaterial(0, MaterialAsset.Object);
+		MyStaticMesh->SetWorldScale3D(FVector(0.5f));
+	}
+
+	MySpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("MySprintArm"));
+	MySpringArm->SetupAttachment(GetStaticMeshComponent());
+	MySpringArm->SetRelativeRotation(FRotator(-45.0f, 0.0f, 0.0f));
+	MySpringArm->TargetArmLength = 400.0f;
+	MySpringArm->bEnableCameraLag = true;
+	MySpringArm->CameraLagSpeed = 3.0f;
+
+	MyCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("MyCamera"));
+	MyCamera->SetupAttachment(GetRootComponent());
+
+	MyCamera->SetRelativeLocation(FVector(-300.0f, 0.0f, 300.0f));
+	MyCamera->SetRelativeRotation(FRotator(-45.0f, 0.0f, 0.0f));
+	MyCamera->SetupAttachment(GetSpringArmComponent());
+
+	AutoPossessPlayer = EAutoReceiveInput::Player0;
+
+	MaxSpeed = 300.0f;
+	Velocity = FVector::ZeroVector;
+}
+
+// Called when the game starts or when spawned
+void AMyPawn::BeginPlay()
+{
+	Super::BeginPlay();
+	
+}
+
+// Called every frame
+void AMyPawn::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	AddActorLocalOffset(Velocity * DeltaTime, true);
+
+	// X, Y, Z 在虚幻的旋转轴对应 Roll, Pitch, Yaw
+	FRotator NewSpringArmRotation = MySpringArm->GetComponentRotation();
+	NewSpringArmRotation.Pitch = FMath::Clamp(NewSpringArmRotation.Pitch += MouseInput.Y, -80.0f, 0.0f);
+	MySpringArm->SetWorldRotation(NewSpringArmRotation);
+}
+
+// Called to bind functionality to input
+void AMyPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+	PlayerInputComponent->BindAxis(TEXT("MoveForward"), this, &AMyPawn::MoveForward);
+	PlayerInputComponent->BindAxis(TEXT("MoveRight"), this, &AMyPawn::MoveRight);
+	PlayerInputComponent->BindAxis(TEXT("LookUp"), this, &AMyPawn::LookUp);
+	PlayerInputComponent->BindAxis(TEXT("LookRight"), this, &AMyPawn::LookRight);
+}
+
+void AMyPawn::MoveForward(float Value)
+{
+	Velocity.X = FMath::Clamp(Value, -1.0f, 1.0f) * MaxSpeed;
+}
+
+void AMyPawn::MoveRight(float Value)
+{
+	Velocity.Y = FMath::Clamp(Value, -1.0f, 1.0f) * MaxSpeed;
+}
+
+void AMyPawn::LookUp(float Value)
+{
+	MouseInput.Y = FMath::Clamp(Value, -1.0f, 1.0f);
+}
+
+void AMyPawn::LookRight(float Value)
+{
+	MouseInput.X = FMath::Clamp(Value, -1.0f, 1.0f);
+}
+```
+
+## 511-使用 Controller 控制视野左右旋转
+
+​	修改 `MyPawn.cpp` 里的内容，完成视野随鼠标向左右查看的功能（`AddControllerYawInput(MouseInput.X);`）：
+
+```c++
+#include "MyPawn.h"
+#include "Components/StaticMeshComponent.h"
+#include "Camera/CameraComponent.h"
+#include "Components/InputComponent.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "UObject/ConstructorHelpers.h"
+
+// Sets default values
+AMyPawn::AMyPawn()
+{
+ 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	PrimaryActorTick.bCanEverTick = true;
+
+	// RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
+	MyStaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MyStaticMesh"));
+	RootComponent = MyStaticMesh;
+	MyStaticMesh->SetCollisionProfileName(TEXT("Pawn"));
+
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> StaticMeshAsset(TEXT("StaticMesh'/Engine/EngineMeshes/Sphere.Sphere'"));
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> MaterialAsset(TEXT("Material'/Engine/Tutorial/SubEditors/TutorialAssets/TutorialMaterial.TutorialMaterial'"));
+	if (StaticMeshAsset.Succeeded() && MaterialAsset.Succeeded())
+	{
+		MyStaticMesh->SetStaticMesh(StaticMeshAsset.Object);
+		MyStaticMesh->SetMaterial(0, MaterialAsset.Object);
+		MyStaticMesh->SetWorldScale3D(FVector(0.5f));
+	}
+
+	MySpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("MySprintArm"));
+	MySpringArm->SetupAttachment(GetStaticMeshComponent());
+	MySpringArm->SetRelativeRotation(FRotator(-45.0f, 0.0f, 0.0f));
+	MySpringArm->TargetArmLength = 400.0f;
+	MySpringArm->bEnableCameraLag = true;
+	MySpringArm->CameraLagSpeed = 3.0f;
+
+	MyCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("MyCamera"));
+	MyCamera->SetupAttachment(GetRootComponent());
+
+	MyCamera->SetRelativeLocation(FVector(-300.0f, 0.0f, 300.0f));
+	MyCamera->SetRelativeRotation(FRotator(-45.0f, 0.0f, 0.0f));
+	MyCamera->SetupAttachment(GetSpringArmComponent());
+
+	AutoPossessPlayer = EAutoReceiveInput::Player0;
+	bUseControllerRotationRoll = true;
+	bUseControllerRotationPitch = true;
+	bUseControllerRotationYaw = true;
+
+	MaxSpeed = 300.0f;
+	Velocity = FVector::ZeroVector;
+}
+
+// Called when the game starts or when spawned
+void AMyPawn::BeginPlay()
+{
+	Super::BeginPlay();
+	
+}
+
+// Called every frame
+void AMyPawn::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	AddActorLocalOffset(Velocity * DeltaTime, true);
+
+	// X, Y, Z 在虚幻的旋转轴对应 Roll, Pitch, Yaw
+	AddControllerYawInput(MouseInput.X);
+
+	FRotator NewSpringArmRotation = MySpringArm->GetComponentRotation();
+	NewSpringArmRotation.Pitch = FMath::Clamp(NewSpringArmRotation.Pitch += MouseInput.Y, -80.0f, 0.0f);
+	MySpringArm->SetWorldRotation(NewSpringArmRotation);
+}
+
+// Called to bind functionality to input
+void AMyPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+	PlayerInputComponent->BindAxis(TEXT("MoveForward"), this, &AMyPawn::MoveForward);
+	PlayerInputComponent->BindAxis(TEXT("MoveRight"), this, &AMyPawn::MoveRight);
+	PlayerInputComponent->BindAxis(TEXT("LookUp"), this, &AMyPawn::LookUp);
+	PlayerInputComponent->BindAxis(TEXT("LookRight"), this, &AMyPawn::LookRight);
+}
+
+void AMyPawn::MoveForward(float Value)
+{
+	Velocity.X = FMath::Clamp(Value, -1.0f, 1.0f) * MaxSpeed;
+}
+
+void AMyPawn::MoveRight(float Value)
+{
+	Velocity.Y = FMath::Clamp(Value, -1.0f, 1.0f) * MaxSpeed;
+}
+
+void AMyPawn::LookUp(float Value)
+{
+	MouseInput.Y = FMath::Clamp(Value, -1.0f, 1.0f);
+}
+
+void AMyPawn::LookRight(float Value)
+{
+	MouseInput.X = FMath::Clamp(Value, -1.0f, 1.0f);
+}
+```
+
+![png](511.1.png)
+
+> 这些属性是用于控制 Pawn 的旋转是否受控制器的旋转影响。具体说明如下：
+>
+> - bUseControllerRotationRoll：设置为 true 时，表示 Pawn 的 Roll 旋转将受控制器的 Roll 旋转影响。
+> - bUseControllerRotationPitch：设置为 true 时，表示 Pawn 的 Pitch 旋转将受控制器的 Pitch 旋转影响。
+> - bUseControllerRotationYaw：设置为 true 时，表示 Pawn 的 Yaw 旋转将受控制器的 Yaw 旋转影响。
+>
+> 当这些属性被设置为 true 时，Pawn 的旋转将由控制器来决定，而不是由组件自身的旋转规则决定。这在某些情况下非常有用，例如第一人称或第三人称视角的角色控制，其中玩家可以通过控制器来旋转角色的方向。
+
+​	

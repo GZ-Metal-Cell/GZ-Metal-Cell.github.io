@@ -1,0 +1,179 @@
+---
+title: Hexo-更新了hexo主题
+date: Tue Nov 15 2022 08:20:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - Hexo
+categories: 开发
+description: 博客焕然一新！
+---
+
+
+# 前言
+
+​	主题"[hexo-theme-quiet: 🔥A simple, easy to read flat hexo theme. 扁平化简约 Hexo 主题](https://github.com/79e/hexo-theme-quiet)"更新了！现在我的博客有了新的改进！在此对该主题的作者表示感谢！
+
+​	同时我觉得这个主题还有一定问题, 记录一下并尝试自己解决。
+
+![gif](01.gif)
+
+# 正文
+
+## 文章评论功能
+
+![png](02.png)
+
+​	这个功能要你自己创建一个 OAuth application..
+
+- [博客集成评论功能---Gitalk - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/260781932)
+
+- [hexo 博客添加 gitalk 评论系统 - 俗的太不一样 - 博客园 (cnblogs.com)](https://www.cnblogs.com/qisi007/p/13731562.html)
+
+​	大部分文章因为标题太长, 留言板功能会出现 <font color="red">Error: Validation Failed.</font> , ~~有空再修 orz~~看下面这个文章, 使用 MD5 解决了, 真机智啊！
+
+- [gitalk Error: Validation Failed_death05 的博客-CSDN 博客](https://blog.csdn.net/death05/article/details/83618887)
+
+## css 的优化, 界面的更新
+
+![png](04.png)
+
+​	这个表格看起来清爽多了!
+
+![png](05.png)
+
+​	我不太喜欢原主题白色背景, 黑色的代码框,于是我瞎鼓捣 css, 改成接近`jupyter notebook`的风格
+
+![png](13.png)
+
+​	这个代码居然不换行 orz, 把旧版的`jquery.min.js`里的内容替换了`hljs.min.js`里的全部内容, 感觉好多了
+
+## 显示图片效果的优化
+
+![png](06.png)
+
+​	现在显示图片可以一张一张地滚动。
+
+![png](07.png)
+
+​	显示照片的时候我感觉 100%宽度有点太丰满了？改代码！`source\css\public\article_cente.less`中修改 img 类:
+
+```less
+img {
+    max-width: 80%;
+    cursor: pointer;
+    margin: 8px auto;
+    text-align: center;
+    display: flex;
+    border-radius: 10px;
+    outline: none;
+    border: 0;
+}
+```
+
+​	在此谢谢保罗同学😘~
+
+## 标签点击跳转失败
+
+![png](08.png)
+
+​	目前点击推文上的标签会跳转失败, 分析了一下, 是`layout\_partial\post_head.ejs`中第 34 行:
+
+```ejs
+<% page.categories.data.map((cat)=>{ %>
+	<a href="../../<%- cat.path %>" target="_blank" ><%- cat.name %></a>
+<% }) %>
+```
+
+`cat.path`链接错误, 把它改成
+
+```ejs
+<a href="/categories/<%- cat.name %>" target="_blank" ><%- cat.name %></a>
+```
+
+我真机智!
+
+## 翻页丢失封面
+
+![png](09.png)
+
+​	不知道是我配置的问题还是原作者没意识到这件事 orz, 翻页会导致所有封面地址错误导致显示不出来.
+
+​	~~我有个感觉很笨的解决方法, ~~把`layout\_partial\home.ejs`中第 8 行-第 12 行:
+
+```ejs
+<% if(post.cover){ %>
+	<img src="<%= post.cover %>" alt="Quiet">
+<% }else{ %>
+		<img src="<%- theme.default_cover %>" alt="Quiet">
+<% } %>
+```
+
+改为:
+
+```ejs
+<% if(post.cover){ %>
+	<img src="<%= theme.menus.home + post.cover %>" alt="Cover">
+<% }else{ %>
+	<img src="<%- theme.default_cover %>" alt="Cover">
+<% } %>	
+```
+
+​	~~同理 40 行的那一坨也要改.不过这样会导致`localhost`载入封面时也要尝试从`github`载入封面导致浪费流量 orz~~
+
+## 编译错误
+
+![png](10.png)
+
+​	不知道是哪里导致执行命令`hexo g`的时候会出错 orz
+
+​	但好像没啥影响?就是看着不爽 orz
+
+​	因为我写网页的技术太菜估计一时半会解决不了 orz
+
+​	既然解决不了就把它删了吧！
+
+## 播放音乐
+
+[MoePlayer/hexo-tag-aplayer：在 Hexo 帖子/页面中嵌入播放器 (github.com)](https://github.com/MoePlayer/hexo-tag-aplayer)
+
+## hexo mathjax 无法渲染
+
+mathjax.js 被拦截：
+
+![png](14.png)
+
+[hexo mathjax 无法渲染 - 简书 (jianshu.com)](https://www.jianshu.com/p/d43535c17ce2?utm_campaign=maleskine&utm_content=note&utm_medium=seo_notes&utm_source=recommendation) 脚本选择 https...
+
+## tags 只显示 9 个
+
+照着`archive.ejs`把`tags.ejs`改了一遍..
+
+```ejs
+<% page.title = __("标签：" + page.tag) %>
+<%- partial('_partial/header',{name:'tags'}) %>
+<%
+    var years = {};
+    site.posts.sort('date').reverse().forEach(function(post){
+        const tags = post.tags;
+        if(tags.length < 1) return
+        tags.data.map((t)=>{
+            if(page.tag === t.name){
+                var year = post.date.year()
+                if(years[year]===undefined){
+                    years[year] = [];
+                }
+                years[year].push(post);
+            }
+        })
+    });
+%>
+
+<div class="tag">
+    <%- partial('_widget/header_body',{message:"文章标签："+page.tag,icon:theme.headers.tags.icon}) %>
+    <div class="tag-content" id="content">
+        <div class="tag-content-data">
+            <%- partial('_widget/grouping',{data:years,keys:Object.keys(years).reverse()}) %>
+        </div>
+    </div>
+</div>
+```
+

@@ -1,0 +1,458 @@
+---
+title: Software-Blender & Python (11-20)
+date: Wed May 31 2023 20:41:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - Blender
+  - Python
+  - Darkfall
+categories: 探索
+description: 用 Python 编写 Blender 的插件。学习自 Youtube 博主 Darkfall。
+---
+
+
+# 课程
+
+## Updated Registration Method
+
+emmmm 就是把 `register()` 里注册的类放到一个 `for` 循环里：
+
+```python
+def register():
+    bpy.utils.register_class(NODE_OT_compGroup)
+    bpy.utils.register_class(NODE_PT_customPanel)
+ 
+ 
+def unregister():
+    bpy.utils.unregister_class(NODE_OT_compGroup)
+    bpy.utils.unregister_class(NODE_PT_customPanel)
+ 
+ 
+if __name__ == "__main__":
+    register()
+```
+
+改为：
+
+```python
+classes = [NODE_OT_compGroup, NODE_PT_customPanel, YOUR_CLASS_NAME]
+
+def register():
+    for cls in classes:
+        bpy.utils.register_class(cls)
+ 
+ 
+def unregister():
+    for cls in classes:
+        bpy.utils.unregister_class(cls)
+ 
+ 
+if __name__ == "__main__":
+    register()
+```
+
+## 5 Scripting Tips for Beginners
+
+- [Blender 3.5 Python API Documentation — Blender Python API](https://docs.blender.org/api/current/index.html)
+
+介绍了一些小技巧：
+
+在 python console 里，输入代码：
+
+列出场景中已有的 3D 物体：
+
+```python
+list(bpy.data.objects)
+```
+
+列出场景中已有的材质：
+
+```python
+list(bpy.data.materials)
+```
+
+新建一个材质：
+
+```python
+bpy.data.materials.new("My Material")
+```
+
+`Text Editor` 中，`Text`-`Live Edit` 可以实时运行脚本。
+
+![jpg](11_1.jpg)
+
+## Enumerator / Drop down Menu
+
+> 这段代码定义了两个类和两个函数，用于在 Blender 中添加一个面板和一个操作员。
+>
+> 1. ADDONNAME_PT_TemplatePanel 类 该类继承自 bpy.types.Panel，它创建了一个面板并定义了它的一些属性。bl_label 属性定义了面板的名称，bl_idname 属性是面板的唯一标识符，bl_space_type 和 bl_region_type 属性定义了面板在哪个空间和区域中显示，bl_category 属性定义了面板应该显示在哪个选项卡中。draw() 方法定义了面板的布局和内容，layout 变量用来管理面板的布局和元素，layout.operator() 方法添加了一个操作按钮，该按钮调用名为 "wm.template_operator" 的操作员。
+> 2. ADDONANE_OT_TemplateOperator 类 该类继承自 bpy.types.Operator，它创建了一个操作员，并定义了它的一些属性。bl_label 属性创建了操作员的按钮标签，bl_idname 属性是操作员的唯一标识符。preset_enum 属性是一个枚举值，它提供了三个不同的选项，每个选项都有一个唯一的 id、一个名称和一个描述。invoke() 方法定义了当用户单击操作员时执行的代码，draw() 方法定义了操作员的布局和内容，execute() 方法定义了操作员执行的代码。
+> 3. register() 函数 该函数使用 bpy.utils.register_class() 方法注册 ADDONNAME_PT_TemplatePanel 和 ADDONANE_OT_TemplateOperator 两个类，将它们添加到 Blender 中。
+> 4. unregister() 函数 该函数使用 bpy.utils.unregister_class() 方法取消注册 ADDONNAME_PT_TemplatePanel 和 ADDONANE_OT_TemplateOperator 两个类，将它们从 Blender 中移除。
+>
+> 最后，如果该脚本被直接运行（而不是被其他脚本导入），则调用 register() 函数将 ADDONNAME_PT_TemplatePanel 和 ADDONANE_OT_TemplateOperator 两个类添加到 Blender 中。
+
+```python
+import bpy
+
+
+class ADDONNAME_PT_TemplatePanel(bpy.types.Panel):
+    bl_label = 'Name of the Panel'
+    bl_idname = 'ADDONNAME_PT_TemplatePanel'
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = 'Template Tab'
+    
+    def draw(self, context):
+        layout = self.layout
+        
+        layout.operator('wm.template_operator')
+        
+
+class ADDONANE_OT_TemplateOperator(bpy.types.Operator):
+    bl_label = 'Template Operator'
+    bl_idname = 'wm.template_operator'
+    
+    preset_enum: bpy.props.EnumProperty(
+        name='',
+        description='Select an option',
+        items=[ 
+            ('OP1', 'Cube', 'Add a Cube to the scene'),
+            ('OP2', 'Sphere', ''),
+            ('OP3', 'Suzanne', 'Add Suzanne to the scene')
+        ]
+    )
+    
+    
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
+    
+    
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(self, 'preset_enum')
+        
+    
+    def execute(self, context):
+        if self.preset_enum == 'OP1':
+            bpy.ops.mesh.primitive_cube_add()
+        if self.preset_enum == 'OP2':
+            bpy.ops.mesh.primitive_uv_sphere_add()
+        if self.preset_enum == 'OP3':
+            bpy.ops.mesh.primitive_monkey_add()
+        return {'FINISHED'}
+    
+
+def register():
+    bpy.utils.register_class(ADDONNAME_PT_TemplatePanel)
+    bpy.utils.register_class(ADDONANE_OT_TemplateOperator)
+  
+    
+def unregister():
+    bpy.utils.unsregister_class(ADDONNAME_PT_TemplatePanel)
+    bpy.utils.unregister_class(ADDONANE_OT_TemplateOperator)
+        
+
+if __name__ == '__main__':
+    register()
+```
+
+运行代码，enum 会创建一个下拉菜单：
+
+![jpg](12_1.jpg)
+
+## Class Naming Convention
+
+介绍了 Blender 命名传统规则：[Darkfall : Blender Python Tutorial: Class Naming Convention (darkfallblender.blogspot.com)](https://darkfallblender.blogspot.com/2020/07/blender-python-tutorial-class-naming.html)
+
+## How to create and assign a Material Shader
+
+> 这段代码实现了一个简单的 Blender 插件，在 3D 视图空间中添加了一个面板和一个操作。具体解释如下：
+>
+> 1. `import bpy` 导入了 Blender 的 Python API。
+> 2. `ADDONNAME_PT_main_panel(bpy.types.Panel)` 定义了一个继承自 `bpy.types.Panel` 的面板类，并将其命名为 `ADDONNAME_PT_main_panel`。在类的内部，定义了面板的相关属性和 `draw()` 方法。
+> 3. 在 `bl_label` 中指定了面板标签文本，`bl_idname` 中指定了面板的 ID。`bl_space_type` 指定了面板支持的空间类型，这里使用 `'VIEW_3D'` 表示只会在 3D 视图空间中显示。`bl_region_type` 指定了面板所占的区域类型，这里使用 `'UI'` 表示在 UI 区域中显示。`bl_category` 指定了面板所属的类别，这里使用 `'New Tab'` 表示添加到一个名为 `'New Tab'` 的新标签页中。
+> 4. 在 `draw()` 方法中，通过 `self.layout.operator()` 添加了一个操作按钮，用于执行 `ADDONNAME_OT_add_basic` 操作。
+> 5. `ADDONNAME_OT_add_basic(bpy.types.Operator)` 类定义了一个继承自 `bpy.types.Operator` 的操作类，并将其命名为 `ADDONNAME_OT_add_basic`。其中，`bl_label` 指定了操作在 UI 中的显示名称，`bl_idname` 指定了操作的 ID。
+> 6. 在类中定义了一个名为 `col` 的属性，类型为 `bpy.props.FloatVectorProperty`。这个属性是一个四元组，表示 RGBA 颜色值。
+> 7. `execute()` 方法中实现了插件的核心逻辑，用于创建一个新的材质，并将其应用到当前选择的对象上。具体来说，这个方法中首先创建了一个名为 `material_basic` 的新材质，并设置其使用节点。然后通过 `material_basic.node_tree.nodes.get('Principled BSDF')` 获取材质的 Principled BSDF 节点，并将其 metallic 参数设置为 0.08。接着，创建了一个 ShaderNodeRGB 节点，并将其颜色值设置为 `self.col` 中存储的颜色值。最后，通过 `material_basic.node_tree.links.new()` 创建了两个节点之间的连接，并将材质应用到当前选择的对象上。
+> 8. `invoke()` 方法用于在用户执行操作时打开一个小型对话框，以便用户在对话框中设置属性值。返回值表示执行结果。
+> 9. `classes = [ADDONNAME_PT_main_panel, ADDONNAME_OT_add_basic]` 定义了一个列表，其中包含了需要进行注册的所有类。
+> 10. 在 `register()` 函数中，使用 `bpy.utils.register_class()` 分别注册了 `classes` 列表中的每一个类。
+> 11. 在 `unregister()` 函数中，使用 `bpy.utils.unregister_class()` 分别注销了 `classes` 列表中的每一个类。
+> 12. `if __name__ == "__main__": register()` 是一个常用的语法，表示在插件文件被直接运行时自动执行注册函数进行注册。
+
+原网址 [Darkfall : Blender Python Tutorial: How to Create and Assign a Shader Material (darkfallblender.blogspot.com)](https://darkfallblender.blogspot.com/2020/08/blender-python-tutorial-how-to-create.html) 下的代码太旧了，要把 ` col = bpy.props.FloatVectorProperty(name= "Color", subtype= 'COLOR_GAMMA', size=4, default=(0.0, 1.0, 0.0, 1.0))` 改成 ` col: bpy.props.FloatVectorProperty(name= "Color", subtype= 'COLOR_GAMMA', size=4, default=(0.0, 1.0, 0.0, 1.0))` 才能跑，这是我第二次进坑了 orz
+
+```python
+import bpy
+ 
+ 
+class ADDONNAME_PT_main_panel(bpy.types.Panel):
+    
+    bl_label = "Add Shader Panel"
+    bl_idname = "ADDONNAME_PT_main_panel"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = 'New Tab'
+ 
+    def draw(self, context):
+        layout = self.layout
+        layout.operator("addonname.addbasic_operator")
+ 
+ 
+class ADDONNAME_OT_add_basic(bpy.types.Operator):
+    bl_label = "Add Basic Shader"
+    bl_idname = "addonname.addbasic_operator"
+    
+    col: bpy.props.FloatVectorProperty(name= "Color", subtype= 'COLOR_GAMMA', size=4, default=(0.0, 1.0, 0.0, 1.0))
+    
+    
+    def execute(self, context):
+        material_basic = bpy.data.materials.new(name= "Basic")
+        material_basic.use_nodes = True
+        
+        principled_node = material_basic.node_tree.nodes.get('Principled BSDF')
+        principled_node.inputs[7].default_value = 0.08
+        
+        rgb_node = material_basic.node_tree.nodes.new('ShaderNodeRGB')
+        rgb_node.location = (-250, 0)
+        rgb_node.outputs[0].default_value = self.col
+        
+        link = material_basic.node_tree.links.new
+        link(rgb_node.outputs[0], principled_node.inputs[0])
+        
+        bpy.context.object.active_material = material_basic
+    
+        return {'FINISHED'}
+    
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self)
+ 
+ 
+classes = [ADDONNAME_PT_main_panel, ADDONNAME_OT_add_basic]
+ 
+ 
+def register():
+    for cls in classes:
+        bpy.utils.register_class(cls)
+ 
+def unregister():
+    for cls in classes:
+        bpy.utils.unregister_class(cls)
+ 
+ 
+if __name__ == "__main__":
+    register()
+```
+
+开跑！
+
+![jpg](15_1.jpg)
+
+## Create Property Group & Enumerator (Panel)
+
+- [Darkfall : Blender Python Tutorial: How to add an Enumerator to a Panel & Create a Property Group (darkfallblender.blogspot.com)](https://darkfallblender.blogspot.com/2020/08/blender-python-tutorial-how-to-add.html)
+
+> 这段代码是一个 Blender 插件的示例，用来创建一个面板和操作符，实现一些简单的功能。
+>
+> 首先，定义了一个 `MyProperties` 类，继承自 `bpy.types.PropertyGroup`。它定义了三个属性：`my_string` 属性为字符串类型，显示为一个文本框；`my_float_vector` 为浮点向量类型，显示为三个滑块；`my_enum` 为枚举类型，显示为一个下拉菜单，其中包含三个不同的操作选项。
+>
+> 然后，定义了一个 `ADDONNAME_PT_main_panel` 类，继承自 `bpy.types.Panel`。它定义了一个面板，包含上述三个属性的控件，并在最后添加了一个名为 `addonname.myop_operator` 的操作符按钮。
+>
+> 接下来，定义了一个 `ADDONNAME_OT_my_op` 类，继承自 `bpy.types.Operator`，用来处理该操作符按钮的执行操作。`execute()` 方法中根据当前选择的操作选项，使用 Blender 提供的函数进行不同的操作。例如，如果选择了“Add Cube”选项，则使用 `bpy.ops.mesh.primitive_cube_add()` 函数创建一个立方体，并将其命名为 `mytool.my_string`；同时，根据 `mytool.my_float_vector` 中的值对其进行缩放。最后，返回一个 `{'FINISHED'}` 字典表示操作已完成。
+>
+> 最后，定义了 `classes` 列表包含上述三个类，以及注册和注销插件的函数 `register()` 和 `unregister()`，在注册时将 `MyProperties` 类的实例指针赋值给 `bpy.types.Scene.my_tool` 属性。当运行该脚本时，将自动注册插件。
+>
+> 总体来说，这段代码是一个简单的 Blender 插件示例，展示了如何创建自定义属性和操作符，并将它们添加到面板中以实现简单的交互式操作。
+
+```python
+import bpy
+ 
+
+class MyProperties(bpy.types.PropertyGroup):
+    my_string: bpy.props.StringProperty(name='Enter Text')
+    my_float_vector: bpy.props.FloatVectorProperty(name='Enter Value', soft_min=0, soft_max=1000, default=(1, 1, 1))
+    my_enum: bpy.props.EnumProperty(
+        name='Enumerator / Dropdown',
+        description='sample text',
+        items=[('OP1', 'Add Cube', ''),
+               ('OP2', 'Add Sphere', ''),
+               ('OP3', 'Add Suzanne', '')
+        ]
+    )
+
+
+class ADDONNAME_PT_main_panel(bpy.types.Panel):
+    bl_label = "Main Panel"
+    bl_idname = "ADDONNAME_PT_main_panel"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = "New Tab"
+ 
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+        mytool = scene.my_tool
+        
+        layout.prop(mytool, 'my_string')
+        layout.prop(mytool, 'my_float_vector')
+        layout.prop(mytool, 'my_enum')
+ 
+        row = layout.row()
+        row.operator("addonname.myop_operator")
+ 
+ 
+class ADDONNAME_OT_my_op(bpy.types.Operator):
+    bl_label = "Operator"
+    bl_idname = "addonname.myop_operator"
+    
+    
+    def execute(self, context):
+        scene = context.scene
+        mytool = scene.my_tool
+        
+        if mytool.my_enum == 'OP1':
+            bpy.ops.mesh.primitive_cube_add()
+            bpy.context.object.name = mytool.my_string
+            bpy.context.object.scale[0] = mytool.my_float_vector[0]
+            bpy.context.object.scale[1] = mytool.my_float_vector[1]
+            bpy.context.object.scale[2] = mytool.my_float_vector[2]
+        if mytool.my_enum == 'OP2':
+            bpy.ops.mesh.primitive_uv_sphere_add()
+            bpy.context.object.name = mytool.my_string
+            bpy.context.object.scale[0] = mytool.my_float_vector[0]
+            bpy.context.object.scale[1] = mytool.my_float_vector[1]
+            bpy.context.object.scale[2] = mytool.my_float_vector[2]
+        if mytool.my_enum == 'OP3':
+            bpy.ops.mesh.primitive_monkey_add()
+            bpy.context.object.name = mytool.my_string
+            bpy.context.object.scale[0] = mytool.my_float_vector[0]
+            bpy.context.object.scale[1] = mytool.my_float_vector[1]
+            bpy.context.object.scale[2] = mytool.my_float_vector[2]
+        return {'FINISHED'}
+    
+ 
+classes = [MyProperties, ADDONNAME_PT_main_panel, ADDONNAME_OT_my_op]
+ 
+ 
+def register():
+    for cls in classes:
+        bpy.utils.register_class(cls)
+        bpy.types.Scene.my_tool = bpy.props.PointerProperty(type=MyProperties)
+ 
+def unregister():
+    for cls in classes:
+        bpy.utils.unregister_class(cls)
+        del bpy.types.Scene.my_tool
+ 
+
+if __name__ == "__main__":
+    register()
+```
+
+创建了一个可以创建模型并设置相关参数的插件：
+
+![jpg](16_1.jpg)
+
+## Property Subtypes and Password Protection
+
+主要介绍了`StringProperty` 和 `FloatVectorProperty`中的 `subtype` 属性：
+
+> 在 Blender Python API 中，`StringProperty` 和 `FloatVectorProperty` 中的 `subtype` 属性都有以下选项：
+>
+> 对于 `StringProperty`：
+>
+> - `FILE_PATH`: 文件路径类型。
+> - `DIR_PATH`: 目录路径类型。
+> - `FILE_NAME`: 文件名类型。
+> - `PASSWORD`: 密码类型。
+> - `NONE`: 普通文本类型。
+>
+> 对于 `FloatVectorProperty`：
+>
+> - `COLOR`: 表示颜色值(RGB)类型。
+> - `TRANSLATION`: 表示平移向量类型。
+> - `DIRECTION`: 表示方向向量类型。
+> - `VELOCITY`: 表示速率/速度向量类型。
+> - `ACCELERATION`: 表示加速度向量类型。
+> - `NONE`: 普通浮点数类型。
+>
+> 使用这些不同的 `subtype` 值，可以在 Blender 中创建不同类型的属性，以便更好地适应特定的场景和需求。例如，使用 `FILE_PATH` 或 `DIR_PATH` 可以创建一个文件选择器或目录选择器，方便用户选择相应的文件或目录；使用 `COLOR` 可以创建一种颜色选择器，方便用户选择 RGB 值。
+
+一个密码的使用案例：
+
+```python
+import bpy
+ 
+ 
+class MyProperties(bpy.types.PropertyGroup):
+    my_string : bpy.props.StringProperty(name= "Password", subtype= 'PASSWORD')
+    
+
+class ADDONNAME_PT_main_panel(bpy.types.Panel):
+    bl_label = "Main Panel"
+    bl_idname = "ADDONNAME_PT_main_panel"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = "New Tab"
+ 
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+        mytool = scene.my_tool
+        
+        row = layout.row()
+        split = row.split(factor= 0.5)
+        
+        row.prop(mytool, "my_string")
+ 
+        layout.operator("addonname.myop_operator")
+
+ 
+class ADDONNAME_OT_my_op(bpy.types.Operator):
+    bl_label = "Confirm"
+    bl_idname = "addonname.myop_operator"
+    
+    def execute(self, context):
+        scene = context.scene
+        mytool = scene.my_tool
+        
+        if mytool.my_string == "awesomepassword":
+            bpy.ops.mesh.primitive_cube_add()
+        return {'FINISHED'}
+    
+
+classes = [MyProperties, ADDONNAME_PT_main_panel, ADDONNAME_OT_my_op]
+
+
+def register():
+    for cls in classes:
+        bpy.utils.register_class(cls)
+        
+        bpy.types.Scene.my_tool = bpy.props.PointerProperty(type= MyProperties)
+
+
+def unregister():
+    for cls in classes:
+        bpy.utils.unregister_class(cls)
+        del bpy.types.Scene.my_tool
+
+
+if __name__ == "__main__":
+    register()
+```
+
+![png](17_1.png)
+
+## Blender 2.90 is here! - Scripting Changes!!?
+
+介绍了 2.9 版本的特性……emmm 我都用上 3.5.1 了
+
+## Read an Error Message and how to Fix it [learn python for beginners]
+
+教你怎么看错误提示并根据此进行代码调试。
+
+## Importing Modules
+
+教你怎么用 `from ... import` 语句。

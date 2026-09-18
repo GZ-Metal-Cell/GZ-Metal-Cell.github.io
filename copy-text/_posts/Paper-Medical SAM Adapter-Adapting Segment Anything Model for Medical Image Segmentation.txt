@@ -1,0 +1,60 @@
+---
+title: Paper-Medical SAM Adapter-Adapting Segment Anything Model for Medical Image Segmentation
+date: Sun May 21 2023 14:02:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - Python
+  - 代码复现
+  - 图像分割
+categories: 论文
+description: 论文阅读。
+---
+
+
+# 资源
+
+- 原文：[[2304.12620v6] Medical SAM Adapter: Adapting Segment Anything Model for Medical Image Segmentation (arxiv.org)](https://arxiv.org/abs/2304.12620v6)
+
+- 代码：[WuJunde/Medical-SAM-Adapter: Adapting Segment Anything Model for Medical Image Segmentation (github.com)](https://github.com/wujunde/medical-sam-adapter)
+
+# 笔记
+
+## Abstract
+
+​	SAM 在医学中表现不佳，提出了 Med-SAM Adapter（MSA），通过一种简单而有效的自适应技术将医学特定领域的知识集成到分割模型中。
+
+---
+
+## 1 Introduction
+
+​	SAM 受到了很多关注，能够根据用户的 prompt 生成各种细粒度的 segmentation masks。在医学图像上失败的主要原因是缺乏训练数据。从技术上讲，我们选择使用称为 Adaptation 的参数有效微调（PEFT）技术来微调预训练的 SAM。
+
+​	其主要思想是将几个参数高效的 Adapter 模块插入到原始的基本模型中，然后只调整 Adapter 参数，同时冻结所有预先训练的参数。
+
+- SAM 为交互式分割提供了一个极好的框架，使其成为基于提示的医学图像分割的完美起点
+- 许多研究表明，对自然图像的预训练也有利于医学图像分割，至少在收敛速度方面是这样
+- PEFT 方法比完全微调更有效，因为它们可以避免灾难性的遗忘，并更好地推广到域外场景，尤其是在低数据状态下
+- 在 19 个不同图像模式的医学图像分割任务上评估了我们提出的 MSA 模型，包括 MRI、CT、眼底图像、超声图像和皮肤镜图像。我们的结果表明，MSA在相当大的幅度上优于以前最先进的方法
+
+---
+
+## 2 Method
+
+### 2.1 Preliminary: SAM architecture
+
+SAM 包括 3 个主要组件：
+
+- 图像编码器（image encoder）
+  - 基于 Masked Autoencoders 预先训练的 standard Vision Transformer（ViT），输出是输入图像的 16 倍下采样嵌入
+- 提示编码器（prompt encoder）
+  - 可以是稀疏的（点、框、文本），也可以是密集的（掩码）
+    - 我们**只关注稀疏编码器**，将点和框表示为位置编码，并将每个提示类型的学习嵌入相加
+- 掩码解码器（mask decoder）
+  - 被修改为包括动态掩码预测头的 Transformer 解码器块。
+
+​	SAM 使用双向交叉注意力，一个用于提示到图像的嵌入，另一个用于每个块中的图像提示嵌入，以学习提示之间的交互。
+
+---
+
+### 2.2 MSA architecture
+
+​	冻结预先训练的SAM参数，并在体系结构中的特定位置插入适配器模块。

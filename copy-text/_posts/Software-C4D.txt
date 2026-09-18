@@ -1,0 +1,988 @@
+---
+title: Software-C4D
+date: Sun Mar 17 2024 20:59:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - C4D
+categories: 探索
+description: 学习自 momentor。
+---
+
+
+# 资源
+
+- [momentor - 专业 c4d 动态设计教育平台](https://momentor.cn/p/o/c4djck)
+
+- [【Mo 公开课】C4D 基础课（已完结）——54 集精心制作全模块 C4D 课程_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1ur4y1T72V)
+
+- C4D 所用版本：[MAXON Cinema 4D C4D S22.123 Win/Mac 中文版/英文版/破解版 – 龋齿一号 GFXCamp](https://www.gfxcamp.com/c4d-s22/)
+
+{% pdf base.pdf%}
+
+# 课程
+
+## 认识 C4D 01
+
+​	介绍了一下界面和快捷键。
+
+> 快捷键
+>
+> - `H` 回到中心
+> - `E `移动
+> - `R` 旋转
+> - `T` 缩放
+> - `delete` 删除
+> - `C` 转可编辑（物体有没被塌陷叫 C 了没）
+> - `Control` + `Z` 撤回
+> - `ALT` + `MMB`（鼠标中键）平移视图
+> - `ALT` + `LMB`（鼠标左键）旋转视图
+> - `MMB` 切换视图
+> - `MMB` 进入视图
+> - `SHIFT` 多选
+> - `Control` 取消选中
+> - `MMB` 框选范围
+> - `Shift` + `Control` + Z 撤回摄像机视角
+
+## 桌子 - 创建桌子 02
+
+![png](02.1.png)
+
+​	给场景里添加 `Cube` 和一个 `Cylinder` 分别充当桌子和桌腿。
+
+![png](02.2.png)
+
+​	场景中选择桌腿，工具栏下按下 **`Shift`** 后再选择 `Taper`，这将给 `Cylinder` 添加 `Taper` 的**子节点**。
+
+![png](02.3.png)
+
+​	设置 `Taper` 一个 `Fit to Parent`，然后调整 `Strength` 里的值，调整 和 `Strength` 的 Transform，这将让 z 桌腿  `Cylinder` 上宽下窄。
+
+![png](02.4.png)
+
+​	场景中选择桌腿，工具栏下按下 **`Shift`** 后再选择 `Symmetry`，这将给 `Cylinder` 添加 `Symmetry` 的**父节点**。（绿色要作为父级起作用，紫色作子级起作用）设置好 `Mirror Plane` 和相对变换。这将给 `Symmetry` 下的子节点镜像效果。
+
+![png](02.5.png)
+
+​	同理再加一个 `Symmetry`，就形成了四个桌腿。
+
+![png](02.6.png)
+
+​	最终效果。
+
+## 桌子 - 倒角和布尔 03
+
+![png](03.1.png)
+
+![png](03.2.png)
+
+​	`U` + `L` 循环选择。
+
+​	选中桌面底部四条边，按 `T` 拖动以倒角。
+
+![png](03.3.png)
+
+​	 `U` + `B` 环形选择。执行 `Bevel` 倒角。
+
+![png](03.4.png)
+
+​	可以调整 `Bevel` 的 `Offset` 和 `Subdivision` 以修改倒角效果。
+
+![png](03.5.png)
+
+​	修改 `Phong Tag` 的 `Phone Angle` 使得桌面显示平滑。
+
+![png](03.6.png)
+
+​	接下来开始布尔操作，感觉比较方便但是对性能不好。
+
+![png](03.7.png)
+
+​	创建 `Boole`。
+
+![png](03.8.png)
+
+​	如此做，`A subtract B`。
+
+![png](03.9.png)
+
+​	同样地，使用 `Boole` 让桌角平整。
+
+![png](03.10.png)
+
+​	最终节点如图所示。
+
+## 桌子 - 材质基础 04
+
+![png](04.1.png)
+
+​	窗口底端有个管理材质的东东。`New Standard Material`！这将创建一个类似之前学的类似 3ds Max 的材质球。
+
+![png](04.2.png)
+
+​	把材质球拖到节点右边即可应用材质。
+
+![png](04.3.png)
+
+​	打开 `ProRender` 渲染器。
+
+![png](04.4.png)
+
+​	自己的显卡太新了不兼容……改成 CPU 渲染，但是这样渲染巨慢……WDM。
+
+![png](04.5.png)
+
+​	点击绑定在物体上的材质球，可以修改材质球的贴图方式 `Projection`。
+
+![png](04.6.png)
+
+​	一些贴图方式的原理。
+
+![png](04.7.png)
+
+​	`New Node Material`。这是目前比较流行的设置材质的方法。
+
+![png](04.8.png)
+
+​	啊！真是熟悉的感觉！
+
+## TIP : 什么是 UV
+
+![png](04.9.png)
+
+​	就像纸模一样，相邻的面之间的 UV 贴图最好是连在一起的。
+
+![png](04.10.png)
+
+​	右上角的 `Layout` 选择 `BP - UV Edit` 即可操作一些贴图逻辑。
+
+## 桌子 - 渲染 05
+
+> 照片级渲染
+>
+> 1. 真实合理的模型结构
+> 2. 材质符合物理准确
+> 3. 写实准确的光源
+> 4. 正确的摄像机设置
+> 5.（渲染器优秀的算法）
+
+![png](05.1.png)
+
+​	加个灯光，得这么加。
+
+![png](05.2.png)
+
+​	整一个环境贴图环境光。创建一个 `Sky` 放入场景。
+
+![png](05.3.png)
+
+​	创建一个 PBR（基于物理的）材质，关闭 `Color` 和 `Reflectance`，`Luminance` 选择 HDRI 环境贴图。
+
+![png](05.4.png)
+
+​	创建摄像机，打开 `Camera` 右边的方形小按钮。
+
+![png](05.5.png)
+
+​	将 `Camera` 的视口绑定到视角上。
+
+![png](05.6.png)
+
+​	调整布局后，可以保存。
+
+![png](05.7.png)
+
+​	给环境再加个地标和墙。调整相机参数。
+
+![png](05.8.png)
+
+​	创建更多材质。
+
+![png](05.9.png)
+
+​	设置贴图类型。
+
+![png](05.10.png)
+
+​	修改渲染器参数，调整 `Iteration Count`（原课程调成了 500，这对 CPU 来说简直渲染不动！）
+
+![png](05.11.png)
+
+​	设置保存路径。
+
+![png](05.12.png)
+
+​	渲染后还可以 `Filter` 调色。算球吧这渲染也太慢了我佛了。
+
+## 补丁：PRO RENDER 为什么用不了
+
+​	我服了……居然说无解……~~换 Octane~~ 我草这玩意还收费，换 RedShift——[Redshift 渲染器 V3.0.45 For C4D R18 – R24 + Houdini + Maya + 3DS MAX 2014-2022 插件版本 Win 破解版 – 龋齿一号 GFXCamp](https://www.gfxcamp.com/redshift-3045/)。
+
+## 制作小零食 - 巧克力场景_建模 06
+
+![png](06.1.png)
+
+​	创建一个样条线。
+
+![png](06.2.png)
+
+​		场景中选择这个星星，工具栏下按下 **`Shift`** 后再选择 `Extrude`。
+
+![png](06.3.png)
+
+​	调一调参数，多整几个。
+
+![png](06.4.png)
+
+​	还可以给模型加个细分，结构如图所示。
+
+![png](06.5.png)
+
+![png](06.6.png)
+
+​	使用 `Sweep` 节点，让 `n-Side` 沿着 `Spline` 的轨迹形成一个体。
+
+![png](06.7.png)
+
+![png](06.8.png)
+
+​	创建一个球，`C` 掉，选择所有顶点，`T` 压扁，再细分。
+
+## 制作小零食 - 巧克力场景_场景搭建 07
+
+![png](07.1.png)
+
+上节做的模型一塌糊涂……重新整一个。
+
+![png](07.2.png)
+
+场景结构图如图所示。
+
+![png](07.3.png)
+
+​	给这些模型顶端附上 `Cloner` 节点，调整参数，就会将这些模型克隆好几份并按规则排放。
+
+![png](07.4.png)
+
+​	给这个 `Cloner` 添加 `Effectors`。
+
+![png](07.5.png)
+
+​	使用 `Plain` 可以给阵列里的对象一个固定的 Transform。
+
+![png](07.6.png)
+
+​	如果这里圆形巧克力是倒伏的，需要通过坐标器修改工具将其扶正（而不是直接旋转）。
+
+![png](07.7.png)
+
+​	`Randomize` 可以给对象在一定范围内随机地作 Transform。
+
+![png](07.8.png)
+
+​	`Push Apart` 节点可以防止对象之间重叠。
+
+![png](07.9.png)
+
+​	添加相机和平面。
+
+![png](07.10.png)
+
+​	最终结构树。
+
+## 制作小零食 - 巧克力场景_渲染 08
+
+![png](08.1.png)
+
+​	创建一个 PBR 环境贴图材质。
+
+![png](08.2.png)
+
+​	`Clone` 下 `Instance Mode` 选择 `Render Instance` 可以节约性能。 
+
+![png](08.3.png)
+
+​	整点巧克力的材质。
+
+![png](08.4.jpg)
+
+​	渲染效果……笑死好假（以后渲染部分还是跳过吧）。
+
+## 制作小零食 - 薯片场景搭建 09
+
+![png](09.1.png)
+
+​	创建一个 `Bezier` 面。
+
+![png](09.2.png)
+
+​	默认的 `Bezier` 面有 9 个控制点，选中 4 个角缩放，将其变成类似圆形的东东。
+
+![png](09.3.png)
+
+​	移动其它控制点。
+
+![png](09.4.png)
+
+​	中间这个点，拱一拱。
+
+![png](09.5.png)
+
+​	`C` 掉。按住 `Shift` 双击选中一条直线，最后选中所有隔一行的线。
+
+![png](09.6.png)
+
+​	右键选择 `Slide`，再按住 `Shift` 拖一拖。
+
+![png](09.7.png)
+
+​	拖完后整个 `Bevel` 倒角。
+
+![png](09.8.png)
+
+​	目前效果，再复制两个调调参数。
+
+![png](09.9.png)
+
+​	送它们仨一个 `Cloth Surface`，`Subdivisions` 设为 `0`，`Thickness` 设为 `3cm`。
+
+![png](09.10.png)
+
+​	送它们仨各一材质，便于区分。再送 `Cloner`，`Clones` 选择 `Random`，`Instance Mode` 选择 `Render Instance`。
+
+![png](09.11.png)
+
+​	新建一个 `Plane` 垫在底下，给它一个 `Collider Body`。
+
+![png](09.12.png)
+
+​	给 `Cloner` 一个 `Rigid Body`。
+
+![png](09.13.png)
+
+​	调整关键帧长度，开跑！
+
+![png](09.14.png)
+
+​	`Rigid Body` 标签下选择 `Bake All`，将模拟的结果转为关键帧。
+
+![png](09.15.png)
+
+​	整个相机构个图。
+
+## 制作小零食 - 薯片渲染 10
+
+![jpg](10.jpg)
+
+​	不会调材质😭
+
+## TIP : Bump Normal Displacement 区别
+
+**Bump 凹凸**
+
+- 该通道只能识别黑白信息(灰度图)
+- 黑白信息代表向上突起的程度
+- 数据量有局限
+
+**Normal 法线**
+
+- 该通道识别彩色信息
+- 除开明暗信息可以有 Bump 的功能
+- 彩色信息可以定义突起的角度
+- Normal = Bump + 突起角度信息
+
+**Displacement 置换**
+
+- 该通道只能识别黑白信息（灰度图）
+- 黑白信息代表向上突起的程度
+- 能形成模型上真正的突起
+- 所以一般用置换 + 法线 的搭配，一个形成真实的突起，一个填补突起的角度细节
+
+## 制作小零食 - 软糖场景搭建 11
+
+![png](11.1.png)
+
+​	整一个星形样条线，`C` 掉，选中所有顶点，右键 `Round`。
+
+![png](11.2.png)
+
+​	提高 `Round` 的 `Points` 使得形状更平滑。
+
+![png](11.3.png)
+
+​	`MoText` 整一个三维文字。
+
+![png](11.4.png)
+
+​	调整文字参数，`C` 掉。
+
+![png](11.5.png)
+
+​	选中五角星和文字，`Alt` + `G` 打组，在上一个 `Volume Builder`，调整 `Voxel Size`，添加 `SDF Smooth`。
+
+![png](11.6.png)
+
+​	打开其它项目，复制瓶子和瓶盖对象，`V` 切换场景，粘贴到原场景中。 
+
+![png](11.7.png)
+
+​	相机中添加 `Protection` 标记可以锁定相机视角，防止误触。
+
+![png](11.8.png)
+
+​	一阵操作。对于五角星，可以另复制一份，`C` 掉再缩放防止错误。
+
+## 制作小零食 - 软糖渲染 12
+
+​	略。
+
+## 游戏手柄 - 硬边建模_大形 13
+
+![png](13.1.png)
+
+​	CG 建模方式：拼凑、硬边建模、平滑细分建模、雕刻。
+
+![png](13.2.png)
+
+​	`Options` 下调出 `Configure...` 菜单。
+
+![png](13.3.png)
+
+​	整一个背景参考图。
+
+![png](13.4.png)
+
+![png](13.5.png)
+
+​	画两个矩形，然后 `Spline Subtract` 整一个 L 形。`Chamfer` 整一个圆角。
+
+![png](13.6.png)
+
+​	`Sweep` 弄一个环形，`Boole` 挖洞。
+
+![png](13.7.png)
+
+![png](13.8.png)
+
+​	整一个十字架！
+
+![png](13.9.png)
+
+​	后面继续布尔！
+
+## 游戏手柄 - 硬边建模_细节 14
+
+![png](14.1.png)
+
+​	选中这个十字架，计划在上面刻上按钮。
+
+![png](14.2.png)
+
+​	整一个矩形样条线，`C` 掉，选择点模式，选中顶端两个点，`Ctrl` 切出第三个点，往上拖。
+
+![png](14.3.png)
+
+​	一阵操作后，`Boole` 选择 `Create single object`，然后再 `C` 掉。
+
+![png](14.4.png)
+
+​	选中这 8 个点，稍稍向下拖。
+
+![png](14.5.png)
+
+​	`Live Selection` 里选上 `Only Select Visible Elements`。
+
+![png](14.6.png)
+
+​	就可以很方便地选中底边这个圈圈！
+
+![png](14.7.png)
+
+​	选中某个面，`Extrude Inner`，再往里拖就会获得小一号的面。
+
+![png](14.8.png)
+
+​	将这个面向下拖。
+
+![png](14.9.png)
+
+​	这个 `Bevel` 放在模型的下方就可以倒角。给游戏机的边缘倒一倒角。
+
+![png](14.10.png)
+
+​	整一个 7 节圆柱体，`C` 掉，`Scale` 里打开 `Soft Selection` 的 `Enable`，就可以开启软选择。
+
+![png](14.11.png)
+
+​	中间的几节，`U` + `L` 循环选中一个环环后，`Extrude` 向里缩。
+
+![png](14.12.png)
+
+​	数据线就是样条线 `Sweep` 一阵操作！
+
+## 游戏手柄 - 渲染 15
+
+![png](15.1.png)
+
+​	`Bevel` 里的 `Phong Break Rounding` 可以修复某些错误。
+
+![png](15.2.png)
+
+​	使用 `Instance` 而不是复制可以节省性能！
+
+## TIP : 三角面 四边面 多边形面
+
+​	三角面在变形时容易产生尖刺，多边形面容易让模型破掉。多边形面需要重新布线转为四边形面（体积建模/其他牛逼的办法）。
+
+## 闹钟 - 平滑细分原理 16
+
+![png](16.1.png)
+
+​	细分的原理就是取中点，让模型更平滑。因此可以通过卡边的方式控制想要的平滑程度。
+
+## 闹钟 - 建模大形 17
+
+![png](17.1.png)
+
+​	创建一个 `Disc Segments` 为 `5`，`Rotation Segments` 为 `8` 的 `Disc`。
+
+![png](17.2.png)
+
+​	`Move` 里打开 `Soft Selection` 向后拖。
+
+![png](17.3.png)
+
+​	使用 `Extrude` 给边缘增加厚度。
+
+![png](17.4.png)
+
+​	多整几次 `Extrude`，最后 `Close Polygon Hole` 封口。
+
+![png](17.5.png)
+
+![png](17.6.png)
+
+​	使用 `Bevel Mode` 为 `Solid` 的倒角工具给边缘卡边使得平滑细分更加自然。
+
+![png](17.7.png)
+
+​	切换到右视图，使用 `Line Cut` 切边工具按 `Shift` 向下拉一条线。
+
+![png](17.8.png)
+
+​	给这条线使用 `Bevel Mode` 为 `Solid` 的倒角工具卡边。打开面选择工具，`U` + `L` 切换到循环选择，点击中间的这条线即可选中整个环形，`Extrude` 向内挤。
+
+![png](17.9.png)
+
+​	最后调一调。
+
+## 闹钟 - 建模头部 18
+
+![png](18.1.png)
+
+​	选中闹钟主体的内面，`Split` 分离出玻璃罩。
+
+![png](18.2.png)
+
+​	给这个玻璃罩一个 `Extude` 和 `Subdivision Surface`。
+
+![png](18.3.png)
+
+​	给指针轴设计一个 8 边形圆柱体，`C` 掉后 `Extrude Inner` 向内整一个面，`Extrude` 向里挤。
+
+![png](18.4.png)
+
+​	指针是立方体，`C` 掉后选中顶部两条边，`Bevel` 让指针头更平滑
+
+![png](18.5.png)
+
+​	铃铛是个胶囊体，`C` 掉后 `U` + `L` 选中环形边，`U` + `F` 选中底边的面，删掉。再 `Extrude` 挤出，控边 哔哩吧啦……
+
+![png](18.6.png)
+
+​	选中一条竖边，`Loop/Path Cut` 可以环切一条边。
+
+![png](18.7.png)
+
+​	最终结果。
+
+## 闹钟 - 挖洞焊接 19
+
+![png](19.1.png)
+
+​	以此法整一个环环。
+
+![png](19.2.png)
+
+​	如果这样直接平滑细分，效果不好，得手动布线。
+
+![png](19.3.png)
+
+​	关闭平滑细分开整！
+
+![png](19.4.png)
+
+​	选中接缝中相近的两点，`Wield` 合并成一个。
+
+![png](19.5.png)
+
+​	将多边形面 `Line Cut` 成三角形面和四边形面。
+
+![png](19.6.png)
+
+​	`Bevel` 卡边。
+
+![png](19.7.png)
+
+​	继续卡！可以把另一半删掉，后面再 `Symmetry` 镜像回去。
+
+![png](19.8.png)
+
+​	`Exturde` 挤出一点点，卡边。
+
+![png](19.9.png)
+
+​	`Extrude Inner` 和 `Extrude` 一阵操作，卡边。
+
+![png](19.10.png)
+
+​	中间 `Boole` 一个圆柱，旋转 `22.5°` 让边平行，继续布线。
+
+![png](19.11.png)
+
+​	`Loop/Path Cut` 卡边。
+
+![png](19.12.png)
+
+​	`Dissolve` 消去不需要的边。
+
+![png](19.13.png)
+
+​	最后整一个支架。
+
+## 闹钟 - 场景搭建 20
+
+​	可以从 [Pinterest](https://www.pinterest.com/) 等网站找到场景搭建的灵感。
+
+> 参考寻找网站：[Pinterest](https://www.pinterest.com/)
+> 全球最大设计平台：[Behance](https://www.behance.net/)
+> 全球最大的优质视频平台：[Vimeo](https://vimeo.com/)
+> 全球最大 CG 艺术平台：[ArtStation](https://www.artstation.com/?sort_by=community&dimension=all)
+
+![png](20.1.png)
+
+​	如此搭建场景，什么三角构图法云云……
+
+![png](20.2.png)
+
+​	墙面转角可用 `Chamfer` 实现。
+
+## 闹钟 - 场景渲染 21
+
+![png](21.1.png)
+
+​	三点布光法。
+
+## 打地鼠 - 初识域 22
+
+![png](22.1.png)
+
+​	从下载的项目中打开 `地鼠工程.c4d`，上一个 `Clone`。
+
+![png](22.2.png)
+
+​	`MoGraph` 下 `Effector` 创建一个 `Plain`，给其 `Parameter` 下的 `P.Y` 设为 `1000cm`。
+
+​	创建一个 `Linear Field`，域中的对象将应用变换。
+
+![png](22.3.png)
+
+​	也可以整一个 `Box Field`。
+
+![png](22.4.png)
+
+​	多个区域可以共同作用。
+
+## 打地鼠 - 场景组建与着色域 23
+
+![png](23.1.png)
+
+​	将 `地鼠工程.c4d` 的模型放到 `机器.c4d` 里面，使用 `Cloner` 将地鼠放到机器的对应位置。
+
+![png](23.2.png)
+
+​	将 `Cloner` 的 `Clones` 设为 `Random`。
+
+![png](23.3.png)
+
+​	使用 `Plain` 将 `P.Y` 设为 `-350cm`，使用域 `Shader Field`，`Shader` 设为 `Noise`，`Animation Speed` 设为 `0.5`，`Contrast` 设为 `100%`，`Refresh` 的 `Frame` 打勾。
+
+![png](23.4.png)
+
+​	添加 `Delay` 使得地鼠移动不那么突兀。
+
+​	将 `Box Field` 绑定在小锤锤上，使得当锤子靠近时地鼠就缩头。
+
+## 打地鼠 - 动画初识 24
+
+![png](24.1.png)
+
+​	`F/G` 键可以让时间轴向前/后挪一帧。
+
+​	`Ctrl` + `D` 设定动画的 `FPS`，`Render Settings` 下的 `Frame Rate` 也应该设置。
+
+![png](24.2.png)
+
+​	`Shift` + `F3` 打开动画窗格。`Alt` + `滚轮` 移动时间轴，`Alt` + `右键` 缩放时间轴。
+
+![png](24.3.png)
+
+​	动画窗格有两种模式：`Dope sheet` 和 `F-Curve` 模式。
+
+![png](24.4.png)
+
+​	一阵操作猛如虎！
+
+## 打地鼠 - 动画渲染输出 25
+
+​	略。
+
+## 风铃 - 刚体动力学绑定 26
+
+![png](26.1.png)
+
+​		打开 `风铃_01_动力学绑定.c4d`，清空 `下端绳子` 的所有 tag，给它添加 `Hair Tags`。
+
+![png](26.2.png)
+
+​	再添加一个 `Hair Constaint`。
+
+![png](26.3.png)
+
+​	`Hair Contraint` 绑定 `铃` 作为 `Object`，`Draw` 设为下端绳子最顶端的点。
+
+![png](26.4.png)
+
+​	`Simulate` 下 `Forces` 添加 `Wind`。给下端绳子的 `Spline Dynamics` 的 `Forces` 放上这个 `Wind`。
+
+![png](26.5.png)
+
+​	下面也要绑定 `Hair Constraint`！
+
+![png](26.6.png)
+
+​	选中铃铛的底部顶点，设置 `Set Selection`。
+
+![png](26.7.png)
+
+​	选中纸币的顶部顶点，设置 `Set Selection`。
+
+![png](26.8.png)
+
+​	新建一个 `Simulate` 下 `Dynamics` 的 `String`，设置好对应的 `Object` 和 `Attachment`。
+
+## 风铃 - 动力学绑定进阶 27
+
+![png](27.1.png)
+
+​	给 `上端绳子` 添加 `Spline Dynamics`，选中最顶端的顶点，`Fixed` 下 `Set`。
+
+![png](27.2.png)
+
+​	使用 `Spring` 将 `上端绳子` 的底部与 `低模铛` 的顶部中心相连。
+
+![png](27.3.png)
+
+​	给 `低模铛` 添加一个 `Rigid Body Tag`，`Forces` 上添加 `Wind`。
+
+![png](27.4.png)
+
+​	用 `Type` 为 `Ball and Socket` 的 `Connector` 将 `低模铛` 相连。
+
+![png](27.5.png)
+
+​	将 `低模铛` 的 `Rigid Body Tag` 的 `Collision` 的 `Shape` 设为 `Moving Mesh`，`铃` 也是。
+
+![png](27.6.png)
+
+​	给 `高模档` 添加 `Constraint`，选择 `PSR`。
+
+![png](27.7.png)
+
+​	`PSR` 的 `Target` 选择 `低模铛`，这样 `高模铛` 的 Transform 就会与 `低模铛` 保持一致，减少计算量，最后再把 `低模铛` 的显示给我关了。
+
+## 风铃 - 计算优先级 28
+
+![png](28.1.png)
+
+​	C4D 渲染是有优先级顺序的，`Generators` 为 `Hair` 的优先级要比 `Dynamics` 要高。
+
+![png](28.2.png)
+
+​	人为地修改 `Spline Dynamics` 的优先级。
+
+![png](28.3.png)
+
+​	顶端的连接器适合使用 `Ragdoll`。
+
+## 早餐工厂 - 柔体初识 30
+
+![png](30.1.png)
+
+​	用 `Arc` 和 `n-Side` 创建一个通心粉，`Object Properties` 下的 `Intermediate Points` 设为 `Uniform`，`Number` 设为 `0`。给这个通心粉添加 `Soft Body`。
+
+![png](30.2.png)
+
+​	创建一个 `Sphere`，其 `Object` 下的 `Type` 设为 `Hemisphere`。添加 `Collider Body`。
+
+​	`Ctrl` + `D` 设置中打开 `Dynamics` 的 `Visualization`。
+
+![png](30.3.png)
+
+​	把 `Sphere` 的 `Dynamics Body` 下的 `Collision` 的 `Shape` 设为 `Moving Mesh`。
+
+![png](30.4.png)
+
+​	`Ctrl` + `D` 下的 `Dynamics` 下的 `Expert` 下的 `Steps per Frame` 设为 `5`。
+
+![png](30.5.png)
+
+​	如果动画播放起来很卡，考虑给 `Dynamics Body Tag` 下的 `Cache` 使用 `Bake All`。
+
+## 早餐工厂 - 荷包蛋柔体 31
+
+![png](31.1.png)
+
+​	打开下载的工程 `早餐工厂.c4d`，用 `中键` 选中 `鸡蛋罩子`，即可选中其与其下的子物体。`右键` `Add to Layer`。
+
+![png](31.2.png)
+
+​	层级中打开这个层的 `S`，即可只显示这个层级下的对象。
+
+![png](31.3.png)
+
+​	创建一个 `Sphere`，`Type` 选择 `Hexahedron`，`Radius` 为 `18cm`，`Segments` 为 `28`。
+
+![png](31.4.png)
+
+​	`U` + `L` 选中中间这一圈，扩大。
+
+![png](31.5.png)
+
+​	使用 `Loop/Path Cut` 给中间这些面切一层。
+
+![png](31.6.png)
+
+​	`Loop/Path Cut` 中的 `Number of Cuts` 设为 `10`。
+
+![png](31.7.png)
+
+​	底下也来几圈。
+
+![png](31.8.png)
+
+​	中间来两圈。
+
+​	中间最好再弄扁一些。
+
+![png](31.9.png)
+
+​	给这个鸡蛋来个 `Soft Body`。
+
+![png](31.10.png)
+
+​	`Ctrl` + `D` 设置中把 `Dynamics` 下的 `Steps per Frame` 和 `Maximum Solver Iterations per Step` 调高一点，增加计算的精确度。
+
+## 早餐工厂 - 顶点贴图与权重 32
+
+![png](32.1.png)
+
+​	`Shift` + `F12` 打开 `Customize Commands...`，选择 `Set Vertex Weight...`，添加。
+
+![png](32.2.png)
+
+​	选中蛋黄的面，`Set Vertex Weight` 的 `Value` 为 `100%`。
+
+![png](32.3.png)
+
+​	设置煎蛋的 `Dynamics Body Tag`，设置 `Shape Conservation` 的 `Stiffness` 为 `10`，`Map` 为所创建的顶点贴图。这样蛋黄和蛋白的硬度将会有差异。
+
+![png](32.4.png)
+
+​	全选煎蛋的所有顶点，`Set Vertex Weight` 的 `Value` 为 `50%`。命名为 `Rest Map`。
+
+![png](32.5.png)
+
+​	设置煎蛋的 `Dynamics Body Tag`，设置 `Rest Length` 的值为 `200%`，`Map` 为 `Rest Map`。
+
+![png](32.6.png)
+
+​	给 `Rest Map` 创建一个 `Torus Field` 以划分出蛋白和蛋黄的范围。
+
+![png](32.7.png)
+
+​	在煎蛋落在盘子的一瞬间，应用这个 `Field` 作为关键帧，前一帧关闭这个 `Field` 作为关键帧，这样煎蛋落在盘子上会有蛋白扩大的效果。
+
+![png](32.8.png)
+
+​	将蛋黄存储选区。
+
+![png](32.9.png)
+
+​	烘焙一个煎蛋 100 帧的动画，选中这个煎蛋，`Bake as Alembic`，生成一个 `.abc` 文件。
+
+> ​	在 Cinema 4D（简称 C4D）中，ABC 文件通常指的是 Alembic 文件，它是一种用于存储和交换复杂动画和几何数据的文件格式。ABC 文件可以包含物体的几何形状、动画信息、变形数据等，适用于在不同的 3D 软件之间进行数据交换和共享。Alembic 格式的优点之一是它可以有效地处理大量的几何和动画数据，使其成为处理复杂场景和动画的理想选择。
+
+![png](32.10.png)
+
+​	复制一个 abc 对象，`Offset` 设为 `-40F`，实现煎蛋的循环动画。
+
+## 早餐工厂 - 动画渲染 33
+
+​	略。
+
+## 毛发初识 41
+
+![png](41.1.png)
+
+​	创建一个 `Plane`，在上面 `Add Hair`。
+
+![png](41.2.png)
+
+​	调出各种工具。
+
+![png](41.3.png)
+
+​	`Guides` 下的 `Count` 可以设置浏览场景中的毛发数量。
+
+![png](41.4.png)
+
+​	`Guides` 下的 `Count` 可以设置渲染场景中的毛发数量。
+
+![png](41.5.png)
+
+​	拿笔刷一阵操作……
+
+![png](41.6.png)
+
+​	`Editor` 下的 `Display` 设为 `Hair Lines`，即可在浏览界面中显示毛发。
+
+## 绑定 - 初识绑定 机械臂 42
+
+![png](42.1.png)
+
+​	打开 `机械臂开始.c4d`，将对象组织成如图所示的父子级关系形式，这也是一种绑定。
+
+![png](42.2.png)
+
+​	选中 `第二节` 的轴中心的线，打开 `Axis Center`，设置 `Selected Edges`，`Execute`。
+
+![png](42.3.png)
+
+​	给末端添加 `XPresso`。
+
+![png](42.4.png)
+
+​	给末端添加 `User Data`，`Name` 为 `打开钳子`，`Interface` 为 `Float Slider`，`Unit` 为 `Degree`，`Limit Max` 为 `50°`。
+
+![png](42.5.png)
+
+​	这么折腾这个节点。这样调整 `打开钳子` 这个参数就会同时调整 `上钳` 和 `下钳` 的 `Rotation.B`。

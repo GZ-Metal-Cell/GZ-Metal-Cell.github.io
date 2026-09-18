@@ -1,0 +1,534 @@
+---
+title: XML-Svg
+date: Tue Dec 31 2024 07:46:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - 前端
+categories: 探索
+description: 绘制矢量图！
+---
+
+
+# 资源
+
+- [SVG 教程 | 菜鸟教程](https://www.runoob.com/svg/svg-tutorial.html)
+
+- [SVG矢量图前端实战教程_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1Y54y1C7M9)
+- [iconfont-阿里巴巴矢量图标库](https://www.iconfont.cn/)
+
+# 正文
+
+## VSCode
+
+​	VSC 下安装 SVG 插件。
+
+![webp](01.webp)
+
+​	在编写 SVG 代码时，可以按下 `Ctrl` + `Shift` + `P` 调出命令面板，以打开 `Preview SVG` 页面。
+
+![webp](02.webp)
+
+## 图形
+
+### 矩形 \<rect>
+
+​	创建一个圆角矩形：
+
+- `x`：左上角 x 坐标
+- `y`：左上角 y 坐标
+- `rx`：圆角水平半径
+- `ry`：圆角垂直半径
+- `width`：矩形宽度
+- `height`：矩形高度
+- `fill`：填充颜色
+- `stroke`：描边颜色
+- `stroke-width`：描边宽度
+- `opacity`：透明度
+
+```xml
+<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg" version="1.1">
+<rect x="50" y="20" rx="20" ry="20" width="150" height="150"
+  style="fill:red;stroke:black;stroke-width:5;opacity:0.5"/>
+</svg>
+```
+
+![webp](03.webp)
+
+### 圆形 \<circle>
+
+- `x`：圆心 x 坐标
+- `y`：圆心 y 坐标
+- `r`：圆半径
+
+```xml
+<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg" version="1.1">
+  <circle cx="100" cy="100" r="50" fill="blue" stroke="black" stroke-width="2" />
+</svg>
+```
+
+![webp](04.webp)
+
+### 椭圆 \<ellipse>
+
+- `cx`：椭圆中心点 x 坐标
+- `cy`：椭圆中心点 y 坐标
+- `rx`：水平轴半径
+- `ry`：垂直轴半径
+
+```xml
+<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg" version="1.1">
+  <circle cx="100" cy="100" r="50" fill="blue" stroke="black" stroke-width="2" />
+</svg>
+```
+
+![webp](05.webp)
+
+### 直线 \<line>
+
+​	两点确定一条直线。
+
+- `x1`：起点 x 坐标
+- `y1`：起点 y 坐标
+- `x2`：终点 x 坐标
+- `y2`：终点 y 坐标
+
+```xml
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1">
+	<line x1="0" y1="0" x2="200" y2="200" style="stroke:rgb(255,0,0);stroke-width:2"/>
+</svg>
+```
+
+![webp](06.webp)
+
+### 多边形 \<polygon>
+
+- `points="x1,y1 x2,y2 x3,y3 ..."`， 表示多边形各个顶点的坐标。
+
+```xml
+<svg height="210" width="500">
+  <polygon points="100,10 40,198 190,78 10,78 160,198"
+  style="fill:lime;stroke:purple;stroke-width:5;fill-rule:evenodd;" />
+  <polygon points="300,10 240,198 390,78 210,78 360,198"
+  style="fill:lime;stroke:purple;stroke-width:5;fill-rule:nonzero;" />
+</svg>
+```
+
+![webp](07.webp)
+
+> [!Note]
+>
+> ​	Adobe Illustrator 默认使用 **Nonzero（非零绕数规则）** 作为填充方式，只有在特定情况下才会设置为 **Even-Odd（奇偶规则）**。
+
+### 多段 \<polyline>
+
+​	与 `<polygon>` 元素不同， `<polyline>` 绘制的线条是未封闭的，即起点和终点不会自动连接。
+
+```xml
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1">
+  <polyline points="0,40 40,40 40,80 80,80 80,120 120,120 120,160" style="fill:white;stroke:red;stroke-width:4" />
+</svg>
+```
+
+![webp](08.webp)
+
+### 路径 \<path>
+
+- `d="path-data"` 定义了路径数据，即路径命令序列。路径数据由一系列的路径命令组成，每个路径命令以字母开头，后面跟随一组数字参数。常用的路径命令包括：
+  - `M`（移动到）
+  - `L`（直线到）
+  - `H`（水平线到）
+  - `V`（垂直线到）
+  - `C`（三次贝塞尔曲线）
+  - `S`（光滑曲线）
+  - `Q`（二次贝塞尔曲线）
+  - `T`（光滑二次贝塞尔曲线）
+  - `A`（圆弧）
+  - `Z`（闭合路径）等。
+
+---
+
+​	对于路径属性 `d="M 100 350 q 150 -300 300 0"`：
+
+- **`M 100 350`**:
+
+  - `M` 是 "move to" 的命令，表示将绘图起点移动到坐标 (100, 350)。
+
+  - 不会绘制任何线段，仅仅是将画笔移动到该点。
+
+- **`q 150 -300 300 0`**:
+
+  - `q` 是 "quadratic Bézier curve"（二次贝塞尔曲线）的命令，定义一段曲线。
+
+  - 第一个参数 `(150, -300)` 是控制点相对于当前点的偏移量（相对坐标）。
+
+  - 第二个参数 `(300, 0)` 是曲线的终点相对于当前点的偏移量。
+
+  - 从起点 `(100, 350)` 开始，曲线在控制点 `(250, 50)` 的影响下，最终到达终点 `(400, 350)`。
+
+- **控制点计算：**
+
+  - 控制点绝对坐标 = 起点 + 偏移量 = `(100 + 150, 350 - 300)` = `(250, 50)`
+
+  - 终点绝对坐标 = 起点 + 偏移量 = `(100 + 300, 350 + 0)` = `(400, 350)`
+
+```xml
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1">
+  <path id="lineAB" d="M 100 350 l 150 -300" stroke="red"
+  stroke-width="3" fill="none" />
+  <path id="lineBC" d="M 250 50 l 150 300" stroke="red"
+  stroke-width="3" fill="none" />
+  <path d="M 175 200 l 150 0" stroke="green" stroke-width="3"
+  fill="none" />
+  <path d="M 100 350 q 150 -300 300 0" stroke="blue"
+  stroke-width="5" fill="none" />
+  <!-- Mark relevant points -->
+  <g stroke="black" stroke-width="3" fill="black">
+    <circle id="pointA" cx="100" cy="350" r="3" />
+    <circle id="pointB" cx="250" cy="50" r="3" />
+    <circle id="pointC" cx="400" cy="350" r="3" />
+  </g>
+  <!-- Label the points -->
+  <g font-size="30" font="sans-serif" fill="black" stroke="none"
+  text-anchor="middle">
+    <text x="100" y="350" dx="-30">A</text>
+    <text x="250" y="50" dy="-10">B</text>
+    <text x="400" y="350" dx="30">C</text>
+  </g>
+</svg>
+```
+
+![webp](09.webp)
+
+### 文本 \<text>
+
+- `x`：锚点 x 坐标
+- `y`：锚点 y 坐标
+- `font-family`：字体
+- `font-size`：大小
+- `text-anchor`：属性定义了文本锚点，即文本相对于指定坐标的对齐方式，常用取值有 "start"（默认，左对齐）、"middle"（居中对齐）和 "end"（右对齐）。
+
+```xml
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1"
+xmlns:xlink="http://www.w3.org/1999/xlink">
+   <defs>
+    <path id="path1" d="M75,20 a1,1 0 0,0 100,0" />
+  </defs>
+  <text x="10" y="100" style="fill:red;">
+    <textPath xlink:href="#path1">I love SVG I love SVG</textPath>
+  </text>
+</svg>
+```
+
+![webp](10.webp)
+
+### 其它
+
+- `<g>` 是用来组织和操作多个 SVG 元素的分组工具。
+
+- `<image>` 用于嵌入外部图像资源到 SVG 中。
+
+## 属性
+
+### stroke
+
+​	定义轮廓颜色。
+
+```xml
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1">
+  <g fill="none">
+    <path stroke="red" d="M5 20 l215 0" />
+    <path stroke="blue" d="M5 40 l215 0" />
+    <path stroke="black" d="M5 60 l215 0" />
+  </g>
+</svg>
+```
+
+![webp](11.webp)
+
+### stroke-width
+
+​	定义轮廓宽度。
+
+```xml
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1">
+  <g fill="none" stroke="black">
+    <path stroke-width="2" d="M5 20 l215 0" />
+    <path stroke-width="4" d="M5 40 l215 0" />
+    <path stroke-width="6" d="M5 60 l215 0" />
+  </g>
+</svg>
+```
+
+![webp](12.webp)
+
+### stroke-linecap
+
+​	定义路径头部样式。
+
+```xml
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1">
+  <g fill="none" stroke="black" stroke-width="6">
+    <path stroke-linecap="butt" d="M5 20 l215 0" />
+    <path stroke-linecap="round" d="M5 40 l215 0" />
+    <path stroke-linecap="square" d="M5 60 l215 0" />
+  </g>
+</svg>
+```
+
+![webp](13.webp)
+
+### stroke-dasharray
+
+​	创建虚线。
+
+```xml
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1">
+  <g fill="none" stroke="black" stroke-width="4">
+    <path stroke-dasharray="5,5" d="M5 20 l215 0" />
+    <path stroke-dasharray="10,10" d="M5 40 l215 0" />
+    <path stroke-dasharray="20,10,5,5,5,10" d="M5 60 l215 0" />
+  </g>
+</svg>
+```
+
+![webp](14.webp)
+
+## 滤镜
+
+> [!Note]
+>
+> SVG 滤镜通常使用 `<filter>` 元素定义，并通过 `filter` 属性将其应用于目标元素。
+>
+> 常见的滤镜效果包括：
+>
+> - **模糊（Blur）**：使图像产生模糊效果，通过 `<feGaussianBlur>` 元素实现。
+> - **阴影（Shadow）**：为图像添加阴影效果，通过 `<feDropShadow>` 元素实现。
+> - **亮度、对比度调整（Brightness, Contrast）**：调整图像的亮度和对比度，通过 `<feComponentTransfer>` 元素实现。
+> - **颜色矩阵（Color Matrix）**：通过颜色矩阵操作修改图像的颜色，通过 `<feColorMatrix>` 元素实现。
+> - **混合模式（Blend Mode）**：将两个图像混合在一起，通过 `<feBlend>` 元素实现。
+
+```xml
+<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+  <!-- 定义模糊和阴影的组合滤镜 -->
+  <filter id="blur_and_shadow_filter">
+    <!-- 阴影 -->
+    <feDropShadow dx="5" dy="5" stdDeviation="3" flood-color="black" flood-opacity="0.5" />
+    <!-- 模糊 -->
+    <feGaussianBlur stdDeviation="3" />
+  </filter>
+  <!-- 应用组合滤镜的矩形 -->
+  <rect x="50" y="50" width="100" height="80" fill="red" filter="url(#blur_and_shadow_filter)" />
+</svg>
+```
+
+<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+  <!-- 定义模糊和阴影的组合滤镜 -->
+  <filter id="blur_and_shadow_filter">
+    <!-- 阴影 -->
+    <feDropShadow dx="5" dy="5" stdDeviation="3" flood-color="black" flood-opacity="0.5" />
+    <!-- 模糊 -->
+    <feGaussianBlur stdDeviation="3" />
+  </filter>
+  <!-- 应用组合滤镜的矩形 -->
+  <rect x="50" y="50" width="100" height="80" fill="red" filter="url(#blur_and_shadow_filter)" />
+</svg>
+
+![webp](15.webp)
+
+​	看样子 AI 并不是很支持这个滤镜。
+
+## 渐变
+
+### 线性渐变 \<linearGradient>
+
+> [!Note]
+>
+> 渐变是一种从一种颜色到另一种颜色的平滑过渡。另外，可以把多个颜色的过渡应用到同一个元素上。
+>
+> SVG 渐变主要有两种类型：
+>
+> - 线性渐变 - `<linearGradient>`
+> - 放射性渐变 - `<radialGradient>`
+
+```xml
+<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+  <!-- 定义线性渐变 -->
+  <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%" stop-color="red" />
+    <stop offset="100%" stop-color="blue" />
+  </linearGradient>
+  
+  <!-- 应用线性渐变的矩形 -->
+  <rect x="50" y="50" width="100" height="80" fill="url(#gradient)" />
+</svg>
+```
+
+![webp](16.webp)
+
+### 放射性渐变 \<radialGradient>
+
+```xml
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1">
+    <defs>
+        <radialGradient id="grad1" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+            <stop offset="0%" style="stop-color:rgb(255,255,255);
+      stop-opacity:0" />
+            <stop offset="100%" style="stop-color:rgb(0,0,255);stop-opacity:1" />
+        </radialGradient>
+    </defs>
+    <ellipse cx="200" cy="70" rx="85" ry="55" fill="url(#grad1)" />
+</svg>
+```
+
+![webp](17.webp)
+
+## CSS+JS
+
+​	可以使用 CSS 和 JS 控制 SVG 元素。
+
+​	创建一个进度条：
+
+```xml
+<svg xmlns="http://www.w3.org/2000/svg" height="700" width="700">
+    <style>
+        .text {
+            text-anchor: middle;
+            dominant-baseline: middle;
+        }
+    </style>
+    <!-- 设置底色的圆环 -->
+    <circle cx="350" cy="350" r="300" fill="none" stroke="grey" stroke-width="40" stroke-linecap="round" />
+
+    <!-- 设置进度条 -->
+    <circle class="progress" transform="rotate(-90,350,350)" cx="350" cy="350" r="300" fill="none" stroke="red"
+        stroke-width="40" stroke-linecap="round" stroke-dasharray="0,10000" />
+
+    <!-- 设置文本 -->
+    <text class="text" x="350" y="350" font-size="200" fill="red">36</text>
+</svg>
+```
+
+![webp](18.webp)
+
+​	AI 还是有点兼容性问题……
+
+​	这里将 `stroke-dasharray="0,10000"` 间隙设置得很大，是为了只显示一个点。虚线的数值可以控制进度条的进度。
+
+​	写个 JS 控制进度条逻辑。
+
+```js
+var progressDom = document.querySelector('.progress');
+var textDom = document.querySelector('.text');
+
+function rotateCircle(percent) {
+    // 获取 SVG 圆形的长度，通过进度来计算长度并输出总长
+    var circleLength = Math.floor(2 * Math.PI * parseFloat(progressDom.getAttribute("r")));
+    var value = percent * circleLength / 100;
+
+    // 颜色设置 RGB: 255,0,0 -> 0,191,255
+    var red = 255 + parseInt((0 - 255) / 100 * percent);
+    var green = 0 + parseInt((191 - 0) / 100 * percent);
+    var blue = 0 + parseInt((255 - 0) / 100 * percent);
+
+    // 设置 stroke-dasharray 属性
+    progressDom.setAttribute("stroke-dasharray", value + ",10000");
+    progressDom.setAttribute("stroke", `rgb(${red},${green},${blue})`);
+
+    // 设置文本内容和颜色
+    textDom.innerHTML = percent + '%';
+    textDom.setAttribute("fill", `rgb(${red},${green},${blue})`);
+}
+
+// 30 毫秒改变进度
+let num = 0;
+setInterval(() => {
+    num++;
+    if (num > 100) {
+        num = 0;
+    }
+    rotateCircle(num);
+}, 30);
+```
+
+​	完整代码和效果：
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .text {
+            text-anchor: middle;
+            dominant-baseline: middle;
+        }
+
+        body {
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <svg xmlns="http://www.w3.org/2000/svg" height="700" width="700">
+        <!-- 设置底色的圆环 -->
+        <circle cx="350" cy="350" r="300" fill="none" stroke="grey" stroke-width="40" stroke-linecap="round" />
+
+        <!-- 设置进度条 -->
+        <circle class="progress" transform="rotate(-90,350,350)" cx="350" cy="350" r="300" fill="none" stroke="red"
+            stroke-width="40" stroke-linecap="round" stroke-dasharray="0,10000" />
+
+        <!-- 设置文本 -->
+        <text class="text" x="350" y="350" font-size="200" fill="red">36</text>
+    </svg>
+
+    <script>
+        var progressDom = document.querySelector('.progress');
+        var textDom = document.querySelector('.text');
+
+        function rotateCircle(percent) {
+            // 获取 SVG 圆形的长度，通过进度来计算长度并输出总长
+            var circleLength = Math.floor(2 * Math.PI * parseFloat(progressDom.getAttribute("r")));
+            var value = percent * circleLength / 100;
+
+            // 颜色设置 RGB: 255,0,0 -> 0,191,255
+            var red = 255 + parseInt((0 - 255) / 100 * percent);
+            var green = 0 + parseInt((191 - 0) / 100 * percent);
+            var blue = 0 + parseInt((255 - 0) / 100 * percent);
+
+            // 设置 stroke-dasharray 属性
+            progressDom.setAttribute("stroke-dasharray", value + ",10000");
+            progressDom.setAttribute("stroke", `rgb(${red},${green},${blue})`);
+
+            // 设置文本内容和颜色
+            textDom.innerHTML = percent + '%';
+            textDom.setAttribute("fill", `rgb(${red},${green},${blue})`);
+        }
+
+        // 30 毫秒改变进度
+        let num = 0;
+        setInterval(() => {
+            num++;
+            if (num > 100) {
+                num = 0;
+            }
+            rotateCircle(num);
+        }, 30);
+    </script>
+</body>
+
+</html>
+```
+
+<svg xmlns="http://www.w3.org/2000/svg" height="700" width="700">
+    <style>.text{text-anchor:middle;dominant-baseline:middle;}</style>
+    <circle cx="350" cy="350" r="300" fill="none" stroke="grey" stroke-width="40" stroke-linecap="round"/>
+    <circle class="progress" transform="rotate(-90,350,350)" cx="350" cy="350" r="300" fill="none" stroke="red" stroke-width="40" stroke-linecap="round" stroke-dasharray="0,10000"/>
+    <text class="text" x="350" y="350" font-size="200" fill="red">36</text>
+</svg>
+
+<script>
+var p=document.querySelector('.progress'),t=document.querySelector('.text');function r(c){var l=Math.floor(2*Math.PI*parseFloat(p.getAttribute("r"))),v=c*l/100,red=255+(0-255)/100*c,green=(191/100)*c,blue=(255/100)*c;p.setAttribute("stroke-dasharray",v+",10000"),p.setAttribute("stroke",`rgb(${red},${green},${blue})`),t.innerHTML=c+'%',t.setAttribute("fill",`rgb(${red},${green},${blue})`)}let n=0;setInterval(()=>{n++;n>100&&(n=0),r(n)},30);
+</script>

@@ -1,0 +1,201 @@
+---
+title: ML-李宏毅-Lecture 9-Explainable AI
+date: Tue Feb 28 2023 08:03:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - 李宏毅
+categories: 课程
+description: 李宏毅《机器学习2022》课程学习笔记。
+---
+
+
+# Preparation
+
+## 【機器學習 2021】機器學習模型的可解釋性 -Explainable ML- -上- – 為什麼類神經網路可以正確分辨寶可夢和數碼寶貝呢？
+
+![png](P1.1.png)
+
+​	有时候机器得到正确的答案，并不代表它真正地理解了这个问题。
+
+![png](P1.2.png)
+
+Why we need Explainable ML?
+
+- Loan issuers are required by law to explain their models.
+  - 法律要求贷款发放者解释其模式。
+- Medical diagnosis model is responsible for humanlife. Can it be a black box?
+  - 医学诊断模式对人类生活负责。它可以是一个黑盒子吗？
+- If a model is used at the court, we must make surethe model behaves in a nondiscriminatory manner.
+  - 如果在法庭上使用一个模型，我们必须确保该模型以非歧视性的方式行事。
+- If a self-driving car suddenly acts abnormally, weneed to explain why.
+  - 如果一辆自动驾驶汽车突然出现异常行为，我们需要解释原因。
+
+![png](P1.3.png)
+
+​	我们可以基于模型的解释调整模型性能。
+
+![png](P1.4.png)
+
+- 一些模型具有内在的可解释性。
+  - 比如线性模型
+  - 但是一般都不复杂。
+- 深度学习网络难以解释。深度学习网络是一个黑盒，但是比线性模型更强大。
+
+![png](P1.5.png)
+
+​	我们尝试让深度学习网络更具解释性。
+
+![png](P1.6.png)
+
+​	决策树是一个强大且可解释的模型。
+
+![png](P1.7.png)
+
+解释性学习的目标
+
+- 完全知道 ML 模型的工作原理？
+- 我们并不完全知道大脑是如何工作的！
+- 但是我们相信人类的判断！
+
+![png](P1.8.png)
+
+![png](P1.9.png)
+
+​	机器学习的可解释性分为两大类：
+
+- Local Explanation
+  - 为什么你觉得这张图片是一只猫？
+- Global Explanation
+  - 这只猫像什么？（不是指具体的图像）
+
+### Local Explanation：Explain the Decision
+
+![png](P1.10.png)
+
+![png](P1.11.png)
+
+Image2Text 问题。究竟是猫的哪些部分被机器识别出来让机器认为这张图片是一张猫？
+
+![png](P1.12.png)
+
+​	论文 [[1311.2901\] Visualizing and Understanding Convolutional Networks (arxiv.org)](https://arxiv.org/abs/1311.2901) 使用一张灰色正方形遮盖图片，判断机器是否真正理解了图片内容。
+
+![png](P1.13.png)
+
+​	使用 Saliency Map：[[1312.6034\] Deep Inside Convolutional Networks: Visualising Image Classification Models and Saliency Maps (arxiv.org)](https://arxiv.org/abs/1312.6034) 让机器的关注点显现。
+
+![png](P1.14.png)
+
+​	案例：让机器识别是宝可梦还是神奇宝贝。
+
+![png](P1.15.png)
+
+![png](P1.16.png)
+
+```python
+model = Sequential()model.add(Conv2D(32，(3，3)，padding='same'，input_shape(120,120,3)))
+model.add(Activation('relu'))model.add(Conv2D(32，(3，3)))
+model.add(Activation('relu'))model.add(MaxPooling2D(pool_size=(2，2)))
+model.add(Conv2D(64，(3，3)，padding='same'))
+model.add(Activation('relu'))
+model.add(Conv2D(64，(3，3)))
+model.add(Activation('relu'))
+model.add(MaxPooling2D(pool_size=(2，2)))
+model.add(Conv2D(256，(3，3)，padding='same'))
+model.add(Activation('relu'))
+model.add(Conv2D(256，(3，3)))
+model.add(Activation('relu'))
+model.add(MaxPooling2D(pool_size=(2，2)))
+model.add(Flatten())
+model.add(Dense(1024))
+model.add(Activation('relu'))
+model.add(Dense(2))model.add(Activation('softmax'))
+```
+
+​	写一个卷积神经网络，结果它的效果非常好！
+
+![png](P1.17.png)
+
+![png](P1.18.png)
+
+​	绘制它们的 Saliency Map，发现机器的关注点都在背景上 orz
+
+![png](P1.19.png)
+
+​	后来发现是两个数据集的背景颜色不同，导致机器学到了错误的知识。
+
+
+![png](P1.20.png)
+
+![png](P1.21.png)
+
+​	给图片添加随机噪声，绘制它们的 Saliency Map 并求平均值。[[1603.02518\] A New Method to Visualize Deep Neural Networks (arxiv.org)](https://arxiv.org/abs/1603.02518)
+
+![png](P1.22.png)
+
+​	梯度未必能反应重要程度。
+
+​	替代：[[1611.02639\] Gradients of Counterfactuals (arxiv.org)](https://arxiv.org/abs/1611.02639)
+
+![png](P1.23.png)
+
+- 网络是如何处理输入数据的？
+  - 把一个深度神经网络中间的几层拿出来看看长啥样。
+
+![png](P1.24.png)
+
+​	在经过 8 层隐藏层之后，逐渐把不同人说的同一个句子聚集在一起。[icassp12_dbn.pdf (toronto.edu)](https://www.cs.toronto.edu/~hinton/absps/icassp12_dbn.pdf)
+
+![png](P1.25.png)
+
+​	论文 [[1902.10186\] Attention is not Explanation (arxiv.org)](https://arxiv.org/abs/1902.10186) 认为 Attention 机制不能被解释。
+
+​	论文 [[1908.04626\] Attention is not not Explanation (arxiv.org)](https://arxiv.org/abs/1908.04626) 认为有些 Attention 机制能被解释。
+
+![png](P1.26.png)
+
+​	在 BERT 模型中用一个 POS / NER 分类器，但是这个分类器不能太强，不然识别率会很低。
+
+
+![png](P1.27.png)
+
+![png](P1.28.png)
+
+​	语音识别：把中间结果拿出来。[[1911.01102\] What does a network layer hear? Analyzing hidden representations of end-to-end ASR through speech synthesis (arxiv.org)](https://arxiv.org/abs/1911.01102)
+
+## 【機器學習 2021】機器學習模型的可解釋性 -Explainable ML- -下- –機器心中的貓長什麼樣子？
+
+### Global Explanation
+
+![png](P2.1.png)
+
+​	在卷积神经网络中，filter 都提取了哪些特征？
+
+
+![png](P2.2.png)
+
+
+![png](P2.3.png)
+
+![png](P2.4.png)
+
+​	直接把卷积神经网络中间的特征图拿出来（$X^*=arg\max_Xy_i$）会发现难以理解，加上一些图像原来的特征（$X^*=arg\max_X y_i+R(X), R(X)=\sum_{i,j}|X_{ij}|$）。
+
+![png](P2.5.png)
+
+​	有了这些，我们就可以更好地调整超参数。[[1506.06579\] Understanding Neural Networks Through Deep Visualization (arxiv.org)](https://arxiv.org/abs/1506.06579)
+
+
+![png](P2.6.png)
+
+![png](P2.7.png)
+
+
+
+- [[1612.00005\] Plug & Play Generative Networks: Conditional Iterative Generation of Images in Latent Space (arxiv.org)](https://arxiv.org/abs/1612.00005)
+
+![png](P2.8.png)
+
+​	用一个简单的模型模拟深层神经网络生成的结果，然后这个简单的模型就容易被解释。
+
+
+![png](P2.9.png)

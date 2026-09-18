@@ -1,0 +1,255 @@
+---
+title: Software-Docker
+date: Thu Aug 03 2023 08:50:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - Docker
+categories: 探索
+description: 对 Docker 技术的初探索。
+---
+
+
+# 资源
+
+- [Docker Hello World | 菜鸟教程 (runoob.com)](https://www.runoob.com/docker/docker-hello-world.html)
+  - Docker 的帮助文档
+
+- [Linux 下的 Docker 安装-使用文档-PaddlePaddle 深度学习平台](https://www.paddlepaddle.org.cn/documentation/docs/zh/install/docker/linux-docker.html)
+  - 借助 Docker 安装 Paddle
+  
+- [cnstark/pytorch-docker: Pure Pytorch Docker Images. (github.com)](https://github.com/cnstark/pytorch-docker)
+  - 借助 Docker 安装 pytorch
+
+# 部署（Windows11 + Wsl2）
+
+​	Docker 默认安装在 C 盘并且不可控，在安装前尝试将 Docker 迁移至 D 盘：
+
+​	新建文件夹：`C:\Program Files\Docker  `和 `D:\Program Files\Docker `
+
+​	使用管理员权限的 cmd：
+
+![png](W1.png)
+
+```sh
+mklink /j "C:\Program Files\Docker" "D:\Program Files\Docker"
+```
+
+```sh
+为 C:\Program Files\Docker <<===>> D:\Program Files\Docker 创建的联接
+```
+
+​	从 [Docker: Accelerated Container Application Development](https://www.docker.com/) 整一个 Windows 版本的 Docker。安装之。
+
+​	进设置，把 `Resources` -> `Advanced` 里的 `Disk image location` 移到 D 盘：
+
+![png](W2.png)
+
+​	在 `Docker Engine` 里，添加 `  "registry-mirrors": ["https://registry.docker-cn.com", "https://docker.mirrors.ustc.edu.cn"]` 以获得镜像加速。
+
+![png](W3.png)
+
+## 使用（paddleCPU）
+
+### 获取镜像
+
+​	获取镜像，让它下载，等：
+
+```sh
+docker pull registry.baidubce.com/paddlepaddle/paddle:2.5.1
+```
+
+​	可以从 [paddlepaddle/paddle - Docker Image | Docker Hub](https://hub.docker.com/r/paddlepaddle/paddle/tags/) 获取更多镜像。
+
+​	等它下载完：
+
+```
+What's Next?
+  View summary of image vulnerabilities and recommendations → docker scout quickview registry.baidubce.com/paddlepaddle/paddle:2.5.1
+```
+
+![png](W8.png)
+
+### 创建容器
+
+```sh
+docker run --name paddle_docker -it -v $PWD:/paddle registry.baidubce.com/paddlepaddle/paddle:2.5.1 /bin/bash
+```
+
+> - `--name paddle_docker`：设定 Docker 的名称，`paddle_docker` 是自己设置的名称；
+> - `-it`：参数说明容器已和本机交互式运行；
+> - `-v $PWD:/paddle`：指定将当前路径（PWD 变量会展开为当前路径的绝对路径）挂载到容器内部的 /paddle 目录；
+> - `registry.baidubce.com/paddlepaddle/paddle:2.5.1`：指定需要使用的 image 名称，您可以通过`docker images`命令查看；/bin/bash 是在 Docker 中要执行的命令
+
+![png](W9.png)
+
+​	检查是否可用：
+
+```python
+import paddle
+paddle.utils.run_check()
+```
+
+![png](W12.png)
+
+### 关闭容器
+
+```sh
+exit
+```
+
+### 第二次使用
+
+启动：
+
+```sh
+docker start paddle_docker
+```
+
+进入：
+
+```sh
+docker attach paddle_docker
+```
+
+![png](W10.png)
+
+## 使用（paddleCPU + jupyter）
+
+### 获取镜像
+
+​	案例，拉取 Paddle 镜像（由于 Windows 不可以使用 Nvidia-docker，所以只能装 CPU 版本的），在 powershell 里运行（但是在 Ubuntu 下的子系统居然都可以运行，居然是相通的？）：
+
+```shell
+docker pull registry.baidubce.com/paddlepaddle/paddle:2.5.1-jupyter
+```
+
+### 创建容器
+
+​	装好后，创建容器：
+
+```sh
+docker run --name paddle_docker_jupyter -it -v $PWD:/paddle registry.baidubce.com/paddlepaddle/paddle:2.5.1-jupyter /bin/bash
+```
+
+> - `--name paddle_docker-jupyter`：设定 Docker 的名称，`paddle_docker` 是自己设置的名称；
+> - `-it`：参数说明容器已和本机交互式运行；
+> - `-v $PWD:/paddle`：指定将当前路径（PWD 变量会展开为当前路径的绝对路径）挂载到容器内部的 /paddle 目录；
+> - `registry.baidubce.com/paddlepaddle/paddle:2.5.1-jupyter`：指定需要使用的 image 名称，您可以通过`docker images`命令查看；/bin/bash 是在 Docker 中要执行的命令。
+
+### 使用容器
+
+```sh
+mkdir ./jupyter_docker
+chmod 777 ./jupyter_docker
+cd ./jupyter_docker
+```
+
+```sh
+docker run -p 80:80 --rm --env USER_PASSWD="123" -v $PWD:/home/paddle registry.baidubce.com/paddlepaddle/paddle:2.5.1-jupyter
+```
+
+> - `--rm`：关闭容器后删除容器；
+> - `--env USER_PASSWD="123"`：为 jupyter 设置登录密码，`123` 是自己设置的密码；
+> - `-v $PWD:/home/paddle`：指定将当前路径（PWD 变量会展开为当前路径的绝对路径）挂载到容器内部的 /home/paddle 目录；
+> - `registry.baidubce.com/paddlepaddle/paddle:2.5.1-jupyter`：指定需要使用的 image 名称，您可以通过 `docker images` 命令查看
+
+![png](W6.png)
+
+​	这时就可以在浏览器中输入 `http://localhost:80` 进入 JupyterHub
+
+![png](W7.png)
+
+​	这个用户名没说，好坑，查了[使用 Docker 安装后，jupyter 的用户名是什么？· Issue #46931 · PaddlePaddle/Paddle (github.com)](https://github.com/PaddlePaddle/Paddle/issues/46931)才知道是 `jovyan` ……
+
+### 关闭容器
+
+​	命令行下 `Ctrl+C` 解决。
+
+## 使用（paddleGPU）
+
+### Nvidia-docker
+
+- [5 步搭建 wsl2+cuda+docker 解决 windows 深度学习开发问题 - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/408403790)
+
+​	安装 cuda：
+
+```sh
+wget https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/cuda-wsl-ubuntu.pin
+sudo mv cuda-wsl-ubuntu.pin /etc/apt/preferences.d/cuda-repository-pin-600
+wget https://developer.download.nvidia.com/compute/cuda/11.4.2/local_installers/cuda-repo-wsl-ubuntu-11-4-local_11.4.2-1_amd64.deb
+sudo dpkg -i cuda-repo-wsl-ubuntu-11-4-local_11.4.2-1_amd64.deb
+sudo apt-key add /var/cuda-repo-wsl-ubuntu-11-4-local/7fa2af80.pub
+sudo apt-get update
+sudo apt-get -y install cuda
+```
+
+> 如需在 Linux 开启 GPU 支持，请[安装 nvidia-docker](https://github.com/NVIDIA/nvidia-docker)
+
+```sh
+export PATH=$PATH:/usr/lib/wsl/lib
+distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
+curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add -
+curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | sudo tee /etc/apt/sources.list.d/nvidia-docker.list
+curl -s -L https://nvidia.github.io/libnvidia-container/experimental/$distribution/libnvidia-container-experimental.list | sudo tee /etc/apt/sources.list.d/libnvidia-container-experimental.list
+sudo apt-get update
+sudo apt-get install -y nvidia-docker2
+```
+
+​	`nvidia-docker` 命令老是不成功，查到 [docker 启动容器报错 Unknown runtime specified nvidia. - luwanglin - 博客园 (cnblogs.com)](https://www.cnblogs.com/luckforefforts/p/13642682.html) 终于知道发生甚么事了，坑死我了。
+
+​	设置好配置文件，添加 `nvidia` 属性：
+
+```yaml
+  "runtimes": {
+    "nvidia": {
+      "path": "/usr/bin/nvidia-container-runtime",
+      "runtimeArgs": []
+    }
+  }
+```
+
+![png](W13.png)
+
+### 获取镜像
+
+​	无聊的等待下载时间……妈的 12GB 慢死我了。
+
+```sh
+nvidia-docker pull registry.baidubce.com/paddlepaddle/paddle:2.5.1-gpu-cuda10.2-cudnn7.6-trt7.0
+```
+
+### 创建容器
+
+```sh
+nvidia-docker run --name paddle_gpu_docker -it -v $PWD:/paddle registry.baidubce.com/paddlepaddle/paddle:2.5.1-gpu-cuda10.2-cudnn7.6-trt7.0 /bin/bash
+```
+
+### 查看 GPU 是否可用
+
+```python
+import paddle
+paddle.fluid.is_compiled_with_cuda()
+```
+
+```python
+True
+```
+
+### 关闭容器
+
+```sh
+exit
+```
+
+### 第二次使用
+
+​	启动：
+
+```sh
+docker start paddle_gpu_docker
+```
+
+​	进入：
+
+```sh
+docker attach paddle_gpu_docker
+```

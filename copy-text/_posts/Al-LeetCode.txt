@@ -1,0 +1,492 @@
+---
+title: Al-LeetCode
+date: Wed Feb 05 2025 12:02:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - C#
+categories: 探索
+description: 开刷！
+---
+
+
+# 资源
+
+- [LeetCode 75 - 学习计划 - 力扣（LeetCode）全球极客挚爱的技术成长平台](https://leetcode.cn/studyplan/leetcode-75/)
+
+# 正文
+
+## 1768. 交替合并字符串
+
+- [1768. 交替合并字符串 - 力扣（LeetCode）](https://leetcode.cn/problems/merge-strings-alternately/description/?envType=study-plan-v2&envId=leetcode-75)
+
+> [!Note]
+>
+> ​	给你两个字符串 `word1` 和 `word2` 。请你从 `word1` 开始，通过交替添加字母来合并字符串。如果一个字符串比另一个字符串长，就将多出来的字母追加到合并后字符串的末尾。
+>
+> ​	返回 **合并后的字符串** 。
+
+```c#
+public class Solution {
+    public string MergeAlternately(string word1, string word2) {
+        string ans = "";
+        int n = word1.Length >= word2.Length ? word1.Length : word2.Length;  // 取最大值
+        for(int i = 0; i < n; i++) {
+            // 交替合并，如果没到字符串尾就继续添加
+            if(i < word1.Length)
+                ans += word1[i];
+            if(i < word2.Length)
+                ans += word2[i];
+        }
+
+        return ans;
+    }
+}
+```
+
+​	官方解：
+
+```c#
+public class Solution {
+    public string MergeAlternately(string word1, string word2) {
+        int m = word1.Length, n = word2.Length;
+        int i = 0, j = 0;
+
+        StringBuilder ans = new StringBuilder();
+        while (i < m || j < n) {
+            if (i < m) {
+                ans.Append(word1[i]);
+                ++i;
+            }
+            if (j < n) {
+                ans.Append(word2[j]);
+                ++j;
+            }
+        }
+        return ans.ToString();
+    }
+}
+```
+
+## 1071. 字符串的最大公因子
+
+- [1071. 字符串的最大公因子 - 力扣（LeetCode）](https://leetcode.cn/problems/greatest-common-divisor-of-strings/description/?envType=study-plan-v2&envId=leetcode-75)
+
+> [!Note]
+>
+> 对于字符串 `s` 和 `t`，只有在 `s = t + t + t + ... + t + t`（`t` 自身连接 1 次或多次）时，我们才认定 “`t` 能除尽 `s`”。
+>
+> 给定两个字符串 `str1` 和 `str2` 。返回 *最长字符串 `x`，要求满足 `x` 能除尽 `str1` 且 `x` 能除尽 `str2`* 。
+
+```c#
+public class Solution {
+    public bool judge(string str, string subStr)
+    // 判断 str 是否能被 subStr 除尽
+    {
+        bool flag = true;
+        int j = 0;
+        // 如果从长度上不能除尽，直接排除
+        if (str.Length % subStr.Length != 0)
+        {
+            flag = false;
+        }
+        else
+        {
+            for (int i = 0; i < str.Length; i++)
+            {
+                if (str[i] == subStr[j])
+                {
+                    j++;
+                    if (j >= subStr.Length)
+                    {
+                        j = 0;
+                    }
+                }
+                else
+                {
+                    flag = false;
+                    break;
+                }
+            }
+        }
+        return flag;
+    }
+    public string GcdOfStrings(string str1, string str2) {
+        // 寻求两个字符串的最大公共前缀
+        string temp = "";
+        int min = str1.Length < str2.Length ? str1.Length : str2.Length;
+        for (int i = 0; i < min; i++) {
+            if (str1[i] == str2[i]) {
+                temp += str1[i];
+            } else {
+                break;
+            }
+        }
+        // 逐一排除
+        string x = "";
+        string subStr = "";
+        for(int i = 0; i < temp.Length; i++) {
+            subStr = temp.Substring(0, temp.Length - i);
+            if(judge(str1, subStr) && judge(str2, subStr)){
+                x = subStr;
+                break;
+            }
+        }
+        return x;
+    }
+}
+```
+
+​	官方解：
+
+```c#
+public class Solution {
+    public string GcdOfStrings(string str1, string str2) {
+        // 如果他们有公因子那么他们 正反拼接都是一样的 都由公因子重复
+        // 否则就不存在最大公约串
+        if(str1 + str2 != str2 + str1)
+        {
+            return "";
+        }   
+
+        int gcd = GCD(str1.Length, str2.Length);
+        return str1.Substring(0, gcd);
+    }
+
+    // 计算 a, b 的最大公约数，也就是计算两个字符串的长度的最大公约数
+    private int GCD(int a ,int b)
+    {
+        return b == 0 ? a: GCD(b, a % b);
+    }
+}
+```
+
+## 1431. 拥有最多糖果的孩子
+
+> [!Note]
+>
+> 有 `n` 个有糖果的孩子。给你一个数组 `candies`，其中 `candies[i]` 代表第 `i` 个孩子拥有的糖果数目，和一个整数 `extraCandies` 表示你所有的额外糖果的数量。
+>
+> 返回一个长度为 `n` 的布尔数组 `result`，如果把所有的 `extraCandies` 给第 `i` 个孩子之后，他会拥有所有孩子中 **最多** 的糖果，那么 `result[i]` 为 `true`，否则为 `false`。
+>
+> 注意，允许有多个孩子同时拥有 **最多** 的糖果数目。
+
+```c#
+public class Solution {
+    public IList<bool> KidsWithCandies(int[] candies, int extraCandies) {
+        IList<bool> boolList = new List<bool>();
+        // 找到最大值
+        int max = candies[0];
+        foreach (var x in candies) {
+            if (x > max){
+                max = x;
+            }
+        }
+        // 判断是否有效
+        foreach (var x in candies) {
+            boolList.Add(x + extraCandies >= max);
+        }
+        return boolList;
+    }
+}
+```
+
+## 605. 种花问题
+
+> [!Note]
+>
+> ​	假设有一个很长的花坛，一部分地块种植了花，另一部分却没有。可是，花不能种植在相邻的地块上，它们会争夺水源，两者都会死去。
+>
+> ​	给你一个整数数组 `flowerbed` 表示花坛，由若干 `0` 和 `1` 组成，其中 `0` 表示没种植花，`1` 表示种植了花。另有一个数 `n` ，能否在不打破种植规则的情况下种入 `n` 朵花？能则返回 `true` ，不能则返回 `false` 。
+
+```c#
+public class Solution {
+    public bool CanPlaceFlowers(int[] flowerbed, int n) {
+        int max = 0;
+        int current = 0;
+        if(flowerbed.Length > 1) {
+            // 首部
+            if (flowerbed[0] == 0 && flowerbed[1] == 0) {
+                flowerbed[0] = 1;
+                max++;
+            }
+            // 尾部
+            if(flowerbed[flowerbed.Length - 2] == 0 && flowerbed[flowerbed.Length - 1] == 0) {
+                flowerbed[flowerbed.Length - 1] = 1;
+                max++;
+            }
+        } else {
+            // 特殊情况
+            if (flowerbed[0] == 0)
+                max++;
+        }
+        for(int i = 1; i < flowerbed.Length - 1; i++) {
+            // 判断当前是否相邻
+            if (flowerbed[i - 1] == 0 && flowerbed[i] == 0 && flowerbed[i + 1] == 0) {
+                flowerbed[i] = 1;
+                max++;
+            }
+        }
+        return n <= max;
+    }
+}
+```
+
+## 345. 反转字符串中的元音字母
+
+> [!Note]
+>
+> ​	给你一个字符串 `s` ，仅反转字符串中的所有元音字母，并返回结果字符串。
+>
+> ​	元音字母包括 `'a'`、`'e'`、`'i'`、`'o'`、`'u'`，且可能以大小写两种形式出现不止一次。
+
+```c#
+public class Solution
+{
+    private bool isVowel(char c)
+    // 判断是否为元音字母
+    {
+        return c == 'a' || c == 'e' || c == 'i' || c == 'o' || c == 'u' ||
+             c == 'A' || c == 'E' || c == 'I' || c == 'O' || c == 'U';
+    }
+    public string ReverseVowels(string s)
+    {
+        // 遍历两遍，出栈再入栈
+        Stack<char> charStack = new Stack<char>();
+        string result = "";
+        for (int i = 0; i < s.Length; i++)
+        {
+            if (isVowel(s[i]))
+            {
+                charStack.Push(s[i]);
+            }
+        }
+        for (int i = 0; i < s.Length; i++)
+        {
+
+            if (isVowel(s[i]))
+            {
+                result += charStack.Pop();
+            }
+            else
+            {
+                result += s[i];
+            }
+        }
+        return result;
+    }
+}
+```
+
+​	官方解（双指针）：
+
+```c#
+public class Solution {
+    public string ReverseVowels(string s) {
+        int n = s.Length;
+        char[] arr = s.ToCharArray();
+        int i = 0, j = n - 1;
+        while (i < j) {
+            while (i < n && !IsVowel(arr[i])) {
+                ++i;
+            }
+            while (j > 0 && !IsVowel(arr[j])) {
+                --j;
+            }
+            if (i < j) {
+                Swap(arr, i, j);
+                ++i;
+                --j;
+            }
+        }
+        return new string(arr);
+    }
+
+    public bool IsVowel(char ch) {
+        return "aeiouAEIOU".IndexOf(ch) >= 0;
+    }
+
+    public void Swap(char[] arr, int i, int j) {
+        char temp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = temp;
+    }
+}
+```
+
+## 151. 反转字符串中的单词
+
+> [!Note]
+>
+> ​	给你一个字符串 `s` ，请你反转字符串中 **单词** 的顺序。
+>
+> ​	**单词** 是由非空格字符组成的字符串。`s` 中使用至少一个空格将字符串中的 **单词** 分隔开。
+>
+> ​	返回 **单词** 顺序颠倒且 **单词** 之间用单个空格连接的结果字符串。
+>
+> ​	**注意：**输入字符串 `s`中可能会存在前导空格、尾随空格或者单词间的多个空格。返回的结果字符串中，单词间应当仅用单个空格分隔，且不包含任何额外的空格。
+
+栈（双端队列）：
+
+```c#
+public class Solution {
+    public string ReverseWords(string s)
+    {
+        Stack<string> wordStack = new Stack<string>();
+        string word = "";
+        for (int i = 0; i < s.Length; i++)
+        {
+            if (s[i] == ' ')
+            {
+                
+                if (word.Length > 0)
+                {
+                    Console.WriteLine(word);
+                    wordStack.Push(word);
+                    word = "";
+                }
+            } else {
+                word += s[i];
+            }
+        }
+        wordStack.Push(word);
+
+        string ans = "";
+        while(wordStack.Count > 0) {
+            if (ans.Length > 0)
+            {
+                ans += " ";
+            }
+            ans += wordStack.Pop();
+        }
+        return ans;
+    }
+}
+```
+
+## 238. 除自身以外数组的乘积
+
+> [!Note]
+>
+> ​	给你一个整数数组 `nums`，返回 数组 `answer` ，其中 `answer[i]` 等于 `nums` 中除 `nums[i]` 之外其余各元素的乘积 。
+>
+> ​	题目数据 **保证** 数组 `nums`之中任意元素的全部前缀元素和后缀的乘积都在 **32 位** 整数范围内。
+>
+> ​	请 **不要使用除法，**且在 `O(n)` 时间复杂度内完成此题
+
+```c#
+public class Solution {
+    public int[] ProductExceptSelf(int[] nums)
+    {
+        int length = nums.Length;
+        int[] prev = new int[length];  // 前缀积
+        int[] next = new int[length];  // 后缀积
+        int[] ans = new int[length];
+        prev[0] = next[length - 1] = 1;
+        for (int i = 1; i < length; i++)
+        {
+            prev[i] = prev[i - 1] * nums[i - 1];
+            next[length - i - 1] = next[length - i] * nums[length - i];
+        }
+        for (int i = 0; i < length; i++)
+        {
+            ans[i] = prev[i] * next[i];
+        }
+        return ans;
+    }
+}
+```
+
+## 443. 压缩字符串
+
+> [!Note]
+>
+> ​	给你一个字符数组 `chars` ，请使用下述算法压缩：
+>
+> ​	从一个空字符串 `s` 开始。对于 `chars` 中的每组 **连续重复字符** ：
+>
+> - 如果这一组长度为 `1` ，则将字符追加到 `s` 中。
+> - 否则，需要向 `s` 追加字符，后跟这一组的长度。
+>
+> ​	压缩后得到的字符串 `s` **不应该直接返回** ，需要转储到字符数组 `chars` 中。需要注意的是，如果组长度为 `10` 或 `10` 以上，则在 `chars` 数组中会被拆分为多个字符。
+>
+> ​	请在 **修改完输入数组后** ，返回该数组的新长度。
+>
+> ​	你必须设计并实现一个只使用常量额外空间的算法来解决此问题。
+
+```c#
+public class Solution {
+    public int Compress(char[] chars) {
+        if (chars.Length == 1) {
+            return 1;
+        }
+        List<char> charList = new List<char>();  // 字符列表
+        List<int> lengthList = new List<int>();  // 计数列表
+        charList.Add(chars[0]);
+        lengthList.Add(1);
+        int tempLength = 1;
+        for(int i = 1; i < chars.Length; i++) {
+            if(chars[i - 1] == chars[i]) {
+                tempLength += 1;
+            } else {
+                charList.Add(chars[i]);
+                lengthList[lengthList.Count - 1] = tempLength;
+                lengthList.Add(1);
+                tempLength = 1;
+            }
+            if(i == chars.Length - 1) {
+                lengthList[lengthList.Count - 1] = tempLength;
+            }
+        }
+        string ans = "";
+        for(int i = 0; i < charList.Count; i++) {
+            ans += charList[i];
+            if(lengthList[i] != 1) {
+                // 相当于图省事，省去了数字判断位数的部分
+                ans += lengthList[i];
+            }
+        }
+        for(int i = 0; i < ans.Length; i++) {
+            // 图省事直接重写回去了…
+            chars[i] = ans[i];
+        }
+        return ans.Length;
+    }
+}
+```
+
+​	官方题解使用了双指针：
+
+```c#
+public class Solution {
+    public int Compress(char[] chars) {
+        int n = chars.Length;
+        int write = 0, left = 0;
+        for (int read = 0; read < n; read++) {
+            if (read == n - 1 || chars[read] != chars[read + 1]) {
+                chars[write++] = chars[read];
+                int num = read - left + 1;
+                if (num > 1) {
+                    int anchor = write;
+                    while (num > 0) {
+                        chars[write++] = (char) (num % 10 + '0');
+                        num /= 10;
+                    }
+                    Reverse(chars, anchor, write - 1);
+                }
+                left = read + 1;
+            }
+        }
+        return write;
+    }
+
+    public void Reverse(char[] chars, int left, int right) {
+        while (left < right) {
+            char temp = chars[left];
+            chars[left] = chars[right];
+            chars[right] = temp;
+            left++;
+            right--;
+        }
+    }
+}
+```
+

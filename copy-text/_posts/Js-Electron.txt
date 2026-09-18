@@ -1,0 +1,386 @@
+---
+title: Js-Electron
+date: Mon Sep 15 2025 18:00:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - JavaScript
+  - Electron
+categories: 探索
+description: 我要开发桌面应用！
+---
+
+
+# 资源
+
+- [简介 | Electron](https://www.electronjs.org/zh/docs/latest/)
+
+- [禹神：一小时快速上手Electron，前端Electron开发教程_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1sE421N7M5/)
+
+- [electron/electron: :electron: Build cross-platform desktop apps with JavaScript, HTML, and CSS](https://github.com/electron/electron)
+
+- [Notes Desktop App With Electron JS, SQLite3, React JS, TailwindCSS, Shadcn & Zustand - YouTube](https://www.youtube.com/watch?v=xdv48d4GGDI)
+
+# 正文
+
+## 进程模型
+
+![webp](00.webp)
+
+> [!Note]
+>
+> ​	Electron 应用程序的结构非常相似。 作为应用开发者，你将控制两种类型的进程：[主进程](https://www.electronjs.org/zh/docs/latest/tutorial/process-model#the-main-process) 和 [渲染器进程](https://www.electronjs.org/zh/docs/latest/tutorial/process-model#the-renderer-process)。 这类似于上文所述的 Chrome 的浏览器和渲染器进程。
+>
+> **主进程**
+>
+> ​	每个 Electron 应用都有一个单一的主进程，作为应用程序的入口点。 主进程在 Node.js 环境中运行，这意味着它具有 `require` 模块和使用所有 Node.js API 的能力。
+>
+> **渲染器进程**
+>
+> ​	每个 Electron 应用都会为每个打开的 `BrowserWindow` ( 与每个网页嵌入 ) 生成一个单独的渲染器进程。 洽如其名，渲染器负责 *渲染* 网页内容。
+
+> [!Important]
+>
+> ​	Electron 的主进程和渲染进程有着清楚的分工并且不可互换。 这代表着无论是从渲染进程直接访问 Node.js 接口，亦或者是从主进程访问 HTML 文档对象模型 (DOM)，都是不可能的。
+
+## 框架类比
+
+| 特性           | Electron                     | Flutter                                       | Tauri                    |
+| -------------- | ---------------------------- | --------------------------------------------- | ------------------------ |
+| **核心用途**   | 跨平台桌面应用               | 跨平台移动、桌面、Web 应用                    | 轻量桌面应用             |
+| **主要语言**   | JS/HTML/CSS + Node.js        | Dart                                          | Rust + JS/HTML/CSS       |
+| **渲染方式**   | Chromium（WebView）          | Skia 原生绘制                                 | 系统 WebView             |
+| **性能**       | 中等                         | 高（接近原生）                                | 较高                     |
+| **内存占用**   | 高 (>200MB)                  | 中等                                          | 低 (<50MB)               |
+| **启动速度**   | 慢                           | 快                                            | 快                       |
+| **UI 流畅度**  | 受 Web 限制                  | 流畅，60~120fps                               | 一般，但比 Electron 好   |
+| **打包体积**   | 大 (50–100MB+)               | 中等 (10–50MB)                                | 小 (2–10MB)              |
+| **跨平台支持** | Windows / macOS / Linux      | iOS / Android / Windows / macOS / Linux / Web | Windows / macOS / Linux  |
+| **热重载**     | 支持，但慢                   | 支持，快速                                    | 支持                     |
+| **适合场景**   | 快速开发桌面应用，Web 技术栈 | 高性能跨平台 App，注重 UI                     | 小体积桌面应用，安全性高 |
+
+## 安装
+
+​	新建一个项目文件夹，执行下面命令：
+
+```shell
+npm init
+```
+
+​	之后一阵操作，得到 `package.json`。
+
+​	`author` 和 `description` 是必需的，不然将无法打包成 Electron。
+
+​	`cnpm` 安装（不然巨慢）：
+
+```shell
+cnpm i electron
+```
+
+​	修改 `package.json`（添加 `"scripts": {"start": "electron ."`}）：
+
+```json
+{
+  "name": "electron",
+  "version": "1.0.0",
+  "description": "A test case.",
+  "license": "MIT",
+  "author": "Zane",
+  "type": "commonjs",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^38.1.0"
+  }
+}
+```
+
+## 快速开始
+
+​	创建一个 `main.js`：
+
+```javascript
+const {app, BrowserWindow} = require('electron')
+
+app.on('ready', () => {
+    new BrowserWindow({width: 800, height: 600}).loadURL('https://www.google.com')
+});
+```
+
+​	终端里跑一下：
+
+```shell
+npm start
+```
+
+![webp](01.webp)
+
+​	项目中创建一个 `index.html`：
+
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'"
+    />
+    <meta
+      http-equiv="X-Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'"
+    />
+    <title>Hello from Electron renderer!</title>
+  </head>
+  <body>
+    <h1>Hello from Electron renderer!</h1>
+    <p>👋</p>
+  </body>
+</html>
+```
+
+> [!Note]
+>
+> **`default-src 'self'`**
+>
+> - 默认资源加载策略：只允许从当前源（`self`，即本地应用或同源的文件）加载内容。
+> - 这意味着 **图片、字体、CSS、XHR 请求** 等都只能来自当前应用打包的文件，而不能随便访问互联网或其他域名。
+>
+> **`script-src 'self'`**
+>
+> - 限制 JavaScript 的加载来源：只能执行来自应用自身的脚本。
+> - 禁止从 CDN、第三方域名加载脚本，也禁止内联脚本（除非特别允许 `'unsafe-inline'`）。
+> - 这样可以防止外部恶意脚本注入和执行。
+>
+> **`http-equiv="X-Content-Security-Policy"`**
+>
+> - 这是 **旧版 IE 和部分浏览器** 对 CSP 的兼容写法。现代浏览器主要识别 `Content-Security-Policy`，但为了兼容性，有些人会同时写上。
+
+​	修改 `main.js`：
+
+```javascript
+const {app, BrowserWindow} = require('electron')
+
+const createWindow = () => {
+    const win = new BrowserWindow({
+        width: 800,
+        height: 600
+    })
+
+    win.loadFile('index.html')
+}
+
+app.on('ready', () => {
+    createWindow()
+});
+```
+
+​	跑一下：
+
+![webp](02.webp)
+
+## 窗口管理
+
+​	在 Windows/Linux 中，当所有窗口都被关闭时，主进程将被杀死。而 MacOS 则不会，因此可以加一段窗口管理的代码：
+
+```javascript
+const { app, BrowserWindow } = require('electron/main')
+
+const createWindow = () => {
+  const win = new BrowserWindow({
+    width: 800,
+    height: 600
+  })
+
+  win.loadFile('index.html')
+}
+
+app.whenReady().then(() => {
+  createWindow()
+
+  // 适配 MacOS
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow()
+    }
+  })
+})
+
+app.on('window-all-closed', () => {
+  // 如果是 Windows/Linux
+  if (process.platform !== 'darwin') {
+    app.quit()
+  }
+})
+```
+
+## 预加载脚本
+
+> [!Note]
+>
+> ​	为了将 Electron 的不同类型的进程桥接在一起，我们需要使用被称为 **预加载** 的特殊脚本。
+
+​	创建一个 `peload.js`：
+
+```javascript
+const { contextBridge } = require('electron')
+
+contextBridge.exposeInMainWorld('versions', {
+  node: () => process.versions.node,
+  chrome: () => process.versions.chrome,
+  electron: () => process.versions.electron
+})
+```
+
+> [!Note]
+>
+> - 使用 `contextBridge` 安全地把主进程的一些信息暴露给渲染进程（浏览器环境）。
+>
+> - 这里把 Node、Chrome、Electron 的版本信息挂到 `window.versions` 上，渲染进程通过 `window.versions.node()` 访问。
+
+​	 修改 `main.js`：
+
+```javascript
+const { app, BrowserWindow } = require('electron')
+
+const path = require('node:path')
+
+const createWindow = () => {
+  const win = new BrowserWindow({
+    width: 800,
+    height: 600,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js')
+    }
+  })
+
+  win.loadFile('index.html')
+}
+
+app.whenReady().then(() => {
+  createWindow()
+})
+```
+
+> [!Note]
+>
+> - 创建应用窗口，加载 HTML 页面。
+>
+> - `app.whenReady()` 确保 Electron 初始化完成再创建窗口。
+>
+> - `preload.js` 是预加载脚本路径，在渲染进程加载页面前执行。
+
+​	创建一个 `renderer.js`：
+
+```javascript
+const information = document.getElementById('info')
+information.innerText = `本应用正在使用 Chrome (v${versions.chrome()}), Node.js (v${versions.node()}), 和 Electron (v${versions.electron()})`
+```
+
+​	修改 `index.html`：
+
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'"
+    />
+    <meta
+      http-equiv="X-Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'"
+    />
+    <title>来自 Electron 渲染器的问好！</title>
+  </head>
+  <body>
+    <h1>来自 Electron 渲染器的问好！</h1>
+    <p>👋</p>
+    <p id="info"></p>
+  </body>
+  <script src="./renderer.js"></script>
+</html>
+```
+
+![webp](03.webp)
+
+## 打包（electron-builder）
+
+​	快被 forge 折磨死了……我跳车了。
+
+​	先：
+
+```shell
+cnpm i electron-builder
+```
+
+​	然后修改 `package.json`：
+
+```json
+{
+  "name": "electron",
+  "version": "1.0.0",
+  "description": "A test case.",
+  "license": "MIT",
+  "author": "Zane",
+  "type": "commonjs",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder"
+  },
+  "devDependencies": {
+    "electron": "^38.1.0",
+    "electron-builder": "^26.0.12"
+  },
+  "dependencies": {},
+  "build": {
+    "appId": "com.zane.electronapp",
+    "productName": "ElectronTestApp",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "**/*"
+    ],
+    "win": {
+      "target": [
+        "zip"
+      ],
+      "signAndEditExecutable": false
+    }
+  }
+}
+
+```
+
+​	执行打包命令：
+
+```shell
+npm run dist
+```
+
+​	它还是会尝试下载 Electron 的二进制文件……见招拆招吧，这里下载完毕了。
+
+```shell
+> electron@1.0.0 dist
+> electron-builder
+
+  • electron-builder  version=26.0.12 os=10.0.26100
+  • loaded configuration  file=package.json ("build" field)
+  • writing effective config  file=dist\builder-effective-config.yaml
+  • executing @electron/rebuild  electronVersion=38.1.1 arch=x64 buildFromSource=false appDir=./
+  • installing native dependencies  arch=x64
+  • completed installing native dependencies
+  • packaging       platform=win32 arch=x64 electron=38.1.1 appOutDir=dist\win-unpacked
+  • updating asar integrity executable resource  executablePath=dist\win-unpacked\ElectronTestApp.exe
+  • building        target=zip arch=x64 file=dist\ElectronTestApp-1.0.0-win.zip
+```
+
+​	西八，终于搞定了。
+
+![webp](04.webp)
+
+​	如果要加点别的（React/Vue 之类的），去 Github 看看有没有模板吧……

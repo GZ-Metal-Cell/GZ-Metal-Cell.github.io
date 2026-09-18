@@ -1,0 +1,422 @@
+---
+title: ML-李宏毅-Lecture 12-Reinforcement Learning
+date: Sat Nov 25 2023 19:15:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - 李宏毅
+categories: 课程
+description: 李宏毅《机器学习2022》课程学习笔记。
+---
+
+
+# Preparation
+
+## 增強式學習跟機器學習一樣都是三個步驟
+
+![png](P1.1.png)
+
+​	对于一些问题，人类也不知道正确答案（最优解）。RL（强化学习）。
+
+![png](P1.2.png)
+
+​	大纲：
+
+- What is RL? (Three steps in ML)
+  - 什么是 RL？(ML 的三个步骤）
+- Policy Gradient
+  - 策略梯度
+- Actor-Critic
+
+- Reward Shaping
+  - 奖励塑造
+- No Reward: Learning from Demonstration
+  - 示教学习/模仿学习
+
+![png](P1.3.png)
+
+​	对于机器学习，就是找到一个函数。
+
+​	对于强化学习，`Actor` 对于观察 `Environment` 做出 `Action = f(Observation)`, 所做出的 `Function output` 又可以影响环境。目标就是找到一个 `policy` 使得环境反馈得到的 `total reward` 最大。
+
+![png](P1.4.png)
+
+​	强化学习的示例：电子游戏
+
+​	Space invader 游戏，目标是击杀外 aliens 获得 score 并防止自己的 shield 和 spaceship 不被击杀。
+
+![png](P1.5.png)
+
+​	Actor 通过操控 spaceship 以获得更高的 reward。
+
+![png](P1.8.png)
+
+​	下围棋也可以是一个 RL 问题，赢了 `reward = 1`，输了 `reward = -1`。
+
+![png](P1.9.png)
+
+​	用传统机器学习的流程去理解强化学习。
+
+![png](P1.10.png)
+
+​	Step 1: Function with Unknown
+
+- lnput of neural network: the observation of machine represented as a vector or a matrix
+  - 神经网络的输入：以矢量或矩阵形式表示的机器观测结果
+- Output neural network : each action corresponds to aneuron in output layer
+  - 输出神经网络：每个动作对应输出层的神经元
+
+![png](P1.11.png)
+
+​	Step 2: Define "Loss"
+
+​	在做出不同的行为后，可能获得不同的 reward。
+
+![png](P1.12.png)
+
+> ​	episode 是强化学习中的一个术语，指智能体在环境中执行某个策略从开始到结束的一次完整交互过程。
+
+​	经过 many turns 后，游戏结束，就是一个 episode，Total reard: $R=\sum^T_{t=1}r_t$，即为需要 maximize 的目标。
+
+![png](P1.14.png)
+
+​	Step 3: Optimization
+
+​	对于序列 $\tau=\{s_{1},a_{1},s_{2},a_{2},\cdots\}$，获得的 Reward 的总和：$R(\tau)=\sum^T_{t=1}r_t$。
+
+​	如何进行优化是 RL 面临的主要挑战。
+
+## Policy Gradient 與修課心情
+
+![png](P1.16.png)
+
+​	How to control your actor:
+
+- Make it take (or don't take) a specific action $\hat a$ given specific observation $s$.
+  - `在特定观察结果 $s$ 的情况下，让它采取（或不采取）特定行动 $\hat a$。
+
+​	采取行动 $\hat a$：$L=e$
+
+​	不采取行动 $\hat a$：$L=-e$
+
+​	最终目标：$\theta^*=arg\min_\theta L$
+
+![png](P1.17.png)
+
+![png](P2.1.png)
+
+​	对于环境 $s$，以及做出的行为 $a$，得到最终的 reward $A$，则 $L=\sum A_ne_n$，$\theta^*=arg\min_{\theta}L$
+
+![png](P2.2.png)
+
+​	如果只看当前的 $A$ 最大作为优化目标，是短视的行为，因为局部最优不等于全局最优。
+
+![png](P2.3.png)
+
+- An action affects the subsequent observations and thus subsequent rewards.
+  - 行动会影响后续的观察结果，从而影响后续的奖励。
+
+- Reward delay: Actor has to sacrifice immediate reward togain more long-term reward.
+  - 奖励延迟：行为者必须牺牲眼前的奖励来换取更多的长期奖励。
+
+- In space invader, only “fire” yields positive reward, so version 0 will learn an actor that always “fire”
+  - 在 "太空入侵者 "中，只有 "开火 "才会产生正奖励，因此 Verison 0 将学习一个总是 "开火 "的行为者。
+
+![png](P2.5.png)
+
+​	Version 1：每个操作都将后续所有的 $r$ 加起来得到 $G=\sum^N_{n=t}r_n$ 作为优化目标。
+
+![png](P2.6.png)
+
+​	Version 2: 加一个 $\gamma$：$G_t'=\sum^ N_{n=t}\gamma^{n-t}r_n$
+
+![png](P2.7.png)
+
+​	对 reward 做归一化处理，每个 $A$ 都要减去 baseline $b$。
+
+![png](P2.8.png)
+
+​	Policy Gradient
+
+- Initialize actor network parameters $\theta^0$
+
+  初始化角色网络参数 $\theta^0$
+
+- For training iteration $i=1$ to $T$
+
+  训练迭代 $i=1$ 至 $T$
+
+  - Using actor $\theta^{i-1}$ to interact
+
+    使用 actor $\theta^{i-1}$ 进行互动
+
+  - Obtain data $\{s_1,a_1\},\{s_2,a_2\},...,\{s_N,a_N\}$
+
+  - Compute $A_1,A_2,...,A_N$
+
+  - Compute loss $L$
+
+  - $\theta^i\leftarrow \theta^{i-1}-\eta\bigtriangledown L$
+
+​	Data collection is in the “for loop”of training iterations
+
+​	在训练迭代的 "for 循环 "中收集数据
+
+![png](P2.9.png)
+
+​	Each time you update the model parameters, you need tocollect the whole training set again.
+
+​	每次更新模型参数时，都需要重新收集整个训练集。
+
+![png](P2.10.png)
+
+​	为什么每次更新模型参数时，都需要重新收集整个训练集？因为 $\theta^{i-1}$ 的经验对 $\theta^i$ 来说不一定是最好的。
+
+![png](P2.11.png)
+
+《棋魂》中，对于新手来说小马步飞是对的，因为比较稳，而对于高手来说，应该走大马步飞。
+
+![png](P2.12.png)
+
+![png](P2.13.png)
+
+​	On-policy v.s. Off-policy
+
+- The <font color="#136ec2">actor to train</font> and the <font color="red">actor for interacting</font> is the same.→ On-policy
+
+  <font color="#136ec2">要训练的角色</font>和<font color="red">互动的角色</font>是相同的。→ On-policy
+
+- Can the <font color="#136ec2">actor to train</font> and the <font color="red">actor for interacting</font> be different?→ Off-policy
+
+​	<font color="#136ec2">用于训练的角色</font>和<font color="red">用于互动的角色</font>可以不同吗？→ Off-policy
+
+In this way, we do not have to collection data after each update.
+
+​	这样，我们就不必在每次更新后收集数据。
+
+![png](P2.14.png)
+
+​	Off-policy → Proximal Policy Optimization(PPO) 近端策略优化
+
+<font color="#136ec2">要训练的角色</font>和<font color="red">互动的角色</font>认定是不同的。
+
+![png](P2.15.png)
+
+​	Collection Training Data: **Exploration**
+
+​	收集培训数据：**探索**
+
+​	The actor needs to have randomness duringdata collection.
+
+​	在数据收集过程中，角色需要有随机性。
+
+​	扩大 output entropy，增加 noises
+
+![png](P2.16.png)
+
+- [Google's DeepMind AI Just Taught Itself To Walk - YouTube](https://www.youtube.com/watch?v=gn4nRCC9TwQ&ab_channel=InsiderTech)
+
+![png](P2.17.png)
+
+- [blog.openai.com](https://blog.openai.com/openai-baselines-ppo/) 进不去。
+
+## Actor-Critic
+
+![png](P3.1.png)
+
+Critic
+
+- Critic: Given actor $\theta$, how good it is when observing $s$ (and taking action $a$)
+
+  Critic：给定行为者 $\theta$，它在观察 $s$（并采取 $a$ 行动）时的表现如何
+
+- Value function $V^\theta(s)$: When using actor $\theta$, the discounted cumulated reward expects to be obtained after seeing $s$
+
+  价值函数 $V^\theta(s)$：当使用行为者 $\theta$ 时，在看到 $s$ 后期望获得的折现累积奖励
+
+​	The output values of a critic depend on the actor evaluated.
+
+​	Critic 的输出值取决于被评价的行为体。
+
+![png](P3.2.png)
+
+​	How to estimate $V^\theta(s)$
+
+​	如何估计 $V^\theta(s)$
+
+- **Monte-Carlo(MC) based approach**
+
+  **基于蒙特卡洛（MC）的方法**
+
+  - The critic watches actor $\theta$  to interact with the environment.
+
+    评论家观察演员 $\theta$ 与环境的互动。
+
+​	After seeing $s_a$, Until the end of the episode, the cumulated reward is $G'_a$
+
+​	看到 $s_a$ 后，直到 episode 结束，累计奖励为 $G'_a$
+
+​	After seeing $s_b$, Until the end of the episode, the cumulated reward is $G'_b$
+
+​	看到 $s_b$ 后，直到 episode 结束，累计奖励为 $G'_b$
+
+![png](P3.3.png)
+
+How to estimate $V^\pi(s)$
+
+- **Temporal-difference(TD) approach**
+  - 时差（TD）法
+
+![png](P3.4.png)
+
+对于上面这个场景，MC 与 TD 估计 $V^\theta(s_a)$ 的结果是不一样的。
+
+![png](P3.5.png)
+
+Version 3.5，$A$ 的计算公式与 $V^\theta(s)$ 挂钩。
+
+![png](P3.6.png)
+
+
+
+![png](P3.7.png)
+
+Version 4：Advantage Actor-Critic 优势演员-评论家
+
+$$A_t=r_t+V^\theta(s_{t+1})-V ^\theta(s_t)$$
+
+![png](P3.8.png)
+
+Tip of Actor-Critic 演员评论家的提示
+
+- The parameters of actor and critic can be shared.
+
+  演员和评论家的参数可以共享。
+
+![png](P3.9.png)
+
+Outlook: Deep Q Network (DQN)
+
+- [DRL Lecture 3: Q-learning (Basic Idea) - YouTube](https://www.youtube.com/watch?v=o_g9JUMw1Oc&ab_channel=Hung-yiLee)
+- [[1710.02298] Rainbow: Combining Improvements in Deep Reinforcement Learning (arxiv.org)](https://arxiv.org/abs/1710.02298)
+
+## 回饋非常罕見的時候怎麼辦？機器的望梅止渴
+
+![png](P4.1.png)
+
+Sparese Reward 人为给某些操作定义 Reward。
+
+![png](P4.2.png)
+
+- [Training Agent for First-Person Shooter Game with Actor-Critic Curriculum Learning | OpenReview](https://openreview.net/forum?id=Hk3mPK5gg&noteld=Hk3mPK5gg)
+- [Visual Doom AI Competition @ CIG 2016 Track 1 All Rounds - YouTube](https://www.youtube.com/watch?v=94EPSjQH38Y&ab_channel=ViZDoom)
+
+![png](P4.3.png)
+
+使用强化学习教会电脑玩第一人称射击游戏。
+
+![png](P4.4.png)
+
+给定好奇心——获取新事物的时候获得 Reward。
+
+- [[1705.05363] Curiosity-driven Exploration by Self-supervised Prediction (arxiv.org)](https://arxiv.org/abs/1705.05363)
+- [Curiosity-driven Exploration by Self-supervised Prediction (pathak22.github.io)](https://pathak22.github.io/noreward-rl/)
+
+## 如何從示範中學習？逆向增強式學習 -Inverse RL
+
+![png](P5.1.png)
+
+Motivation
+
+- Even define reward can be challenging in some tasks.
+
+  甚至在某些任务中定义奖励也具有挑战性。
+
+- Hand-crafted rewards can lead to uncontrolled behavior.
+
+  手工制作的奖励会导致行为失控。
+
+---
+
+Three Laws of Robotics:
+1. A robot may not injure a human being or, throughinaction, allow a human being to come to harm.
+2. A robot must obey the orders given it by human beingsexcerpt where such orders would conflict with the First Law.
+3. A robot must protect its own existence as long as suchprotection does not conflict with the First or Second Laws.
+
+机器人三大法则：
+1. 机器人不得伤害人类，也不得通过行动让人类受到伤害。
+2. 机器人必须服从人类的命令，除非这种命令与第一法则相冲突。
+3. 机器人必须保护自己的生存，只要这种保护不与第一或第二法则相抵触。
+
+最终结果：
+
+restraining individual human behavior and sacrificing some humans will ensure humanity's survival.
+
+约束人类的个人行为并牺牲部分人类将确保人类的生存。
+
+![png](P5.2.png)
+
+Imitation Learning 模仿学习
+
+Actor can interact with the environment, but reward function is not available.
+
+角色可以与环境互动，但不具备奖励功能。
+
+
+
+![png](P5.3.png)
+
+逆向式增强学习是监督学习吗？
+
+问题：专家只能观察到有限的场景。
+
+![png](P5.4.png)
+
+更多的问题：
+
+- The agent will copy every behavior, even irrelevant actions.
+
+  代理会复制每一个行为，甚至是无关的行为。
+
+[生活大爆炸-----Sheldon 学中文那段.mp4 chinese - YouTube](https://www.youtube.com/watch?v=j2FSB3bseek&ab_channel=NeeShengYong)
+
+![png](P5.5.png)
+
+使用 reward function 以获得 optimal actor。
+
+![png](P5.6.png)
+
+Inverse Reinforcement Learning 逆向强化学习
+
+- Principle: <font color="red">The teacher is always the best.</font> 老师永远是最好的。
+
+- Basic idea:
+
+  - Initialize an <font color="#136ec2">actor</font> 初始化角色
+
+  - In each iteration 在每轮迭代过程中、
+
+    - The <font color="#136ec2">actor</font> interacts with the <font color="orange">environments</font> to obtainsome trajectories.
+
+      演员（actor）与环境（environments）交互以获取一些轨迹。
+
+    - Define a <font color="green">reward function</font>, which makes thetrajectories of the teacher better than the <font color="#136ec2">actor</font>.
+
+      定义一个奖励函数（reward function），该函数使教师的轨迹比角色的轨迹更好。
+
+    - The <font color="#136ec2">actor</font> learns to maximize the <font color="green">reward</font> based onthe new <font color="green">reward function</font>.
+
+      角色根据新的奖励函数学习最大化奖励。
+
+![png](P5.7.png)
+
+![png](P5.8.png)
+
+IRL 的思想有点类似于 GAN。
+
+![png](P5.9.png)
+
+- [Guided Cost Learning (berkeley.edu)](https://rll.berkeley.edu/gcl/)
+
+![png](P5.10.png)
+
+- [[1807.04742] Visual Reinforcement Learning with Imagined Goals (arxiv.org)](https://arxiv.org/abs/1807.04742)
+- [[1903.03698] Skew-Fit: State-Covering Self-Supervised Reinforcement Learning (arxiv.org)](https://arxiv.org/abs/1903.03698)
