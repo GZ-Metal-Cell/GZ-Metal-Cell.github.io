@@ -1,0 +1,1137 @@
+---
+title: Web-Notes Desktop APP With Electron JS & SQLite3
+date: Tue Sep 23 2025 17:37:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - JavaScript
+  - React
+  - Astro
+categories: 课程
+description: 学习自 Youtube 博主 Build Cool Stuffs。
+---
+
+
+# 资源
+
+- [Notes Desktop App With Electron JS, SQLite3, React JS, TailwindCSS, Shadcn & Zustand](https://www.youtube.com/watch?v=xdv48d4GGDI&t=5154s)
+- [paulosabayomi/notes-desktop-app-with-electron-js-react-js-tailwindcss](https://github.com/paulosabayomi/notes-desktop-app-with-electron-js-react-js-tailwindcss)
+- [Electron、SQLite3、React、Tailwind 和 Shadcn 开发 桌面笔记应用_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1eVpLzuEFi/)
+
+# 正文
+
+## 开始篇
+
+### 配置开发环境
+
+​	原教程的工程中安装了：
+
+#### Electron Forge
+
+[Webpack + Typescript | Electron Forge](https://www.electronforge.io/templates/typescript-+-webpack-template)
+
+```shell
+npx create-electron-app@6.2.1 personal-notes --template=webpack-typescript
+```
+
+[React with TypeScript | Electron Forge](https://www.electronforge.io/guides/framework-integration/react-with-typescript)
+
+```shell
+npm install --save react react-dom
+npm install --save-dev @types/react @types/react-dom
+```
+
+然后按文档上的操作来……
+
+- 修改 `tsconfig.json`（`"compilerOptions"` 下加入）：
+
+  ```json
+  "jsx": "react-jsx"
+
+- 创建 `src/App.tsx`：
+
+  ```tsx
+  import {createRoot} from'react-dom/client';
+  
+  const root = createRoot(document.body);
+  root.render(<h2>Hello from React!</h2>);
+  ```
+
+- 修改 `src/renderer.ts`，加入：
+
+  ```ts
+  import "./App";
+  ```
+
+#### Shadcn/ui
+
+[Manual Installation - shadcn/ui](https://ui.shadcn.com/docs/installation/manual)
+
+```shell
+npm install class-variance-authority clsx tailwind-merge lucide-react tw-animate-css
+```
+
+然后按文档上的操作来……
+
+- 修改 `tsconfig.json`：
+
+  ```json
+  {
+    "compilerOptions": {
+      "baseUrl": ".",
+      "paths": {
+        "@/*": ["./*"]
+      }
+    }
+  }
+  ```
+
+- 修改 `src/index.css`：
+
+  ```css
+  @import "tailwindcss";
+  @import "tw-animate-css";
+  
+  @custom-variant dark (&:is(.dark *));
+  
+  :root {
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.145 0 0);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.145 0 0);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.145 0 0);
+    --primary: oklch(0.205 0 0);
+    --primary-foreground: oklch(0.985 0 0);
+    --secondary: oklch(0.97 0 0);
+    --secondary-foreground: oklch(0.205 0 0);
+    --muted: oklch(0.97 0 0);
+    --muted-foreground: oklch(0.556 0 0);
+    --accent: oklch(0.97 0 0);
+    --accent-foreground: oklch(0.205 0 0);
+    --destructive: oklch(0.577 0.245 27.325);
+    --destructive-foreground: oklch(0.577 0.245 27.325);
+    --border: oklch(0.922 0 0);
+    --input: oklch(0.922 0 0);
+    --ring: oklch(0.708 0 0);
+    --chart-1: oklch(0.646 0.222 41.116);
+    --chart-2: oklch(0.6 0.118 184.704);
+    --chart-3: oklch(0.398 0.07 227.392);
+    --chart-4: oklch(0.828 0.189 84.429);
+    --chart-5: oklch(0.769 0.188 70.08);
+    --radius: 0.625rem;
+    --sidebar: oklch(0.985 0 0);
+    --sidebar-foreground: oklch(0.145 0 0);
+    --sidebar-primary: oklch(0.205 0 0);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-accent: oklch(0.97 0 0);
+    --sidebar-accent-foreground: oklch(0.205 0 0);
+    --sidebar-border: oklch(0.922 0 0);
+    --sidebar-ring: oklch(0.708 0 0);
+  }
+  
+  .dark {
+    --background: oklch(0.145 0 0);
+    --foreground: oklch(0.985 0 0);
+    --card: oklch(0.145 0 0);
+    --card-foreground: oklch(0.985 0 0);
+    --popover: oklch(0.145 0 0);
+    --popover-foreground: oklch(0.985 0 0);
+    --primary: oklch(0.985 0 0);
+    --primary-foreground: oklch(0.205 0 0);
+    --secondary: oklch(0.269 0 0);
+    --secondary-foreground: oklch(0.985 0 0);
+    --muted: oklch(0.269 0 0);
+    --muted-foreground: oklch(0.708 0 0);
+    --accent: oklch(0.269 0 0);
+    --accent-foreground: oklch(0.985 0 0);
+    --destructive: oklch(0.396 0.141 25.723);
+    --destructive-foreground: oklch(0.637 0.237 25.331);
+    --border: oklch(0.269 0 0);
+    --input: oklch(0.269 0 0);
+    --ring: oklch(0.439 0 0);
+    --chart-1: oklch(0.488 0.243 264.376);
+    --chart-2: oklch(0.696 0.17 162.48);
+    --chart-3: oklch(0.769 0.188 70.08);
+    --chart-4: oklch(0.627 0.265 303.9);
+    --chart-5: oklch(0.645 0.246 16.439);
+    --sidebar: oklch(0.205 0 0);
+    --sidebar-foreground: oklch(0.985 0 0);
+    --sidebar-primary: oklch(0.488 0.243 264.376);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-accent: oklch(0.269 0 0);
+    --sidebar-accent-foreground: oklch(0.985 0 0);
+    --sidebar-border: oklch(0.269 0 0);
+    --sidebar-ring: oklch(0.439 0 0);
+  }
+  
+  @theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --color-chart-1: var(--chart-1);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
+    --radius-sm: calc(var(--radius) - 4px);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) + 4px);
+    --color-sidebar: var(--sidebar);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-ring: var(--sidebar-ring);
+  }
+  
+  @layer base {
+    * {
+      @apply border-border outline-ring/50;
+    }
+    body {
+      @apply bg-background text-foreground;
+    }
+  }
+  
+  body {
+    margin: 0;
+    padding: 0;
+  }
+  ```
+
+- 创建 `src/lib/utils.ts`：
+
+  ```ts
+  import { clsx, type ClassValue } from "clsx"
+  import { twMerge } from "tailwind-merge"
+  
+  export function cn(...inputs: ClassValue[]) {
+    return twMerge(clsx(inputs))
+  }
+  ```
+
+- 创建 `components.json`：
+
+  ```json
+  {
+    "$schema": "https://ui.shadcn.com/schema.json",
+    "style": "new-york",
+    "rsc": false,
+    "tsx": true,
+    "tailwind": {
+      "config": "",
+      "css": "src/styles/globals.css",
+      "baseColor": "neutral",
+      "cssVariables": true,
+      "prefix": ""
+    },
+    "aliases": {
+      "components": "@/components",
+      "utils": "@/lib/utils",
+      "ui": "@/components/ui",
+      "lib": "@/lib",
+      "hooks": "@/hooks"
+    },
+    "iconLibrary": "lucide"
+  }
+  ```
+
+- 修改 `tsconfig.json`：
+
+  ```json
+  {
+    "compilerOptions": {
+      "jsx": "react",
+      "jsx": "react",
+      "target": "ES6",
+      "allowJs": true,
+      "module": "commonjs",
+      "skipLibCheck": true,
+      "esModuleInterop": true,
+      "noImplicitAny": true,
+      "sourceMap": true,
+      "baseUrl": ".",
+      "outDir": "dist",
+      "moduleResolution": "node",
+      "resolveJsonModule": true,
+      "paths": {
+        "*": ["node_modules/*"],
+        "@/*": ["./src/*"]
+      },
+      "jsx": "react-jsx"
+    },
+    "include": ["src/**/*"]
+  }
+  ```
+
+- 修改 `webpack.renderer.config.ts`：
+
+  ```ts
+  import type { Configuration } from 'webpack';
+  
+  import { rules } from './webpack.rules';
+  import { plugins } from './webpack.plugins';
+  import path from 'path';
+  
+  rules.push({
+    test: /\.css$/,
+    use: [{ loader: 'style-loader' }, { loader: 'css-loader' }],
+  });
+  
+  export const rendererConfig: Configuration = {
+    module: {
+      rules,
+    },
+    plugins,
+    resolve: {
+      extensions: ['.js', '.ts', '.jsx', '.tsx', '.css'],
+      alias: {
+        "@": path.resolve(__dirname, "src"),
+      }
+    },
+  };
+  ```
+
+#### Tailwind CSS
+
+[Installing Tailwind CSS with PostCSS - Tailwind CSS](https://tailwindcss.com/docs/installation/using-postcss)
+
+```shell
+npm install tailwindcss @tailwindcss/postcss postcss
+```
+
+```shell
+npm install -D postcss postcss-loader
+```
+
+然后按文档上的操作来……
+
+- 创建 `postcss.config.mjs`：
+
+  ```js
+  export default {
+    plugins: {
+      "@tailwindcss/postcss": {},
+    }
+  }
+  ```
+
+- 修改 `webpack.renderer.config.ts`：
+
+  ```ts
+  rules.push({
+    test: /\.css$/,
+    use: [{ loader: 'style-loader' }, { loader: 'css-loader' }, { loader: 'postcss-loader' }]
+  });
+  ```
+
+#### Zustand
+
+[zustand - npm](https://www.npmjs.com/package/zustand)
+
+```shell
+npm i zustand
+```
+
+- 创建 `src/shared/zust-store.ts`：
+
+  ```ts
+  import { create } from 'zustand'
+  import { devtools, persist } from 'zustand/middleware'
+  
+  interface BearState {
+      bears: number
+      increase: (by: number) => void
+  }
+  
+  const useBearStore = create<BearState>()(
+      persist(
+          (set) => ({
+              bears: 0,
+              increase: (by) => set((state) => ({ bears: state.bears + by })),
+          }),
+          {
+              name: 'bear-storage',
+          },
+      ),
+  )
+  ```
+
+#### Sqlite3
+
+[sqlite3 - npm](https://www.npmjs.com/package/sqlite3)
+
+````shell
+npm i sqlite3
+````
+
+#### Editor.js
+
+[Getting started- Editor.js](https://editorjs.io/getting-started/)
+
+```shell
+npm i @editorjs/editorjs --save
+npm i @editorjs/header @editorjs/link @editorjs/checklist @editorjs/list @editorjs/quote @editorjs/marker --save
+```
+
+---
+
+​	或者直接从 Git 上 clone 原作者的仓库，然后：
+
+```shell
+npm i
+```
+
+### 安装并使用 shadcn/ui 组件
+
+```shell
+npx shadcn@latest add scroll-area
+```
+
+```shell
+npx shadcn@latest add resizable
+```
+
+```shell
+npx shadcn@latest add button
+```
+
+​	这将在 `src/components.ui/` 中创建：
+
+- `button.tsx`
+- `resizable.tsx`
+- `scroll-area.tsx`
+
+### 创建可拖动左右面板
+
+​	根据 [Resizable - shadcn/ui](https://ui.shadcn.com/docs/components/resizable) 中的用法，创建 `src/app-components/Wrapper.tsx`。
+
+​	这将创立一个左右面板，默认左边 35%，右边 65%，左边最小 30%，最大 70%。
+
+```tsx
+import React from "react";
+import {
+    ResizableHandle,
+    ResizablePanel,
+    ResizablePanelGroup,
+} from "@/components/ui/resizable";
+
+export default React.memo((props: any) => {
+    return (
+        <div className="h-[100vh] w-[100%]">
+            <ResizablePanelGroup direction="horizontal">
+                <ResizablePanel minSize={30} defaultSize={35}></ResizablePanel>
+                <ResizableHandle />
+                <ResizablePanel minSize={30}></ResizablePanel>
+            </ResizablePanelGroup>
+        </div>
+    )
+});
+```
+
+​	修改 `src/App.tsx`：
+
+```tsx
+import {createRoot} from'react-dom/client';
+import Wrapper from './app-components/Wrapper';
+
+const root = createRoot(document.body);
+root.render(<Wrapper/>);
+```
+
+​	清空 `src/index.html`：
+
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Hello World!</title>
+  </head>
+  <body></body>
+</html>
+
+```
+
+​	跑一下能看到效果：
+
+```shell
+npm start
+```
+
+![webp](01.webp)
+
+### 设置窗口无框
+
+​	修改 `src/index.ts`，加入 `frame: false`：
+
+```ts
+const createWindow = (): void => {
+  // Create the browser window.
+  const mainWindow = new BrowserWindow({
+    height: 600,
+    width: 800,
+    frame: false,
+    webPreferences: {
+      preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
+    },
+  });
+
+  // and load the index.html of the app.
+  mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
+
+  // Open the DevTools.
+  mainWindow.webContents.openDevTools();
+};
+```
+
+​	由于修改了 `index.ts`，必须重新执行 `npm start` 才能看到效果。
+
+![webp](02.webp)
+
+### 自定义顶部边框
+
+​	修改 `src/app-components/Wrapper.tsx`。
+
+​	颜色的取值可在 [Colors - Core concepts - Tailwind CSS](https://tailwindcss.com/docs/colors) 中找到。
+
+```tsx
+import React from "react";
+import {
+    ResizableHandle,
+    ResizablePanel,
+    ResizablePanelGroup,
+} from "@/components/ui/resizable";
+
+export default React.memo((props: any) => {
+    return (
+        <div className="h-[100vh] w-[100%]">
+            <ResizablePanelGroup direction="horizontal">
+                <ResizablePanel minSize={30} defaultSize={35}>
+                    <div className="h-[40px] w-[100%] border-b-[.5px] border-b-stone-300 dark:border-b-stone-800 flex justify-center"></div>
+                </ResizablePanel>
+                <ResizableHandle />
+                <ResizablePanel minSize={30}>
+                    <div className="h-[40px] w-[100%] border-b-[.5px] border-b-stone-300 dark:border-b-stone-800 flex justify-center"></div>
+                </ResizablePanel>
+            </ResizablePanelGroup>
+        </div>
+    )
+});
+```
+
+![webp](03.webp)
+
+### 让窗口可拖拽
+
+​	修改 `src/index.css`，底部添加：
+
+```css
+.app-dragger {
+  user-select: none;
+  -webkit-app-region: drag;
+}
+```
+
+​	修改 `src/app-components/Wrapper.tsx`，添加 `app-dragger`。
+
+```tsx
+import React from "react";
+import {
+    ResizableHandle,
+    ResizablePanel,
+    ResizablePanelGroup,
+} from "@/components/ui/resizable";
+
+export default React.memo((props: any) => {
+    return (
+        <div className="h-[100vh] w-[100%]">
+            <ResizablePanelGroup direction="horizontal">
+                <ResizablePanel minSize={30} defaultSize={35}>
+                    <div className="h-[40px] w-[100%] border-b-[.5px] border-b-stone-300 dark:border-b-stone-800 app-dragger flex justify-center"></div>
+                </ResizablePanel>
+                <ResizableHandle />
+                <ResizablePanel minSize={30}>
+                    <div className="h-[40px] w-[100%] border-b-[.5px] border-b-stone-300 dark:border-b-stone-800 app-dragger flex justify-center"></div>
+                </ResizablePanel>
+            </ResizablePanelGroup>
+        </div>
+    )
+});
+```
+
+​	之后拖动顶端栏便可移动整个窗口。
+
+### WindowButtons 组件
+
+​	创建 `src/app-components/SharedComponents.tsx`：
+
+```tsx
+import React from "react";
+import {
+    ResizableHandle,
+    ResizablePanel,
+    ResizablePanelGroup,
+} from "@/components/ui/resizable";
+import { WindowButtons } from "./SharedComponents";
+
+export default React.memo((props: any) => {
+    return (
+        <div className="h-[100vh] w-[100%]">
+            <ResizablePanelGroup direction="horizontal">
+                <ResizablePanel minSize={30} defaultSize={35}>
+                    <div className="h-[40px] w-[100%] border-b-[.5px] border-b-stone-300 dark:border-b-stone-800 app-dragger flex justify-center"></div>
+                </ResizablePanel>
+                <ResizableHandle />
+                <ResizablePanel minSize={30}>
+                    <div className="h-[40px] w-[100%] border-b-[.5px] border-b-stone-300 dark:border-b-stone-800 app-dragger flex justify-end">
+                        {
+                            !window.navigator.userAgent.toLowerCase().includes('mac') && <WindowButtons />
+                        }
+                    </div>
+                </ResizablePanel>
+            </ResizablePanelGroup>
+        </div>
+    )
+});
+```
+
+​	在 `src/app-components/SharedComponents.tsx` 中放置 `<WindowButtons />`：
+
+```tsx
+import React from "react";
+import {
+    ResizableHandle,
+    ResizablePanel,
+    ResizablePanelGroup,
+} from "@/components/ui/resizable";
+import { WindowButtons } from "./SharedComponents";
+
+export default React.memo((props: any) => {
+    return (
+        <div className="h-[100vh] w-[100%]">
+            <ResizablePanelGroup direction="horizontal">
+                <ResizablePanel minSize={30} defaultSize={35}>
+                    <div className="h-[40px] w-[100%] border-b-[.5px] border-b-stone-300 dark:border-b-stone-800 app-dragger flex justify-center"></div>
+                </ResizablePanel>
+                <ResizableHandle />
+                <ResizablePanel minSize={30}>
+                    <div className="h-[40px] w-[100%] border-b-[.5px] border-b-stone-300 dark:border-b-stone-800 app-dragger flex justify-end">
+                        <WindowButtons />
+                    </div>
+                </ResizablePanel>
+            </ResizablePanelGroup>
+        </div>
+    )
+});
+```
+
+​	修改 `src/index.css`，让这一部分不能够被拖拽：
+
+```css
+.app-dragger div {
+  -webkit-app-region: none !important;
+}
+```
+
+![webp](04.webp)
+
+### MacOS 图标
+
+​	在 `src/index.ts` 的 `const createWindow` 中添加：
+
+```ts
+if (process.platform === 'darwin') { // Only for macOS
+	mainWindow.setWindowButtonVisibility(true);
+}
+```
+
+### 按钮监听
+
+​	`preload.ts` 负责将主进程和渲染进程联系在一起。编辑 `src/preload.ts`：
+
+```javascript
+// See the Electron documentation for details on how to use preload scripts:
+// https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
+import { contextBridge, ipcRenderer } from 'electron';
+
+const renderer = {
+    closeApp: () => {
+        ipcRenderer.send('close-app');
+    },
+    maximizeApp: () => {
+        ipcRenderer.send('maximize-app');
+    },
+    minimizeApp: () => {
+        ipcRenderer.send('minimize-app');
+    }
+}
+
+contextBridge.exposeInMainWorld('electron', renderer);
+
+export type IRenderer = typeof renderer;
+```
+
+> [!Note]
+>
+> - `contextBridge`：用来在 **主进程** 和 **渲染进程** 之间创建一个安全接口，把定义好的 API 暴露给网页。
+>
+> - `ipcRenderer`：渲染进程里用的 **进程间通信对象**，用它可以给主进程发消息。
+> - `renderer`：
+>   - `close`：发送 `'close-app'` 消息 → 主进程收到后应该执行关闭窗口操作。
+>   - `maximizeApp`：发送 `'maximize-app'` 消息 → 主进程收到后应该把窗口最大化。
+>   - `minimizeApp`：发送 `'minimize-app'` 消息 → 主进程收到后应该把窗口最小化。
+
+​	创建 `src/global.d.ts`：
+
+```ts
+import { decl } from "postcss/lib/postcss";
+import { IRenderer } from "./preload";
+
+declare global {
+    interface Window {
+        electron: IRenderer;
+    }
+}
+```
+
+​	修改 `src/index.ts`：
+
+```ts
+import { app, BrowserWindow, ipcMain } from 'electron';
+// This allows TypeScript to pick up the magic constants that's auto-generated by Forge's Webpack
+// plugin that tells the Electron app where to look for the Webpack-bundled app code (depending on
+// whether you're running in development or production).
+declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
+declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
+
+// Handle creating/removing shortcuts on Windows when installing/uninstalling.
+if (require('electron-squirrel-startup')) {
+  app.quit();
+}
+
+const createWindow = (): void => {
+  // Create the browser window.
+  const mainWindow = new BrowserWindow({
+    height: 600,
+    width: 800,
+    frame: false,
+    webPreferences: {
+      preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
+    },
+  });
+
+  // and load the index.html of the app.
+  mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
+
+  if (process.platform === 'darwin') { // Only for macOS
+    mainWindow.setWindowButtonVisibility(true);
+  }
+
+  // Open the DevTools.
+  mainWindow.webContents.openDevTools();
+
+  ipcMain.on('close-app', (ev, argz) => {
+    mainWindow.close();
+  });
+
+  ipcMain.on('minimize-app', (ev, argz) => {
+    mainWindow.minimize();
+  });
+
+  ipcMain.on('maximize-app', (ev, argz) => {
+    if (mainWindow.isMaximized()) {
+      mainWindow.unmaximize();
+    } else {
+      mainWindow.maximize();
+    }
+  }); 
+};
+```
+
+> [!Note]
+>
+> **进程间通信 (IPC)**
+>
+> - `ipcMain.on('close-app', ...)`：监听来自渲染进程的 `close-app` 消息，然后调用 `mainWindow.close()`。
+> - `ipcMain.on('minimize-app', ...)`：监听 `minimize-app`，调用 `mainWindow.minimize()`。
+> - ...
+
+​	修改 `src/app-components/SharedComponents.tsx`，调用 `preload.ts` 暴露的 API：
+
+```tsx
+import { Maximize, Minus, X } from "lucide-react";
+import React from "react";
+
+export const WindowButtons = React.memo((props: any) => {
+  return (
+    <div className="window-buttons flex [&>div]:hover:bg-[#e7e5e4] dark:[&>div]:hover:bg-[#1c1917]">
+      <div className="p-2 flex justify-center align-center"
+        onClick={() => window.electron.minimizeApp()}>
+        <Minus className="w-[20px] h-[20px] text-black dark:text-[#e7e5e4]" />
+      </div>
+      <div className="p-2 flex justify-center align-center"
+        onClick={() => window.electron.maximizeApp()}>
+        <Maximize className="w-[20px] h-[20px] text-black dark:text-[#e7e5e4]" />
+      </div>
+      <div className="p-2 flex justify-center align-center"
+        onClick={() => window.electron.closeApp()}>
+        <X className="w-[20px] h-[20px] text-black dark:text-[#e7e5e4]" />
+      </div>
+    </div>
+  );
+});
+```
+
+​	之后右上角的按钮便可用。
+
+## 核心篇
+
+### EditorJS
+
+​	创建 `src/app-components/EditorJSTemplate.tsx`：
+
+```tsx
+import React from "react";
+import EditorJS from '@editorjs/editorjs';
+import Header from '@editorjs/header';
+// @ts-ignore
+import Link from '@editorjs/link';
+// @ts-ignore
+import CheckList from '@editorjs/checklist';
+import List from '@editorjs/list';
+import Quote from '@editorjs/quote';
+// @ts-ignore
+import Marker from '@editorjs/marker';
+
+export default React.memo((props: any) => {
+    React.useEffect(() => { 
+        const editor = new EditorJS({
+            holder: 'editorjs-container',
+            tools: {
+                header: Header,
+                link: Link,
+                checklist: CheckList,
+                list: List,
+                quote: Quote,
+                marker: Marker,
+            },
+            onChange(api, event) {
+                props.onChange(api, event)
+            }, 
+        });
+
+    }, [])
+    
+    return (
+        <div id="editorjs-container" className="dark:[&_::selection]:bg-[oklch(37.4%_0.01_67.558)_!important] dark:[&_::selection]:text-white dark:[&_svg_path,_svg_line,_svg_rect]:stroke-[#ddd_!important] p-4 dark:text-white h-[100%] dark:[&_.ce-popover-item]:text-[white_!important] dark:[&__[class*=container]_::-webkit-scrollbar]:hidden dark:[&_.cdx-search-field]:bg-[oklch(37.4%_0.01_67.558)_!important] dark:[&_.ce-popover-item]:hover:bg-[oklch(37.4%_0.01_67.558)_!important] dark:[&_[class*=container]]:bg-[oklch(21.6%_0.006_56.043)_!important] dark:[&_[class*=container]]:border-[transparent_!important] dark:[&_[class*=plus]]:hover:bg-[oklch(37.4%_0.01_67.558)_!important]"></div>
+    )
+})
+```
+
+​	创建 `src/app-components/Editor.tsx`：
+
+```tsx
+import React from "react";
+import EditorJSTemplate from "./EditorJSTemplate";
+
+export default React.memo((props: any) => {
+  const handle_change = React.useCallback((api: any, event: any) => {
+    console.log("api", api);
+  }, []);
+
+  return (
+    <div>
+      <EditorJSTemplate onChange={handle_change} />
+    </div>
+  );
+});
+```
+
+> [!Note]
+>
+> **父组件管理回调，子组件封装编辑器**
+>
+> - **子组件（EditorJSTemplate）**：只关心 EditorJS 内部实现
+>
+> - **父组件**：关心外部业务逻辑（数据同步、保存、日志等）
+>
+> - **React.memo + useCallback**：保证性能和稳定性
+
+​	修改 `src/app-components/Wrapper.tsx`，加入 `<Editor/>`：
+
+```tsx
+import React from "react";
+import {
+    ResizableHandle,
+    ResizablePanel,
+    ResizablePanelGroup,
+} from "@/components/ui/resizable";
+import { WindowButtons } from "./SharedComponents";
+import Editor from "./Editor";
+
+export default React.memo((props: any) => {
+    return (
+        <div className="h-[100vh] w-[100%]">
+            <ResizablePanelGroup direction="horizontal">
+                <ResizablePanel minSize={30} defaultSize={35}>
+                    <div className="h-[40px] w-[100%] border-b-[.5px] border-b-stone-300 dark:border-b-stone-800 app-dragger flex justify-center"></div>
+                </ResizablePanel>
+                <ResizableHandle />
+                <ResizablePanel minSize={30}>
+                    <div className="h-[40px] w-[100%] border-b-[.5px] border-b-stone-300 dark:border-b-stone-800 app-dragger flex justify-end">
+                        {
+                            !window.navigator.userAgent.toLowerCase().includes('mac') && <WindowButtons />
+                        }
+                    </div>
+                    <Editor />
+                </ResizablePanel>
+            </ResizablePanelGroup>
+        </div>
+    )
+});
+```
+
+​	编辑功能实现：
+
+```shell
+npm run start
+```
+
+![webp](05.webp)
+
+### Shadcn-ScrollArea
+
+​	修改 `src/app-components/Editor.tsx`：
+
+```tsx
+import React from "react";
+import EditorJSTemplate from "./EditorJSTemplate";
+import { ScrollArea } from "@/components/ui/scroll-area";
+
+export default React.memo((props: any) => {
+  const handle_change = React.useCallback((api: any, event: any) => {
+    console.log("api", api);
+  }, []);
+
+  return (
+    <ScrollArea className="h-[calc(100%-40px)]">
+      <EditorJSTemplate onChange={handle_change} />
+    </ScrollArea>
+  );
+});
+```
+
+​	页面中成功添加了滚动条。
+
+![webp](06.webp)
+
+### 状态管理
+
+​	修改 `src/shared/zust-store.ts`：
+
+```ts
+import { create } from 'zustand';
+import { devtools, persist } from 'zustand/middleware';
+import { IMainState } from './types';
+
+export const useMainStore = create<IMainState>()(
+    persist(
+      (set) => ({
+        active_note: null as any,
+        set_state: (title, value) => {
+            switch (title) {
+                case 'active_note':
+                        set((state) => ({ active_note: value }))
+                    break;
+                default:
+                    break;
+            }
+        },
+      }),
+      {
+        name: 'app-main-state',
+      },
+    ),
+);
+```
+
+​	创建 `src/shared/types.ts`：
+
+```ts
+export interface IMainState extends IMainStateObject {
+  set_state: (title: keyof IMainStateObject, value: any) => void;
+}
+
+export interface IMainStateObject {
+    active_note: any;
+}
+```
+
+​	创建 `src/app-components/EmptyNoteUI.tsx`，中间放一个 `New note` 的按钮并设置按钮监听：
+
+```tsx
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import React from "react";
+
+export default React.memo((props: {onClick: Function}) => {
+    return (
+        <div className="w-[100%] h-[100%] flex justify-center items-center">
+            <Button onClick = {() => props.onClick()} className="bg-transparent [&:hover]:bg-transparent text-stone-800 dark:text-stone-300">
+                <Plus className="w-[25px] h-[25px]" />New note
+            </Button>
+        </div>
+    );
+});
+```
+
+​	修改 `src/Wrapper.tsx`，当不处于 `active_note` 状态时，渲染 `<EmptyNoteUI>`：
+
+```tsx
+import React from "react";
+import {
+    ResizableHandle,
+    ResizablePanel,
+    ResizablePanelGroup,
+} from "@/components/ui/resizable";
+import { WindowButtons } from "./SharedComponents";
+import Editor from "./Editor";
+import { useMainStore } from "@/shared/zust-store";
+import EmptyNoteUI from "./EmptyNoteUI";
+
+export default React.memo((props: any) => {
+    const active_note = useMainStore(state => state.active_note);
+    const handle_create_new_note = React.useCallback(() => {
+        const dummy_data = {
+            id: null as any,
+            note: ''
+        }
+    }, []);
+    return (
+        <div className="h-[100vh] w-[100%]">
+            <ResizablePanelGroup direction="horizontal">
+                <ResizablePanel minSize={30} defaultSize={35}>
+                    <div className="h-[40px] w-[100%] border-b-[.5px] border-b-stone-300 dark:border-b-stone-800 app-dragger flex justify-center"></div>
+                </ResizablePanel>
+                <ResizableHandle />
+                <ResizablePanel minSize={30}>
+                    <div className="h-[40px] w-[100%] border-b-[.5px] border-b-stone-300 dark:border-b-stone-800 app-dragger flex justify-end">
+                        {
+                            !window.navigator.userAgent.toLowerCase().includes('mac') && <WindowButtons />
+                        }
+                    </div>
+                    {
+                        active_note == null ?
+                        <EmptyNoteUI onClick={handle_create_new_note} />:
+                        <Editor />                
+                    }
+                </ResizablePanel>
+            </ResizablePanelGroup>
+        </div>
+    )
+});
+```
+
+​	`src/preload.ts` 中添加：
+
+```ts
+set_note: async (data: any) => {
+    const notes = ipcRenderer.send('set-note', data);
+    console.log("notes", notes);
+    return notes;
+}
+```
+
+​	`src/index.ts` 中添加：
+
+```ts
+ipcMain.handle('set-note', (ev, argz) => {
+
+});
+```
+
+### 数据库
+
+​	`src/database/db.ts` 中添加数据库初始化的代码：
+
+```ts
+import { INoteData } from "@/shared/types";
+import sqlite3 from "sqlite3";
+const db = new sqlite3.Database('notes-sql');
+
+const create_notes_table = () => {
+    db.run("CREATE TABLE IF NOT EXISTS notes (id INTEGER PRIMARY KEY AUTOINCREMENT, note TEXT)");
+}
+
+const set_note = (data: INoteData, callback: Function) => {
+    db.serialize(() => {
+        const stmt = db.prepare("INSERT OR REPLACE INTO notes (id, note) VALUES ((SELECT id FROM notes WHERE id = ?),?)")
+        stmt.run(data.id, data.note);
+        stmt.finalize();
+        // callback
+    });
+}
+
+const get_all_notes = (callback: Function) => {
+    db.serialize(() => {
+        create_notes_table();
+        db.all("SELECT * FROM notes ORDER BY id DESC", (err, data) => {
+            if (err) {
+                console.error(err);
+                return null;
+            }
+            callback(data);
+        })
+    });
+}
+
+db.serialize(() => {
+    db.run("CREATE TABLE lorem (info TEXT)");
+
+    const stmt = db.prepare("INSERT INTO lorem VALUES (?)");
+    for (let i = 0; i < 10; i++) {
+        stmt.run("Ipsum " + i);
+    }
+    stmt.finalize();
+
+    db.each("SELECT rowid AS id, info FROM lorem", (err, row) => {
+        console.log(row.id + ": " + row.info);
+    });
+});
+
+db.close();
+```
+
+​	``src/shared/types.ts` 中添加：
+
+```ts
+export interface INoteData {
+  id: number | null;
+  note: string;
+}
+```
+
+​	修改 `src/index.ts`：
+
+```ts
+```
+

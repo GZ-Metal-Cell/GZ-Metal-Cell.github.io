@@ -1,0 +1,2203 @@
+---
+title: Embedded-江协科技 STM32 学习笔记
+date: Sun Sep 20 2026 16:11:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - 嵌入式
+  - C
+categories: 学习
+description: 我要学习复习嵌入式软件基础知识！
+---
+
+
+# 资源
+
+- [江协科技](https://jiangxiekeji.com/)
+
+# 正文
+
+## 课程定位
+
+本笔记根据本项目中的视频教程、STM32F103 工程源码、标准外设库和配套资料整理而成，适合作为 STM32F103 系列单片机的入门课程讲义。
+
+课程主线是：
+
+```text
+GPIO
+  → 外部中断
+  → 定时器与 PWM
+  → ADC
+  → DMA
+  → USART
+  → I2C
+  → SPI
+  → RTC 与低功耗
+  → 看门狗与 Flash
+```
+
+项目主要使用：
+
+- STM32F103C8T6 或兼容的 STM32F103 系列芯片
+- Keil MDK
+- STM32F10x Standard Peripheral Library V3.5.0
+- ST-LINK 下载调试器
+- USB 转串口模块
+- OLED、MPU6050、W25Q64、TB6612 等外设模块
+
+本课程中的每个例程通常是一个独立 Keil 工程。不同章节可能重复使用同一个引脚，但这并不表示所有模块可以同时连接。
+
+## 第一部分：学习准备
+
+### 1. 硬件安全与基本连接
+
+#### 1.1 电源原则
+
+STM32F103 的 GPIO 通常工作在 3.3V 电平。连接外设时必须注意：
+
+- 外设信号输入 STM32 前不能超过芯片允许的电压范围。
+- 外接模块必须与 STM32 共地。
+- 舵机、电机等大电流负载不能直接由 STM32 GPIO 供电。
+- 电机和舵机最好使用独立电源，但信号地必须与 STM32 的 GND 相连。
+- 不确定模块是否兼容 3.3V 时，应先查看模块原理图或数据手册。
+
+#### 1.2 ST-LINK SWD 连接
+
+```text
+ST-LINK 3.3V/Vref → 开发板 3.3V
+ST-LINK GND       → 开发板 GND
+ST-LINK SWDIO     → STM32 PA13
+ST-LINK SWCLK     → STM32 PA14
+ST-LINK NRST      → 开发板 NRST，可选
+```
+
+SWDIO 和 SWCLK 不能接反。ST-LINK 的 3.3V/Vref 主要用于电平参考，是否由 ST-LINK 给开发板供电，要根据具体接线方式决定。
+
+#### 1.3 项目常用引脚总表
+
+| 功能 | 引脚 | 电气配置 | 备注 |
+|---|---|---|---|
+| LED1 | PA1 | 推挽输出 | 源码中低电平点亮 |
+| LED2 | PA2 | 推挽输出 | 源码中低电平点亮 |
+| 按键 1 | PB1 | 上拉输入 | 低电平表示按下 |
+| 按键 2 | PB11 | 上拉输入 | 低电平表示按下 |
+| OLED SCL | PB8 | 开漏输出 | 四针脚软件 I2C OLED |
+| OLED SDA | PB9 | 开漏输出 | 四针脚软件 I2C OLED |
+| 蜂鸣器 | PB12 | 推挽输出 | 低电平开启 |
+| 光敏传感器 | PB13 | 上拉输入 | 使用数字输出，不是 ADC |
+| 对射式红外 | PB14 | 上拉输入/EXTI | 下降沿触发 |
+| 定时器外部时钟 | PA0 | 上拉输入 | TIM2 ETR |
+| PWM 输出 | PA0、PA1、PA2 | 复用推挽 | 由不同 TIM2 通道使用 |
+| ADC 输入 | PA0～PA3 | 模拟输入 | ADC1 通道 0～3 |
+| 串口 TX | PA9 | 复用推挽 | USART1_TX |
+| 串口 RX | PA10 | 上拉输入 | USART1_RX |
+| 软件/硬件 I2C | PB10/PB11 | 开漏或复用开漏 | I2C2 或软件 I2C |
+| SPI CS | PA4 | 推挽输出 | 软件控制片选 |
+| SPI SCK | PA5 | 推挽或复用推挽 | SPI1_SCK |
+| SPI MISO | PA6 | 上拉输入 | SPI1_MISO |
+| SPI MOSI | PA7 | 推挽或复用推挽 | SPI1_MOSI |
+
+> [!Tip]
+>
+> **推挽输出**：MCU 可以主动输出高电平，也可以主动输出低电平。适合 LED、蜂鸣器、片选 CS。
+>
+> **上拉输入**：GPIO 平时通过上拉保持为 `1`，外部设备动作时把它拉成 `0`。所以经常出现“低电平表示按下”。
+>
+> **开漏输出**：GPIO 只能主动拉低，不能主动输出高电平，高电平依赖上拉电阻。I2C 的 SDA/SCL 通常就是这种方式。
+>
+> **复用推挽 / 复用开漏**：GPIO 不再由普通 `GPIO_Write()` 控制，而是交给 USART、SPI、TIM、I2C 等片上外设。
+>
+> **模拟输入**：关闭数字输入输出功能，把这个引脚交给 ADC。
+>
+> **EXTI**：GPIO 可以触发外部中断，例如检测下降沿。
+
+```
+STM32 GPIO
+│
+├── 普通数字输出
+│   ├── LED
+│   ├── 蜂鸣器
+│   └── SPI CS
+│
+├── 普通数字输入
+│   ├── 按键
+│   └── 光敏传感器 DO
+│
+├── 中断输入
+│   └── 红外传感器
+│
+├── 模拟输入
+│   └── ADC
+│
+└── 外设复用
+    ├── TIM → PWM / ETR
+    ├── USART → TX / RX
+    ├── I2C → SCL / SDA
+    └── SPI → SCK / MISO / MOSI
+```
+
+#### 1.4 引脚复用冲突
+
+学习时必须以当前章节的工程为准。例如：
+
+- PA0 可能是 ADC、TIM2 ETR、PWM 或待机唤醒脚。
+- PA1 可能是板载 LED，也可能是舵机 PWM。
+- PA2 可能是板载 LED，也可能是电机 PWM。
+- PA4～PA7 可能用于电机控制或 SPI。
+- PB1 既是按键 1，也可能是旋转编码器 B 相。
+
+因此建议一次只运行一个章节的工程，不要把所有模块叠加连接。
+
+### 2. STM32 工程运行链路
+
+STM32 程序的启动过程大致如下：
+
+```text
+上电或复位
+  → 启动文件
+  → 设置初始栈
+  → SystemInit()
+  → C 运行环境初始化
+  → main()
+  → while(1)
+```
+
+一个最小主函数如下：
+
+```c
+#include "stm32f10x.h"
+
+int main(void)
+{
+    while (1)
+    {
+        /* 主循环中的任务 */
+    }
+}
+```
+
+项目工程通常包含：
+
+- `User/main.c`：用户主程序
+- `Hardware/*.c`：LED、按键、OLED、串口等硬件驱动
+- `System/*.c`：延时、DMA、RTC、Flash 存储等系统模块
+- `Library/*.c`：STM32 标准外设库
+- `Start/*.s`：启动文件
+- `Start/system_stm32f10x.c`：系统时钟
+- `User/stm32f10x_it.c`：部分中断服务函数
+
+建议阅读顺序：
+
+```text
+main.c
+  → 初始化函数
+  → 硬件驱动
+  → 标准外设库
+  → 寄存器
+```
+
+## 第二部分：分章节教学笔记
+
+### 第 1 章 STM32 简介
+
+#### 1.1 学习目标
+
+本章建立以下基本概念：
+
+- 微控制器和普通 CPU 的区别
+- Cortex-M3 内核
+- Flash、SRAM 和寄存器
+- GPIO、定时器、ADC、通信外设
+- 时钟、总线和外设之间的关系
+
+STM32 不是只有一个 CPU，而是将 CPU、存储器和大量外设集成在一颗芯片中。
+
+#### 1.2 电路连接
+
+本章不需要额外外设。只需：
+
+```text
+开发板 → 供电
+ST-LINK → SWD 接口
+```
+
+#### 1.3 时钟门控
+
+使用外设前必须打开对应时钟：
+
+```c
+RCC_APB2PeriphClockCmd(
+    RCC_APB2Periph_GPIOA,
+    ENABLE
+);
+
+RCC_APB1PeriphClockCmd(
+    RCC_APB1Periph_TIM2,
+    ENABLE
+);
+```
+
+STM32 默认关闭部分外设时钟可以降低功耗。没有开启时钟时，对外设寄存器的配置通常不会产生预期效果。
+
+#### 1.4 课后练习
+
+1. 查找 STM32F103C8T6 的 Flash 和 SRAM 容量。
+2. 找出 GPIOA、TIM2、ADC1 分别挂在哪条总线上。
+3. 说明为什么 GPIO 初始化前必须开启 GPIO 时钟。
+
+### 第 2 章 软件安装与新建工程
+
+#### 2.1 开发工具
+
+需要准备：
+
+- Keil MDK
+- STM32F1 芯片支持包
+- ST-LINK 驱动
+- USB 转串口驱动
+- FlyMcu
+- 串口助手
+
+#### 2.2 新建工程的核心结构
+
+**例程 2-1：工程模板**
+
+![例程 2-1：工程模板](2-1 工程模板.webp)
+
+标准外设库工程需要添加：
+
+- 启动文件
+- `system_stm32f10x.c`
+- `stm32f10x.h`
+- 需要使用的外设库文件
+- `main.c`
+- 用户驱动文件
+
+工程中常见的配置步骤：
+
+1. 选择目标芯片。
+2. 添加启动文件。
+3. 添加 CMSIS 和标准外设库。
+4. 设置宏定义，例如芯片密度类型。
+5. 设置头文件搜索路径。
+6. 配置 ST-LINK 下载器。
+7. 编译并下载。
+
+#### 2.3 GPIO 初始化模板
+
+```c
+GPIO_InitTypeDef GPIO_InitStructure;
+
+GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0;
+GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+
+GPIO_Init(GPIOA, &GPIO_InitStructure);
+```
+
+这里使用结构体描述外设参数，再调用标准外设库函数写入寄存器。
+
+#### 2.4 常见编译问题
+
+- 头文件没有加入工程。
+- 启动文件选择错误。
+- 芯片密度宏定义不匹配。
+- 同一个函数被重复定义。
+- 中断函数名称拼写错误。
+- 工程路径或文件名包含特殊字符导致工具链异常。
+
+### 第 3 章 GPIO 输出、输入、LED、按键和蜂鸣器
+
+#### 3.1 GPIO 输出
+
+**例程 3-1：LED 闪烁**
+
+PA0 ─── 电阻 ─── LED ─── GND
+
+![3-1 LED 闪烁接线图](3-1 LED闪烁.webp)
+
+项目 3-1 LED 闪烁 开启 GPIOA 时钟，并把 PA0 配置为 50 MHz 推挽输出。这段初始化代码只是配置 PA0 的工作方式，并没有决定它当前输出高电平还是低电平。：
+
+```c
+RCC_APB2PeriphClockCmd(
+    RCC_APB2Periph_GPIOA,
+    ENABLE
+);
+
+GPIO_InitTypeDef GPIO_InitStructure;
+GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0;
+GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+GPIO_Init(GPIOA, &GPIO_InitStructure);
+```
+
+#### 3.2 LED 连接
+
+**例程 3-2：LED 流水灯**
+
+![3-2 LED 流水灯接线图](3-2 LED流水灯.webp)
+
+外接 LED 建议：
+
+```text
+PA0 → 限流电阻 → LED正极
+LED负极 → GND
+```
+
+项目模块化 LED 驱动使用 PA1 和 PA2：
+
+```c
+void LED1_ON(void)
+{
+    GPIO_ResetBits(GPIOA, GPIO_Pin_1);
+}
+
+void LED1_OFF(void)
+{
+    GPIO_SetBits(GPIOA, GPIO_Pin_1);
+}
+```
+
+这说明该 LED 电路是低电平有效：
+
+```text
+PA1 = 0 → LED 亮
+PA1 = 1 → LED 灭
+```
+
+#### 3.3 按键连接与消抖
+
+**例程 3-4：按键控制 LED**
+
+![例程 3-4：按键控制 LED](3-4 按键控制LED.webp)
+
+```text
+按键1 → PB1 和 GND 之间
+按键2 → PB11 和 GND 之间
+```
+
+源码使用内部上拉：
+
+```c
+GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
+GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1 | GPIO_Pin_11;
+GPIO_Init(GPIOB, &GPIO_InitStructure);
+```
+
+读取按键：
+
+```c
+uint8_t Key_GetNum(void)
+{
+    uint8_t KeyNum = 0;
+
+    if (GPIO_ReadInputDataBit(
+            GPIOB,
+            GPIO_Pin_1
+        ) == 0)
+    {
+        Delay_ms(20);
+
+        while (GPIO_ReadInputDataBit(
+                   GPIOB,
+                   GPIO_Pin_1
+               ) == 0);
+
+        Delay_ms(20);
+        KeyNum = 1;
+    }
+
+    return KeyNum;
+}
+```
+
+这种方式属于阻塞式按键扫描。更复杂的产品中可以使用定时器扫描和状态机消抖。
+
+#### 3.4 光敏传感器与蜂鸣器
+
+**例程 3-3：蜂鸣器**
+
+![3-3 蜂鸣器接线图](3-3 蜂鸣器.webp)
+
+**例程 3-5：光敏传感器控制蜂鸣器**
+
+![3-5 光敏传感器控制蜂鸣器接线图](3-5 光敏传感器控制蜂鸣器.webp)
+
+项目中光敏模块使用数字输出：
+
+```text
+光敏模块 VCC → 3.3V
+光敏模块 GND → GND
+光敏模块 DO  → PB13
+蜂鸣器控制端 → PB12
+```
+
+光敏传感器驱动：
+
+```c
+uint8_t LightSensor_Get(void)
+{
+    return GPIO_ReadInputDataBit(
+        GPIOB,
+        GPIO_Pin_13
+    );
+}
+```
+
+蜂鸣器驱动：
+
+```c
+void Buzzer_ON(void)
+{
+    GPIO_ResetBits(GPIOB, GPIO_Pin_12);
+}
+```
+
+这里的光敏模块输出是高低电平，而不是连续模拟电压。如果要读取实际光照强度，应使用 ADC 章节的接法。
+
+#### 3.5 本章练习
+
+1. 按键 1 按下时翻转 LED1。
+2. 光线变暗时开启蜂鸣器。
+3. 将阻塞式消抖改成定时器扫描消抖。
+
+### 第 4 章 OLED 显示屏
+
+#### 4.1 四针脚 I2C OLED 接线
+
+**例程 4-1：OLED 显示屏**
+
+![例程 4-1：OLED 显示屏](4-1 OLED显示屏.webp)
+
+项目默认四针脚 OLED 使用软件 I2C：
+
+```text
+OLED VCC → 3.3V
+OLED GND → GND
+OLED SCL → PB8
+OLED SDA → PB9
+```
+
+> [!Tip]
+>
+> I²C（ **Inter-Integrated Circuit**）就是用 `SCL + SDA` 两根线，让一个 MCU 和多个外设通过地址进行通信的协议。
+>
+> - `VCC`：OLED 电源
+> - `GND`：地线
+> - `SCL`：I²C 时钟线，由 STM32 产生时钟
+> - `SDA`：I²C 数据线，传输命令和显示数据
+>
+> 软件 I²C 不使用 STM32 内部的硬件 I²C 外设，而是由程序手动控制 PB8、PB9 的高低电平。
+>
+> I²C 设备不会主动输出高电平，而是：
+>
+> - 想发送 `0`：把线路拉低
+> - 想发送 `1`：释放线路，由上拉电阻把线路拉高
+
+I2C 信号需要上拉电阻：
+
+```text
+PB8 → 4.7kΩ~10kΩ → 3.3V
+PB9 → 4.7kΩ~10kΩ → 3.3V
+```
+
+如果 OLED 模块已经内置上拉，一般不需要重复添加多个上拉电阻。
+
+#### 4.2 初始化和显示
+
+```c
+OLED_Init();
+
+OLED_ShowString(1, 1, "STM32");
+OLED_ShowNum(2, 1, 1234, 4);
+OLED_ShowHexNum(3, 1, 0xABCD, 4);
+OLED_ShowSignedNum(4, 1, -123, 4);
+```
+
+驱动接口将底层通信封装起来。上层只关心行、列和显示内容。
+
+#### 4.3 OLED 底层工作
+
+OLED 驱动通常分为：
+
+```text
+显示字符串
+  → 显示字符
+  → 写入字模
+  → 写 OLED 命令/数据
+  → 软件 I2C 发送字节
+  → PB8/PB9 电平变化
+```
+
+需要理解：
+
+- 命令和数据的区别。
+- 页地址和列地址。
+- 字符点阵和汉字字模。
+- SCL 为时钟，SDA 为数据。
+- 开漏输出和上拉电阻。
+
+#### 4.4 七针脚 SPI OLED
+
+项目另有一个独立的七针脚 SPI 版本：
+
+| OLED 引脚 | STM32 引脚 | 含义              | 作用说明                                               |
+| --------- | ---------- | ----------------- | ------------------------------------------------------ |
+| D0 / SCK  | PB12       | SPI 时钟          | 由 STM32 输出时钟信号，OLED 按照时钟节拍接收每一位数据 |
+| D1 / MOSI | PB13       | STM32 → OLED 数据 | STM32 通过这根线把命令和像素数据发送给 OLED            |
+| RES       | PB14       | OLED 复位         | 控制 OLED 重新初始化，通常上电时先拉低再拉高           |
+| DC        | PB15       | 命令 / 数据选择   | 告诉 OLED 当前发送的是控制命令还是显示数据             |
+| CS        | PA8        | 片选              | 选择当前要通信的 OLED，通常拉低后 OLED 才响应 SPI 数据 |
+| VCC       | 3.3V       | 电源              | 给 OLED 模块提供 3.3V 工作电压                         |
+| GND       | GND        | 地                | STM32 和 OLED 共地，提供统一的电压参考                 |
+
+该版本不能与四针脚 I2C 版本的接线混用。
+
+#### 4.5 本章练习
+
+1. 显示按键按下次数。
+2. 显示 ADC 值和换算后的电压。
+3. 显示 MPU6050 的六轴原始数据。
+
+### 第 5 章 EXTI 外部中断
+
+#### 5.1 对射式红外传感器接线
+
+**例程 5-1：对射式红外传感器计次**
+
+![例程 5-1：对射式红外传感器计次](5-1 对射式红外传感器计次.webp)
+
+```text
+红外模块 VCC → 3.3V
+红外模块 GND → GND
+红外模块 OUT → PB14
+```
+
+源码配置 PB14 为上拉输入，并将 EXTI14 设置为下降沿触发。
+
+#### 5.2 外部中断配置
+
+```c
+GPIO_EXTILineConfig(
+    GPIO_PortSourceGPIOB,
+    GPIO_PinSource14
+);
+
+EXTI_InitStructure.EXTI_Line = EXTI_Line14;
+// 设置为中断模式。发生信号变化时，CPU 会暂停当前程序，进入中断函数。
+EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
+EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
+EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+
+EXTI_Init(&EXTI_InitStructure);
+```
+
+#### 5.3 中断处理函数
+
+```c
+uint16_t CountSensor_Count;
+
+// 中断函数应该尽快结束。因为中断执行期间，主程序可能无法正常运行，其他中断也可能被延迟。
+void EXTI15_10_IRQHandler(void)
+{
+    if (EXTI_GetITStatus(EXTI_Line14) == SET)
+    {
+        if (GPIO_ReadInputDataBit(
+                GPIOB,
+                GPIO_Pin_14
+            ) == 0)
+        {
+            CountSensor_Count++;
+        }
+
+        EXTI_ClearITPendingBit(EXTI_Line14);
+    }
+}
+```
+
+中断函数必须：
+
+- 判断中断来源。
+- 快速完成必要操作。
+- 清除挂起标志。
+- 不执行长时间延时。
+
+**轮询和中断的核心区别就是：CPU 是主动去问，还是等硬件主动通知。**
+
+#### 5.4 旋转编码器计次
+
+**例程 5-2：旋转编码器计次**
+
+![例程 5-2：旋转编码器计次](5-2 旋转编码器计次.webp)
+
+另一个编码器例程使用：
+
+```text
+编码器A相 → PB0
+编码器B相 → PB1
+编码器VCC → 3.3V
+编码器GND → GND
+```
+
+PB0、PB1 分别配置外部中断，通过另一相的电平判断方向。
+
+> [!Tip]
+>
+> 旋转编码器转动时，A 相和 B 相不会同时变化，而是存在相位差：
+>
+> ```
+> 方向一：00 → 01 → 11 → 10 → 00
+> 方向二：00 → 10 → 11 → 01 → 00
+> ```
+>
+> 通过观察 A 相变化时 B 相的电平，就可以判断方向。
+>
+> 例如，当 A 相发生下降沿时：
+>
+> ```c
+> if (PB1 == 0)
+> {
+>     Encoder_Count++;
+> }
+> else
+> {
+>     Encoder_Count--;
+> }
+> ```
+>
+> 但 `++` 和 `--` 的对应关系取决于编码器的接线方向。如果发现旋转方向相反，只需要交换加减逻辑，或者交换 A、B 两根信号线。
+
+需要注意 PB1 同时是默认按键 1 引脚，两个模块不能在同一工程中直接共用。
+
+### 第 6 章 TIM 定时器、PWM、输入捕获和编码器接口
+
+#### 6.1 定时器内部定时
+
+**例程 6-1：定时器定时中断**
+
+![例程 6-1：定时器定时中断](6-1 定时器定时中断.webp)
+
+使用 TIM2 产生一个每秒触发一次的定时中断，不需要连接外部器件。
+
+项目中的 TIM2 配置：
+
+```c
+// 定时器通常从 0 开始计数，所以要 -1
+TIM_TimeBaseInitStructure.TIM_Period = 10000 - 1;  // 自动重装值
+TIM_TimeBaseInitStructure.TIM_Prescaler = 7200 - 1;  // 预分频系数。假设定时器时钟为 72MHz。
+```
+
+假设定时器时钟为 72MHz：
+
+```text
+计数频率 = 72MHz / 7200 = 10kHz
+计数时间 = 10000 / 10kHz = 1秒
+```
+
+TIM2 向上计数，计数器达到最大值后溢出，重新从 0 开始，并产生一次更新事件。因此每隔一秒进入一次中断函数：
+
+```c
+void TIM2_IRQHandler(void)
+{
+    if (TIM_GetITStatus(
+            TIM2,
+            TIM_IT_Update
+        ) == SET)
+    {
+        Num++;
+        TIM_ClearITPendingBit(
+            TIM2,
+            TIM_IT_Update
+        );
+    }
+}
+```
+
+#### 6.2 定时器外部时钟
+
+**例程 6-2：定时器外部时钟**
+
+![例程 6-2：定时器外部时钟](6-2 定时器外部时钟.webp)
+
+```text
+外部脉冲信号 → PA0/TIM2_ETR
+外部信号 GND → STM32 GND
+```
+
+PA0 上的每个有效脉冲都会让 TIM2 计数器增加。
+
+> [!Tip]
+>
+> 把外部脉冲当作 TIM2 的计数时钟。外部信号每产生一个有效边沿，TIM2 的计数器就加一。
+>
+> | 对比                     | 软件变量计数   | 定时器外部时钟         |
+> | ------------------------ | -------------- | ---------------------- |
+> | 谁负责计数               | CPU 和中断函数 | 定时器硬件             |
+> | 每个脉冲是否进入中断     | 通常需要       | 不需要                 |
+> | CPU 占用                 | 较高           | 较低                   |
+> | 高速脉冲处理能力         | 可能漏计数     | 通常更可靠             |
+> | 是否需要 GPIO 外部中断   | 通常需要       | 不需要逐脉冲中断       |
+> | 是否能设置达到数量后触发 | 需要软件判断   | 可用自动重装值硬件触发 |
+
+#### 6.3 PWM 驱动 LED
+
+**例程 6-3：PWM 驱动 LED 呼吸灯**
+
+![例程 6-3：PWM 驱动 LED 呼吸灯](6-3 PWM驱动LED呼吸灯.webp)
+
+项目 PWM LED 使用：
+
+```text
+PA0/TIM2_CH1 → 外接 LED 控制端
+```
+
+外接 LED：
+
+```text
+PA0 → 限流电阻 → LED → GND
+```
+
+PWM 核心关系：
+
+```text
+PWM频率 = 定时器时钟 / ((PSC+1)×(ARR+1))
+占空比   = CCR / (ARR+1)
+```
+
+修改占空比：
+
+```c
+TIM_SetCompare1(TIM2, Compare);
+```
+
+#### 6.4 PWM 驱动舵机
+
+**例程 6-4：PWM 驱动舵机**
+
+![例程 6-4：PWM 驱动舵机](6-4 PWM驱动舵机.webp)
+
+项目使用 TIM2_CH2：
+
+```text
+PA1 → 舵机信号线
+舵机 VCC → 独立 5V
+舵机 GND → STM32 GND
+```
+
+项目通过比较值映射角度：
+
+```c
+void Servo_SetAngle(float Angle)
+{
+    PWM_SetCompare2(Angle / 180 * 2000 + 500);
+}
+```
+
+舵机通常需要约 50Hz 周期信号，高电平脉宽决定角度。
+
+#### 6.5 PWM 驱动直流电机
+
+**例程 6-5：PWM 驱动直流电机**
+
+![例程 6-5：PWM 驱动直流电机](6-5 PWM驱动直流电机.webp)
+
+项目使用：
+
+```text
+PA2 → PWM 速度
+PA4 → 方向控制 1
+PA5 → 方向控制 2
+```
+
+TB6612 接线：
+
+```text
+PA2 → PWMA
+PA4 → AIN1
+PA5 → AIN2
+3.3V → VCC
+3.3V → STBY
+外部电机电源 → VM
+AO1/AO2 → 电机
+所有 GND 共地
+```
+
+不要让电机电流流过 STM32 开发板的 3.3V 稳压器。
+
+| AIN1 | AIN2 | 效果     |
+| ---- | ---- | -------- |
+| 1    | 0    | 正转     |
+| 0    | 1    | 反转     |
+| 0    | 0    | 滑行停止 |
+| 1    | 1    | 刹车     |
+
+#### 6.6 输入捕获测频率
+
+**例程 6-6：输入捕获模式测频率**
+
+![例程 6-6：输入捕获模式测频率](6-6 输入捕获模式测频率.webp)
+
+项目使用：
+
+```text
+被测信号 → PA6/TIM3_CH1
+信号源 GND → STM32 GND
+```
+
+也可以用项目中的 PWM 输出测试：
+
+```text
+PA0/TIM2_CH1 → PA6/TIM3_CH1
+```
+
+项目将 TIM3 计数频率设置为约 1MHz，因此：
+
+```text
+信号频率 = 1MHz / 一个周期内的计数值
+```
+
+#### 6.7 PWMI 测量频率和占空比
+
+**例程 6-7：PWMI 模式测频率占空比**
+
+![例程 6-7：PWMI 模式测频率占空比](6-7 PWMI模式测频率占空比.webp)
+
+PWMI 同样接入 PA6：
+
+```text
+被测PWM → PA6
+GND      → GND
+```
+
+项目使用两个捕获寄存器：
+
+```text
+CCR1 → 周期
+CCR2 → 高电平时间
+占空比 = CCR2 / CCR1 × 100%
+```
+
+#### 6.8 定时器编码器接口
+
+**例程 6-8：编码器接口测速**
+
+![例程 6-8：编码器接口测速](6-8 编码器接口测速.webp)
+
+```text
+编码器A相 → PA6/TIM3_CH1
+编码器B相 → PA7/TIM3_CH2
+编码器VCC → 3.3V
+编码器GND → GND
+```
+
+TIM3 硬件自动完成正交编码器的加减计数，主程序只需周期性读取：
+
+```c
+int16_t Encoder_Get(void)
+{
+    int16_t Temp;
+    Temp = TIM_GetCounter(TIM3);
+    TIM_SetCounter(TIM3, 0);
+    return Temp;
+}
+```
+
+### 第 7 章 ADC 模数转换器
+
+#### 7.1 单通道接线
+
+**例程 7-1：AD 单通道**
+
+![例程 7-1：AD 单通道](7-1 AD单通道.webp)
+
+如何把一个模拟电压转换成 STM32 能处理的数字值。旋转旋钮时，抽头电压会在 `0 ~ 3.3V` 之间变化。
+
+项目单通道 ADC 使用 PA0：
+
+```text
+模拟信号 → PA0/ADC_Channel_0
+模拟地   → GND
+```
+
+电位器接法：
+
+```text
+电位器一端 → 3.3V
+电位器另一端 → GND
+电位器中间抽头 → PA0
+```
+
+#### 7.2 ADC 转换
+
+ADC 的全称是模数转换器：`Analog-to-Digital Converter`。它把连续变化的模拟电压转换成数字量。
+
+```c
+ADC_RegularChannelConfig(
+    ADC1,
+    ADC_Channel_0,
+    1,
+    ADC_SampleTime_55Cycles5
+);
+
+ADC_SoftwareStartConvCmd(
+    ADC1,
+    ENABLE
+);
+
+while (ADC_GetFlagStatus(
+           ADC1,
+           ADC_FLAG_EOC
+       ) == RESET);
+
+uint16_t value =
+    ADC_GetConversionValue(ADC1);
+```
+
+STM32F103 ADC 通常为 12 位：
+
+```text
+ADC范围：0～4095
+电压约等于：ADC值 / 4095 × 3.3V
+```
+
+#### 7.3 多通道接线
+
+**例程 7-2：AD 多通道**
+
+![例程 7-2：AD 多通道](7-2 AD多通道.webp)
+
+项目多通道工程使用：
+
+```text
+PA0 → ADC 通道 0
+PA1 → ADC 通道 1
+PA2 → ADC 通道 2
+PA3 → ADC 通道 3
+```
+
+PA0～PA3 都必须配置为模拟输入，输入电压均不能超过 3.3V。
+
+#### 7.4 常见问题
+
+- 忘记将 GPIO 配置为模拟输入。
+- ADC 时钟超过芯片允许范围。
+- 模拟信号没有共地。
+- 输入电压超过 3.3V。
+- 传感器输出阻抗过高，采样时间过短。
+
+### 第 8 章 DMA 直接存储器访问
+
+#### 8.1 内存到内存 DMA
+
+> [!Tip]
+>
+> DMA 的作用是让外设和内存之间自动搬运数据，减少 CPU 参与。
+>
+> | 方式 | CPU 做什么          | 适合场景       |
+> | ---- | ------------------- | -------------- |
+> | 轮询 | CPU 不断查询状态    | 简单、低频事件 |
+> | 中断 | 事件发生时 CPU 处理 | 突发事件       |
+> | DMA  | DMA 自动搬大量数据  | 连续、大量数据 |
+
+**例程 8-1：DMA 数据转运**
+
+![例程 8-1：DMA 数据转运](8-1 DMA数据转运.webp)
+
+8-1 DMA 数据转运不需要外部电路：
+
+```text
+数组 DataA → DMA1_Channel1 → 数组 DataB
+```
+
+调用方式：
+
+```c
+MyDMA_Init(
+    (uint32_t)DataA,
+    (uint32_t)DataB,
+    4
+);
+
+MyDMA_Transfer();
+```
+
+#### 8.2 DMA 与 ADC
+
+**例程 8-2：DMA 与 ADC 多通道**
+
+![例程 8-2：DMA 与 ADC 多通道](8-2 DMA+AD多通道.webp)
+
+8-2 DMA+AD 多通道的电路与多通道 ADC 相同：
+
+```text
+PA0～PA3 → 四路模拟信号
+```
+
+数据流：
+
+```text
+ADC1 数据寄存器
+  → DMA1_Channel1
+  → AD_Value[0]～AD_Value[3]
+```
+
+关键配置：
+
+```c
+DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&ADC1->DR;
+DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)AD_Value;
+DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
+DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
+```
+
+外设地址不递增，因为 ADC 数据始终来自同一个数据寄存器；内存地址递增，因为每个通道结果要保存到数组的不同位置。
+
+### 第 9 章 USART 串口通信
+
+#### 9.1 USART1 接线
+
+**例程 9-1：串口发送**
+
+![9-1 串口发送接线图](9-1 串口发送.webp)
+
+**例程 9-2：串口发送与接收**
+
+![9-2 串口发送与接收接线图](9-2 串口发送+接收.webp)
+
+```text
+STM32 PA9/TX  → USB 转串口 RX
+STM32 PA10/RX ← USB 转串口 TX
+STM32 GND     ↔ USB 转串口 GND
+```
+
+这是交叉连接，不能 TX 接 TX。
+
+必须使用 3.3V TTL 串口模块，不要直接接传统 RS-232 接口。
+
+#### 9.2 USART 配置
+
+项目常用配置：
+
+```text
+波特率：9600
+数据位：8 位
+校验位：无
+停止位：1 位
+```
+
+#### 9.3 接收中断
+
+```c
+void USART1_IRQHandler(void)
+{
+    if (USART_GetITStatus(
+            USART1,
+            USART_IT_RXNE
+        ) == SET)
+    {
+        Serial_RxData =
+            USART_ReceiveData(USART1);
+
+        Serial_RxFlag = 1;
+    }
+}
+```
+
+中断中只保存数据和设置标志，复杂处理放在主循环。
+
+#### 9.4 文本数据包
+
+**例程 9-4：串口收发文本数据包**
+
+![例程 9-4：串口收发文本数据包](9-4 串口收发文本数据包.webp)
+
+项目文本数据包以 @ 开头，以换行结束，例如：
+
+```text
+@LED_ON\r\n
+```
+
+主程序解析：
+
+```c
+if (strcmp(
+        Serial_RxPacket,
+        "LED_ON"
+    ) == 0)
+{
+    LED1_ON();
+    Serial_SendString(
+        "LED_ON_OK\r\n"
+    );
+}
+```
+
+设计通信协议时应考虑：
+
+- 帧头
+- 帧尾
+- 数据长度
+- 缓冲区大小
+- 指令合法性
+- 超时处理
+- 校验和或 CRC
+
+#### 9.5 HEX 数据包
+
+**例程 9-3：串口收发 HEX 数据包**
+
+![例程 9-3：串口收发 HEX 数据包](9-3 串口收发HEX数据包.webp)
+
+电脑只有 USB，而单片机常用 UART，所以中间加一颗转换芯片，让电脑把 USB 当成一个 COM 串口来用。
+
+项目 HEX 数据包格式类似：
+
+```text
+FF 01 02 03 04 FE
+```
+
+其中 FF 可以作为帧头，FE 可以作为帧尾，中间保存 4 个字节数据。
+
+### 第 10 章 I2C 与 MPU6050
+
+#### 10.1 软件 I2C 接线
+
+**例程 10-1：软件 I2C 读写 MPU6050**
+
+![例程 10-1：软件 I2C 读写 MPU6050](10-1 软件I2C读写MPU6050.webp)
+
+> [!Tip]
+>
+> MPU6050 是一个很经典的 **六轴惯性传感器（IMU）**，主要用来检测设备的**运动状态和姿态变化**。
+>
+> 它内部主要集成了两类传感器：
+>
+> | 模块                   | 轴数 | 测什么                      |
+> | ---------------------- | ---- | --------------------------- |
+> | 加速度计 Accelerometer | 3 轴 | X/Y/Z 三个方向的加速度      |
+> | 陀螺仪 Gyroscope       | 3 轴 | 绕 X/Y/Z 三个轴旋转的角速度 |
+
+```text
+MPU6050 VCC → 3.3V
+MPU6050 GND → GND
+MPU6050 SCL → PB10
+MPU6050 SDA → PB11
+MPU6050 AD0 → GND
+```
+
+SCL 和 SDA 需要上拉电阻：
+
+```text
+PB10/SCL → 4.7kΩ~10kΩ → 3.3V
+PB11/SDA → 4.7kΩ~10kΩ → 3.3V
+```
+
+#### 10.2 I2C 起始条件
+
+```c
+void MyI2C_Start(void)
+{
+    MyI2C_W_SDA(1);
+    MyI2C_W_SCL(1);
+    MyI2C_W_SDA(0);
+    MyI2C_W_SCL(0);
+}
+```
+
+所谓“软件 I²C”，就是不用 STM32 内部的 I²C 外设，而是：用普通 GPIO 自己模拟 SCL 和 SDA 的变化。
+
+I2C 起始条件是：SCL 保持高电平时，SDA 从高电平变为低电平。
+
+I²C 正常传输数据时，一般要求：SDA 在 SCL 高电平期间保持稳定。
+
+#### 10.3 MPU6050 寄存器写入
+
+```c
+void MPU6050_WriteReg(
+    uint8_t RegAddress,
+    uint8_t Data
+)
+{
+    MyI2C_Start();
+    MyI2C_SendByte(0xD0);
+    MyI2C_ReceiveAck();
+    MyI2C_SendByte(RegAddress);
+    MyI2C_ReceiveAck();
+    MyI2C_SendByte(Data);
+    MyI2C_ReceiveAck();
+    MyI2C_Stop();
+}
+```
+
+#### 10.4 MPU6050 地址
+
+项目使用 8 位地址：
+
+```text
+写地址：0xD0
+读地址：0xD1
+对应 7 位地址：0x68
+```
+
+如果 AD0 接高电平，地址会改变，代码中的地址也要修改。
+
+#### 10.5 硬件 I2C
+
+**例程 10-2：硬件 I2C 读写 MPU6050**
+
+![例程 10-2：硬件 I2C 读写 MPU6050](10-2 硬件I2C读写MPU6050.webp)
+
+硬件 I2C 工程仍使用：
+
+```text
+PB10 → I2C2_SCL
+PB11 → I2C2_SDA
+```
+
+区别在于软件 I2C 由 GPIO 手动产生时序，硬件 I2C 由 STM32 的 I2C2 外设产生时序。
+
+### 第 11 章 SPI 与 W25Q64
+
+#### 11.1 W25Q64 接线
+
+**例程 11-1：软件 SPI 读写 W25Q64**
+
+![例程 11-1：软件 SPI 读写 W25Q64](11-1 软件SPI读写W25Q64.webp)
+
+```text
+W25Q64 VCC → 3.3V
+W25Q64 GND → GND
+W25Q64 CS  → PA4
+W25Q64 CLK → PA5
+W25Q64 DO  → PA6
+W25Q64 DI  → PA7
+```
+
+对应 STM32 信号：
+
+```text
+PA5 → SPI 时钟 SCK
+PA6 ← SPI 数据 MISO
+PA7 → SPI 数据 MOSI
+PA4 → 软件控制片选 CS
+```
+
+如果模块引出 WP 和 HOLD，应根据模块说明将其拉高。
+
+> [!Tip]
+>
+> | 项目     | W25Q64   | SD 卡        |
+> | -------- | -------- | ------------ |
+> | 容量     | 8 MB     | GB～TB       |
+> | 是否可拆 | 通常不可 | 可以         |
+> | 成本     | 低       | 较高         |
+> | 接口     | SPI/QSPI | SDIO/SPI     |
+> | 配置存储 | 很合适   | 有点大材小用 |
+> | 大量日志 | 有限     | 很适合       |
+>
+> | W25Q64 | 含义     | STM32    |
+> | :----- | -------- | -------- |
+> | CS     | 片选     | GPIO     |
+> | CLK    | SPI 时钟 | SCK      |
+> | DI     | 数据输入 | MOSI     |
+> | DO     | 数据输出 | MISO     |
+> | VCC    | 电源     | 3.3V     |
+> | GND    | 地       | GND      |
+> | WP     | 写保护   | 通常拉高 |
+> | HOLD   | 暂停通信 | 通常拉高 |
+
+#### 11.2 软件 SPI
+
+> [!Tip]
+>
+> SPI 是 **Serial Peripheral Interface** 的缩写，中文通常叫 **串行外设接口**。
+>
+> 它是一种让 MCU 和外设进行高速串行通信的接口。前面的 OLED、W25Q64 都经常使用 SPI。
+>
+> 最典型的 SPI 有 4 根信号线：
+>
+> | 信号      | 全称                | 作用                   |
+> | --------- | ------------------- | ---------------------- |
+> | SCK / CLK | Serial Clock        | 时钟线                 |
+> | MOSI      | Master Out Slave In | 主机发送、从机接收     |
+> | MISO      | Master In Slave Out | 从机发送、主机接收     |
+> | CS / NSS  | Chip Select         | 片选，选择要通信的设备 |
+>
+> | 项目       | SPI                 | I²C            |
+> | ---------- | ------------------- | -------------- |
+> | 时钟线     | SCK                 | SCL            |
+> | 数据线     | MOSI + MISO         | SDA            |
+> | 片选       | 每个设备通常一个 CS | 用地址区分设备 |
+> | 线数量     | 较多                | 较少           |
+> | 速度       | 通常更快            | 通常较慢       |
+> | 协议复杂度 | 比较简单            | 稍复杂         |
+> | 多设备扩展 | CS 会越来越多       | 很方便         |
+>
+> **I²C 是“用地址找设备”，SPI 是“用 CS 选设备”。**
+>
+> SPI 的核心就是：
+>
+> **SCK 提供节拍，MOSI 往外发，MISO 往回收，CS 决定跟谁说话。**
+
+软件 SPI 由 GPIO 手动产生时钟：
+
+```c
+MySPI_W_MOSI(!!(ByteSend & (0x80 >> i)));
+
+MySPI_W_SCK(1);
+MySPI_W_SCK(0);
+```
+
+#### 11.3 硬件 SPI
+
+**例程 11-2：硬件 SPI 读写 W25Q64**
+
+![例程 11-2：硬件 SPI 读写 W25Q64](11-2 硬件SPI读写W25Q64.webp)
+
+硬件 SPI 使用 SPI1：
+
+```c
+SPI_InitStructure.SPI_Mode = SPI_Mode_Master;
+SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
+SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;
+SPI_InitStructure.SPI_CPOL = SPI_CPOL_Low;
+SPI_InitStructure.SPI_CPHA = SPI_CPHA_1Edge;
+```
+
+这表示使用 SPI 模式 0，高位先发送。
+
+#### 11.4 W25Q64 写入流程
+
+```c
+W25Q64_WriteEnable();
+W25Q64_PageProgram(0x000000, DataArray, 4);
+W25Q64_WaitBusy();
+```
+
+写入前需要写使能，写入后需要等待芯片完成内部编程。
+
+W25Q64 的典型操作：
+
+1. 读取芯片 ID。
+2. 写使能。
+3. 擦除扇区。
+4. 页编程。
+5. 查询忙状态。
+6. 读取数据。
+
+### 第 12 章 RTC、Unix 时间戳与备份寄存器
+
+STM32 里一套很典型的“**断电后仍然保留时间和少量数据**”机制。
+
+#### 12.1 备份寄存器接线
+
+**例程 12-1：读写备份寄存器**
+
+![例程 12-1：读写备份寄存器](12-1 读写备份寄存器.webp)
+
+备份寄存器是 STM32 内部资源，没有额外数据线。
+
+若使用 OLED 显示：
+
+```text
+OLED SCL → PB8
+OLED SDA → PB9
+```
+
+#### 12.2 备份寄存器访问
+
+```c
+RCC_APB1PeriphClockCmd(
+    RCC_APB1Periph_PWR,
+    ENABLE
+);
+
+RCC_APB1PeriphClockCmd(
+    RCC_APB1Periph_BKP,
+    ENABLE
+);
+
+PWR_BackupAccessCmd(ENABLE);
+
+BKP_WriteBackupRegister(
+    BKP_DR1,
+    0x1234
+);
+```
+
+> [!Tip]
+>
+> 备份寄存器给 STM32 内部的一个**备份寄存器**写数据。
+>
+> 它可以理解成容量非常小的、由备份电源维持的数据存储区。
+
+#### 12.3 RTC 晶振和备用电源
+
+**例程 12-2：实时时钟**
+
+![例程 12-2：实时时钟](12-2 实时时钟.webp)
+
+> [!Tip]
+>
+> RTC = **Real-Time Clock，实时时钟**。
+>
+> 它的作用就是让 MCU 知道现在是什么时间，例如：
+>
+> ```
+> 2026-09-20 15:30:45
+> ```
+>
+> 即使 STM32 主程序正在做别的事情，RTC 也会自己计时。
+>
+> 更重要的是，如果接了备用电源：
+>
+> ```
+> VBAT → 纽扣电池 / 超级电容
+> ```
+>
+> 即使开发板的主电源断掉（`VCC = 0`）RTC 仍然可以继续走时。
+>
+> | 存储           | 容量 | 断电保持        | 适合什么           |
+> | -------------- | ---- | --------------- | ------------------ |
+> | RAM            | 大   | 否              | 程序运行数据       |
+> | BKP 备份寄存器 | 极小 | VBAT 存在时可以 | RTC 标志、少量状态 |
+> | W25Q64         | 8 MB | 是              | 配置、文件、日志   |
+> | Flash          | 较大 | 是              | 程序和参数         |
+
+项目默认使用 LSE 32.768kHz 晶振：
+
+```text
+PC14/OSC32_IN
+PC15/OSC32_OUT
+```
+
+大多数开发板已经安装了 32.768kHz 晶振。
+
+如果需要主电源断开后继续走时：
+
+```text
+VBAT → 备用电池或超级电容
+GND  → GND
+```
+
+#### 12.4 RTC 时间处理
+
+项目将年月日时分秒转换为 Unix 时间戳，写入 RTC 计数器：
+
+```c
+time_cnt = mktime(&time_date) - 8 * 60 * 60;
+RTC_SetCounter(time_cnt);
+```
+
+读取时再转换回来：
+
+```c
+time_cnt = RTC_GetCounter() + 8 * 60 * 60;
+time_date = *localtime(&time_cnt);
+```
+
+这里的 8 * 60 * 60 是东八区时区修正。
+
+### 第 13 章 PWR 电源控制与低功耗
+
+#### 13.0 修改主频
+
+**例程 13-1：修改主频**
+
+![例程 13-1：修改主频](13-1 修改主频.webp)
+
+#### 13.1 睡眠模式
+
+**例程 13-2：睡眠模式、串口发送与接收**
+
+![例程 13-2：睡眠模式、串口发送与接收](13-2 睡眠模式+串口发送+接收.webp)
+
+睡眠模式例程使用串口和 OLED：
+
+```text
+PA9  → USB 转串口 RX
+PA10 ← USB 转串口 TX
+PB8  → OLED SCL
+PB9  → OLED SDA
+```
+
+进入睡眠：
+
+```c
+__WFI();  // 执行以后，CPU 核心停止执行指令。
+```
+
+CPU 睡眠后，USART 接收中断到来即可唤醒。
+
+#### 13.2 停止模式
+
+**例程 13-3：停止模式与对射式红外传感器计次**
+
+![例程 13-3：停止模式与对射式红外传感器计次](13-3 停止模式+对射式红外传感器计次.webp)
+
+停止模式例程使用红外传感器作为唤醒源：
+
+```text
+红外模块 OUT → PB14
+红外模块 VCC → 3.3V
+红外模块 GND → GND
+```
+
+进入停止模式：
+
+```c
+PWR_EnterSTOPMode(
+    PWR_Regulator_ON,
+    PWR_STOPEntry_WFI
+);
+```
+
+停止模式唤醒后，通常需要重新配置系统时钟。
+
+#### 13.3 待机模式
+
+**例程 13-4：待机模式与实时时钟**
+
+![例程 13-4：待机模式与实时时钟](13-4 待机模式+实时时钟.webp)
+
+项目启用了 PA0 的 WKUP 唤醒：
+
+```text
+PA0 → 10kΩ下拉 → GND
+PA0 → 按键一端
+按键另一端 → 3.3V
+```
+
+按键按下时，PA0 产生上升沿。
+
+RTC 闹钟唤醒不需要额外外部信号，但需要 RTC 晶振和备份域正常工作。
+
+> [!Tip]
+>
+> | 项目     | Sleep    | Stop               | Standby      |
+> | -------- | -------- | ------------------ | ------------ |
+> | CPU      | 停止     | 停止               | 关闭         |
+> | 主时钟   | 基本保持 | 多数停止           | 停止         |
+> | 外设     | 很多继续 | 大部分停止         | 基本停止     |
+> | RAM      | 保留     | 保留               | 通常丢失     |
+> | 寄存器   | 保留     | 保留               | 大部分丢失   |
+> | RTC      | 可以工作 | 可以工作           | 可以工作     |
+> | 功耗     | 较低     | 更低               | 最低         |
+> | 唤醒速度 | 最快     | 较快               | 最慢         |
+> | 唤醒后   | 继续运行 | 继续但常要恢复时钟 | 接近重新启动 |
+> | 常见唤醒 | 任意中断 | EXTI/RTC 等        | WKUP/RTC 等  |
+>
+> - Sleep：CPU 打瞌睡
+>
+> - Stop：公司停工，但东西还在办公室
+>
+> - Standby：公司关门，只留保安和时钟
+
+### 第 14 章 独立看门狗与窗口看门狗
+
+> [!Tip]
+>
+> MCU 的一种**自恢复机制**。如果程序因为死循环、跑飞、任务卡死等原因不能正常执行，就让硬件自动复位 MCU。
+>
+> “看门狗”可以理解成一个一直倒计时的硬件计时器。程序正常运行时必须定期告诉它：**我还活着，不要复位。**
+>
+> 这个动作就叫 **喂狗 / Refresh Watchdog**。
+
+#### 14.1 独立看门狗
+
+**例程 14-1：独立看门狗**
+
+![例程 14-1：独立看门狗](14-1 独立看门狗.webp)
+
+看门狗不需要额外外接电路。项目初始化：
+
+```c
+IWDG_WriteAccessCmd(IWDG_WriteAccess_Enable);  // 配置倒计时速度
+IWDG_SetPrescaler(IWDG_Prescaler_16);
+IWDG_SetReload(2499);  // 设置倒计时初值
+IWDG_ReloadCounter();  // 装载计数器
+IWDG_Enable();  // 启动看门狗
+```
+
+主循环中喂狗：
+
+```c
+IWDG_ReloadCounter();
+```
+
+如果程序死循环或长时间不喂狗，芯片会复位。
+
+> [!Tip]
+>
+> **主循环怎么喂狗？**
+>
+> 最简单：
+>
+> ```c
+> while (1)
+> {
+>     // 正常程序
+> 
+>     IWDG_ReloadCounter();
+> }
+> ```
+>
+> 只要程序正常执行：
+>
+> ```
+> 业务
+>  ↓
+> 业务
+>  ↓
+> 喂狗
+>  ↓
+> 业务
+>  ↓
+> 业务
+>  ↓
+> 喂狗
+> ```
+>
+> IWDG 永远到不了 0。
+>
+> 在 RTOS 系统里，更好的设计通常是：
+>
+> ```
+> Task A ─→ 我正常
+> Task B ─→ 我正常
+> Task C ─→ 我正常
+>             ↓
+>       Watchdog Task
+>             ↓
+> 确认所有关键任务正常
+>             ↓
+>           喂狗
+> ```
+>
+> 例如：
+>
+> ```
+> if (task_a_alive &&
+>     task_b_alive &&
+>     task_c_alive)
+> {
+>     IWDG_ReloadCounter();
+> }
+> ```
+>
+> 这样只要某个关键任务失效，就停止喂狗。
+
+#### 14.2 窗口看门狗
+
+**例程 14-2：窗口看门狗**
+
+![例程 14-2：窗口看门狗](14-2 窗口看门狗.webp)
+
+窗口看门狗也不需要外部电路：
+
+```c
+WWDG_SetPrescaler(WWDG_Prescaler_8);
+WWDG_SetWindowValue(0x40 | 21);
+WWDG_Enable(0x40 | 54);
+```
+
+窗口看门狗要求在允许的时间范围内刷新计数器，太早和太晚都可能复位。
+
+> [!Tip]
+>
+> **Window Watchdog，窗口看门狗。**
+>
+> 它和 IWDG 最大区别是：IWDG 只怕你喂得太晚；WWDG 不仅怕太晚，也怕太早。
+>
+> | 对比             | IWDG 独立看门狗      | WWDG 窗口看门狗          |
+> | ---------------- | -------------------- | ------------------------ |
+> | 英文             | Independent Watchdog | Window Watchdog          |
+> | 主要目标         | 防止长时间不响应     | 检测程序执行节奏异常     |
+> | 喂太晚           | 复位                 | 复位                     |
+> | 喂太早           | 没问题               | 可能复位                 |
+> | 喂狗要求         | 超时前即可           | 必须在时间窗口内         |
+> | 时钟             | 独立 LSI             | 通常来自 APB 时钟        |
+> | 是否依赖系统时钟 | 较少                 | 较多                     |
+> | 配置难度         | 简单                 | 更复杂                   |
+> | 常见用途         | 系统最终保护         | 对执行周期要求严格的系统 |
+
+### 第 15 章 内部 Flash 与参数保存
+
+不用外接 W25Q64，也可以直接利用 STM32 芯片内部的 Flash 保存少量配置参数，而且断电后数据不会丢。
+
+> [!Tip]
+>
+> 烧录 STM32 程序的时候，其实程序本身就是放在内部 Flash 里的。
+>
+> 可以简单理解成：
+>
+> ```
+> STM32
+> │
+> ├── CPU
+> ├── SRAM
+> │   └── 程序运行时的变量
+> │
+> └── Internal Flash
+>     ├── 程序代码
+>     ├── 常量
+>     └── 可以预留一部分保存参数
+> ```
+>
+> | 项目           | SRAM         | Flash          |
+> | -------------- | ------------ | -------------- |
+> | 速度           | 很快         | 较慢           |
+> | CPU 可直接使用 | 是           | 是             |
+> | 断电后数据     | 丢失         | 保留           |
+> | 修改次数       | 几乎不用考虑 | 有擦写寿命     |
+> | 是否需要擦除   | 不需要       | 写之前通常需要 |
+> | 适合           | 程序运行变量 | 长期保存参数   |
+>
+> | 项目             | STM32 内部 Flash | W25Q64          |
+> | ---------------- | ---------------- | --------------- |
+> | 是否需要外接芯片 | 不需要           | 需要            |
+> | 接口             | CPU 直接访问     | SPI             |
+> | 容量             | 要和程序共享     | 独立 8 MB       |
+> | 保存少量参数     | 很适合           | 也可以          |
+> | 保存大量日志     | 不太适合         | 更合适          |
+> | 保存文件         | 不推荐           | 很适合          |
+> | 擦写寿命问题     | 有               | 有              |
+> | 程序被误擦风险   | 有               | 不影响 MCU 程序 |
+>
+> |           | Backup Register            | Internal Flash |
+> | --------- | -------------------------- | -------------- |
+> | 容量      | 极小                       | 较大           |
+> | 需要 VBAT | 是，若希望主电源断开后保持 | 不需要         |
+> | 擦写寿命  | 不像 Flash 那样按页擦写    | 有擦写寿命     |
+> | 写入速度  | 快                         | 慢一些         |
+> | 用途      | RTC 标志、少量状态         | 参数配置       |
+
+#### 15.1 电路连接
+
+**例程 15-1：读写内部 FLASH**
+
+![例程 15-1：读写内部 FLASH](15-1 读写内部FLASH.webp)
+
+内部 Flash 实验不需要外接芯片，数据保存在 STM32 内部。
+
+如果使用 OLED 观察数据：
+
+```text
+OLED SCL → PB8
+OLED SDA → PB9
+```
+
+#### 15.2 Flash 读写
+
+读取半字：
+
+```c
+uint16_t MyFLASH_ReadHalfWord(
+    uint32_t Address
+)
+{
+    return *(__IO uint16_t *)(Address);
+}
+```
+
+写入半字：
+
+```c
+void MyFLASH_ProgramHalfWord(
+    uint32_t Address,
+    uint16_t Data
+)
+{
+    FLASH_Unlock();
+    FLASH_ProgramHalfWord(Address, Data);
+    FLASH_Lock();
+}
+```
+
+#### 15.3 参数保存流程
+
+项目使用有效标志判断 Flash 中是否有有效数据：
+
+```c
+if (MyFLASH_ReadHalfWord(
+        STORE_START_ADDRESS
+    ) != 0xA5A5)
+{
+    MyFLASH_ErasePage(
+        STORE_START_ADDRESS
+    );
+
+    MyFLASH_ProgramHalfWord(
+        STORE_START_ADDRESS,
+        0xA5A5
+    );
+}
+```
+
+完整的参数保存过程：
+
+```text
+Flash 读取
+  → 检查有效标志
+  → 加载到 SRAM
+  → 程序运行中修改 SRAM
+  → 需要保存时擦除 Flash 页
+  → 将 SRAM 数据重新写入 Flash
+```
+
+注意：
+
+- 不要擦除存放程序的区域。
+- Flash 写入前通常必须先擦除。
+- Flash 不能无限次擦写。
+- 重要参数应加入版本号、长度和 CRC。
+- 断电保护需要更完善的数据提交策略。
+
+#### 15.4 读取芯片 ID
+
+**例程 15-2：读取芯片 ID**
+
+![例程 15-2：读取芯片 ID](15-2 读取芯片ID.webp)
+
+## 第三部分：综合实践
+
+### 16. 综合项目：传感器数据显示与参数保存
+
+可以将多个章节组合成一个小型数据采集系统。
+
+#### 16.1 硬件连接
+
+```text
+电位器输出      → PA0/ADC
+按键 1           → PB1
+OLED SCL        → PB8
+OLED SDA        → PB9
+USB 转串口 RX     → PA9
+USB 转串口 TX     → PA10
+所有模块 GND 共地
+```
+
+#### 16.2 程序结构
+
+```c
+int main(void)
+{
+    OLED_Init();
+    Key_Init();
+    AD_Init();
+    Serial_Init();
+    Store_Init();
+
+    while (1)
+    {
+        uint16_t ad_value;
+
+        ad_value = AD_GetValue();
+
+        OLED_ShowNum(
+            1,
+            1,
+            ad_value,
+            4
+        );
+
+        Serial_Printf("ADC=%d\r\n", ad_value);
+
+        if (Key_GetNum() == 1)
+        {
+            Store_Data[1]++;
+            Store_Save();
+        }
+
+        Delay_ms(100);
+    }
+}
+```
+
+#### 16.3 综合项目涉及的知识
+
+- GPIO：按键输入。
+- ADC：模拟量采集。
+- OLED：本地显示。
+- USART：上传数据。
+- Flash：保存参数。
+- 延时：控制采样周期。
+
+后续还可以增加：
+
+- 定时器触发 ADC。
+- DMA 自动搬运采样数据。
+- RTC 给采样数据加时间戳。
+- W25Q64 保存大量历史数据。
+- 看门狗提高系统可靠性。
+- 低功耗模式降低电池消耗。
+
+## 第四部分：调试方法
+
+### 17. 下载失败排查
+
+按以下顺序检查：
+
+1. 开发板是否供电。
+2. ST-LINK 是否被电脑识别。
+3. GND 是否连接。
+4. SWDIO 和 SWCLK 是否接反。
+5. Keil 芯片型号是否正确。
+6. BOOT0 是否处于正常用户 Flash 启动状态。
+7. 复位脚是否被外部电路拉低。
+
+### 18. LED 不亮
+
+检查：
+
+- LED 是否低电平有效。
+- GPIO 时钟是否开启。
+- GPIO 是否配置为推挽输出。
+- LED 是否接反。
+- 是否使用了当前工程对应的引脚。
+
+### 19. 按键没有反应
+
+检查：
+
+- 按键是否接到 GND。
+- 是否使用上拉输入。
+- 按键按下时读取值是否为 0。
+- 是否卡在等待按键释放的循环中。
+- 是否存在 PB1 引脚复用冲突。
+
+### 20. OLED 没有显示
+
+检查：
+
+- VCC 和 GND 是否正确。
+- SCL 是否接 PB8。
+- SDA 是否接 PB9。
+- OLED 是 I2C 版本还是 SPI 版本。
+- I2C 上拉是否存在。
+- OLED 驱动版本是否和硬件版本匹配。
+
+### 21. 串口乱码
+
+检查：
+
+- TX 和 RX 是否交叉。
+- 是否共地。
+- 波特率是否一致。
+- 数据位、停止位、校验位是否一致。
+- 使用的是 TTL 串口而不是 RS-232。
+- 串口模块电平是否兼容 3.3V。
+
+### 22. I2C 没有应答
+
+检查：
+
+- SCL 和 SDA 是否接反。
+- 上拉电阻是否存在。
+- MPU6050 是否供电。
+- AD0 电平是否决定了正确地址。
+- 代码使用的是 8 位地址还是 7 位地址。
+- 总线是否被某个设备拉死。
+
+### 23. SPI 读不到 W25Q64 ID
+
+检查：
+
+- CS 是否接 PA4。
+- SCK、MISO、MOSI 是否对应正确。
+- W25Q64 是否使用 3.3V。
+- SPI 模式是否为模式 0。
+- WP 和 HOLD 是否处于有效高电平。
+- 片选是否在一帧通信期间保持低电平。
+
+### 24. 定时器频率不正确
+
+重新检查：
+
+```text
+定时器时钟
+预分频 PSC
+自动重装 ARR
+APB1/APB2 分频
+定时器时钟倍频规则
+```
+
+特别是 STM32F1 中，当 APB 预分频器不为 1 时，定时器时钟可能是对应 APB 时钟的两倍。
+
+## 第五部分：学习建议
+
+推荐每个例程按照以下步骤学习：
+
+1. 先看电路连接。
+2. 找到 main.c。
+3. 找到初始化函数。
+4. 找到对应的 Hardware 或 System 驱动。
+5. 对照芯片参考手册理解寄存器配置。
+6. 编译下载，观察实验现象。
+7. 修改一个参数，再次验证现象变化。
+8. 尝试把当前模块与前一章模块组合。
+
+推荐学习顺序：
+
+```text
+GPIO 输出
+  → GPIO 输入
+  → OLED
+  → 外部中断
+  → 定时器
+  → PWM
+  → ADC
+  → DMA
+  → USART
+  → I2C
+  → SPI
+  → RTC
+  → 低功耗
+  → 看门狗
+  → Flash
+```
+
+最终目标不是记住每个库函数，而是能够独立完成以下流程：
+
+```text
+分析硬件
+  → 选择引脚
+  → 配置时钟
+  → 配置 GPIO
+  → 配置外设
+  → 设计中断或 DMA
+  → 编写驱动接口
+  → 在 main 中组织应用逻辑
+  → 下载、测量和调试
+```
+
+这就是从“会运行例程”走向“能够设计 STM32 应用”的完整路径。
+
+## 第六部分：对后续学习 RT-Thread（自补）
+
+| 当前项目内容                  | 后续 RT-Thread 中的对应概念        |
+| ----------------------------- | ---------------------------------- |
+| GPIO、LED、按键               | RT-Thread Pin 设备                 |
+| USART 串口收发                | RT-Thread Serial 设备、FinSH/msh   |
+| 外部中断                      | GPIO 中断回调、信号量、事件        |
+| 定时器中断                    | 硬件定时器、软件定时器、线程延时   |
+| PWM、输入捕获、编码器         | PWM 设备、定时器设备               |
+| ADC                           | ADC 设备、采样线程                 |
+| ADC + DMA                     | DMA 缓冲区、完成回调、消息通知     |
+| I²C、SPI                      | I²C/SPI 总线设备和传感器驱动       |
+| Flash、RTC、看门狗            | Flash、RTC、Watchdog 设备          |
+| 串口数据包状态机              | RT-Thread 串口线程中的协议解析     |
+| `Hardware`、`System` 模块划分 | RT-Thread 驱动层、应用层、设备框架 |
+
+例如当前代码中的：
+
+```c
+while (1)
+{
+    KeyNum = Key_GetNum();
+    Delay_ms(100);
+}
+```
+
+以后通常会变成：
+
+```c
+void key_thread_entry(void *parameter)
+{
+    while (1)
+    {
+        key_scan();
+        rt_thread_mdelay(100);
+    }
+}
+```
+
+也就是说，硬件功能不变，只是程序从“一个大循环”变成“多个线程 + 设备驱动 + 同步通信”。
+
+RT-Thread 通常会在 MCU 底层驱动之上再封装一层，甚至几层。
+
+大致结构是：
+
+```text
+你的应用代码
+    ↓
+RT-Thread 线程、信号量、消息队列、设备 API
+    ↓
+RT-Thread 设备框架
+    ↓
+GD32 BSP / HAL / 标准外设库
+    ↓
+GD32 寄存器和硬件
+```
+
+例如：
+
+| 裸机写法                        | RT-Thread 中可能的写法                           |
+| ------------------------------- | ------------------------------------------------ |
+| `GPIO_Init()`、`GPIO_SetBits()` | `rt_pin_mode()`、`rt_pin_write()`                |
+| 自己写 `USART_IRQHandler()`     | 使用 `uart1` 设备，调用 `rt_device_read/write()` |
+| `Delay_ms()`                    | `rt_thread_mdelay()`                             |
+| 自己配置定时器中断              | `rt_timer_create()`，或使用硬件定时器设备        |
+| 自己写 I²C 起始、停止、读写     | 使用 I²C 总线设备和设备驱动                      |
+| 自己维护串口接收标志            | 串口设备 + 缓冲区 + 信号量/消息队列              |
+| 自己写 Flash 操作               | FAL、KV 存储或具体 Flash 驱动                    |
+
+比如当前项目中的串口流程可能是：
+
+```text
+USART 中断
+    ↓
+接收字节
+    ↓
+自己拼接数据包
+    ↓
+设置 Serial_RxFlag
+    ↓
+main循环处理
+```
+
+在 RT-Thread 中通常变成：
+
+```text
+串口底层驱动
+    ↓
+RT-Thread 串口设备
+    ↓
+串口接收线程
+    ↓
+消息队列/信号量
+    ↓
+协议解析线程
+    ↓
+业务处理
+```
+
+但要注意，RT-Thread 并不是把硬件功能“变没了”，而是把常用操作统一封装起来。底层仍然需要：
+
+- 配置 GD32 的时钟和引脚；
+- 选择正确的 UART、SPI、ADC、DMA；
+- 编写或使用 BSP 驱动；
+- 处理中断、DMA 和硬件异常。
+
+所以学习当前项目依然有价值：你以后调用 `rt_device_write()` 时，能理解它最终还是在操作 UART 的发送寄存器；使用 ADC 设备时，也知道背后涉及采样、触发、DMA 和缓冲区。
+
+RT-Thread 还额外引入了当前裸机项目没有的概念：
+
+- 线程和任务调度；
+- 优先级和时间片；
+- 信号量、互斥锁、事件、消息队列；
+- 线程栈和堆；
+- 阻塞与唤醒；
+- 多线程共享数据的保护；
+- 驱动和设备的统一接口。
+
+可以把它理解为：
+
+> 当前项目学习“硬件怎么工作”；RT-Thread 再封装一层，解决“多个功能如何同时、有组织地工作”。
+
+最重要的是先分清三种东西：
+
+1. `rt_thread_mdelay()`：RT-Thread 的线程延时；
+2. `rt_timer`：RT-Thread 软件定时器；
+3. GD32 的硬件定时器：真正产生 PWM、输入捕获或硬件中断的外设。
+
+它们名字都叫“定时器”或“延时”，但所在层次不同。

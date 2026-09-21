@@ -1,0 +1,109 @@
+---
+title: Unity-XCharts
+date: Thu Mar 21 2024 14:32:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - Unity
+categories: 探索
+description: 我要画图！
+---
+
+
+# 资源
+
+- [XCharts (xcharts-team.github.io)](https://xcharts-team.github.io/)
+
+- [XCharts-Team/XCharts: A charting and data visualization library for Unity. Unity 数据可视化图表插件。(github.com)](https://github.com/XCharts-Team/XCharts)
+
+# 快速开始
+
+## 配置
+
+​	从 [XCharts-Team/XCharts: A charting and data visualization library for Unity. Unity 数据可视化图表插件。(github.com)](https://github.com/XCharts-Team/XCharts) 把工程加载到 `Assets/` 下的一个地方。
+
+​	之后就可以在 `Hierarchy` 右键创建一个 `XCharts`，我们创建一个 `LineChart`。
+
+![png](01.png)
+
+​	可以在这个 `LineChart` 组件的基础上再绑上其它控制脚本。绑定 `Examples/Example01_RandomData.cs`。
+
+## 自定义
+
+​	自定义脚本创建 `LineChart`：
+
+```c#
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using XCharts.Runtime;
+
+public class ChartController : MonoBehaviour
+{
+    // Start is called before the first frame update
+    void Start()
+    {
+        // 创建 LineChart 对象
+        var chart = gameObject.GetComponent<LineChart>();
+        if (chart == null)
+        {
+            chart = gameObject.AddComponent<LineChart>();
+            chart.Init();
+        }
+        chart.SetSize(580, 300);  // 代码动态设置尺寸，或直接操作 chart.rectTransform，或直接在 Inspector 上改
+        // 设置标题
+        var title = chart.EnsureChartComponent<Title>();
+        title.text = "Simple Line";
+        // 设置提示框和图例是否显示
+        var tooltip = chart.EnsureChartComponent<Tooltip>();
+        tooltip.show = true;
+
+        var legend = chart.EnsureChartComponent<Legend>();
+        legend.show = false;
+        // 设置坐标轴
+        var xAxis = chart.EnsureChartComponent<XAxis>();
+        xAxis.splitNumber = 10;
+        xAxis.boundaryGap = true;
+        xAxis.type = Axis.AxisType.Category;
+
+        var yAxis = chart.EnsureChartComponent<YAxis>();
+        yAxis.type = Axis.AxisType.Value;
+        // 清空默认数据，添加 Line 类型的 Serie 用于接收数据
+        chart.RemoveData();
+        chart.AddSerie<Line>("line");
+        // 添加 10 个数据
+        for (int i = 0; i < 10; i++)
+        {
+            chart.AddXAxisData(i + "");
+            chart.AddData(0, Random.Range(10, 20));
+        }
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        
+    }
+}
+```
+
+​	写一个按下按钮追加数据的逻辑：
+
+```c#
+public void onClick()
+{
+    chart.AddXAxisData(chart.series[0].GetDataList().Count + "");
+    chart.AddData(0, Random.Range(10, 20));
+}
+```
+
+> ​	你还可以用代码控制更多的参数，`Examples` 下还有更多的其他例子，凡是 `Inspector` 上看到的可配置的参数，都可以通过代码来设置。[XCharts 配置项手册](https://xcharts-team.github.io/docs/configuration) 里面的所有参数都是可以通过代码控制的。
+>
+> ​	另外，除非定制，建议调用 `Chart` 下提供的 `public` 接口，特别是数据相关操作部分。这些接口内部会做一些关联处理，比如刷新图表等。常见的接口有：
+>
+> 1. `chart.ClearData()`：清空图表数据（不移除 Series）
+> 2. `chart.RemoveData()`：清除图表数据（会移除所有 Series）
+> 3. `chart.AddSerie()`：添加 Serie
+> 4. `chart.AddXAxisData()`：添加 X 轴数据
+> 5. `chart.AddData()`：添加 Serie 数据
+> 6. `chart.UpdateData()`：更新 Serie 数据
+> 7. `chart.UpdateXAxisData()`：更新 X 轴数据
+> 8. `chart.UpdateDataName()`：更新 Serie 数据的名字

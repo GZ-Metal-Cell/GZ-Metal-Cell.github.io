@@ -1,0 +1,343 @@
+---
+title: Pytorch-目标检测 YOLOv5 开源代码项目调试与讲解实战-小土堆
+date: Fri Mar 31 2023 18:32:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - Python
+  - 代码复现
+  - 小土堆
+categories: 课程
+description: 论文代码复现的初尝试。学习自 B 站 UP 主 我是土堆。
+---
+
+
+# 视频
+
+- [目标检测 YOLOv5 开源代码项目调试与讲解实战【土堆 x 布尔艺数】_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1tf4y1t7ru)
+
+# 仓库
+
+- [ultralytics/yolov5 at v5.0 (github.com)](https://github.com/ultralytics/yolov5/tree/v5.0)
+
+# 课程
+
+## 课程介绍
+
+1. 项目介绍及环境配置
+2. 如何利用 YOLOv5 进行预测
+3. 如何训练 YOLOv5 神经网络
+4. 如何制作和训练自己的数据集
+5. 理解预测代码组织和结构
+6. 理解训练代码组织和结构
+7. 带你重写代码(有机会的话)
+
+## 项目介绍及环境配置
+
+从 github 官网上爬取项目。
+
+为了保证与讲解视频一致，选择 v5.0 版本（是 yolov5 的 5.0 版本，不是 yolo 的 5.0 版本），下载代码时选择 Download ZIP
+
+查看 `README.md`：
+
+> Python 3.8 or later with all [requirements.txt](https://github.com/ultralytics/yolov5/blob/master/requirements.txt) dependencies installed, including `torch>=1.7`. To install run:
+>
+> ```
+> $ pip install -r requirements.txt
+> ```
+
+使用 Pycharm 打开项目，配环境：
+
+```shell
+conda create -n yolo python=3.9
+```
+
+```shell
+conda activate yolo
+```
+
+```shell
+pip install -r requirements.txt
+```
+
+---
+
+1. 选择特定 Tags 的文件，以保持和视频中代码的一致
+2. 在 PyCharm 中配置对应的 Conda 环境
+3. 如果作者提供 requirments.txt 文件:
+   -  可以利用 PyCharm 自带的智能提示进行安装
+   - 或者利用 `pip install-r requirements.txt` 指令进行安装
+4. 如果作者没有提供 requirments.txt 文件
+   - 根据运行报错信息，百度，手动安装缺少的库
+
+## 如何利用 YOLOv5 进行预测（一）
+
+​	在 `README.md` 中可以看到如何导入训练好的模型文件对图像进行预测：
+
+> `detect.py` runs inference on a variety of sources, downloading models automatically from the [latest YOLOv5 release](https://github.com/ultralytics/yolov5/releases) and saving results to `runs/detect`.
+>
+> ``` bash
+> $ python detect.py --source 0  # webcam
+>                             file.jpg  # image 
+>                             file.mp4  # video
+>                             path/  # directory
+>                             path/*.jpg  # glob
+>                             'https://youtu.be/NUsoVlDFqZg'  # YouTube video
+>                             'rtsp://example.com/media.mp4'  # RTSP, RTMP, HTTP stream
+> ```
+
+​	官方文档推荐用命令行设置相应的 parser 参数开始预测，但是也可以使用 pycharm 启动。
+
+​	打开 `detect.py`:
+
+​	`if __name__ == '__main__':` 中会有包 `import argparse` 中的 `parser` 参数，通过命令行运行这个文件可以设置这些参数：
+
+```python
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--weights', nargs='+', type=str, default='yolov5s.pt', help='model.pt path(s)')
+    parser.add_argument('--source', type=str, default='data/images', help='source')  # file/folder, 0 for webcam
+    parser.add_argument('--img-size', type=int, default=640, help='inference size (pixels)')
+    parser.add_argument('--conf-thres', type=float, default=0.25, help='object confidence threshold')
+    parser.add_argument('--iou-thres', type=float, default=0.45, help='IOU threshold for NMS')
+    parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
+    parser.add_argument('--view-img', action='store_true', help='display results')
+    parser.add_argument('--save-txt', action='store_true', help='save results to *.txt')
+    parser.add_argument('--save-conf', action='store_true', help='save confidences in --save-txt labels')
+    parser.add_argument('--nosave', action='store_true', help='do not save images/videos')
+    parser.add_argument('--classes', nargs='+', type=int, help='filter by class: --class 0, or --class 0 2 3')
+    parser.add_argument('--agnostic-nms', action='store_true', help='class-agnostic NMS')
+    parser.add_argument('--augment', action='store_true', help='augmented inference')
+    parser.add_argument('--update', action='store_true', help='update all models')
+    parser.add_argument('--project', default='runs/detect', help='save results to project/name')
+    parser.add_argument('--name', default='exp', help='save results to project/name')
+    parser.add_argument('--exist-ok', action='store_true', help='existing project/name ok, do not increment')
+    opt = parser.parse_args()
+    print(opt)
+    check_requirements(exclude=('pycocotools', 'thop'))
+
+    with torch.no_grad():
+        if opt.update:  # update all models (to fix SourceChangeWarning)
+            for opt.weights in ['yolov5s.pt', 'yolov5m.pt', 'yolov5l.pt', 'yolov5x.pt']:
+                detect()
+                strip_optimizer(opt.weights)
+        else:
+            detect()
+```
+
+​	运行后会根据 `--weights` 的默认值 `yolov5s.pt` 下载模型文件：https://github.com/ultralytics/yoloy5/releases/download/y5.0/yolov5s.pt，也可以换其他的模型：`yolov5m.pt`、`yolov5l.pt`、`yolov5x.pt`。
+
+![png](YOLOv5_models.png)
+
+​	然后根据 `--source` 的默认值 `data/images` 读取输入。
+
+​	生成的 `--project` 的默认值 `runs/detect` 将预测后的结果保存至相应的文件夹。
+
+``` shel
+Namespace(weights='yolov5s.pt', source='data/images', img_size=640, conf_thres=0.25, iou_thres=0.45, device='', view_img=False, save_txt=False, save_conf=False, nosave=False, classes=None, agnostic_nms=False, augment=False, update=False, project='runs/detect', name='exp', exist_ok=False)
+YOLOv5  2021-4-12 torch 2.0.0+cpu CPU
+
+Fusing layers... 
+C:\Users\gzjzx\anaconda3\envs\yolo\lib\site-packages\torch\functional.py:504: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at C:\actions-runner\_work\pytorch\pytorch\builder\windows\pytorch\aten\src\ATen\native\TensorShape.cpp:3484.)
+  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
+Model Summary: 224 layers, 7266973 parameters, 0 gradients, 17.0 GFLOPS
+image 1/2 D:\Study\1st-year-master\yolov5-5.0\data\images\bus.jpg: 640x480 4 persons, 1 bus, 1 fire hydrant, Done. (1.685s)
+image 2/2 D:\Study\1st-year-master\yolov5-5.0\data\images\zidane.jpg: 384x640 2 persons, 2 ties, Done. (0.973s)
+Results saved to runs\detect\exp14
+Done. (3.025s)
+```
+
+![jpg](zidane.jpg)
+
+坑点：
+
+- 项目工程是 5.0 的，但是默认会下载最新的 7.0 的模型，导致不兼容
+- pytorch 太新也会导致不兼容：[YOLOV5 训练好模型测试时出现问题：AttributeError: ‘Upsample‘ object has no attribute ‘recompute_scale_factor‘的解决方法_yolov5 upsample_佐咖的博客-CSDN博客](https://blog.csdn.net/qq_40280673/article/details/125095353)
+
+## 如何利用 YOLOv5 进行预测（二）
+
+​	这章主要讲了剩下的参数的用法。
+
+​	可以在 pycharm 中的 `Edit Configurations...`  中 `Parameters` 中设置参数。
+
+![png](configurations.png)
+
+- `--img-size` 在导入图片时，会把图片缩放至一定大小的图片作为输入。
+
+- `--conf-thres` 置信阈值，只有检测结果大于该阈值的才会在输出中展示。
+- `--iou-thres` 
+  - IOU：交并比，Intersection over Union
+  - NMS：非极大值抑制，Non Max Suppression
+  - [NMS（non_max_suppression） - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/141719585)。在预测任务中，会出现很多冗余的预测框。通过NMS操作可以有效的删除冗余检测的结果。非极大值抑制（NMS）顾名思义就是抑制不是极大值的元素，搜索局部的极大值。**大于该值**的框框将被合并。
+- `--device` 使用设备，可选 cuda 或 cpu
+- `--view-img` 预测后是否显示图片
+- `--save-txt` 预测后会把框框的坐标信息保存到 txt 中
+- `--save-conf` 预测后将置信度保存到 txt 中
+- `--nosave` 是否保存预测结果图
+- `--classes` 设置只保留某一部分类别, 形如 0 或者 0 2 3,  使用 `--classes = n`, 则在路径 `runs/detect/exp*/` 下保存的图片为 n 所对应的类别, 此时需要设置 data
+- `--agnostic-nms`进行 NMS 去除不同类别之间的框, 默认 False
+
+- `--augment` TTA测试时增强/多尺度预测
+- `--visualize` 是否可视化网络层输出特征
+- `--update` 如果为True,则对所有模型进行 `strip_optimizer` 操作,去除pt文件中的优化器等信息,默认为 `False`
+- `--project` 保存测试日志的文件夹路径
+- `--name` 保存测试日志文件夹的名字, 所以最终是保存在 `project/name` 中
+- `--exist_ok` 是否重新创建日志文件, `False`时重新创建文件
+
+## 一点小补充
+
+```python
+opt = parser.parse_args()
+print(opt)
+```
+
+​	这两行代码就是解析之前设置的参数用。
+
+## 训练YOLOv5模型（本地）
+
+​	运行 `train.py` 就可以本地训练 YOLOv5 模型。
+
+```shell
+github: skipping check (not a git repository)
+YOLOv5  2021-4-12 torch 1.13.1+cu117 CUDA:0 (NVIDIA GeForce MX330, 4095.875MB)
+
+Namespace(weights='yolov5s.pt', cfg='', data='data/coco128.yaml', hyp='data/hyp.scratch.yaml', epochs=300, batch_size=16, img_size=[640, 640], rect=False, resume=False, nosave=False, notest=False, noautoanchor=False, evolve=False, bucket='', cache_images=False, image_weights=False, device='', multi_scale=False, single_cls=False, adam=False, sync_bn=False, local_rank=-1, workers=0, project='runs/train', entity=None, name='exp', exist_ok=False, quad=False, linear_lr=False, label_smoothing=0.0, upload_dataset=False, bbox_interval=-1, save_period=-1, artifact_alias='latest', world_size=1, global_rank=-1, save_dir='runs\\train\\exp6', total_batch_size=16)
+tensorboard: Start with 'tensorboard --logdir runs/train', view at http://localhost:6006/
+hyperparameters: lr0=0.01, lrf=0.2, momentum=0.937, weight_decay=0.0005, warmup_epochs=3.0, warmup_momentum=0.8, warmup_bias_lr=0.1, box=0.05, cls=0.5, cls_pw=1.0, obj=1.0, obj_pw=1.0, iou_t=0.2, anchor_t=4.0, fl_gamma=0.0, hsv_h=0.015, hsv_s=0.7, hsv_v=0.4, degrees=0.0, translate=0.1, scale=0.5, shear=0.0, perspective=0.0, flipud=0.0, fliplr=0.5, mosaic=1.0, mixup=0.0
+wandb: Install Weights & Biases for YOLOv5 logging with 'pip install wandb' (recommended)
+
+                 from  n    params  module                                  arguments                     
+  0                -1  1      3520  models.common.Focus                     [3, 32, 3]                    
+  1                -1  1     18560  models.common.Conv                      [32, 64, 3, 2]                
+  2                -1  1     18816  models.common.C3                        [64, 64, 1]                   
+  3                -1  1     73984  models.common.Conv                      [64, 128, 3, 2]               
+  4                -1  1    156928  models.common.C3                        [128, 128, 3]                 
+  5                -1  1    295424  models.common.Conv                      [128, 256, 3, 2]              
+  6                -1  1    625152  models.common.C3                        [256, 256, 3]                 
+  7                -1  1   1180672  models.common.Conv                      [256, 512, 3, 2]              
+  8                -1  1    656896  models.common.SPP                       [512, 512, [5, 9, 13]]        
+  9                -1  1   1182720  models.common.C3                        [512, 512, 1, False]          
+ 10                -1  1    131584  models.common.Conv                      [512, 256, 1, 1]              
+ 11                -1  1         0  torch.nn.modules.upsampling.Upsample    [None, 2, 'nearest']          
+ 12           [-1, 6]  1         0  models.common.Concat                    [1]                           
+ 13                -1  1    361984  models.common.C3                        [512, 256, 1, False]          
+ 14                -1  1     33024  models.common.Conv                      [256, 128, 1, 1]              
+ 15                -1  1         0  torch.nn.modules.upsampling.Upsample    [None, 2, 'nearest']          
+ 16           [-1, 4]  1         0  models.common.Concat                    [1]                           
+ 17                -1  1     90880  models.common.C3                        [256, 128, 1, False]          
+ 18                -1  1    147712  models.common.Conv                      [128, 128, 3, 2]              
+ 19          [-1, 14]  1         0  models.common.Concat                    [1]                           
+ 20                -1  1    296448  models.common.C3                        [256, 256, 1, False]          
+ 21                -1  1    590336  models.common.Conv                      [256, 256, 3, 2]              
+ 22          [-1, 10]  1         0  models.common.Concat                    [1]                           
+ 23                -1  1   1182720  models.common.C3                        [512, 512, 1, False]          
+ 24      [17, 20, 23]  1    229245  models.yolo.Detect                      [80, [[10, 13, 16, 30, 33, 23], [30, 61, 62, 45, 59, 119], [116, 90, 156, 198, 373, 326]], [128, 256, 512]]
+C:\Users\gzjzx\anaconda3\lib\site-packages\torch\functional.py:504: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at C:\actions-runner\_work\pytorch\pytorch\builder\windows\pytorch\aten\src\ATen\native\TensorShape.cpp:3191.)
+  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
+Model Summary: 283 layers, 7276605 parameters, 7276605 gradients, 17.2 GFLOPS
+
+Transferred 362/362 items from yolov5s.pt
+Scaled weight_decay = 0.0005
+Optimizer groups: 62 .bias, 62 conv.weight, 59 other
+train: Scanning '..\coco128\labels\train2017.cache' images and labels... 126 found, 2 missing, 0 empty, 0 corrupted: 100%|██████████| 128/128 [00:00<?, ?it/s]
+Plotting labels... 
+val: Scanning '..\coco128\labels\train2017.cache' images and labels... 126 found, 2 missing, 0 empty, 0 corrupted: 100%|██████████| 128/128 [00:00<?, ?it/s]
+
+autoanchor: Analyzing anchors... anchors/target = 4.26, Best Possible Recall (BPR) = 0.9946
+Image sizes 640 train, 640 test
+Using 0 dataloader workers
+Logging results to runs\train\exp6
+Starting training for 300 epochs...
+
+     Epoch   gpu_mem       box       obj       cls     total    labels  img_size
+     0/299     3.06G   0.04553   0.06434   0.02053    0.1304       143       640: 100%|██████████| 8/8 [00:46<00:00,  5.79s/it]
+               Class      Images      Labels           P           R      mAP@.5  mAP@.5:.95: 100%|██████████| 4/4 [00:34<00:00,  8.56s/it]
+                 all         128         929       0.728       0.557       0.648       0.427
+
+     Epoch   gpu_mem       box       obj       cls     total    labels  img_size
+     1/299     3.29G   0.04573   0.06658   0.02045    0.1328       158       640: 100%|██████████| 8/8 [00:23<00:00,  2.96s/it]
+               Class      Images      Labels           P           R      mAP@.5  mAP@.5:.95: 100%|██████████| 4/4 [00:09<00:00,  2.32s/it]
+                 all         128         929       0.718       0.566       0.658       0.433
+
+     Epoch   gpu_mem       box       obj       cls     total    labels  img_size
+     2/299     3.29G   0.04575   0.07487   0.01959    0.1402       213       640:  38%|███▊      | 3/8 [00:15<00:25,  5.00s/it]
+Process finished with exit code -1
+```
+
+​	提示推荐你安装 `wandb` ，据说是个比 `Tensorboard` 更好用的可视化工具。
+
+---
+
+YOLOv5 的超参文件见 `data/hyp.finetune.yaml`（适用 VOC 数据集）或者 `hyo.scrach.yaml`（适用 COCO 数据集）文件。
+
+| 名称 | 值   | 描述 |
+| ---- | ---- | ---- |
+|lr0| 0.00447  |学习率|
+|lrf| 0.114 | 余弦退火超参数|
+|momentum| 0.873 | 学习率动量|
+|weight_decay| 0.00047 | 权重衰减系数|
+|giou| 0.0306 | giou 损失的系数|
+|cls| 0.211 | 分类损失的系数|
+|cls_pw| 0.546 | 分类 BCELoss 中正样本的权重|
+|obj| 0.421 | 有无物体损失的系数|
+|obj_pw| 0.972 | 有无物体 BCELoss 中正样本的权重|
+|iou_t| 0.2 | 标签与 anchors 的 iou 阈值 iou training threshold|
+|anchor_t| 2.26| 标签的长 h 宽 w/anchor 的长 h_a 宽 w_a 阈值, 即 h/h_a, w/w_a 都要在(1/2.26, 2.26)之间 anchor-multiple threshold|
+|fl_gamma| 0.0  | 设为 0 则表示不使用 focal loss(efficientDet default is gamma=1.5)|
+|hsv_h | 0.0154 | 色调 |
+|hsv_s | 0.9 | 饱和度 |
+|hsv_v | 0.619 | 明度|
+|degrees | 0.404  | 旋转角度 |
+|translate | 0.206 | 水平和垂直平移|
+|scale| 0.86| 缩放|
+|shear| 0.795  | 剪切|
+|perspective | 0.0 | 透视变换参数|
+|flipud | 0.00756  | 上下翻转|
+|fliplr | 0.5 | 左右翻转 |
+|mixup | 0.153 | mixup 系数|
+
+---
+
+​	从 `if __name__ == '__main__':` 中看到设置的参数：
+
+```python
+parser = argparse.ArgumentParser()
+parser.add_argument('--weights', type=str, default='yolov5s.pt', help='initial weights path')
+parser.add_argument('--cfg', type=str, default='', help='model.yaml path')
+parser.add_argument('--data', type=str, default='data/coco128.yaml', help='data.yaml path')
+parser.add_argument('--hyp', type=str, default='data/hyp.scratch.yaml', help='hyperparameters path')
+parser.add_argument('--epochs', type=int, default=300)
+parser.add_argument('--batch-size', type=int, default=16, help='total batch size for all GPUs')
+parser.add_argument('--img-size', nargs='+', type=int, default=[640, 640], help='[train, test] image sizes')
+parser.add_argument('--rect', action='store_true', help='rectangular training')
+parser.add_argument('--resume', nargs='?', const=True, default=False, help='resume most recent training')
+parser.add_argument('--nosave', action='store_true', help='only save final checkpoint')
+parser.add_argument('--notest', action='store_true', help='only test final epoch')
+parser.add_argument('--noautoanchor', action='store_true', help='disable autoanchor check')
+parser.add_argument('--evolve', action='store_true', help='evolve hyperparameters')
+parser.add_argument('--bucket', type=str, default='', help='gsutil bucket')
+parser.add_argument('--cache-images', action='store_true', help='cache images for faster training')
+parser.add_argument('--image-weights', action='store_true', help='use weighted image selection for training')
+parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
+parser.add_argument('--multi-scale', action='store_true', help='vary img-size +/- 50%%')
+parser.add_argument('--single-cls', action='store_true', help='train multi-class data as single-class')
+parser.add_argument('--adam', action='store_true', help='use torch.optim.Adam() optimizer')
+parser.add_argument('--sync-bn', action='store_true', help='use SyncBatchNorm, only available in DDP mode')
+parser.add_argument('--local_rank', type=int, default=-1, help='DDP parameter, do not modify')
+parser.add_argument('--workers', type=int, default=0, help='maximum number of dataloader workers')
+parser.add_argument('--project', default='runs/train', help='save to project/name')
+parser.add_argument('--entity', default=None, help='W&B entity')
+parser.add_argument('--name', default='exp', help='save to project/name')
+parser.add_argument('--exist-ok', action='store_true', help='existing project/name ok, do not increment')
+parser.add_argument('--quad', action='store_true', help='quad dataloader')
+parser.add_argument('--linear-lr', action='store_true', help='linear LR')
+parser.add_argument('--label-smoothing', type=float, default=0.0, help='Label smoothing epsilon')
+parser.add_argument('--upload_dataset', action='store_true', help='Upload dataset as W&B artifact table')
+parser.add_argument('--bbox_interval', type=int, default=-1, help='Set bounding-box image logging interval for W&B')
+parser.add_argument('--save_period', type=int, default=-1, help='Log model after every "save_period" epoch')
+parser.add_argument('--artifact_alias', type=str, default="latest", help='version of dataset artifact to be used')
+opt = parser.parse_args()
+```
+
+- [YOLOV5训练代码train.py注释与解析_Laughing-q的博客-CSDN博客](https://blog.csdn.net/Q1u1NG/article/details/107463417)
+- [Yolo v5 训练自己的数据从训练到调参实战详解_yolo调参_王挣银的博客-CSDN博客](https://blog.csdn.net/qq_29960631/article/details/121649821)
+
+## 训练YOLOv5模型（云端GPU）

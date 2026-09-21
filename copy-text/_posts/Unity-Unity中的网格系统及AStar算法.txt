@@ -1,0 +1,1036 @@
+---
+title: Unity-Unity中的网格系统及AStar算法
+date: Fri Nov 11 2022 07:25:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - Unity
+  - C#
+categories: 课程
+description: 学习自 Youtube 博主 CodeMonkey。
+---
+
+
+# 相关资源
+
+​	在本科毕设的时候使用到的一个 Unity 的网格系统, 但是那时候没有做笔记有点忘了 orz, 现在为了做算法大作业再拿出来用用..只看了前三节的部分实现 A*算法就行.
+
+​	这个 CodeMonkey 的代码能力还是很牛逼的, 我不介意重学一遍
+
+- YouTube 视频: [\[Grid System in Unity (How to make it and where to use it) - YouTube](https://www.youtube.com/playlist?list=PLzDRvYVwl53uhO8yhqxcyjDImRjO9W722)](https://www.youtube.com/playlist?list=PLHae9ggVvqPgyRQQOtENr6hK0m1UquGaG)
+
+- > Get the Project files and Utilities at [https://unitycodemonkey.com/video.php...](https://www.youtube.com/redirect?event=video_description&redir_token=QUFFLUhqbHQ1WHpWdnpDS3RVOG1ESF9WYjg2YlNTTk9Yd3xBQ3Jtc0ttRUNiZDBpMi1WTXlJam1TMFVLU1RIVE9ZaVZyVERNOVQzcy03cVFGQ3FvSmtFMGJSLTJrejJSc29LTUFxZFhOM0JJNV9VeWw4dVJOR0pKYk5XcU5sbUdTMUh0azdWN09ONzhWSUpLZWU1akV5aGhsaw&q=https%3A%2F%2Funitycodemonkey.com%2Fvideo.php%3Fv%3D8jrAWtI8RXg&v=8jrAWtI8RXg) 
+  >
+  > Let's add C# Generics to our Grid System. 
+  >
+  > This allows us to use the Grid with any object type we can think of to solve whatever problem we have. Grid System in Unity (Heatmap, Pathfinding, Building Area) [https://www.youtube.com/watch?v=waEsG...](https://www.youtube.com/watch?v=waEsGu--9P8&t=0s) 
+  >
+  > Make Awesome Effects with Meshes in Unity | How to make a Mesh [https://www.youtube.com/watch?v=11c9r...](https://www.youtube.com/watch?v=11c9rWRotJ8&t=0s) 
+  >
+  > Quadrant System in Unity ECS (Find Target/Obstacle Avoidance/Boids) [https://www.youtube.com/watch?v=hP4Vu...](https://www.youtube.com/watch?v=hP4Vu6JbzSo&t=0s) 
+  >
+  > Battle Royale Tycoon on Steam [https://store.steampowered.com/app/85...](https://www.youtube.com/redirect?event=video_description&redir_token=QUFFLUhqbTFJcEdtbjFKN2FuRUVWeVNsNEw2N0NhaXdZUXxBQ3Jtc0tsX0R2ZmFLc0F5WGpVUmpBZ1VDR2p3bHRUemw1aDBSRGR2a1U3RENrd0RmbDJueFd1Z0s5SV9aWUEtUjFCcDlaRV9jLVA0YVV5YW9zODhvY1MwbFlhZVJ2NEowTXdWLTlYWTNBbW82ZWJxV2dLRnY1UQ&q=https%3A%2F%2Fstore.steampowered.com%2Fapp%2F851930%2FBattle_Royale_Tycoon%2F&v=8jrAWtI8RXg)
+  >
+  > If you have any questions post them in the comments and I'll do my best to answer them.
+
+- Bilibili 搬运: [Unity 中的网格系统 Grid System in Unity (How to make it and where to use it)_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1AY411a7QV)
+
+# 正文
+
+## 网格系统
+
+### Grid System in Unity (Heatmap, Pathfinding, Building Area)
+
+#### 设计 Grid 类
+
+建立了一个 Grid 类, 包含如下元素: 
+
+- 宽 width
+- 高 height
+- 网格大小 cellSize
+- 起始位置 originPosition
+- 网格数组 gridArray
+- debug 用数组 debugTextArray
+
+```c#
+private int width;
+private int height;
+private float cellSize;
+private Vector3 originPosition;
+private int[,] gridArray;
+private TextMesh[,] debugTextArray;
+```
+
+#### 设计构造函数
+
+设计构造函数 public Grid(int width, int height, float cellSize, Vector3 originPosition)
+
+```c#
+public Grid(int width, int height, float cellSize, Vector3 originPosition)
+{
+    this.width = width;
+    this.height = height;
+    this.cellSize = cellSize;
+    this.originPosition = originPosition;
+
+    gridArray = new int[width, height];
+    debugTextArray = new TextMesh[width, height];
+
+    for (int x = 0; x < gridArray.GetLength(0); x++)
+    {
+        for (int y = 0; y < gridArray.GetLength(1); y++)
+        {
+            debugTextArray[x, y] = UtilsClass.CreateWorldText(gridArray[x, y].ToString(), null, GetWorldPosition(x, y) + new Vector3(cellSize, cellSize) * .5f, 20, Color.white, TextAnchor.MiddleCenter);
+            Debug.DrawLine(GetWorldPosition(x, y), GetWorldPosition(x, y + 1), Color.white, 100f);
+            Debug.DrawLine(GetWorldPosition(x, y), GetWorldPosition(x + 1, y), Color.white, 100f);
+        }
+    }
+    Debug.DrawLine(GetWorldPosition(0, height), GetWorldPosition(width, height), Color.white, 100f);
+    Debug.DrawLine(GetWorldPosition(width, 0), GetWorldPosition(width, height), Color.white, 100f);
+}
+```
+
+#### 坐标转换
+
+此时有两种坐标:
+
+- 网格坐标 XY (数组的下标)
+- 游戏中的世界坐标 WorldPosition
+
+设计两个函数用于两种坐标之间的转换:
+
+```c#
+    private Vector3 GetWorldPosition(int x, int y)
+    {
+        return new Vector3(x, y) * cellSize + originPosition;
+    }
+
+    private void GetXY(Vector3 worldPosition, out int x, out int y)
+    {
+        x = Mathf.FloorToInt((worldPosition - originPosition).x / cellSize);
+        y = Mathf.FloorToInt((worldPosition - originPosition).y / cellSize);
+    }
+```
+
+#### 设置网格系统中的值
+
+根据坐标**设置**网格系统中的值:
+
+```c#
+public void SetValue(int x, int y, int value)
+{
+    if (x >= 0 && y >= 0 && x < width && y < height)
+    {
+        gridArray[x, y] = value;
+        debugTextArray[x, y].text = gridArray[x, y].ToString();
+    }
+}
+
+public void SetValue(Vector3 worldPosition, int value)
+{
+    int x, y;
+    GetXY(worldPosition, out x, out y);
+    SetValue(x, y, value);
+}
+```
+
+#### 获取网格系统中的值
+
+根据坐标**获取**网格系统中的值:
+
+```c#
+public int GetValue(int x, int y)
+{
+    if (x >= 0 && y >= 0 && x < width && y < height)
+    {
+        return gridArray[x, y];
+    }
+    else
+    {
+        return 0;
+    }
+}
+
+public int GetValue(Vector3 worldPosition)
+{
+    int x, y;
+    GetXY(worldPosition, out x, out y);
+    return GetValue(x, y);
+}
+```
+
+#### 鼠标交互
+
+在 `Testing.cs` 中使用 Grid 类, 使用鼠标可以修改/获取网格系统中的值. 下面是 `Testing.cs` 的完整代码:
+
+```c#
+using UnityEngine;
+using CodeMonkey.Utils;
+
+public class Testing : MonoBehaviour
+{
+    private Grid grid;
+    // Start is called before the first frame update
+    void Start()
+    {
+        grid = new Grid(4, 2, 10f, new Vector3(20, 0));
+    }
+
+    private void Update()
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+            grid.SetValue(UtilsClass.GetMouseWorldPosition(), 56);
+        }
+        if (Input.GetMouseButtonDown(1))
+        {
+            Debug.Log(grid.GetValue(UtilsClass.GetMouseWorldPosition()));
+        }
+    }
+}
+```
+
+#### Grid.cs 完整代码
+
+附 `Grid.cs` 的完整代码:
+
+```c#
+using UnityEngine;
+using CodeMonkey.Utils;
+
+public class Grid
+{
+    private int width;
+    private int height;
+    private float cellSize;
+    private Vector3 originPosition;
+    private int[,] gridArray;
+    private TextMesh[,] debugTextArray;
+
+    public Grid(int width, int height, float cellSize, Vector3 originPosition)
+    {
+        this.width = width;
+        this.height = height;
+        this.cellSize = cellSize;
+        this.originPosition = originPosition;
+
+        gridArray = new int[width, height];
+        debugTextArray = new TextMesh[width, height];
+
+        for (int x = 0; x < gridArray.GetLength(0); x++)
+        {
+            for (int y = 0; y < gridArray.GetLength(1); y++)
+            {
+                debugTextArray[x, y] = UtilsClass.CreateWorldText(gridArray[x, y].ToString(), null, GetWorldPosition(x, y) + new Vector3(cellSize, cellSize) * .5f, 20, Color.white, TextAnchor.MiddleCenter);
+                Debug.DrawLine(GetWorldPosition(x, y), GetWorldPosition(x, y + 1), Color.white, 100f);
+                Debug.DrawLine(GetWorldPosition(x, y), GetWorldPosition(x + 1, y), Color.white, 100f);
+            }
+        }
+        Debug.DrawLine(GetWorldPosition(0, height), GetWorldPosition(width, height), Color.white, 100f);
+        Debug.DrawLine(GetWorldPosition(width, 0), GetWorldPosition(width, height), Color.white, 100f);
+    }
+    private Vector3 GetWorldPosition(int x, int y)
+    {
+        return new Vector3(x, y) * cellSize + originPosition;
+    }
+
+    private void GetXY(Vector3 worldPosition, out int x, out int y)
+    {
+        x = Mathf.FloorToInt((worldPosition - originPosition).x / cellSize);
+        y = Mathf.FloorToInt((worldPosition - originPosition).y / cellSize);
+    }
+
+    public void SetValue(int x, int y, int value)
+    {
+        if (x >= 0 && y >= 0 && x < width && y < height)
+        {
+            gridArray[x, y] = value;
+            debugTextArray[x, y].text = gridArray[x, y].ToString();
+        }
+    }
+
+    public void SetValue(Vector3 worldPosition, int value)
+    {
+        int x, y;
+        GetXY(worldPosition, out x, out y);
+        SetValue(x, y, value);
+    }
+
+    public int GetValue(int x, int y)
+    {
+        if (x >= 0 && y >= 0 && x < width && y < height)
+        {
+            return gridArray[x, y];
+        }
+        else
+        {
+            return 0;
+        }
+    }
+
+    public int GetValue(Vector3 worldPosition)
+    {
+        int x, y;
+        GetXY(worldPosition, out x, out y);
+        return GetValue(x, y);
+    }
+}
+```
+
+ ## Powerful Generics Added! Grid System in Unity (Terraria, Minesweeper, Tilemap)
+
+#### 使用泛型
+
+大概意思就是修改上一章的`Grid.cs`, 添加泛型, 增加代码的重用性
+
+将类名修改为:
+
+```c#
+public class Grid<TGridObject>
+```
+
+网格数组 `gridArray` 中的类型不再使用 `int`, 而是使用`<TGridObject>`:
+
+```c#
+private TGridObject[,] gridArray;
+```
+
+构造函数使用了委托`Func<Grid<TGridObject>, int, int, TGridObject> createGridObject`:
+
+```c#
+public Grid(int width, int height, float cellSize, Vector3 originPosition, Func<Grid<TGridObject>, int, int, TGridObject> createGridObject)
+```
+
+使用了事件 event, 但是我没学过 orz 就照抄了..
+
+```c#
+public event EventHandler<OnGridValueChangedEventArgs> OnGridValueChanged;
+public class OnGridValueChangedEventArgs : EventArgs
+{
+    public int x;
+    public int y;
+}
+```
+
+#### Grid.cs 完整代码
+
+一些函数的名称也因语义做相关改变, 附`Grid.cs`的完整代码: 
+
+```c#
+using UnityEngine;
+using CodeMonkey.Utils;
+using System;
+
+public class Grid<TGridObject>
+{
+    public event EventHandler<OnGridValueChangedEventArgs> OnGridValueChanged;
+    public class OnGridValueChangedEventArgs : EventArgs
+    {
+        public int x;
+        public int y;
+    }
+
+    private int width;
+    private int height;
+    private float cellSize;
+    private Vector3 originPosition;
+    private TGridObject[,] gridArray;
+
+    public Grid(int width, int height, float cellSize, Vector3 originPosition, Func<Grid<TGridObject>, int, int, TGridObject> createGridObject)
+    {
+        this.width = width;
+        this.height = height;
+        this.cellSize = cellSize;
+        this.originPosition = originPosition;
+
+        gridArray = new TGridObject[width, height];
+
+        for(int x = 0; x < gridArray.GetLength(0); x++)
+        {
+            for(int y = 0; y < gridArray.GetLength(1); y++)
+            {
+                 gridArray[x, y] = createGridObject(this, x, y);
+            }
+        }
+
+        bool showDebug = true;
+        if (showDebug)
+        {
+            TextMesh[,] debugTextArray = new TextMesh[width, height];
+            for (int x = 0; x < gridArray.GetLength(0); x++)
+            {
+                for (int y = 0; y < gridArray.GetLength(1); y++)
+                {
+                    debugTextArray[x, y] = UtilsClass.CreateWorldText(gridArray[x, y]?.ToString(), null, GetWorldPosition(x, y) + new Vector3(cellSize, cellSize) * .5f, 20, Color.white, TextAnchor.MiddleCenter);
+                    Debug.DrawLine(GetWorldPosition(x, y), GetWorldPosition(x, y + 1), Color.white, 100f);
+                    Debug.DrawLine(GetWorldPosition(x, y), GetWorldPosition(x + 1, y), Color.white, 100f);
+                }
+            }
+            Debug.DrawLine(GetWorldPosition(0, height), GetWorldPosition(width, height), Color.white, 100f);
+            Debug.DrawLine(GetWorldPosition(width, 0), GetWorldPosition(width, height), Color.white, 100f);
+
+            OnGridValueChanged += (object sender, OnGridValueChangedEventArgs eventArgs) =>
+            {
+                debugTextArray[eventArgs.x, eventArgs.y].text = gridArray[eventArgs.x, eventArgs.y]?.ToString();
+            };
+        }
+    }
+    private Vector3 GetWorldPosition(int x, int y)
+    {
+        return new Vector3(x, y) * cellSize + originPosition;
+    }
+
+    private void GetXY(Vector3 worldPosition, out int x, out int y)
+    {
+        x = Mathf.FloorToInt((worldPosition - originPosition).x / cellSize);
+        y = Mathf.FloorToInt((worldPosition - originPosition).y / cellSize);
+    }
+
+    public void SetGridObject(int x, int y, TGridObject value)
+    {
+        if (x >= 0 && y >= 0 && x < width && y < height)
+        {
+            gridArray[x, y] = value;
+            if (OnGridValueChanged != null)
+            {
+                OnGridValueChanged(this, new OnGridValueChangedEventArgs { x = x, y = y });
+            }
+        }
+    }
+
+    public void TriggerGridObjectChanged(int x, int y)
+    {
+        if (OnGridValueChanged != null)
+        {
+            OnGridValueChanged(this, new OnGridValueChangedEventArgs { x = x, y = y });
+        }
+    }
+
+    public void SetGridObject(Vector3 worldPosition, TGridObject value)
+    {
+        int x, y;
+        GetXY(worldPosition, out x, out y);
+        SetGridObject(x, y, value);
+    }
+
+    public TGridObject GetGridObject(int x, int y)
+    {
+        if (x >= 0 && y >= 0 && x < width && y < height)
+        {
+            return gridArray[x, y];
+        }
+        else
+        {
+            return default(TGridObject);
+        }
+    }
+
+    public TGridObject GetGridObject(Vector3 worldPosition)
+    {
+        int x, y;
+        GetXY(worldPosition, out x, out y);
+        return GetGridObject(x, y);
+    }
+}
+```
+
+#### 设计并使用 HeatMapGridObject 类
+
+此时就可以在 `Testing.cs`中自行设计类, 在网格系统中存储自己想要存储的数据:
+
+(因为我不需要使用热图, 所以没有按照视频搬运热图相关的代码)
+
+设计并使用 `HeatMapGridObject` 类的完整 `Testing.cs` 代码:
+
+```c#
+using UnityEngine;
+using CodeMonkey.Utils;
+
+public class Testing : MonoBehaviour
+{
+    private Grid<HeatMapGridObject> grid;
+    // Start is called before the first frame update
+    void Start()
+    {
+        grid = new Grid<HeatMapGridObject>(4, 2, 10f, new Vector3(20, 0), (Grid<HeatMapGridObject> g, int x, int y) => new HeatMapGridObject(g, x, y));
+    }
+
+    private void Update()
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+            Vector3 position = UtilsClass.GetMouseWorldPosition();
+            HeatMapGridObject heatMapGridObject = grid.GetGridObject(position);
+            if (heatMapGridObject != null)
+            {
+                heatMapGridObject.AddValue(5);
+            }
+        }
+    }
+
+    public class HeatMapGridObject
+    {
+        private const int MIN = 0;
+        private const int MAX = 100;
+
+        private Grid<HeatMapGridObject> grid;
+        private int x;
+        private int y;
+        private int value;
+
+        public HeatMapGridObject(Grid<HeatMapGridObject> grid, int x, int y)
+        {
+            this.grid = grid;
+            this.x = x;
+            this.y = y;
+        }
+
+        public void AddValue(int addValue)
+        {
+            value += addValue;
+            Mathf.Clamp(value, MIN, MAX);
+            grid.TriggerGridObjectChanged(x, y);
+        }
+
+        public float GetValueNormalized()
+        {
+            return (float)value / MAX;
+        }
+
+        public override string ToString()
+        {
+            return value.ToString();
+        }
+    }
+}
+```
+
+运行效果: 
+
+![png](HeatMapGridObject.png)
+
+#### 设计并使用 StringGridObject 类
+
+设计并使用 `StringGridObject` 类的完整 `Testing.cs` 代码:
+
+```c#
+using UnityEngine;
+using CodeMonkey.Utils;
+
+public class Testing : MonoBehaviour
+{
+    private Grid<StringGridObject> stringGrid;
+    // Start is called before the first frame update
+    void Start()
+    {
+        stringGrid = new Grid<StringGridObject>(4, 2, 10f, new Vector3(20, 0), (Grid<StringGridObject> g, int x, int y) => new StringGridObject(g, x, y));
+    }
+
+    private void Update()
+    {
+        Vector3 position = UtilsClass.GetMouseWorldPosition();
+        if (Input.GetKeyDown(KeyCode.A)) { stringGrid.GetGridObject(position).AddLetter("A"); }
+        if (Input.GetKeyDown(KeyCode.B)) { stringGrid.GetGridObject(position).AddLetter("B"); }
+        if (Input.GetKeyDown(KeyCode.C)) { stringGrid.GetGridObject(position).AddLetter("C"); }
+
+        if (Input.GetKeyDown(KeyCode.Alpha1)) { stringGrid.GetGridObject(position).AddNumber("1"); }
+        if (Input.GetKeyDown(KeyCode.Alpha2)) { stringGrid.GetGridObject(position).AddNumber("2"); }
+        if (Input.GetKeyDown(KeyCode.Alpha3)) { stringGrid.GetGridObject(position).AddNumber("3"); }
+    }
+
+    public class StringGridObject
+    {
+        private Grid<StringGridObject> grid;
+        private int x;
+        private int y;
+
+        public string letters;
+        public string numbers;
+
+        public StringGridObject(Grid<StringGridObject> grid, int x, int y)
+        {
+            this.grid = grid;
+            this.x = x;
+            this.y = y;
+            letters = "";
+            numbers = "";
+        }
+
+        public void AddLetter(string letter)
+        {
+            letters += letter;
+            grid.TriggerGridObjectChanged(x, y);
+        }
+
+        public void AddNumber(string number)
+        {
+            numbers += number;
+            grid.TriggerGridObjectChanged(x, y);
+        }
+
+        public override string ToString()
+        {
+            return letters + "\n" + numbers;
+        }
+    }
+}
+```
+
+运行效果:
+
+![png](StringGridObject.png)
+
+## AStar 算法
+
+### A* Pathfinding in Unity
+
+这篇的代码量还真是大..直接抄吧
+
+#### 场景对象布局
+
+![png](Hierarchy.png)
+
+#### CharacterPathfindingMovementHandler 控制人物行走
+
+```c#
+using System.Collections.Generic;
+using UnityEngine;
+using V_AnimationSystem;
+using CodeMonkey.Utils;
+
+public class CharacterPathfindingMovementHandler : MonoBehaviour {
+
+    private const float speed = 40f;
+
+    private V_UnitSkeleton unitSkeleton;
+    private V_UnitAnimation unitAnimation;
+    private AnimatedWalker animatedWalker;
+    private int currentPathIndex;
+    private List<Vector3> pathVectorList;
+
+
+    private void Start() {
+        Transform bodyTransform = transform.Find("Body");
+        unitSkeleton = new V_UnitSkeleton(1f, bodyTransform.TransformPoint, (Mesh mesh) => bodyTransform.GetComponent<MeshFilter>().mesh = mesh);
+        unitAnimation = new V_UnitAnimation(unitSkeleton);
+        animatedWalker = new AnimatedWalker(unitAnimation, UnitAnimType.GetUnitAnimType("dMarine_Idle"), UnitAnimType.GetUnitAnimType("dMarine_Walk"), 1f, 1f);
+    }
+
+    private void Update() {
+        HandleMovement();
+        unitSkeleton.Update(Time.deltaTime);
+
+        if (Input.GetMouseButtonDown(0)) {
+            SetTargetPosition(UtilsClass.GetMouseWorldPosition());
+        }
+    }
+    
+    private void HandleMovement() {
+        if (pathVectorList != null) {
+            Vector3 targetPosition = pathVectorList[currentPathIndex];
+            if (Vector3.Distance(transform.position, targetPosition) > 1f) {
+                Vector3moveDir = (targetPosition - transform.position).normalized;
+
+                float distanceBefore = Vector3.Distance(transform.position, targetPosition);
+                animatedWalker.SetMoveVector(moveDir);
+                transform.position = transform.position + moveDir * speed * Time.deltaTime;
+            } else {
+                currentPathIndex++;
+                if (currentPathIndex >= pathVectorList.Count) {
+                    StopMoving();
+                    animatedWalker.SetMoveVector(Vector3.zero);
+                }
+            }
+        } else {
+            animatedWalker.SetMoveVector(Vector3.zero);
+        }
+    }
+
+    private void StopMoving() {
+        pathVectorList = null;
+    }
+
+    public Vector3 GetPosition() {
+        return transform.position;
+    }
+
+    public void SetTargetPosition(Vector3 targetPosition) {
+        currentPathIndex = 0;
+        pathVectorList = Pathfinding.Instance.FindPath(GetPosition(), targetPosition);
+
+        if (pathVectorList != null && pathVectorList.Count > 1) {
+            pathVectorList.RemoveAt(0);
+        }
+    }
+}
+```
+
+#### PathfindingDebugStepVisual 界面可视化
+
+```c#
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using TMPro;
+using CodeMonkey.Utils;
+
+public class PathfindingDebugStepVisual : MonoBehaviour {
+    public static PathfindingDebugStepVisual Instance { get; private set; }
+    [SerializeField] private Transform pfPathfindingDebugStepVisualNode;
+    private List<Transform> visualNodeList;
+    private List<GridSnapshotAction> gridSnapshotActionList;
+    private bool autoShowSnapshots;
+    private float autoShowSnapshotsTimer;
+    private Transform[,] visualNodeArray; 
+    private void Awake() {
+        Instance = this;
+        visualNodeList = new List<Transform>();
+        gridSnapshotActionList = new List<GridSnapshotAction>();
+    }
+    public void Setup(Grid<PathNode> grid) {
+        visualNodeArray = new Transform[grid.GetWidth(), grid.GetHeight()];
+
+        for (int x = 0; x < grid.GetWidth(); x++) {
+            for (int y = 0; y < grid.GetHeight(); y++) {
+                Vector3gridPosition = new Vector3(x, y) * grid.GetCellSize() + Vector3.one * grid.GetCellSize() * .5f;
+                Transform visualNode = CreateVisualNode(gridPosition);
+                visualNodeArray[x, y] = visualNode;
+                visualNodeList.Add(visualNode);
+            }
+        }
+        HideNodeVisuals();
+    }
+    private void Update() {
+        if (Input.GetKeyDown(KeyCode.Space)) {
+            ShowNextSnapshot();
+        }
+
+        if (Input.GetKeyDown(KeyCode.Return)) {
+            autoShowSnapshots = true;
+        }
+        if (autoShowSnapshots) {
+            float autoShowSnapshotsTimerMax = .05f;
+            autoShowSnapshotsTimer -= Time.deltaTime;
+            if (autoShowSnapshotsTimer <= 0f) {
+                autoShowSnapshotsTimer += autoShowSnapshotsTimerMax;
+                ShowNextSnapshot();
+                if (gridSnapshotActionList.Count == 0) {
+                    autoShowSnapshots = false;
+                }
+            }
+        }
+    }
+    private void ShowNextSnapshot() {
+        if (gridSnapshotActionList.Count > 0) {
+            GridSnapshotAction gridSnapshotAction = gridSnapshotActionList[0];
+            gridSnapshotActionList.RemoveAt(0);
+            gridSnapshotAction.TriggerAction();
+        }
+    }
+    public void ClearSnapshots() {
+        gridSnapshotActionList.Clear();
+    }
+    public void TakeSnapshot(Grid<PathNode> grid, PathNode current, List<PathNode> openList, List<PathNode> closedList) {
+        GridSnapshotAction gridSnapshotAction = new GridSnapshotAction();
+        gridSnapshotAction.AddAction(HideNodeVisuals);
+        for (int x = 0; x < grid.GetWidth(); x++) {
+            for (int y = 0; y < grid.GetHeight(); y++) {
+                PathNode pathNode = grid.GetGridObject(x, y);
+                int gCost = pathNode.gCost;
+                int hCost = pathNode.hCost;
+                int fCost = pathNode.fCost;
+                Vector3gridPosition = new Vector3(pathNode.x, pathNode.y) * grid.GetCellSize() + Vector3.one * grid.GetCellSize() * .5f;
+                bool isCurrent = pathNode == current;
+                bool isInOpenList = openList.Contains(pathNode);
+                bool isInClosedList = closedList.Contains(pathNode);
+                int tmpX = x;
+                int tmpY = y;
+                gridSnapshotAction.AddAction(() => {
+                    Transform visualNode = visualNodeArray[tmpX, tmpY];
+                    SetupVisualNode(visualNode, gCost, hCost, fCost);
+                    Color backgroundColor = UtilsClass.GetColorFromString("636363");
+                    if (isInClosedList) {
+                        backgroundColor = new Color(1, 0, 0);
+                    }
+                    if (isInOpenList) {
+                        backgroundColor = UtilsClass.GetColorFromString("009AFF");
+                    }
+                    if (isCurrent) {
+                        backgroundColor = new Color(0, 1, 0);
+                    }
+                    visualNode.Find("sprite").GetComponent<SpriteRenderer>().color = backgroundColor;
+                });
+            }
+        }
+        gridSnapshotActionList.Add(gridSnapshotAction);
+    }
+    public void TakeSnapshotFinalPath(Grid<PathNode> grid, List<PathNode> path) {
+        GridSnapshotAction gridSnapshotAction = new GridSnapshotAction();
+        gridSnapshotAction.AddAction(HideNodeVisuals);
+        for (int x = 0; x < grid.GetWidth(); x++) {
+            for (int y = 0; y < grid.GetHeight(); y++) {
+                PathNode pathNode = grid.GetGridObject(x, y);
+                int gCost = pathNode.gCost;
+                int hCost = pathNode.hCost;
+                int fCost = pathNode.fCost;
+                Vector3gridPosition = new Vector3(pathNode.x, pathNode.y) * grid.GetCellSize() + Vector3.one * grid.GetCellSize() * .5f;
+                bool isInPath = path.Contains(pathNode);
+                int tmpX = x;
+                int tmpY = y;
+                gridSnapshotAction.AddAction(() => { 
+                    Transform visualNode = visualNodeArray[tmpX, tmpY];
+                    SetupVisualNode(visualNode, gCost, hCost, fCost);
+                    Color backgroundColor;
+                    if (isInPath) {
+                        backgroundColor = new Color(0, 1, 0);
+                    } else {
+                        backgroundColor = UtilsClass.GetColorFromString("636363");
+                    }
+                    visualNode.Find("sprite").GetComponent<SpriteRenderer>().color = backgroundColor;
+                });
+            }
+        }
+        gridSnapshotActionList.Add(gridSnapshotAction);
+    }
+    private void HideNodeVisuals() {
+        foreach (Transform visualNodeTransform in visualNodeList) {
+            SetupVisualNode(visualNodeTransform, 9999, 9999, 9999);
+        }
+    }
+    private Transform CreateVisualNode(Vector3 position) {
+        Transform visualNodeTransform = Instantiate(pfPathfindingDebugStepVisualNode, position, Quaternion.identity);
+        return visualNodeTransform;
+    }
+    private void SetupVisualNode(Transform visualNodeTransform, int gCost, int hCost, int fCost) {
+        if (fCost < 1000) {
+            visualNodeTransform.Find("gCostText").GetComponent<TextMeshPro>().SetText(gCost.ToString());
+            visualNodeTransform.Find("hCostText").GetComponent<TextMeshPro>().SetText(hCost.ToString());
+            visualNodeTransform.Find("fCostText").GetComponent<TextMeshPro>().SetText(fCost.ToString());
+        } else {
+            visualNodeTransform.Find("gCostText").GetComponent<TextMeshPro>().SetText("");
+            visualNodeTransform.Find("hCostText").GetComponent<TextMeshPro>().SetText("");
+            visualNodeTransform.Find("fCostText").GetComponent<TextMeshPro>().SetText("");
+        }
+    }
+    private class GridSnapshotAction {
+        private Action action;
+        public GridSnapshotAction() {
+            action = () => { };
+        }
+        public void AddAction(Action action) {
+            this.action += action;
+        }
+        public void TriggerAction() {
+            action();
+        }
+    }
+}
+```
+
+#### PathfindingDebugStepVisual 算法步骤可视化
+
+```c#
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using TMPro;
+using CodeMonkey.Utils;
+
+public class PathfindingDebugStepVisual : MonoBehaviour {
+    public static PathfindingDebugStepVisual Instance { get; private set; }
+    [SerializeField] private Transform pfPathfindingDebugStepVisualNode;
+    private List<Transform> visualNodeList;
+    private List<GridSnapshotAction> gridSnapshotActionList;
+    private bool autoShowSnapshots;
+    private float autoShowSnapshotsTimer;
+    private Transform[,] visualNodeArray; 
+    private void Awake() {
+        Instance = this;
+        visualNodeList = new List<Transform>();
+        gridSnapshotActionList = new List<GridSnapshotAction>();
+    }
+    public void Setup(Grid<PathNode> grid) {
+        visualNodeArray = new Transform[grid.GetWidth(), grid.GetHeight()];
+        for (int x = 0; x < grid.GetWidth(); x++) {
+            for (int y = 0; y < grid.GetHeight(); y++) {
+                Vector3gridPosition = new Vector3(x, y) * grid.GetCellSize() + Vector3.one * grid.GetCellSize() * .5f;
+                Transform visualNode = CreateVisualNode(gridPosition);
+                visualNodeArray[x, y] = visualNode;
+                visualNodeList.Add(visualNode);
+            }
+        }
+        HideNodeVisuals();
+    }
+    private void Update() {
+        if (Input.GetKeyDown(KeyCode.Space)) {
+            ShowNextSnapshot();
+        }
+        if (Input.GetKeyDown(KeyCode.Return)) {
+            autoShowSnapshots = true;
+        }
+        if (autoShowSnapshots) {
+            float autoShowSnapshotsTimerMax = .05f;
+            autoShowSnapshotsTimer -= Time.deltaTime;
+            if (autoShowSnapshotsTimer <= 0f) {
+                autoShowSnapshotsTimer += autoShowSnapshotsTimerMax;
+                ShowNextSnapshot();
+                if (gridSnapshotActionList.Count == 0) {
+                    autoShowSnapshots = false;
+                }
+            }
+        }
+    }
+    private void ShowNextSnapshot() {
+        if (gridSnapshotActionList.Count > 0) {
+            GridSnapshotAction gridSnapshotAction = gridSnapshotActionList[0];
+            gridSnapshotActionList.RemoveAt(0);
+            gridSnapshotAction.TriggerAction();
+        }
+    }
+    public void ClearSnapshots() {
+        gridSnapshotActionList.Clear();
+    }
+    public void TakeSnapshot(Grid<PathNode> grid, PathNode current, List<PathNode> openList, List<PathNode> closedList) {
+        GridSnapshotAction gridSnapshotAction = new GridSnapshotAction();
+        gridSnapshotAction.AddAction(HideNodeVisuals);
+        for (int x = 0; x < grid.GetWidth(); x++) {
+            for (int y = 0; y < grid.GetHeight(); y++) {
+                PathNode pathNode = grid.GetGridObject(x, y);
+                int gCost = pathNode.gCost;
+                int hCost = pathNode.hCost;
+                int fCost = pathNode.fCost;
+                Vector3gridPosition = new Vector3(pathNode.x, pathNode.y) * grid.GetCellSize() + Vector3.one * grid.GetCellSize() * .5f;
+                bool isCurrent = pathNode == current;
+                bool isInOpenList = openList.Contains(pathNode);
+                bool isInClosedList = closedList.Contains(pathNode);
+                int tmpX = x;
+                int tmpY = y;
+                gridSnapshotAction.AddAction(() => {
+                    Transform visualNode = visualNodeArray[tmpX, tmpY];
+                    SetupVisualNode(visualNode, gCost, hCost, fCost);
+                    Color backgroundColor = UtilsClass.GetColorFromString("636363");
+
+                    if (isInClosedList) {
+                        backgroundColor = new Color(1, 0, 0);
+                    }
+                    if (isInOpenList) {
+                        backgroundColor = UtilsClass.GetColorFromString("009AFF");
+                    }
+                    if (isCurrent) {
+                        backgroundColor = new Color(0, 1, 0);
+                    }
+                    visualNode.Find("sprite").GetComponent<SpriteRenderer>().color = backgroundColor;
+                });
+            }
+        }
+        gridSnapshotActionList.Add(gridSnapshotAction);
+    }
+    public void TakeSnapshotFinalPath(Grid<PathNode> grid, List<PathNode> path) {
+        GridSnapshotAction gridSnapshotAction = new GridSnapshotAction();
+        gridSnapshotAction.AddAction(HideNodeVisuals);
+        for (int x = 0; x < grid.GetWidth(); x++) {
+            for (int y = 0; y < grid.GetHeight(); y++) {
+                PathNode pathNode = grid.GetGridObject(x, y);
+                int gCost = pathNode.gCost;
+                int hCost = pathNode.hCost;
+                int fCost = pathNode.fCost;
+                Vector3gridPosition = new Vector3(pathNode.x, pathNode.y) * grid.GetCellSize() + Vector3.one * grid.GetCellSize() * .5f;
+                bool isInPath = path.Contains(pathNode);
+                int tmpX = x;
+                int tmpY = y;
+                gridSnapshotAction.AddAction(() => { 
+                    Transform visualNode = visualNodeArray[tmpX, tmpY];
+                    SetupVisualNode(visualNode, gCost, hCost, fCost);
+                    Color backgroundColor;
+                    if (isInPath) {
+                        backgroundColor = new Color(0, 1, 0);
+                    } else {
+                        backgroundColor = UtilsClass.GetColorFromString("636363");
+                    }
+                    visualNode.Find("sprite").GetComponent<SpriteRenderer>().color = backgroundColor;
+                });
+            }
+        }
+        gridSnapshotActionList.Add(gridSnapshotAction);
+    }
+    private void HideNodeVisuals() {
+        foreach (Transform visualNodeTransform in visualNodeList) {
+            SetupVisualNode(visualNodeTransform, 9999, 9999, 9999);
+        }
+    }
+    private Transform CreateVisualNode(Vector3 position) {
+        Transform visualNodeTransform = Instantiate(pfPathfindingDebugStepVisualNode, position, Quaternion.identity);
+        return visualNodeTransform;
+    }
+    private void SetupVisualNode(Transform visualNodeTransform, int gCost, int hCost, int fCost) {
+        if (fCost < 1000) {
+            visualNodeTransform.Find("gCostText").GetComponent<TextMeshPro>().SetText(gCost.ToString());
+            visualNodeTransform.Find("hCostText").GetComponent<TextMeshPro>().SetText(hCost.ToString());
+            visualNodeTransform.Find("fCostText").GetComponent<TextMeshPro>().SetText(fCost.ToString());
+        } else {
+            visualNodeTransform.Find("gCostText").GetComponent<TextMeshPro>().SetText("");
+            visualNodeTransform.Find("hCostText").GetComponent<TextMeshPro>().SetText("");
+            visualNodeTransform.Find("fCostText").GetComponent<TextMeshPro>().SetText("");
+        }
+    }
+    private class GridSnapshotAction {
+        private Action action;
+        public GridSnapshotAction() {
+            action = () => { };
+        }
+        public void AddAction(Action action) {
+            this.action += action;
+        }
+        public void TriggerAction() {
+            action();
+        }
+    }
+}
+```
+
+Testing.cs
+
+`Testing.cs` 源代码: 
+
+```c#
+using System.Collections.Generic;
+using UnityEngine;
+using CodeMonkey.Utils;
+using CodeMonkey;
+
+public class Testing : MonoBehaviour {
+    
+    [SerializeField] private PathfindingDebugStepVisual pathfindingDebugStepVisual;
+    [SerializeField] private PathfindingVisual pathfindingVisual;
+    [SerializeField] private CharacterPathfindingMovementHandler characterPathfinding;
+    private Pathfinding pathfinding;
+
+    private void Start() {
+        pathfinding = new Pathfinding(20, 10);
+        pathfindingDebugStepVisual.Setup(pathfinding.GetGrid());
+        pathfindingVisual.SetGrid(pathfinding.GetGrid());
+    }
+
+    private void Update() {
+        if (Input.GetMouseButtonDown(0)) {
+            Vector3mouseWorldPosition = UtilsClass.GetMouseWorldPosition();
+            pathfinding.GetGrid().GetXY(mouseWorldPosition, out int x, out int y);
+            List<PathNode> path = pathfinding.FindPath(0, 0, x, y);
+            if (path != null) {
+                for (int i=0; i<path.Count - 1; i++) {
+                    Debug.DrawLine(new Vector3(path[i].x, path[i].y) * 10f + Vector3.one * 5f, new Vector3(path[i+1].x, path[i+1].y) * 10f + Vector3.one * 5f, Color.green, 5f);
+                }
+            }
+            characterPathfinding.SetTargetPosition(mouseWorldPosition);
+        }
+
+        if (Input.GetMouseButtonDown(1)) {
+            Vector3mouseWorldPosition = UtilsClass.GetMouseWorldPosition();
+            pathfinding.GetGrid().GetXY(mouseWorldPosition, out int x, out int y);
+            pathfinding.GetNode(x, y).SetIsWalkable(!pathfinding.GetNode(x, y).isWalkable);
+        }
+    }
+
+}
+```
+

@@ -1,0 +1,2040 @@
+---
+title: OS-RT-Thread
+date: Thu Sep 17 2026 09:38:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - 嵌入式
+  - OS
+categories: 学习
+description: 我要学习嵌入式操作系统！
+---
+
+
+# 资源
+
+- [RT-Thread/rt-thread: RT-Thread is an open source IoT Real-Time Operating System (RTOS). https://rt-thread.github.io/rt-thread/](https://github.com/RT-Thread/rt-thread)
+
+# 正文
+
+## 项目组成
+
+原生 RT-Thread 的文件组成及其对应的功能可以理解为：
+
+```
+组件与服务层
+  └─ components/           Shell、文件系统、网络、驱动框架等
+        ↓
+RT-Thread 内核
+  ├─ src/                  线程、调度、IPC、定时器、内存管理
+  └─ include/              内核 API 和公共数据类型
+        ↓
+CPU 移植层
+  └─ libcpu/               上下文切换、中断、启动栈等
+        ↓
+BSP 板级支持包
+  └─ bsp/<厂商>/<架构>/<开发板>/
+        ├─ board/          启动文件、时钟、链接脚本、板级驱动
+        ├─ applications/   应用代码
+        ├─ packages/       第三方软件包
+        ├─ rtconfig.h      编译配置
+        └─ SConstruct      构建脚本
+        ↓
+MCU 硬件
+```
+
+- `src/`：RT-Thread 内核源码，例如线程调度、信号量、互斥锁、消息队列、定时器、内存管理。
+
+- `include/`：内核对外提供的头文件和 API，例如 `rtthread.h`。
+
+- `libcpu/`：不同 CPU 架构的移植代码。
+
+- `components/`：可选组件，包括 FinSH/MSH、DFS 文件系统、网络协议栈、POSIX、Libc、USB、驱动框架等。
+
+- `bsp/`：具体芯片和开发板的移植代码。
+
+- `applications/`：用户自己的业务程序，不属于 RT-Thread 内核。
+
+- `packages/`：第三方或社区软件包，例如 mbedTLS、NTP、AT 设备驱动等。
+
+- `Kconfig/.config/rtconfig.h`：功能裁剪和编译配置。
+
+- `SConstruct/SConscript`：SCons 构建脚本。
+
+## 系统架构
+
+![architecturezh.png](architecturezh.png)
+
+- 内核层：RT-Thread 内核，是 RT-Thread 的核心部分，包括了内核系统中对象的实现。
+
+- 组件与服务层：组件是基于 RT-Thread 内核之上的上层软件，例如虚拟文件系统、FinSH 命令行界面、网络框架、设备框架等。采用模块化设计，做到组件内部高内聚，组件之间低耦合。
+
+
+- RT-Thread 软件包：运行于 RT-Thread 物联网操作系统平台上，面向不同应用领域的通用软件组件，由描述信息、源代码或库文件组成。RT-Thread 已经支持的软件包数量已经达到 450+（默认不在 RT-Thread 系统中，[RT-Thread/packages: packages index repository for rt-thread.](https://github.com/RT-Thread/packages)）。
+
+## 软件包安装
+
+先安装 `env-windows`，使用命令：
+
+```shell
+git clone --recursive --depth 1 https://gitee.com/mirrors_RT-Thread/env-windows.git
+```
+
+然后打开 `env.exe`，初次进入要安装一大堆虚拟环境：
+
+![webp](01.webp)
+
+进入正确的 bsp 目录（必须包含 `Kconfig`、`SConstruct` 和 `rtconfig.py`），打开配置界面：
+
+```shell
+menuconfig
+```
+
+![webp](02.webp)
+
+选择 `RT-Thread online packages` 尝试安装新的软件包：
+
+![webp](03.webp)
+
+选中后，按 `S` 保存，然后按 `Esc` 退出。这一步会改变 `.config`。
+
+使用命令下载软件包：
+
+```shell
+pkgs --update
+```
+
+![webp](04.webp)
+
+下载完成后，如果是标准的 RT-Thread BSP 可以使用如下命令生成 Keil 工程：
+
+```shell
+scons --target=mdk5
+```
+
+但如果不是，则还是手动更新 include 路径好了……
+
+## 操作系统
+
+### 经典特征
+
+大学教材里说“操作系统的特征”（以 Linux/Unix 这种通用操作系统为原型），通常首先指四个经典特征：
+
+| 教材里的基本特征        | 含义                                                         | 普通 RT-Thread                                               |
+| ----------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| **并发 Concurrency**    | 多个任务在一段时间内交替运行                                 | 有（多线程抢占式优先级调度）                                 |
+| **共享 Sharing**        | 多个任务共享 CPU、内存、设备                                 | 有（信号量 Semaphore、互斥锁 Mutex、事件集 Event、邮箱 Mailbox、消息队列 Message Queue） |
+| **虚拟 Virtualization** | 把一个物理资源抽象成多个逻辑资源（如一个 CPU 看起来像多个虚拟 CPU） | 部分具备（RT-Thread 没有 Linux/Unix 这种虚拟内存的概念）     |
+| **异步 Asynchronism**   | 程序以不可预测的速度向前推进，需要同步机制协调               | 有（信号量 Semaphore、事件集 Event、消息队列 Message Queue、回调 Callback、中断 Interrupt、计时器 Timer） |
+
+### 概念
+
+| 大学教材概念 | RT-Thread 对应     |
+| ------------ | ------------------ |
+| 进程 / 线程  | `rt_thread`        |
+| PCB / TCB    | `rt_thread` 控制块 |
+| 调度器       | Scheduler          |
+| 就绪队列     | Ready Queue        |
+| 上下文切换   | Context Switch     |
+| 信号量       | `rt_sem`           |
+| 互斥量       | `rt_mutex`         |
+| 消息队列     | `rt_mq`            |
+| 事件         | `rt_event`         |
+| 动态内存     | `rt_malloc`        |
+| 内存池       | `rt_mp`            |
+| I/O 管理     | `rt_device`        |
+| 文件系统     | DFS                |
+| Shell        | FinSH / MSH        |
+| 时钟中断     | SysTick            |
+| 系统时钟     | `rt_tick`          |
+| 定时器       | `rt_timer`         |
+
+### 特性
+
+| 大学《操作系统》 | RT-Thread                                |
+| ---------------- | ---------------------------------------- |
+| CPU / 处理机管理 | Scheduler                                |
+| 进程/线程管理    | Thread                                   |
+| 进程调度         | Priority Scheduler                       |
+| 进程同步         | Semaphore / Mutex / Event                |
+| 进程通信         | Mailbox / Message Queue                  |
+| 中断管理         | Interrupt subsystem                      |
+| 时钟管理         | Tick / Timer                             |
+| 内存分配         | Heap / MemHeap / Memory Pool             |
+| 虚拟内存         | MMU / Page Table（普通 MCU 版通常没有）  |
+| 进程地址空间隔离 | Process isolation（普通 MCU 版通常没有） |
+| 文件管理         | DFS                                      |
+| 设备管理         | RT-Thread Device Framework               |
+| 网络             | lwIP / SAL 等                            |
+| Shell            | FinSH / MSH                              |
+| POSIX API        | POSIX compatibility layer                |
+| 用户态 / 内核态  | User/Kernel Mode（普通 MCU 版通常没有）  |
+| 多用户权限       | user/group/ACL 等（通常不是目标）        |
+
+## Shell 命令
+
+### 主要命令
+
+原生 RT-Thread 的命令行组件叫 FinSH。命令并不是固定不变的，取决于 Kconfig 是否启用了 DFS、设备驱动、网络组件等。以 MSH 模式为例：
+
+| 命令                   | 作用                                        |
+| ---------------------- | ------------------------------------------- |
+| `help`                 | 列出当前系统中注册的所有命令及说明          |
+| `version`              | 显示 RT-Thread 版本信息                     |
+| `clear`                | 清空终端屏幕                                |
+| `console set <设备名>` | 切换 FinSH 控制台设备，例如切换到另一个串口 |
+| `reboot`               | 重启系统                                    |
+| `ps`                   | 查看系统线程、优先级、状态、栈使用等信息    |
+| `free`                 | 查看堆内存总量、已使用量、峰值和剩余量      |
+| `list`                 | 查看内核对象信息                            |
+
+### List 命令
+
+`list` 支持的子命令包括：
+
+```
+Usage: list [options]
+[options]:
+    thread           - list threads
+    timer            - list timers
+    sem              - list semaphores
+    event            - list events
+    mutex            - list mutexs
+    mailbox          - list mailboxs
+    msgqueue         - list message queues
+    memheap          - list memory heaps
+    device           - list devices
+    fd               - list file descriptors
+```
+
+### 网络组件 netdev
+
+| 命令       | 配置开关                | 作用                             |
+| ---------- | ----------------------- | -------------------------------- |
+| `ifconfig` | `NETDEV_USING_IFCONFIG` | 查看和配置网络接口               |
+| `ping`     | `NETDEV_USING_PING`     | 发送 ICMP 请求，测试连通性和延迟 |
+| `dns`      | 随 `netdev` 编译        | 查看或设置 DNS 服务器            |
+| `netstat`  | `NETDEV_USING_NETSTAT`  | 查看网络接口的 TCP/IP 统计信息   |
+
+### 可选调试和内存命令
+
+这些命令只有打开相应配置后才会出现：
+
+| 命令           | 依赖                                    | 作用                           |
+| -------------- | --------------------------------------- | ------------------------------ |
+| `backtrace`    | `RT_USING_LIBC`                         | 查看当前线程或指定线程的调用栈 |
+| `memcheck`     | `RT_USING_MEMTRACE`                     | 检查堆内存块                   |
+| `memtrace`     | `RT_USING_MEMTRACE`                     | 输出内存分配跟踪信息           |
+| `memheapcheck` | `RT_USING_MEMHEAP`、`RT_USING_MEMTRACE` | 检查 MemHeap                   |
+| `memheaptrace` | `RT_USING_MEMHEAP`、`RT_USING_MEMTRACE` | 输出 MemHeap 内存跟踪信息      |
+
+### 命令行交互功能
+
+- 上下方向键查看历史命令；
+- 保存最近 5 条命令；
+- Tab 命令补全；
+- 命令选项补全；
+- 文件路径补全；
+- 命令描述信息显示。
+
+### 自定义命令
+
+RT-Thread 里最常见的是用 **MSH 命令导出宏**：
+
+```c
+MSH_CMD_EXPORT()
+```
+
+把一个普通 C 函数注册成 shell 命令。
+
+```c
+int command(int argc, char **argv)
+```
+
+这和 Linux 的 `main(argc, argv)` 很像。
+
+例如做一个加法命令：
+
+```c
+#include <rtthread.h>
+#include <stdlib.h>
+
+static int add(int argc, char **argv)
+{
+    int a;
+    int b;
+
+    if (argc != 3)
+    {
+        rt_kprintf("Usage: add <a> <b>\n");
+        return -1;
+    }
+
+    a = atoi(argv[1]);
+    b = atoi(argv[2]);
+
+    rt_kprintf("%d + %d = %d\n",
+               a,
+               b,
+               a + b);
+
+    return 0;
+}
+
+MSH_CMD_EXPORT(add, add two numbers);
+```
+
+然后：
+
+```shell
+msh /> add 10 20
+10 + 20 = 30
+```
+
+## 结构体
+
+### 线程 thread
+
+#### 概念
+
+裸机通常是 `while(1)` 顺序执行；RTOS 可以让多个线程“看起来同时运行”，由调度器分配 CPU。
+
+shell 里的 `ps` / `list thread` 命令可以查看当前系统中所有线程的运行状态：
+
+```shell
+thread   pri  status   sp         stack size max used left tick error   tcb addr
+--------------------------------------------------------------------------------
+tshell    20  running  0x00000540 0x00001000   48%    0x0a     OK      0x203920e8
+tcpip     10  suspend  0x00000490 0x00004000   08%    0x14     EINTRPT  0x2038cc98
+```
+
+| 字段         | 含义                  | 说明                                                         |
+| ------------ | --------------------- | ------------------------------------------------------------ |
+| `thread`     | 线程名称              | 判断是哪一个线程                                             |
+| `pri`        | 当前线程优先级        | 数字越小，优先级通常越高，如果多个线程处于 ready 状态，通常优先级高的会先得到 CPU |
+| `status`     | 当前线程状态          | 常见状态有（running、ready、suspend、close、init）           |
+| `sp`         | 当前栈指针/栈相关信息 | 一般主要供底层调试                                           |
+| `stack size` | 分配给线程的栈大小    | 判断线程栈配置                                               |
+| `max used`   | 历史最大栈使用率      | 判断有没有栈溢出风险（如果接近 100%，则可能有栈溢出风险）    |
+| `left tick`  | 当前剩余时间片        | 用于观察时间片调度（同优先级线程之间可以使用时间片流转）     |
+| `error`      | 线程错误码            | 正常一般为 `0`                                               |
+| `tcb addr`   | TCB 的内存地址        | 描述该线程的结构体在内存中的地址                             |
+
+#### 状态机
+
+```mermaid
+stateDiagram-v2
+    [*] --> INIT: rt_thread_create()
+
+    INIT --> READY: rt_thread_startup()
+
+    READY --> RUNNING: 被调度器选中
+
+    RUNNING --> READY: 被更高优先级线程抢占\n或时间片耗尽
+
+    RUNNING --> SUSPEND: rt_thread_mdelay()
+
+    SUSPEND --> READY: 延时时间到
+
+    INIT --> CLOSE: rt_thread_delete()
+    READY --> CLOSE: rt_thread_delete()
+    SUSPEND --> CLOSE: rt_thread_delete()
+
+    CLOSE --> [*]
+
+    note right of RUNNING
+        rt_thread_self()
+        不改变线程状态
+        只返回当前线程的 TCB
+    end note
+```
+
+#### 代码
+
+| API                   | 典型状态变化                | 含义                                         |
+| --------------------- | --------------------------- | -------------------------------------------- |
+| `rt_thread_create()`  | `不存在 → INIT`             | 创建线程，但还没参与调度                     |
+| `rt_thread_startup()` | `INIT → READY`              | 启动线程，放进就绪队列                       |
+| `rt_thread_mdelay()`  | `RUNNING → SUSPEND → READY` | 当前线程主动延时，期间阻塞；时间到后重新就绪 |
+| `rt_thread_delete()`  | `任意可删除状态 → CLOSE`    | 删除动态线程，退出调度                       |
+| `rt_thread_self()`    | **不改变状态**              | 只是获取“当前正在运行的线程”                 |
+
+##### 线程创建
+
+| 动态方式             | 静态方式                    |
+| -------------------- | --------------------------- |
+| `rt_thread_create()` | `rt_thread_init()`          |
+| 自动分配 TCB         | 自己定义 `struct rt_thread` |
+| 自动分配栈           | 自己定义数组作为栈          |
+| `rt_thread_delete()` | `rt_thread_detach()`        |
+
+###### 动态线程
+
+```c
+static void my_thread_entry(void *parameter)
+{
+    while (1)
+    {
+        /* 线程任务 */
+
+        rt_thread_mdelay(1000);
+    }
+}
+
+static int my_thread_init(void)
+{
+    rt_thread_t tid;
+
+    /* 创建线程 */
+    tid = rt_thread_create(
+        "my_thread",         /* 线程名字 */
+        my_thread_entry,     /* 线程入口函数 */
+        RT_NULL,             /* 传给入口函数的参数 */
+        1024,                /* 栈大小，单位字节 */
+        20,                  /* 优先级，数字越小优先级越高 */
+        10                   /* 时间片 tick */
+    );
+
+    if (tid == RT_NULL)
+    {
+        return -RT_ERROR;
+    }
+
+    rt_thread_startup(tid);
+
+    return RT_EOK;
+}
+
+INIT_APP_EXPORT(my_thread_init);  // 把 my_thread_init() 注册到 RT-Thread 的应用初始化阶段。
+```
+
+###### 静态线程
+
+不通过堆动态分配 TCB 和栈：
+
+```c
+#include <rtthread.h>
+
+#define THREAD_STACK_SIZE 1024
+#define THREAD_PRIORITY   20
+#define THREAD_TIMESLICE  10
+
+static struct rt_thread my_thread;
+
+/* 自己准备线程栈 */
+static rt_uint8_t thread_stack[THREAD_STACK_SIZE];
+
+static void my_thread_entry(void *parameter)
+{
+    while (1)
+    {
+        rt_kprintf("static thread running\n");
+        rt_thread_mdelay(1000);
+    }
+}
+
+int my_thread_init(void)
+{
+    rt_thread_init(
+        &my_thread,              /* TCB */
+        "my_thread",             /* 线程名称 */
+        my_thread_entry,         /* 入口函数 */
+        RT_NULL,                 /* 参数 */
+        thread_stack,            /* 栈 */
+        sizeof(thread_stack),    /* 栈大小 */
+        THREAD_PRIORITY,         /* 优先级 */
+        THREAD_TIMESLICE         /* 时间片 */
+    );
+
+    rt_thread_startup(&my_thread);
+
+    return 0;
+}
+```
+
+### 软件定时器 timer
+
+#### 概念
+
+RT-Thread 的 timer 本质上是经过指定的 tick，触发一个 timeout 回调函数。
+
+`rt_thread_mdelay(1000);` 这类的只是让线程阻塞，不能算是创建了一个独立的定时器。
+
+使用 `list timer` 可以查看当前系统中已经创建的定时器及其状态：
+
+```
+timer         periodic   timeout    activated     mode
+------------ ---------- ---------- ----------- ---------
+tshell       0x00000000 0x00000000 deactivated one shot
+timer1       0x00000000 0x00000000 deactivated one shot
+```
+
+| 字段        | 含义                                    |
+| ----------- | --------------------------------------- |
+| `timer`     | 定时器名称                              |
+| `periodic`  | 定时周期，也就是 `init_tick`            |
+| `timeout`   | 下一次超时对应的 tick                   |
+| `activated` | 当前是否已经启动                        |
+| `mode`      | `one shot`（单次）或 `periodic`（持续） |
+
+#### 状态机
+
+```mermaid
+stateDiagram-v2
+    [*] --> DEACTIVATED: rt_timer_create()<br/>或 rt_timer_init()
+
+    DEACTIVATED --> ACTIVATED: rt_timer_start()
+
+    ACTIVATED --> DEACTIVATED: rt_timer_stop()
+
+    ACTIVATED --> DEACTIVATED: one-shot 到期
+
+    ACTIVATED --> ACTIVATED: periodic 到期<br/>执行回调后重新计时
+
+    DEACTIVATED --> [*]: rt_timer_delete()<br/>或 rt_timer_detach()
+```
+
+#### 代码
+
+RT-Thread 的定时器 API 可以分成四组：**创建/初始化、启动/停止、控制、删除/脱离**。
+
+| API                  | 作用             | 对状态的影响                        |
+| -------------------- | ---------------- | ----------------------------------- |
+| `rt_timer_create()`  | 动态创建 timer   | 创建后为 `deactivated`              |
+| `rt_timer_init()`    | 静态初始化 timer | 初始化后为 `deactivated`            |
+| `rt_timer_start()`   | 启动 timer       | `deactivated → activated`           |
+| `rt_timer_stop()`    | 停止 timer       | `activated → deactivated`           |
+| `rt_timer_control()` | 修改周期、模式等 | 可能修改 `periodic` / `mode` 等属性 |
+| `rt_timer_delete()`  | 删除动态 timer   | timer 对象消失                      |
+| `rt_timer_detach()`  | 脱离静态 timer   | timer 对象从内核对象系统移除        |
+
+```c
+#include <rtthread.h>
+
+static rt_timer_t my_timer = RT_NULL;
+
+/* 定时器超时回调函数 */
+static void timer_timeout(void *parameter)
+{
+    rt_kprintf("timer timeout! tick = %d\n", rt_tick_get());
+}
+
+/* 创建并启动定时器 */
+static int timer_start_demo(void)
+{
+    /* 已创建就不重复创建 */
+    if (my_timer == RT_NULL)
+    {
+        my_timer = rt_timer_create(
+            "demo",                    /* timer 名称 */
+            timer_timeout,             /* 超时回调 */
+            RT_NULL,                   /* 回调参数 */
+            RT_TICK_PER_SECOND,        /* 1 秒 */
+            RT_TIMER_FLAG_PERIODIC     /* 周期定时器 */
+        );
+
+        if (my_timer == RT_NULL)
+        {
+            rt_kprintf("create timer failed!\n");
+            return -1;
+        }
+    }
+
+    rt_timer_start(my_timer);
+
+    rt_kprintf("timer started\n");
+
+    return 0;
+}
+
+MSH_CMD_EXPORT(timer_start_demo, start timer demo);
+```
+
+```
+msh /> timer_start_demo
+timer started
+
+timer timeout! tick = 12345
+timer timeout! tick = 13345
+timer timeout! tick = 14345
+...
+```
+
+### 信号量 semaphore
+
+#### 概念
+
+shell 中可以用 `list sem` 查看系统中的信号量：
+
+```
+semaphore                        v   suspend thread
+-------------------------------- --- --------------
+shrx                             000 0
+shell_rx                         001 0
+```
+
+| 字段             | 含义                         |
+| ---------------- | ---------------------------- |
+| `semaphore`      | 信号量名称                   |
+| `v`              | 当前信号量值                 |
+| `suspend thread` | 当前正在等待这个信号量的线程 |
+
+```mermaid
+flowchart LR
+    A["Semaphore v = 1"] -->|"rt_sem_take()"| B["v = 0"]
+
+    B -->|"另一个线程 rt_sem_take()<br/>且永久等待"| C["v = 0<br/>suspend thread = 1"]
+
+    C -->|"rt_sem_release()"| D["等待线程被唤醒"]
+
+    D --> E["线程 READY<br/>v 通常仍为 0"]
+
+    B -->|"无人等待时<br/>rt_sem_release()"| A
+```
+
+#### 代码
+
+| API                | 作用             | 典型状态变化 / 影响                                    |
+| ------------------ | ---------------- | ------------------------------------------------------ |
+| `rt_sem_create()`  | 动态创建信号量   | 创建信号量并设置初始 `value`                           |
+| `rt_sem_init()`    | 静态初始化信号量 | 初始化已有的 `struct rt_semaphore`                     |
+| `rt_sem_take()`    | 获取信号量       | `value > 0` 时 `value - 1`；否则线程可能进入 `SUSPEND` |
+| `rt_sem_trytake()` | 尝试获取信号量   | 有资源则 `value - 1`，没有则立即失败，不阻塞           |
+| `rt_sem_release()` | 释放信号量       | 有等待线程则唤醒一个；否则 `value + 1`                 |
+| `rt_sem_control()` | 控制信号量       | 常用于执行 IPC 控制操作，例如重置信号量                |
+| `rt_sem_delete()`  | 删除动态信号量   | 删除由 `rt_sem_create()` 创建的信号量                  |
+| `rt_sem_detach()`  | 脱离静态信号量   | 对应 `rt_sem_init()`，从内核对象系统中移除             |
+
+### 事件集 event
+
+#### 概念
+
+RT-Thread 里的 **event（事件集）** 是一种线程间同步机制。它和信号量有点像，但更适合处理“多个条件/多个事件”的组合等待。
+
+| 机制      | 更像什么      | 适合场景         |
+| --------- | ------------- | ---------------- |
+| Semaphore | 一个计数器    | “资源来了几个”   |
+| Event     | 一组 bit 标志 | “哪些事情发生了” |
+
+用 `list event` 查看系统中的事件集：
+
+```
+event             set    suspend thread
+------------  ---------- --------------
+at_ce1        0x00000000 001:at_clnt1
+at_se1        0x00000000 0
+at_ce0        0x00000000 001:at_clnt0
+at_se0        0x00000000 0
+```
+
+RT-Thread 的一个 event 用 **32 位无符号整数**保存事件，所以一个 event 对象最多可以表示 32 个事件，每一位代表一个事件。
+
+```
+bit31 ... bit3 bit2 bit1 bit0
+             │    │    │
+             │    │    └─ WiFi 连接成功
+             │    └────── TCP 连接成功
+             └─────────── 数据准备完成
+```
+
+一个适合使用 event 的例子：
+
+```mermaid
+flowchart TD
+    A["业务线程启动"] --> B["等待 NET | TIME | CONFIG"]
+
+    C["网络线程"] -->|"send NET_OK"| B
+    D["NTP 线程"] -->|"send TIME_OK"| B
+    E["配置线程"] -->|"send CONFIG_OK"| B
+
+    B -->|"三个 bit 全部为 1"| F["业务线程继续运行"]
+```
+
+#### 代码
+
+| API                  | 作用                 |
+| -------------------- | -------------------- |
+| `rt_event_create()`  | 动态创建事件集       |
+| `rt_event_init()`    | 静态初始化事件集     |
+| `rt_event_send()`    | 设置一个或多个事件位 |
+| `rt_event_recv()`    | 等待指定事件         |
+| `rt_event_control()` | 控制 event 对象      |
+| `rt_event_delete()`  | 删除动态 event       |
+| `rt_event_detach()`  | 脱离静态 event       |
+
+先定义两个事件：
+
+```c
+#define EVENT_RX_READY    (1 << 0)
+#define EVENT_TX_DONE     (1 << 1)
+```
+
+创建：
+
+```c
+rt_event_t event;
+
+event = rt_event_create(
+    "my_event",
+    RT_IPC_FLAG_FIFO
+);
+```
+
+假设接收线程等待：
+
+```c
+rt_uint32_t recved;
+
+rt_event_recv(
+    event,
+    EVENT_RX_READY,
+    RT_EVENT_FLAG_OR | RT_EVENT_FLAG_CLEAR,
+    RT_WAITING_FOREVER,
+    &recved
+);
+```
+
+如果现在还没有：
+
+```
+EVENT_RX_READY
+```
+
+那么这个线程会：
+
+```
+RUNNING
+   ↓
+rt_event_recv()
+   ↓
+SUSPEND
+```
+
+然后另一个线程：
+
+```c
+rt_event_send(event, EVENT_RX_READY);
+```
+
+事件位变成：
+
+```
+0000 0001
+```
+
+RT-Thread 检查发现等待条件满足，于是：
+
+```
+接收线程
+SUSPEND
+   ↓
+READY
+```
+
+等待线程被唤醒。
+
+### 邮箱 mailbox
+
+#### 概念
+
+RT-Thread 里的 **mailbox（邮箱）** 是一种线程间通信机制，用来在线程之间传递一个“消息值”。
+
+shell 中可以用 `list mailbox` 查看系统中的邮件：
+
+```
+mailbox      entry size suspend thread
+------------ ----  ---- --------------
+mbox0        0000  0008 1:tcpip
+etxmb        0000  0008 1:etx
+erxmb        0000  0008 1:erx
+```
+
+RT-Thread 的 mailbox 中，每条消息本质上是一个 `rt_ubase_t` 大小的值，也就是和 CPU 字长对应的整数类型。
+
+#### 代码
+
+| API                 | 作用                     |
+| ------------------- | ------------------------ |
+| `rt_mb_create()`    | 动态创建 mailbox         |
+| `rt_mb_init()`      | 静态初始化 mailbox       |
+| `rt_mb_send()`      | 发送消息                 |
+| `rt_mb_send_wait()` | 邮箱满时可以等待后再发送 |
+| `rt_mb_recv()`      | 接收消息                 |
+| `rt_mb_control()`   | 控制 mailbox             |
+| `rt_mb_delete()`    | 删除动态 mailbox         |
+| `rt_mb_detach()`    | 脱离静态 mailbox         |
+
+示例，先创建一个 mailbox：
+
+```c
+#include <rtthread.h>
+
+static rt_mailbox_t mb;
+
+static int mailbox_init(void)
+{
+    mb = rt_mb_create(
+        "mb",
+        8,                  /* 最多存 8 条消息 */
+        RT_IPC_FLAG_FIFO
+    );
+
+    if (mb == RT_NULL)
+    {
+        rt_kprintf("mailbox create failed\n");
+        return -1;
+    }
+
+    return 0;
+}
+```
+
+创建一个不断发送 101，102，103...的线程，如果邮箱满了，则会发送失败：
+
+```c
+static void sender_entry(void *parameter)
+{
+    rt_ubase_t value = 100;
+
+    while (1)
+    {
+        rt_mb_send(mb, value);
+        rt_kprintf("send: %d\n", value);
+        value++;
+        rt_thread_mdelay(1000);
+    }
+}
+```
+
+创建一个接收线程，如果没有邮件，则会一直处于阻塞态：
+
+```c
+static void receiver_entry(void *parameter)
+{
+    rt_ubase_t value;
+
+    while (1)
+    {
+        rt_mb_recv(
+            mb,
+            &value,
+            RT_WAITING_FOREVER
+        );
+
+        rt_kprintf("recv: %d\n", value);
+    }
+}
+```
+
+```mermaid
+flowchart LR
+    A["接收线程 RUNNING"] -->|"rt_mb_recv()"| B["Mailbox 为空"]
+    B --> C["接收线程 SUSPEND"]
+
+    D["发送线程"] -->|"rt_mb_send(123)"| E["Mailbox 有消息"]
+
+    E --> F["接收线程 READY"]
+    F -->|"调度"| G["RUNNING"]
+    G --> H["收到 123"]
+```
+
+### 消息队列 msgqueue
+
+#### 概念
+
+shell 中使用 `list msgqueue` 查看系统中的消息队列：
+
+```
+msgqueue entry suspend thread
+-------- ----- --------------
+mq1      0002  0
+mq2      0000  1:worker
+```
+
+| 字段             | 含义                                     |
+| ---------------- | ---------------------------------------- |
+| `msgqueue`       | 消息队列名称                             |
+| `entry`          | 当前队列中已有多少条消息                 |
+| `suspend thread` | 当前有多少线程因为等待这个消息队列而挂起 |
+
+消息队列可以将整个结构体的数据复制进去（Mailbox 发的是“一个值”；Message Queue 发的是“一块数据”）：
+
+| Mailbox                | Message Queue          |
+| ---------------------- | ---------------------- |
+| 每条消息固定一个机器字 | 每条消息可以是多个字节 |
+| 常用于整数、指针       | 常用于结构体、数据包   |
+| 更轻量                 | 功能更强               |
+| 通常不复制大块数据     | 会复制消息内容         |
+
+#### 代码
+
+| API                 | 作用               | 关键说明                           |
+| ------------------- | ------------------ | ---------------------------------- |
+| `rt_mq_create()`    | 动态创建消息队列   | 指定消息大小、最大消息数、等待策略 |
+| `rt_mq_init()`      | 静态初始化消息队列 | 使用用户自己提供的内存缓冲区       |
+| `rt_mq_send()`      | 发送普通消息       | 队列满时通常立即返回失败           |
+| `rt_mq_send_wait()` | 等待发送消息       | 队列满时可等待一段时间，直到有空位 |
+| `rt_mq_urgent()`    | 发送紧急消息       | 插到队列前面，比普通消息优先被接收 |
+| `rt_mq_recv()`      | 接收消息           | 队列为空时可选择等待或立即返回     |
+| `rt_mq_control()`   | 控制消息队列       | 可用于重置等控制操作               |
+| `rt_mq_delete()`    | 删除动态消息队列   | 对应 `rt_mq_create()`              |
+| `rt_mq_detach()`    | 脱离静态消息队列   | 对应 `rt_mq_init()`                |
+
+一个完整但比较简洁的 RT-Thread 消息队列示例：一个线程每秒发送一条结构体消息，另一个线程负责接收。
+
+```c
+#include <rtthread.h>
+
+typedef struct
+{
+    int id;
+    int value;
+} sensor_msg_t;
+
+static rt_mq_t sensor_mq = RT_NULL;
+
+/* 发送线程 */
+static void sender_entry(void *parameter)
+{
+    sensor_msg_t msg;
+    int count = 0;
+
+    while (1)
+    {
+        msg.id = 1;
+        msg.value = count++;
+
+        if (rt_mq_send(sensor_mq,
+                       &msg,
+                       sizeof(msg)) == RT_EOK)
+        {
+            rt_kprintf("send: id=%d value=%d\n",
+                       msg.id,
+                       msg.value);
+        }
+        else
+        {
+            rt_kprintf("message queue full!\n");
+        }
+
+        rt_thread_mdelay(1000);
+    }
+}
+
+/* 接收线程 */
+static void receiver_entry(void *parameter)
+{
+    sensor_msg_t msg;
+
+    while (1)
+    {
+        /*
+         * 队列为空时永久等待
+         */
+        if (rt_mq_recv(sensor_mq,
+                       &msg,
+                       sizeof(msg),
+                       RT_WAITING_FOREVER) == RT_EOK)
+        {
+            rt_kprintf("recv: id=%d value=%d\n",
+                       msg.id,
+                       msg.value);
+        }
+    }
+}
+
+static int mq_demo(void)
+{
+    rt_thread_t sender;
+    rt_thread_t receiver;
+
+    /* 创建消息队列
+     *
+     * 每条消息大小：sizeof(sensor_msg_t)
+     * 最多保存：8 条消息
+     */
+    sensor_mq = rt_mq_create(
+        "sensor",
+        sizeof(sensor_msg_t),
+        8,
+        RT_IPC_FLAG_FIFO
+    );
+
+    if (sensor_mq == RT_NULL)
+    {
+        rt_kprintf("create message queue failed!\n");
+        return -1;
+    }
+
+    /* 创建发送线程 */
+    sender = rt_thread_create(
+        "sender",
+        sender_entry,
+        RT_NULL,
+        1024,
+        20,
+        10
+    );
+
+    /* 创建接收线程 */
+    receiver = rt_thread_create(
+        "receiver",
+        receiver_entry,
+        RT_NULL,
+        1024,
+        20,
+        10
+    );
+
+    if (sender != RT_NULL)
+        rt_thread_startup(sender);
+
+    if (receiver != RT_NULL)
+        rt_thread_startup(receiver);
+
+    return 0;
+}
+
+MSH_CMD_EXPORT(mq_demo, message queue demo);
+```
+
+```mermaid
+flowchart LR
+    A["sender线程"] -->|"rt_mq_send()"| B["sensor_mq"]
+    B -->|"保存 sensor_msg_t"| C["消息队列"]
+    C -->|"rt_mq_recv()"| D["receiver线程"]
+```
+
+### 堆 memory heaps
+
+#### 概念
+
+shell 的 `list memheap` 可以列举出系统中的内存堆对象使用情况：
+
+```
+memheap   pool size  max used size  available size
+-------- ---------- -------------- --------------
+sdram    33554432   48             33554384
+heap     190584     7356           183228
+```
+
+RT-Thread 的 `memheap` 是一种动态内存管理机制，可以把一块连续 RAM 管理成堆，比如片内 SRAM、片外 SDRAM 都可以各自建立一个 memheap。
+
+| 字段             | 含义                         |
+| ---------------- | ---------------------------- |
+| `memheap`        | 内存堆名称                   |
+| `pool size`      | 这块 heap 的总大小           |
+| `max used size`  | 历史上曾经使用过的最大内存量 |
+| `available size` | 当前还可以使用的内存大小     |
+
+#### 代码
+
+| API                    | 作用                    |
+| ---------------------- | ----------------------- |
+| `rt_memheap_init()`    | 初始化一块 memheap      |
+| `rt_memheap_alloc()`   | 从指定 memheap 分配内存 |
+| `rt_memheap_realloc()` | 调整已分配内存大小      |
+| `rt_memheap_free()`    | 释放内存                |
+| `rt_memheap_info()`    | 获取 heap 使用信息      |
+| `rt_memheap_detach()`  | 从系统中移除 memheap    |
+
+一个比较典型的 RT-Thread `memheap` 示例：先拿一块静态数组模拟“独立内存区域”，把它初始化成一个 memheap，然后从里面申请和释放内存。
+
+```c
+#include <rtthread.h>
+
+/* 模拟一块独立 RAM：10 KB */
+#define MY_HEAP_SIZE   (10 * 1024)
+
+static rt_uint8_t my_heap_buffer[MY_HEAP_SIZE];
+
+/* memheap 控制块 */
+static struct rt_memheap my_heap;
+
+static int memheap_demo(void)
+{
+    char *buf1;
+    char *buf2;
+
+    /* 1. 初始化内存堆 */
+    if (rt_memheap_init(&my_heap,
+                        "myheap",
+                        my_heap_buffer,
+                        sizeof(my_heap_buffer)) != RT_EOK)
+    {
+        rt_kprintf("memheap init failed!\n");
+        return -1;
+    }
+
+    rt_kprintf("memheap initialized\n");
+
+    /* 2. 从 myheap 中申请 1024 字节 */
+    buf1 = rt_memheap_alloc(&my_heap, 1024);
+
+    if (buf1 == RT_NULL)
+    {
+        rt_kprintf("buf1 alloc failed!\n");
+        return -1;
+    }
+
+    rt_kprintf("buf1 alloc success: %p\n", buf1);
+
+    /* 使用这块内存 */
+    rt_snprintf(buf1, 1024, "Hello RT-Thread memheap!");
+
+    rt_kprintf("buf1 content: %s\n", buf1);
+
+    /* 3. 再申请 2048 字节 */
+    buf2 = rt_memheap_alloc(&my_heap, 2048);
+
+    if (buf2 == RT_NULL)
+    {
+        rt_kprintf("buf2 alloc failed!\n");
+
+        rt_memheap_free(buf1);
+        return -1;
+    }
+
+    rt_kprintf("buf2 alloc success: %p\n", buf2);
+
+    /* 4. 释放第一块 */
+    rt_memheap_free(buf1);
+    buf1 = RT_NULL;
+
+    rt_kprintf("buf1 freed\n");
+
+    /* 5. 释放第二块 */
+    rt_memheap_free(buf2);
+    buf2 = RT_NULL;
+
+    rt_kprintf("buf2 freed\n");
+
+    return 0;
+}
+
+MSH_CMD_EXPORT(memheap_demo, memheap demo);
+```
+
+```mermaid
+flowchart TD
+    A["my_heap_buffer[10 KB]<br/>原始内存"]
+
+    A -->|"rt_memheap_init()"| B["myheap<br/>全部空间可用"]
+
+    B -->|"alloc 1024 B"| C["buf1 1024 B<br/>+<br/>剩余 free"]
+
+    C -->|"alloc 2048 B"| D["buf1 1024 B<br/>+<br/>buf2 2048 B<br/>+<br/>剩余 free"]
+
+    D -->|"rt_memheap_free(buf1)"| E["free 1024 B<br/>+<br/>buf2 2048 B<br/>+<br/>剩余 free"]
+
+    E -->|"rt_memheap_free(buf2)"| F["myheap<br/>空间基本全部恢复可用"]
+```
+
+### 设备 device
+
+#### 概念
+
+`list device` 是 RT-Thread 里用来查看**当前已经注册到 I/O 设备框架中的所有设备**的命令。它非常适合检查 UART、网卡、RTC、SD 卡、SPI/I2C 设备等有没有成功注册。
+
+```
+device   type                 ref count
+-------- -------------------- ---------
+e0       Network Interface    0
+sd0      Block Device         1
+rtc      RTC                  0
+uart1    Character Device     0
+uart0    Character Device     2
+```
+
+| 字段        | 含义                 |
+| ----------- | -------------------- |
+| `device`    | 设备名称             |
+| `type`      | 设备类型             |
+| `ref count` | 当前设备被打开的次数 |
+
+```mermaid
+flowchart LR
+    A["CLOSED<br/>ref_count = 0"]
+    -->|"open"| B["OPENED<br/>ref_count = 1"]
+
+    B -->|"open"| C["OPENED<br/>ref_count = 2"]
+
+    C -->|"close"| B
+
+    B -->|"close"| A
+```
+
+#### 状态机
+
+```mermaid
+stateDiagram-v2
+    [*] --> UNREGISTERED
+
+    UNREGISTERED --> REGISTERED: rt_device_register()
+
+    REGISTERED --> INITIALIZED: rt_device_init()
+
+    REGISTERED --> INITIALIZED: rt_device_open()<br/>未初始化时自动 init
+
+    INITIALIZED --> OPENED: rt_device_open()<br/>ref_count 0 → 1
+
+    OPENED --> OPENED: rt_device_open()<br/>ref_count + 1
+
+    OPENED --> OPENED: rt_device_read()<br/>rt_device_write()<br/>rt_device_control()
+
+    OPENED --> OPENED: rt_device_close()<br/>ref_count > 1 时 -1
+
+    OPENED --> INITIALIZED: rt_device_close()<br/>ref_count 1 → 0
+
+    REGISTERED --> UNREGISTERED: rt_device_unregister()
+    INITIALIZED --> UNREGISTERED: rt_device_unregister()
+
+    UNREGISTERED --> [*]
+```
+
+#### 代码
+
+```
+应用层
+  ├─ 用户应用
+  ├─ 软件包提供的应用/协议
+  └─ RT-Thread 组件与服务
+          ↓
+RT-Thread 设备框架
+          ↓
+驱动实现
+  ├─ 用户自写驱动
+  ├─ 软件包驱动
+  └─ BSP/官方驱动
+          ↓
+芯片 HAL / 寄存器
+          ↓
+硬件
+```
+
+| 类型                    | 主要职责                                        | 典型位置                                                     |
+| ----------------------- | ----------------------------------------------- | ------------------------------------------------------------ |
+| 自己写的设备驱动        | 适配具体芯片、板卡或外设                        | `bsp/.../board`、`libraries/<厂商>_drivers`                  |
+| 软件包里的驱动          | 可复用、可分发的设备驱动或协议适配              | `bsp/.../packages`                                           |
+| RT-Thread 官方组件/服务 | 提供通用系统能力，如文件系统、Shell、网络、日志 | `components/dfs`、`components/finsh`、`components/net`、`components/utilities` |
+| RT-Thread 官方驱动框架  | 统一设备模型和驱动接口                          | `components/drivers`                                         |
+
+RT-Thread 用 C 语言实现了类似面向对象的**设备抽象**：
+
+```
+设备结构体 struct rt_device
+        +
+设备类型 enum rt_device_class_type
+        +
+函数指针操作接口
+```
+
+| 面向对象概念     | RT-Thread 中的实现                                  | 作用                                         |
+| ---------------- | --------------------------------------------------- | -------------------------------------------- |
+| 类（Class）      | `struct rt_device`                                  | 定义所有设备共有的属性和操作                 |
+| 子类（Subclass） | 串口、SPI、I2C、Sensor 等专用设备结构体             | 扩展某类设备的专用能力                       |
+| 对象（Object）   | 已注册的具体设备，如 `"uart0"`、`"spi10"`           | 表示一个实际硬件设备                         |
+| 类型标识         | `enum rt_device_class_type`                         | 标识字符设备、网络设备、RTC、SPI、PWM 等类型 |
+| 成员变量         | `type`、`flag`、`open_flag`、`user_data`            | 保存设备状态、权限和私有数据                 |
+| 虚函数表         | `struct rt_device_ops`，或 `rt_device` 中的函数指针 | 保存具体驱动的操作函数                       |
+| 构造/注册        | `rt_device_register()`                              | 把设备加入 RT-Thread 设备列表                |
+| 查找对象         | `rt_device_find("uart0")`                           | 按名称找到设备                               |
+| 打开设备         | `rt_device_open()`                                  | 初始化或启用设备                             |
+| 读操作           | `rt_device_read()`                                  | 调用具体驱动的读取函数                       |
+| 写操作           | `rt_device_write()`                                 | 调用具体驱动的写入函数                       |
+| 控制操作         | `rt_device_control()`                               | 设置参数、启动 DMA、配置中断等               |
+| 关闭设备         | `rt_device_close()`                                 | 停止或释放设备                               |
+| 注销设备         | `rt_device_unregister()`                            | 从设备框架中注销                             |
+| 事件回调         | `rx_indicate`、`tx_complete`                        | 通知接收数据或发送完成                       |
+| 多态             | 应用只调用统一设备 API                              | 不同硬件使用相同的上层调用方式               |
+| 私有成员         | 扩展结构体或 `user_data`                            | 保存寄存器地址、DMA、缓存等驱动私有信息      |
+
+#### 示例：驱动一个 Flash 外设
+
+##### Flash 初始化与挂载链
+
+| 顺序 | 文件                                                 | 关键函数                           | 作用                                      |
+| ---- | ---------------------------------------------------- | ---------------------------------- | ----------------------------------------- |
+| 1    | `applications/spi_flash.c`                           | `spi1_flash_init()`                | 项目初始化入口                            |
+| 2    | `libraries/XXX32_drivers/drv_spi.c`                  | `rt_hw_spi_device_attach()`        | 将 `"spi10"` 挂接到 `"spi1"`，CS 使用 PD1 |
+| 3    | `components/drivers/spi/dev_spi_core.c`              | `rt_spi_bus_attach_device_cspin()` | 创建并注册 SPI 从设备                     |
+| 4    | `components/drivers/spi/dev_spi_flash_sfud.c`        | `rt_sfud_flash_probe()`            | 通过 SPI 识别 Flash，读取 JEDEC/SFDP 参数 |
+| 5    | `components/drivers/spi/sfud/src/sfud.c`             | `sfud_device_init()`               | 初始化 SFUD Flash 对象                    |
+| 6    | `dev_spi_flash_sfud.c`                               | `rt_device_register()`             | 将 Flash 注册成块设备 `"sf_cmd"`          |
+| 7    | `components/dfs/dfs_v1/src/dfs_fs.c`                 | `dfs_mount()`                      | 请求挂载 `"sf_cmd"`                       |
+| 8    | `components/dfs/dfs_v1/filesystems/elmfat/dfs_elm.c` | `dfs_elm_mount()`、`f_mount()`     | 将块设备挂载为 FatFs 文件系统             |
+
+```
+SPI1 总线
+  → spi10 SPI 从设备
+    → sf_cmd Flash 块设备
+      → / 文件系统路径
+```
+
+##### 其他线程执行 CRUD 时的调用链
+
+| 顺序 | 文件                                                 | 关键函数                                                 | 作用                           |
+| ---- | ---------------------------------------------------- | -------------------------------------------------------- | ------------------------------ |
+| 1    | 其他线程自己的 `.c`                                  | `open()`、`read()`、`write()`、`close()`                 | 应用调用公共文件接口           |
+| 2    | `components/dfs/dfs_v1/src/dfs_posix.c`              | `open()`、`read()`、`write()`、`close()`、`unlink()`     | POSIX 接口实现                 |
+| 3    | `components/dfs/dfs_v1/src/dfs_file.c`               | `dfs_file_open()`、`dfs_file_read()`、`dfs_file_write()` | 管理文件描述符、路径和文件对象 |
+| 4    | `components/dfs/dfs_v1/filesystems/elmfat/dfs_elm.c` | `dfs_elm_read()`、`dfs_elm_write()`                      | DFS 到 FatFs 的适配            |
+| 5    | 同上                                                 | `f_read()`、`f_write()`、`f_close()`、`f_unlink()`       | FatFs 文件操作                 |
+| 6    | 同上                                                 | `disk_read()`、`disk_write()`、`disk_ioctl()`            | FatFs 到块设备的适配           |
+| 7    | `components/drivers/spi/dev_spi_flash_sfud.c`        | `rt_sfud_read()`、`rt_sfud_write()`                      | 将逻辑扇区转换为 Flash 地址    |
+| 8    | `components/drivers/spi/sfud/src/sfud.c`             | `sfud_read()`、`sfud_erase_write()`                      | 执行 Flash 读、擦除、写操作    |
+| 9    | `components/drivers/spi/dev_spi_core.c`              | `rt_spi_transfer()`、`rt_spi_send_then_recv()`           | SPI 抽象层传输                 |
+| 10   | `libraries/gd32_drivers/drv_spi.c`                   | `spi_configure()`、`spixfer()`                           | 操作 GD32 SPI1 外设            |
+| 11   | 硬件                                                 | SPI 寄存器和 Flash 芯片                                  | 完成实际数据传输               |
+
+```
+应用线程
+  ↓ read/write
+DFS POSIX
+  ↓
+DFS 文件管理
+  ↓
+FatFs
+  ↓
+sf_cmd 块设备
+  ↓
+SFUD
+  ↓
+RT-Thread SPI 框架
+  ↓
+CPU SPI1 驱动
+  ↓
+Flash 芯片
+```
+
+### 文件描述符 fd
+
+`fd` 是 **file descriptor，文件描述符**。RT-Thread 开启 DFS / POSIX 文件接口以后，会用一个小整数来代表“**当前已经打开的**文件、设备、socket、pipe 等对象”。
+
+`list fd` 用来查看当前已打开的文件描述符。
+
+```
+fd type    ref magic  path
+-- ------  --- -----  ------
+ 0 file      1 fdfd   /uart0
+ 1 socket    1 fdfd
+ 2 file      1 fdfd   /pipe0
+ 3 file      1 fdfd   /pipe0
+```
+
+| 字段    | 含义                                           |
+| ------- | ---------------------------------------------- |
+| `fd`    | 文件描述符编号                                 |
+| `type`  | 描述符对应的对象类型，例如 file、socket        |
+| `ref`   | 这个描述符对象的引用计数                       |
+| `magic` | DFS 内部用来检查结构有效性的标记，不是业务数据 |
+| `path`  | 对应的文件、设备或管道路径                     |
+
+## 存储功能
+
+举例：Elm-Chan FatFs 是实际文件系统，DFS 是统一接口层，SPI Flash 是底层存储介质。
+
+### Elm-Chan FatFs
+
+Elm-Chan FatFs 是由 ChaN（Elm-Chan）编写的轻量级 FAT 文件系统模块，专门用于 MCU 和 RTOS。
+
+```mermaid
+flowchart TD
+    A["Application<br/>f_open()<br/>f_read()<br/>f_write()"]
+    B["FatFs<br/>FAT12 / FAT16 / FAT32 / exFAT<br/>文件管理<br/>目录管理"]
+    C["Disk I/O Layer<br/>disk_initialize()<br/>disk_read()<br/>disk_write()"]
+    D["Hardware Driver<br/>SD SPI<br/>SDMMC<br/>NOR Flash<br/>USB Flash"]
+
+    A --> B
+    B --> C
+    C --> D
+```
+
+```
+open/read/write
+      ↓
+RT-Thread DFS（虚拟文件系统）
+      ↓
+dfs_elm.c（RT-Thread 适配层）
+      ↓
+FatFs 核心 ff.c
+      ↓
+diskio / SFUD
+      ↓
+SPI NOR Flash（sf_cmd）
+```
+
+它主要支持：
+
+- FAT12、FAT16、FAT32
+- 文件和目录操作
+- 长文件名
+- 创建、读写、删除、格式化文件系统
+- 通过 POSIX 接口使用，例如 `open()`、`read()`、`write()`、`stat()`
+
+该文件系统定义了如下数据结构：
+
+```c
+FATFS fs;      // 文件系统对象
+FIL file;      // 文件对象
+DIR dir;       // 目录对象
+FILINFO info;  // 文件信息
+```
+
+#### API
+
+| 功能     | API                           |
+| -------- | ----------------------------- |
+| 挂载     | `f_mount()`                   |
+| 打开文件 | `f_open()`                    |
+| 读取     | `f_read()`                    |
+| 写入     | `f_write()`                   |
+| 关闭     | `f_close()`                   |
+| 同步     | `f_sync()`                    |
+| 删除     | `f_unlink()`                  |
+| 创建目录 | `f_mkdir()`                   |
+| 遍历目录 | `f_opendir()` / `f_readdir()` |
+| 文件大小 | `f_size()`                    |
+| 移动指针 | `f_lseek()`                   |
+| 获取空间 | `f_getfree()`                 |
+
+#### 代码示例
+
+```c
+#include "ff.h"
+
+void save_config(void)
+{
+    FIL file;
+    UINT bw;
+    
+    f_open(&file, "config.txt", FA_WRITE | FA_CREATE_ALWAYS);
+    char config[] =
+        "id=001\n"
+        "interval=1000\n";
+    f_write(&file, config, strlen(config), &bw);
+    f_close(&file);
+}
+
+void load_config(void)
+{
+    FIL file;
+    char buf[128];
+    UINT br;
+
+    f_open(&file, "config.txt", FA_READ);
+    f_read(&file, buf, sizeof(buf) - 1, &br);
+    buf[br] = 0;
+    printf("%s", buf);
+    f_close(&file);
+}
+```
+
+### DFS
+
+RT-Thread 里的 **DFS** 全称是 **Device File System**，本质上就是 RT-Thread 的**虚拟文件系统层（VFS）**。它的作用不是“自己规定一种磁盘格式”，而是把 FatFS、RomFS、DevFS、NFS 等不同文件系统统一到一套接口下面，让应用都能用类似 Linux 的 `open / read / write / close` 来操作。
+
+```mermaid
+flowchart TD
+    A["应用：open('/xxx.txt')"] --> B["DFS"]
+    B --> C{"这个路径属于哪个文件系统？"}
+
+    C -->|"FatFS"| D["SD卡 / Flash"]
+    C -->|"RamFS"| E["RAM"]
+    C -->|"RomFS"| F["ROM，只读"]
+    C -->|"没有挂载点"| G["打开/创建失败"]
+```
+
+#### shell
+
+启用 DFS 和 POSIX 接口后，通常有：
+
+| 命令                      | 作用                           |
+| ------------------------- | ------------------------------ |
+| `ls [path]`               | 列出目录或文件                 |
+| `cd <path>`               | 切换当前工作目录               |
+| `pwd`                     | 显示当前工作目录               |
+| `cp <src> <dst>`          | 复制文件                       |
+| `mv <src> <dst>`          | 移动或重命名文件               |
+| `cat <file>`              | 显示文件内容                   |
+| `rm [-frv] <file>`        | 删除文件或目录                 |
+| `mkdir <dir>`             | 创建目录                       |
+| `mkfs [-t type] <device>` | 格式化存储设备                 |
+| `mount ...`               | 挂载文件系统                   |
+| `umount <path>`           | 卸载文件系统                   |
+| `df [path]`               | 查看磁盘空间使用情况           |
+| `echo "text" [file]`      | 输出字符串，指定文件时写入文件 |
+| `tail [-n number] <file>` | 查看文件末尾内容               |
+
+DFS v2 还可能增加：
+
+```
+ln       创建符号链接
+link     创建硬链接
+chmod    修改文件属性
+```
+
+在支持工作目录的配置下，MSH 还可以执行 `.sh` 脚本。
+
+## 网络功能
+
+### 架构
+
+| 组件                       | 主要职责                                  | 应用层会不会直接经常调用 |
+| -------------------------- | ----------------------------------------- | ------------------------ |
+| `SAL`                      | 给应用提供统一 Socket 接口                | **经常**                 |
+| `NetDev`                   | 管理网卡、IP、DNS、默认接口、UP/LINK 状态 | 偶尔                     |
+| `lwIP / AT Socket`         | 真正实现 TCP/IP 或模块通信                | 通常不直接碰             |
+| Ethernet / Wi-Fi / 4G 驱动 | 和硬件打交道                              | 应用层基本不碰           |
+
+```mermaid
+flowchart TD
+    APP["应用层<br/>FTP / HTTP / MQTT / WebSocket 等"]
+    API["SAL POSIX / BSD Socket API<br/>socket()、connect()、send()、recv()"]
+    DFS["DFS / fd管理"]
+    SAL["SAL 核心<br/>sal_socket.c"]
+    NETDEV["NetDev<br/>默认接口、状态、IP/DNS<br/>协议族绑定与接口选择"]
+
+    LWIP_ADAPTER["SAL lwIP适配<br/>af_inet_lwip.c"]
+    LWIP["lwIP 2.1.2"]
+    ETHDRV["芯片 Ethernet 驱动<br/>drv_eth.c"]
+    ETHPHY["Ethernet MAC / PHY"]
+
+    AT_ADAPTER["SAL AT 适配<br/>af_inet_at.c"]
+    ATSOCKET["通用 AT Socket 层"]
+
+    ESP32["ESP32 AT 设备<br/>ESP32 Socket 实现"]
+    UARTX["UARTX"]
+    WIFI["ESP32 Wi-Fi 模块<br/>模块内部 TCP/IP"]
+
+    EC200X["EC200X AT 设备<br/>EC200X Socket 实现"]
+    UARTY["UARTY"]
+    LTE["EC200M 4G/LTE 模块<br/>模块内部 TCP/IP"]
+
+    APP --> API
+    API --> SAL
+    SAL <--> DFS
+
+    SAL -->|"选择默认网卡<br/>按协议族分发"| NETDEV
+
+    NETDEV -.->|"绑定 lwIP 操作"| LWIP_ADAPTER
+    NETDEV -.->|"绑定 AT Socket 操作"| AT_ADAPTER
+
+    SAL --> LWIP_ADAPTER
+    SAL --> AT_ADAPTER
+
+    LWIP_ADAPTER --> LWIP
+    LWIP --> ETHDRV
+    ETHDRV --> ETHPHY
+    ETHDRV -.->|"注册 eth 网卡"| NETDEV
+
+    AT_ADAPTER --> ATSOCKET
+
+    ATSOCKET --> ESP32
+    ESP32 --> UARTX
+    UARTX --> WIFI
+    ESP32 -.->|"注册 esp32 网卡"| NETDEV
+
+    ATSOCKET --> EC200X
+    EC200X --> UARTY
+    UARTY --> LTE
+    EC200X -.->|"注册 ec200m 网卡"| NETDEV
+```
+
+### NetDev
+
+#### 概念
+
+RT-Thread 里的 **NetDev** 可以理解成：网络设备抽象层，用统一方式管理“网卡”。
+
+一个 `netdev` 对象一般会保存这张网卡的网络信息，例如：
+
+```
+netdev
+│
+├── name
+│    └── 网卡名称，如 e0 / wlan0
+│
+├── IP 地址
+│    └── 192.168.1.100
+│
+├── 子网掩码
+│    └── 255.255.255.0
+│
+├── Gateway
+│    └── 192.168.1.1
+│
+├── DNS
+│    └── 8.8.8.8
+│
+├── 网卡状态
+│    ├── UP / DOWN
+│    └── LINK UP / LINK DOWN
+│
+└── 操作接口
+     ├── set_up
+     ├── set_down
+     ├── set_addr_info
+     ├── set_dns_server
+     └── ping 等
+```
+
+可以用 `ifconfig` 来查看各个网卡的信息：
+
+```
+network interface device: e0 (Default)
+MTU: 1500
+MAC: 00 11 22 33 44 55
+FLAGS: UP LINK_UP INTERNET_UP DHCP_ENABLE
+ip address: 192.168.1.100
+gw address: 192.168.1.1
+net mask  : 255.255.255.0
+dns server #0: 192.168.1.1
+
+network interface device: wlan0
+MTU: 1500
+MAC: ...
+FLAGS: UP LINK_UP
+ip address: 192.168.2.100
+...
+```
+
+#### 代码
+
+| API                           | 作用                                 |
+| ----------------------------- | ------------------------------------ |
+| `netdev_get_by_name()`        | 按名字查找网卡                       |
+| `netdev_get_first_by_flags()` | 按状态查找网卡                       |
+| `netdev_set_up()`             | 启用网卡（进入 UP）                  |
+| `netdev_set_down()`           | 关闭网卡（进入 DOWN）                |
+| `netdev_set_addr_info()`      | 设置 IP / 掩码 / Gateway             |
+| `netdev_set_dns_server()`     | 设置 DNS                             |
+| `netdev_set_default()`        | 设置默认网卡                         |
+| `netdev_is_up()`              | 查看接口是否启用（是否处于 UP 状态） |
+| `netdev_is_link_up()`         | 判断物理链路是否连通                 |
+
+NetDev 提供的是“管理和选择网络接口”的接口，不是强制系统任何时候只能启用一张网卡。
+
+如果要实现：
+
+```mermaid
+flowchart TD
+    A["选择网络"] --> B{"Ethernet 可用?"}
+
+    B -->|是| C["netdev_set_default(e0)"]
+    B -->|否| D{"Wi-Fi 可用?"}
+
+    D -->|是| E["netdev_set_default(wlan0)"]
+    D -->|否| F{"4G 可用?"}
+
+    F -->|是| G["netdev_set_default(4g0)"]
+    F -->|否| H["无可用网络"]
+```
+
+则可以使用逻辑：
+
+```c
+struct netdev *eth;
+struct netdev *wifi;
+struct netdev *lte;
+
+eth  = netdev_get_by_name("e0");
+wifi = netdev_get_by_name("wlan0");
+lte  = netdev_get_by_name("4g0");
+
+if (netdev_is_link_up(eth))
+{
+    netdev_set_default(eth);
+}
+else if (netdev_is_link_up(wifi))
+{
+    netdev_set_default(wifi);
+}
+else if (netdev_is_link_up(lte))
+{
+    netdev_set_default(lte);
+}
+```
+
+`netdev_set_default()` 主要影响后续默认选择的网络路径，不会把已经建立好的 TCP/WebSocket 连接自动“搬”到另一张网卡。
+
+比如：
+
+```
+TCP连接
+   ↓
+最初走 e0
+   ↓
+Ethernet 掉线
+   ↓
+netdev_set_default(4g0)
+```
+
+原来的 TCP socket 通常仍然会断掉。一般需要：
+
+```
+检测断线
+   ↓
+close(old_socket)
+   ↓
+切 default netdev
+   ↓
+重新 socket()
+   ↓
+重新 connect()
+```
+
+### SAL
+
+**SAL** 全称是 **Socket Abstraction Layer（套接字抽象层）**。作用是**把不同网络协议栈统一成一套 BSD Socket API，让应用层不必关心底层到底是 lwIP、AT Socket 还是其他网络实现。** 
+
+假设没有 SAL。
+
+以太网使用 lwIP 时，你可能调用：
+
+```c
+lwip_socket();
+lwip_connect();
+lwip_send();
+```
+
+4G 模块使用 AT Socket 时，底层又可能是：
+
+```c
+at_socket();
+at_connect();
+at_send();
+```
+
+应用程序就和底层协议栈绑死了。
+
+SAL 把它们统一成：
+
+```c
+socket();
+connect();
+send();
+recv();
+close();
+```
+
+于是业务层只需要写：
+
+```c
+int sock;
+
+sock = socket(AF_INET, SOCK_STREAM, 0);
+
+connect(sock,
+        (struct sockaddr *)&server,
+        sizeof(server));
+
+send(sock, data, len, 0);
+
+recv(sock, buf, sizeof(buf), 0);
+
+closesocket(sock);
+```
+
+底层究竟调用：
+
+```c
+lwip_connect()
+```
+
+还是：
+
+```c
+at_connect()
+```
+
+由 SAL 来做适配。
+
+| API                         | 作用                 |
+| --------------------------- | -------------------- |
+| `socket()`                  | 创建 Socket          |
+| `connect()`                 | 客户端连接服务器     |
+| `bind()`                    | 绑定本地 IP / 端口   |
+| `listen()`                  | TCP Server 开始监听  |
+| `accept()`                  | 接受客户端连接       |
+| `send()`                    | 发送数据             |
+| `recv()`                    | 接收数据             |
+| `sendto()`                  | UDP 发送             |
+| `recvfrom()`                | UDP 接收             |
+| `shutdown()`                | 关闭连接方向         |
+| `closesocket()` / `close()` | 关闭 Socket          |
+| `select()` / `poll()`       | 等待多个 Socket 事件 |
+| `getaddrinfo()`             | DNS / 地址解析       |
+
+SAL 的上层 API 就是标准 BSD Socket 风格，因此很多 PC/Linux 网络代码可以比较容易移植到 RT-Thread。
+
+对于 OCPP 协议，应用层网络大致会是：
+
+```mermaid
+flowchart TB
+
+OCPP["OCPP<br/>应用协议层"]
+
+WS["WebSocket<br/>长连接通信"]
+
+SAL["SAL<br/>Socket 抽象层"]
+
+NET["NetDev + 协议栈<br/>TCP/IP"]
+
+ETH["Ethernet<br/>以太网"]
+
+WIFI["Wi-Fi<br/>无线网络"]
+
+CELL["4G<br/>蜂窝网络"]
+
+OCPP --> WS
+WS --> SAL
+SAL --> NET
+
+NET --> ETH
+NET --> WIFI
+NET --> CELL
+```
+
+## 数据解析功能
+
+### ArduinoJson
+
+ArduinoJson 是一个嵌入式 C++ 里的 JSON 解析器 + JSON 生成器。这是个软件包，之前已经尝试用 RT-Thread 的包管理器安装上了。
+
+项目中 Json 可能被用作通用数据格式和持久化配置格式。
+
+```mermaid
+flowchart LR
+    NET["网络<br/>TCP / HTTP / WebSocket"]
+    FILE["文件<br/>config.json"]
+    OTHER["其他来源<br/>串口 / MQTT / Buffer"]
+    JSON["ArduinoJson"]
+    DATA["程序数据结构<br/>struct / class"]
+
+    NET <--> JSON
+    FILE <--> JSON
+    OTHER <--> JSON
+
+    JSON <--> DATA
+```
+
+#### API
+
+| 场景          | 重点 API                                                     |
+| ------------- | ------------------------------------------------------------ |
+| **加载 JSON** | `deserializeJson()`                                          |
+| **读取 JSON** | `[]`、`as<T>()`、`is<T>()`、`|`                              |
+| **构造 JSON** | `[]=`、`add()`、`createNestedObject()`、`createNestedArray()` |
+| **输出 JSON** | `serializeJson()`、`serializeJsonPretty()`、`measureJson()`  |
+
+#### 代码示例
+
+```mermaid
+flowchart TB
+
+FLASH["Flash"]
+DFS["RT-Thread DFS<br/>文件系统"]
+JSON["device.json<br/>JSON配置文件"]
+AJ["ArduinoJson<br/>解析/生成"]
+STRUCT["DeviceConfig<br/>C结构体"]
+APP["应用程序<br/>任务/线程"]
+
+FLASH --> DFS
+DFS --> JSON
+JSON --> AJ
+AJ <--> STRUCT
+STRUCT --> APP
+
+APP --> STRUCT
+STRUCT --> AJ
+AJ --> JSON
+JSON --> DFS
+DFS --> FLASH
+```
+
+定义一个 json：
+
+```json
+{
+    "device": {
+        "name": "SensorNode01",
+        "id": 1001,
+        "version": "1.2.0"
+    },
+
+    "network": {
+        "ip": "192.168.1.100",
+        "port": 8080,
+        "timeout": 5000
+    },
+
+    "system": {
+        "mode": "auto",
+        "debug": true,
+        "logLevel": 2
+    },
+
+    "sensor": {
+        "offset": 0.15,
+        "scale": 1.02,
+        "channels": [
+            1,
+            2,
+            3
+        ]
+    }
+}
+```
+
+程序运行时不直接操作 JSON，而是转换成结构体：
+
+```c++
+#include <stdint.h>
+#include <stdbool.h>
+
+// 设备信息
+typedef struct
+{
+    char name[32];
+    int id;
+    char version[16];
+} DeviceInfo;
+
+// 网络配置
+typedef struct
+{
+    char ip[32];
+    int port;
+    int timeout;
+} NetworkConfig;
+
+// 系统配置
+typedef struct
+{
+    char mode[16];
+    bool debug;
+    int logLevel;
+} SystemConfig;
+
+// 传感器配置
+typedef struct
+{
+    float offset;
+    float scale;
+    int channels[8];
+    int channelCount;
+} SensorConfig;
+
+// 总配置
+
+typedef struct
+{
+    DeviceInfo device;
+    NetworkConfig network;
+    SystemConfig system;
+    SensorConfig sensor;
+} DeviceConfig;
+
+DeviceConfig config;
+```
+
+读取 json：
+
+```c++
+#include <ArduinoJson.h>
+
+bool load_config(const char* json)
+{
+    /* 创建 JSON 内存池,所有解析出来的数据暂时存这里 */
+    StaticJsonDocument<1024> doc;
+    
+    /* JSON 字符串 → JsonDocument */
+    DeserializationError error = deserializeJson(doc, json);
+    if(error)
+    {
+        return false;
+    }
+
+    /* 读取 device JSON: "device":{"name":"SensorNode01"} */
+    strcpy(config.device.name, doc["device"]["name"] | "unknown");
+    config.device.id = doc["device"]["id"] | 0;
+    strcpy(config.device.version, doc["device"]["version"] | "0.0");
+
+    /* 网络配置 */
+    strcpy(config.network.ip, doc["network"]["ip"] | "0.0.0.0");
+    config.network.port = doc["network"]["port"] | 80;
+    config.network.timeout = doc["network"]["timeout"] | 3000;
+    
+    /* 系统参数 */
+    strcpy(config.system.mode, doc["system"]["mode"] | "manual");
+    config.system.debug = doc["system"]["debug"] | false;
+    config.system.logLevel = doc["system"]["logLevel"] | 1;
+    /* 数组解析 JSON: "channels": [1,2,3] */
+    JsonArray channels = doc["sensor"]["channels"];
+    config.sensor.channelCount = 0;
+    for(JsonVariant v : channels)
+    {
+        config.sensor.channels[config.sensor.channelCount] = v.as<int>();
+        config.sensor.channelCount++;
+    }
+    return true;
+}
+```
+
+修改配置（结构体里的数据）：
+
+```c++
+config.system.debug = true;
+config.sensor.scale = 1.05;
+```
+
+输出 json：
+
+```c++
+void save_config(char* buffer, size_t size)
+{
+    StaticJsonDocument<1024> doc;
+    
+    // device
+    JsonObject device = doc.createNestedObject("device");
+    device["name"] = config.device.name;
+    device["id"] = config.device.id;
+    device["version"] = config.device.version;
+    
+    // network
+    JsonObject network = doc.createNestedObject("network");
+    network["ip"] = config.network.ip;
+    network["port"] = config.network.port;
+    network["timeout"] = config.network.timeout;
+
+    // system
+    JsonObject system = doc.createNestedObject("system");
+    system["mode"] = config.system.mode;
+    system["debug"] = config.system.debug;
+    system["logLevel"] = config.system.logLevel;
+
+    // 输出 JSON
+    serializeJsonPretty(doc, buffer, size);
+}
+```
+
+输出：
+
+```json
+{
+  "device": {
+    "name": "SensorNode01",
+    "id": 1001,
+    "version": "1.2.0"
+  },
+  "network": {
+    "ip": "192.168.1.100",
+    "port": 8080,
+    "timeout": 5000
+  },
+  "system": {
+    "mode": "auto",
+    "debug": true,
+    "logLevel": 2
+  }
+}
+```

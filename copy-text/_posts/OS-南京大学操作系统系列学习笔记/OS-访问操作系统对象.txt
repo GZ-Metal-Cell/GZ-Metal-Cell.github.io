@@ -1,0 +1,426 @@
+---
+title: OS-访问操作系统对象
+date: Tue Oct 21 2025 19:34:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - 南京大学《操作系统原理》
+categories: 课程
+description: 学习自 B 站 UP 主绿导师原谅你了。
+---
+
+
+# 资源
+
+-   [2025 南京大学操作系统原理 哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1XZAbeqEyt/)
+-   [Yanyan's Wiki](https://jyywiki.cn/)
+-   [2025春季 操作系统 | Xintao Niu (钮鑫涛)](https://niuxintao.github.io/courses/2025Spring-OS/main/)
+
+# 正文
+
+## 7. 访问操作系统对象
+
+### 7.1 文件描述符
+
+#### 文件和设备
+
+> **文件：有 “名字” 的数据对象**
+
+就是说在操作系统（OS）看来，文件不仅仅是“硬盘上的文档”。
+
+而是**一种命名的数据接口**，只要能被统一地读写，就可以被看作“文件”。
+
+举几个例子：
+
+| 类型     | 实际对象       | 在OS中表现         | 可以 `read` / `write` 吗 |
+| -------- | -------------- | ------------------ | ------------------------ |
+| 普通文件 | `.txt`, `.bin` | `/home/user/a.txt` | ✅                        |
+| 终端     | 键盘、显示器   | `/dev/tty`         | ✅                        |
+| 随机设备 | 随机数生成器   | `/dev/random`      | ✅                        |
+| 网络连接 | Socket         | 由OS分配fd         | ✅                        |
+
+所以在 Unix 哲学中：
+
+> 只要能读写字节的，都可以抽象成文件。
+
+**文件：有 “名字” 的数据对象**
+
+- 字节（终端，random）
+- 字节序列（普通文件）
+
+**文件描述符**
+
+- **指向操作系统对象的 “指针”**
+  - Everything is a file
+  - 通过指针可以访问 “一切”
+- 对象的访问都需要指针
+
+| 系统调用         | 类比操作                              | 含义                                         |
+| ---------------- | ------------------------------------- | -------------------------------------------- |
+| `open()`         | `p = malloc(sizeof(FileDescriptor));` | 向操作系统申请一个文件对象并返回句柄         |
+| `close()`        | `delete(p);`                          | 释放文件对象                                 |
+| `read()/write()` | `*(p.data++);`                        | 根据文件指针的位置读写数据                   |
+| `lseek()`        | `p.data += offset;`                   | 改变当前文件偏移                             |
+| `dup()`          | `q = p;`                              | 新建一个指针（文件描述符）指向同一个文件对象 |
+
+#### 文件描述符的分配
+
+**总是分配最小的未使用描述符**
+
+- 0, 1, 2 是标准输入、输出和错误
+
+> 系统启动进程时，通常默认打开三个文件描述符：
+>
+> | fd   | 名称     | 默认绑定对象         | 功能     |
+> | ---- | -------- | -------------------- | -------- |
+> | 0    | `stdin`  | 键盘输入（或输入流） | 标准输入 |
+> | 1    | `stdout` | 终端屏幕             | 标准输出 |
+> | 2    | `stderr` | 终端屏幕             | 标准错误 |
+>
+> 也就是说：
+>
+> ```c
+> printf("hello\n");
+> ```
+>
+> 等价于：
+>
+> ```c
+> write(1, "hello\n", 6);
+> ```
+>
+> 而：
+>
+> ```c
+> fprintf(stderr, "error!\n");
+> ```
+>
+> 等价于：
+>
+> ```c
+> write(2, "error!\n", 7);
+> ```
+
+- 新打开的文件从 3 开始分配
+  - 文件描述符是进程文件描述符表的索引
+  - 关闭文件后，该描述符号可以被重新分配
+
+```c
+#include <stdio.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+int main() {
+    int fd1 = open("a.txt", O_CREAT | O_WRONLY, 0644);
+    int fd2 = open("b.txt", O_CREAT | O_WRONLY, 0644);
+    int fd3 = open("c.txt", O_CREAT | O_WRONLY, 0644);
+    printf("fd1=%d, fd2=%d, fd3=%d\n", fd1, fd2, fd3);
+
+    close(fd2);
+    int fd4 = open("d.txt", O_CREAT | O_WRONLY, 0644);
+    printf("fd4=%d\n", fd4);
+
+    return 0;
+}
+```
+
+```c
+fd1=3, fd2=4, fd3=5
+fd4=4
+```
+
+**进程能打开多少文件？**
+
+- `ulimit -n`（进程限制）
+- `sysctl fs.file-max`（系统限制）
+
+#### 文件描述符中的 offset
+
+**文件描述符是 “进程状态的” 的一部分**
+
+- 保存在操作系统中；程序只能通过整数编号访问
+- 文件描述符自带一个 offset
+
+> 每个打开的文件，在内核中都会对应一个结构体（这里简化表示）：
+>
+> ```c
+> struct file {
+>     struct inode *inode;   // 文件内容对应的底层存储对象
+>     off_t offset;          // 当前读写位置（偏移量）
+>     int flags;             // 打开方式 (O_RDONLY, O_WRONLY, etc.)
+>     ...
+> };
+> ```
+
+**Quiz: `fork()` 和 `dup()` 之后，文件描述符共享 offset 吗？**
+
+- 这就是 fork() 看似优雅，实际复杂的地方
+
+> 虽然 `fork()` 简单地“复制整个进程”，但它会**共享很多内核资源（包括文件 offset）**，因此在父子进程都对同一个文件写入时，偏移量的同步就成了复杂的并发问题。
+
+#### Windows 中的文件描述符
+
+**Handle（把手；握把；把柄）**
+
+- 比 file descriptor 更像 “指针”
+- 你有一个 “handle” 在我手上，我就可以更好地控制你
+
+![webp](01.webp)
+
+#### Windows 的进程创建
+
+**面向工程的设计**
+
+- 默认 handle 是**不继承**的 (和 UNIX 默认继承相反)
+  - 可以在创建时设置 bInheritHandles，或者运行时修改
+  - “最小权限原则”
+- lpStartupInfo 用于配置 stdin, stdout, stderr
+
+**Linux 引入了 O_CLOEXEC**
+
+- `fcntl(fd, F_SETFD, FD_CLOEXEC)`
+
+| 特性         | Windows                              | Linux / UNIX                 |
+| ------------ | ------------------------------------ | ---------------------------- |
+| 默认句柄继承 | ❌ 不继承                             | ✅ 自动继承                   |
+| 可控方式     | `bInheritHandles` + `bInheritHandle` | `O_CLOEXEC` / `FD_CLOEXEC`   |
+| 标准IO重定向 | `lpStartupInfo`                      | `dup2()`、`pipe()`、`fork()` |
+| 设计理念     | 最小权限、安全优先                   | 灵活性优先、简洁哲学         |
+| 接口         | `CreateProcess()`                    | `fork() + exec()`            |
+
+### 7.2 访问操作系统中的对象
+
+#### 操作系统里都有什么文件？
+
+**Filesystem Hierarchy Standard [FHS](http://refspecs.linuxfoundation.org/FHS_3.0/fhs/index.html)**
+
+- enables *software and user* to predict the location of installed files and directories: 例如 macOS 就不遵循 FHS
+
+> FHS 的目标是让：
+>
+> - **软件开发者** 知道自己的程序、配置文件、日志、库文件等该放到哪里；
+> - **用户** 知道系统中的文件大致在哪，方便维护、备份和排错。
+>
+> 例如：
+>
+> | 路径    | 说明                               |
+> | ------- | ---------------------------------- |
+> | `/bin`  | 基本命令（所有用户都能用）         |
+> | `/sbin` | 系统管理命令（通常只有 root 使用） |
+> | `/etc`  | 系统配置文件                       |
+> | `/home` | 普通用户的家目录                   |
+> | `/usr`  | 用户程序和只读数据                 |
+> | `/var`  | 可变数据，如日志、缓存、邮件等     |
+> | `/tmp`  | 临时文件                           |
+> | `/dev`  | 设备文件                           |
+> | `/proc` | 虚拟文件系统，反映内核和进程信息   |
+>
+> macOS 的文件系统基于 BSD UNIX，但它**不完全遵循 FHS**。
+>  例如：
+>
+> - macOS 的 `/usr`、`/bin`、`/sbin` 结构存在，但系统文件更多放在 `/System`、`/Library` 下；
+> - 应用程序通常放在 `/Applications`；
+> - 用户配置文件更多放在 `~/Library`。
+>
+> 也就是说，macOS 更偏向于“图形化应用与系统集成”的设计，而 Linux 的 FHS 更偏向于“命令行与服务器管理”的传统 UNIX 风格。
+
+```shell
+ls /
+```
+
+```
+bin                boot  etc   lib                lib32  libx32      media  opt    proc  run   sbin.usr-is-merged  srv  tmp  var
+bin.usr-is-merged  dev   home  lib.usr-is-merged  lib64  lost+found  mnt    patch  root  sbin  snap                sys  usr  www
+```
+
+**只要拷对了文件，操作系统就能正常执行**
+
+1. 创建 UEFI 分区，并复制正确的 Loader
+2. 创建文件系统
+   - `mkfs`（格式化）
+3. `cp -ar` 把文件正确复制（保留权限）
+   - 注意 `fstab` 里的 `UUID`
+   - 你就得到了一个可以正常启动的系统盘！
+4. 运行时挂载必要的其他文件系统
+   - 磁盘上的 `/dev`, `/proc`, ... 都是空的
+   - `mount -t proc proc /mount/point` 可以 “创建” `procfs`
+
+#### 任何“可读写”的东西都可以是文件
+
+**真实的设备**
+
+- `/dev/sda`
+- `/dev/tty`
+
+**虚拟的设备 (文件)**
+
+- `/dev/urandom`（随机数）， `/dev/null`（黑洞）, ...
+  - 它们并没有实际的 “文件”
+  - 操作系统为它们实现了特别的 `read` 和 `write` 操作
+    - [/drivers/char/mem.c](https://elixir.bootlin.com/linux/v6.14-rc5/source/drivers/char/mem.c#L430)
+    - 甚至可以通过 `/sys/class/backlight` 控制屏幕亮度
+- `procfs` 也是用类似的方式实现的
+
+> 无论是硬盘、键盘、终端、随机数生成器，还是内存信息、进程信息——都可以通过“文件接口”读写。
+
+#### 管道：一个特殊的 “文件”（流）
+
+- 由读者/写者共享
+  - 读口：支持 read
+  - 写口：支持 write
+
+> 管道是一种特殊的内核缓冲区，允许**一个进程向其中写数据**，**另一个进程从中读数据**。
+>
+> - 管道并不是磁盘文件；
+> - 它存在于内存中；
+> - 对用户程序来说，它就是两个文件描述符。
+
+**匿名管道**
+
+```c
+int pipe(int pipefd[2]); 
+```
+
+> 创建一个匿名管道，成功时返回 0，并在 `pipefd` 数组中写入两个文件描述符：
+>
+> | 索引        | 作用                 |
+> | ----------- | -------------------- |
+> | `pipefd[0]` | 读端，只能 `read()`  |
+> | `pipefd[1]` | 写端，只能 `write()` |
+
+- 返回两个文件描述符
+- 进程同时拥有读口和写口
+  - 看起来没用？不，fork 就有用了（testkit）
+
+#### 阶段性总结
+
+```mermaid
+flowchart TD
+    %% 模块间依赖关系
+    A[Process Management] --> B[Memory Management]
+    A --> C[File Management]
+    B --> C
+    
+    %% 进程管理子图
+    subgraph Process[进程管理]
+        A1["fork()"]
+        A2["execve()"]
+        A3["waitpid()"]
+        A4["exit()"]
+    end
+    
+    %% 内存管理子图
+    subgraph Memory[内存管理]
+        B1["mmap()"]
+        B2["munmap()"]
+        B3["mprotect()"]
+        B4["msync()"]
+    end
+    
+    %% 文件管理子图
+    subgraph File[文件管理]
+        C1["open()"]
+        C2["close()"]
+        C3["read()"]
+        C4["write()"]
+        C5["lseek()"]
+        C6["dup()/dup2()"]
+    end
+    
+    %% 模块内部交互
+    A1 --> B1
+    A2 --> C1
+    B1 --> C3
+```
+
+| 模块         | 系统调用                                      | 功能           | 说明                                                   |
+| ------------ | --------------------------------------------- | -------------- | ------------------------------------------------------ |
+| **进程管理** | `fork()`                                      | 创建子进程     | 把当前进程复制一份，返回两次（父返回子 PID，子返回 0） |
+|              | `execve(path, argv, envp)`                    | 替换进程镜像   | 加载新程序，原有代码和数据被替换                       |
+|              | `waitpid(pid, &status, options)`              | 等待子进程结束 | 阻塞等待指定子进程退出，回收资源                       |
+|              | `exit(status)`                                | 退出进程       | 释放进程资源，并向父进程返回状态                       |
+| **内存管理** | `mmap(addr, length, prot, flags, fd, offset)` | 映射内存       | 将文件或匿名内存映射到虚拟地址空间                     |
+|              | `munmap(addr, length)`                        | 解除映射       | 释放 `mmap` 分配的内存区间                             |
+|              | `mprotect(addr, len, prot)`                   | 修改权限       | 改变内存区访问权限（只读/可写/可执行）                 |
+|              | `msync(addr, len, flags)`                     | 同步内存       | 将内存修改写回文件（如果映射了文件）                   |
+| **文件管理** | `open(path, flags, mode)`                     | 打开文件       | 返回文件描述符，表示文件对象的指针                     |
+|              | `close(fd)`                                   | 关闭文件       | 释放文件描述符及内核资源                               |
+|              | `read(fd, buf, count)`                        | 读文件         | 从文件偏移位置读字节到缓冲区                           |
+|              | `write(fd, buf, count)`                       | 写文件         | 将缓冲区内容写入文件或设备                             |
+|              | `lseek(fd, offset, whence)`                   | 移动偏移       | 改变读写指针，实现随机访问                             |
+|              | `dup(fd)` / `dup2(fd, newfd)`                 | 复制 fd        | 新 fd 与原 fd 共享偏移量和状态                         |
+
+### 7.3 一切皆文件
+
+#### 一切皆文件的好处
+
+**一套 API 访问所有对象**
+
+- 一切都可以 `| grep`
+
+**同时，UNIX Shell 的语法广受诟病**
+
+- 稍大一些的项目就应该用更好的语言 (Python, Rust!)
+- 但是：We all love quick & dirty!
+
+> **一切皆文件的好处**：
+>
+> - 统一 API：所有对象都可以用同一套接口（`open/read/write/close`）访问。
+> - 易于组合：管道和重定向让不同程序像拼积木一样组合处理数据。
+>
+> **局限性**：
+>
+> - Shell 语法古老，复杂项目难维护。
+> - 更大项目通常用 Python、Rust 等更现代的语言，但快速脚本仍受欢迎。
+
+#### 文件描述符适合什么？
+
+**字节流**
+
+- 顺序读/顺序写
+  - 没有数据时等待
+  - 典型代表：**管道**
+
+**字节序列**
+
+- 其实就有一点点不方便了
+  - 需要到处 `lseek` 再 `read/write`
+    - `mmap` 不香吗？指针指哪打哪
+    - `madvise`, `msync` 提供了更精细的控制
+
+#### 总结“一切皆文件”
+
+**优点**
+
+- 优雅，文本接口，就是好用
+
+**缺点**
+
+- 和各种 API 紧密耦合
+  - [A fork() in the road](https://www.microsoft.com/en-us/research/wp-content/uploads/2019/04/fork-hotos19.pdf)
+- 对高速设备不够友好
+  - 额外的延迟和内存拷贝
+  - 单线程 I/O
+
+#### 使用 API + 封装文件管理的系统调用以规避“一切皆文件”的缺点
+
+> Any problem in computer science can be solved with another level of indirection. (Butler Lampson)
+>
+> “任何计算机科学问题都可以通过再加一层间接层解决”
+
+- Windows NT: Win32 API → POSIX 子系统
+  - Windows Subsystem for Linux (WSL)
+- macOS: Cocoa API → BSD 子系统
+- Fuchsia: Zircon 微内核 → POSIX 兼容层
+
+**兼容当然没法做到 100%**
+
+- `sysfs`, `procfs` 就是没法兼容
+
+- 优雅的 WSL1 已经暴毙（尝试封装 Linux 的所有系统调用 API）
+
+  - “Windows Subsystem for Linux”
+
+    WSL1 追求优雅兼容，结果很多 Linux 程序无法正常运行 → “暴毙”。
+
+  - “Linux Subsystem for Windows” (wine)
+
+    Wine 则是另一种思路：Linux 模拟 Windows API (“Linux Subsystem for Windows”)。

@@ -1,0 +1,129 @@
+---
+title: Server-AutoDL
+date: Mon Aug 07 2023 10:45:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - 服务器
+  - 混毕业
+categories: 探索
+description: 花钱租显卡的初探索。
+---
+
+
+# 部署
+
+登录 [AutoDL 算力云 | 弹性、好用、省钱。租 GPU 就上 AutoDL](https://www.autodl.com/home)
+
+启动钞能力！
+
+![png](1.png)
+
+选一个差不多合适的显卡，就是你了 RTX 2080 Ti！
+
+![png](2.png)
+
+根据 [Pay20Y/SEED (github.com)](https://github.com/Pay20Y/SEED) 里显示，他用的是 1.1.0 的 Pytorch，那就选 1.1.0 的 Pytoch（这也是为啥选 2080 Ti 的原因，3080 跑不了这么旧的 Pytorch）：
+
+![png](3.png)
+
+设置好后，无卡模式开机：
+
+![png](4.png)
+
+获得 SSH 密钥：
+
+![png](5.png)
+
+记下登录指令和密码：
+
+```
+ssh -p 44211 root@region-41.seetacloud.com
+Ae9NaYeuvd
+```
+
+在 MobaXterm 里这么输入：
+
+- Remote host *：`@region-41.seetacloud.com`
+- Specify username：`root`
+- Port：`44211`
+
+![png](6.png)
+
+进去以后输入对应的用户名 `root` 和密码 `Ae9NaYeuvd`，就进去了：
+
+![png](7.png)
+
+看它的目录说明里写着把数据放在 `autodl-tmp/` 里速度比较快，代码放 `/` 就行。
+
+# 搭建 SEED 的环境
+
+把 [ayumiymk/aster.pytorch: ASTER in Pytorch (github.com)](https://github.com/ayumiymk/aster.pytorch) 和 [Pay20Y/SEED (github.com)](https://github.com/Pay20Y/SEED) 仓库里的东东下载到本地，然后传到服务器：
+
+![png](8.png)
+
+开始装环境：
+
+```sh
+cd SEED-master
+pip install -r requirements.txt
+```
+
+然后你就会喜提报错：
+
+![png](9.png)
+
+装完接着跑：
+
+```sh
+pip install Cython
+pip install -r requirements.txt
+```
+
+然后你就会喜提报错：
+
+![png](10.png)
+
+发现是安装 `PyYAML` 的时候报错的，单独安装它：
+
+```sh
+pip install pyyaml
+```
+
+然后在 `requirements.txt` 里把 `PyYAML==5.1.2` 给我删了。
+
+![png](11.png)
+
+我继续跑：
+
+```sh
+pip install -r requirements.txt
+```
+
+然后你就会喜提报错：
+
+![png](12.png)
+
+叫我移除对 Scipy 版本的指定：
+
+![png](13.png)
+
+我继续跑：
+
+```sh
+pip install -r requirements.txt
+```
+
+Successfully!
+
+![png](14.png)
+
+接下来按照 [ayumiymk/aster.pytorch: ASTER in Pytorch (github.com)](https://github.com/ayumiymk/aster.pytorch) 里的 `README.md` 下载好 Pretrained model 和 Data for training and testing，最后开跑！
+
+![png](15.png)
+
+用完记得关机，不然把你钱钱扣光光。
+
+要用 GPU 的时候记得不要选无卡模式。
+
+如果还有错，就去请教最牛逼的**<font color="#136ec2">伟哥</font>**！
+
+![png](16.png)

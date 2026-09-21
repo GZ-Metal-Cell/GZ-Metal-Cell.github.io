@@ -1,0 +1,315 @@
+---
+title: Paper-Detecting Curve Text in the Wild-New Dataset and New Solution
+date: Fri Jul 14 2023 09:04:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - 数据集
+categories: 论文
+description: 论文阅读。
+---
+
+
+# 资源
+
+- PapersWithCode：
+  - 论文：[Detecting Curve Text in the Wild: New Dataset and New Solution | Papers With Code](https://paperswithcode.com/paper/detecting-curve-text-in-the-wild-new-dataset)
+  - 数据集：[SCUT-CTW1500 Dataset | Papers With Code](https://paperswithcode.com/dataset/scut-ctw1500)
+
+- Arxiv：[[1712.02170v1] Detecting Curve Text in the Wild: New Dataset and New Solution (arxiv.org)](https://arxiv.org/abs/1712.02170v1)
+
+- GitHub（可以下载数据集）：[Yuliang-Liu/Curve-Text-Detector: This repository provides train＆test code, dataset, det.&rec. annotation, evaluation script, annotation tool, and ranking. (github.com)](https://github.com/Yuliang-Liu/Curve-Text-Detector)
+
+# 正文
+
+## Abstract
+
+提出了：
+
+- 一个数据集 CTW 1500（1000 张用于训练，500 张用于测试）
+
+- 基于该数据集提出了一种基于多边形的曲线文本检测器（CTD）
+
+## 1 Introduction
+
+![png](P1.png)
+
+目前的数据集很少有曲线文本，用**四边形**标记这种文本是有缺陷的，更不用说**矩形**了。例如，如图 1 所示，使用**曲线边界框**有三个显著的优点：
+
+- 避免重叠
+- 减小背景噪声
+- 避免使用多个文本行
+
+对于所有类型的曲线文本区域，一个 14 点的多边形就足以定位它们。
+
+在所提出的数据集上，结果表明，具有轻度减少的 resnet-50 的 CTD 可以有效地检测曲线文本。
+
+## 2 Related Work
+
+目前的技术检测曲线文本都不好使。
+
+## 3. CTW1500 Dataset and Annotation
+
+### Data decription
+
+数据描述。CTW1500 数据集包含
+
+- 1500 幅图像
+- 10751 个边界框（3530 个是曲线边界框）
+- 每幅图像至少一个曲线文本。
+- 多语言，主要包含中文和英文
+
+### Annotation
+
+![png](P3.png)
+
+为了包围曲线文本，我们创建了十条等距的参考线来帮助标记额外的 10 个点（我们实际上发现额外的 10 点足以标记所有类型的曲线文本）。我们使用等距线的原因是为了简化标注工作，并减少主观干扰。
+
+一个曲线文本比标记四边形文本消耗大约三倍的时间。
+
+## 4.1. Network Architecture
+
+![png](P4.png)
+
+我们 CTD 的总体架构如图 4 所示，可分为三个部分：backbone、RPN 和 regression module。
+
+- backbone 通常采用 ImageNet **预先训练**的流行模型，然后使用相应的模型进行**微调**，如 VGG-16、ResNet 等。区域建议网络（RPN）和回归模块分别连接到主干；
+- RPN 生成粗略回忆文本的建议；
+- regression module 对建议进行微调，使其更加紧凑。
+
+## 4.2. Recurrent Transverse and Longitudinal Offset Connection (TLOC)
+## 4.3. Long Side Interpolation
+
+## 4.4. Polygonal Post Processing
+
+**非多边形抑制（NPS）**。误报检测结果是制约文本检测性能的重要原因之一。
+
+**多边形非最大值抑制（PNMS）**。非极大值抑制被证明对目标检测任务非常有效。
+
+## 5. Experiments
+
+提出的模型有效。
+
+## 6. Conclusions and Future Work
+
+# 数据集
+
+从 [Yuliang-Liu/Curve-Text-Detector: This repository provides train＆test code, dataset, det.&rec. annotation, evaluation script, annotation tool, and ranking. (github.com)](https://github.com/Yuliang-Liu/Curve-Text-Detector) 下载数据集：
+
+- `train_images.zip` 训练集图像（1000 张）
+- `ctw1500_train_labels.zip`（训练集图像的标注文件，xml 格式）
+- `test_images.zip` 测试集图像（500 张）
+- `gt_ctw1500.zip`（测试集图像的标注文件，txt 格式）
+
+可视化训练集图像的代码：
+
+```python
+import xml.etree.ElementTree as ET
+
+index = 997
+
+# 定义路径
+image_dir = r'E:\dataset\CTW1500\ctw1500\train_images\\'
+label_dir = r"E:\dataset\CTW1500\ctw1500\ctw1500_train_labels\\"
+
+image_path = os.path.join(image_dir, "{:04d}".format(index) + '.jpg')
+label_path = os.path.join(label_dir, "{:04d}".format(index) + '.xml')
+
+image_origin = cv2.imread(image_path)
+image = image_origin.copy()
+height, width, _ = image.shape
+
+# 解析 XML 文件
+tree = ET.parse(label_path)
+root = tree.getroot()
+
+# 遍历每个图像
+for image_elem in root.findall("image"):
+    file_name = image_elem.get("file")
+    
+    # 遍历每个标注框
+    for box_elem in image_elem.findall("box"):
+        box_height = int(box_elem.get('height'))
+        box_width = int(box_elem.get('width'))
+        box_left = int(box_elem.get('left'))
+        box_top = int(box_elem.get('top'))
+        
+        print(f"Box height: {box_height}")
+        print(f"Box width: {box_width}")
+        print(f"Box left: {box_left}")
+        print(f"Box top: {box_top}")  
+
+        # 读取 <segs> 的值并以逗号分割成列表
+        segs = box_elem.find('./segs')
+        segs_values = segs.text.split(',')
+
+        segs_x = []
+        segs_y = []
+        print("Segments:")
+        for i in range(0, len(segs_values), 2):
+            segs_x.append(int(segs_values[i]))
+            segs_y.append(int(segs_values[i+1]))
+        segs = np.array([segs_x, segs_y], np.int32).T
+        print(f"segs_x: {segs_x}, y: {segs_y}")
+        
+        transcriptions = box_elem.find("label").text
+        
+        # 获取所有 pts 标签
+        pts_elems = box_elem.findall("pts")
+        
+        # 提取坐标信息
+        pts_x = []
+        pts_y = []
+        for pts_elem in pts_elems:
+            pts_x.append(int(pts_elem.get("x")))
+            pts_y.append(int(pts_elem.get("y")))
+        pts = np.array([pts_x, pts_y], np.int32).T
+        # 打印标注信息
+        print("File: ", file_name)
+        print("Transcriptions: ", transcriptions)
+        print("Points: ", pts)
+        
+        # 画图
+        cv2.rectangle(image, (box_left, box_top), (box_left + box_width, box_top + box_height), (255, 255, 0), thickness=2)
+        cv2.polylines(image, [segs], isClosed=False, color=(255, 255, 255), thickness=2)
+        cv2.polylines(image, [pts], isClosed=False, color=(255, 0, 0), thickness=2)
+        
+        for p in pts:
+            cv2.circle(image, (p[0], p[1]), int(min(height, width) / 150), (0, 255, 255), -1)
+            
+        cv2.putText(image, transcriptions, (pts_x[0], pts_y[0] - int(min(height, width) / 150)), cv2.FONT_HERSHEY_SIMPLEX,
+                    min(height, width) / 1000, (0, 255, 0), int(min(height, width) / 500))
+        
+fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(16, 9))
+axes = axes.flatten()
+
+axes[0].imshow(cv2.cvtColor(image_origin, cv2.COLOR_BGR2RGB))
+axes[0].axis('off')
+axes[0].set_title('Origin')
+
+axes[1].imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+axes[1].axis('off')
+axes[1].set_title('Annotation')
+
+plt.tight_layout()
+plt.show()
+```
+
+```
+Box height: 108
+Box width: 565
+Box left: 201
+Box top: 351
+Segments:
+segs_x: [216, 302, 389, 476, 563, 651, 739, 766, 671, 576, 482, 388, 294, 201], y: [351, 383, 398, 407, 409, 391, 363, 406, 440, 458, 459, 451, 432, 398]
+File:  0997.jpg
+Transcriptions:  VIOLENCE NEVER BRINGS
+Points:  [[228 381]
+ [245 390]
+ [268 395]
+ [289 406]
+ [323 415]
+ [352 422]
+ [388 426]
+ [417 431]
+ [439 432]
+ [473 436]
+ [508 434]
+ [540 433]
+ [566 432]
+ [601 429]
+ [616 425]
+ [634 421]
+ [666 414]
+ [683 406]
+ [697 402]
+ [722 392]
+ [741 387]]
+Box height: 111
+Box width: 529
+Box left: 228
+Box top: 434
+Segments:
+segs_x: [251, 331, 411, 491, 571, 651, 731, 757, 669, 581, 493, 405, 316, 228], y: [437, 460, 474, 484, 479, 459, 434, 489, 528, 540, 545, 533, 522, 499]
+File:  0997.jpg
+Transcriptions:  PERMANENT PEACE
+Points:  [[259 475]
+ [290 484]
+ [319 487]
+ [358 495]
+ [396 505]
+ [435 507]
+ [472 511]
+ [505 512]
+ [543 513]
+ [578 506]
+ [613 499]
+ [645 493]
+ [682 481]
+ [709 471]
+ [731 464]]
+Box height: 96
+Box width: 37
+Box left: 466
+Box top: 127
+Segments:
+segs_x: [501, 501, 501, 502, 502, 502, 503, 466, 466, 466, 467, 467, 467, 468], y: [127, 143, 159, 175, 191, 207, 223, 220, 204, 189, 173, 158, 142, 127]
+File:  0997.jpg
+Transcriptions:  LOC
+Points:  [[486 141]
+ [484 168]
+ [485 205]]
+```
+
+![png](C1.png)
+
+可视化测试集图像的代码：
+
+```python
+import cv2
+import os
+import matplotlib.pyplot as plt
+
+index = 1200
+
+image_dir = r'E:\dataset\CTW1500\ctw1500\test_images\\'
+label_dir = r'E:\dataset\CTW1500\ctw1500\gt_ctw1500\\'
+
+image_path = os.path.join(image_dir, "{:04d}".format(index) + '.jpg')
+label_path = os.path.join(label_dir, "{:07d}".format(index) + '.txt')
+
+image_origin = cv2.imread(image_path)
+image = image_origin.copy()
+height, width, _ = image.shape
+label_file = open(label_path, 'r')
+annotations = label_file.readlines()
+label_file.close()
+
+for annotation in annotations:
+    coords_text = annotation.strip().split(',####')
+    coords = list(map(int, coords_text[0].split(',')))
+    points = np.array([(coords[i], coords[i+1]) for i in range(0, len(coords), 2)])
+    transcriptions = coords_text[1]
+        
+    cv2.polylines(image, [points], isClosed=True, color=(255, 0, 0), thickness=2)
+    
+    for p in points:
+        cv2.circle(image, (p[0], p[1]), int(min(height, width) / 150), (0, 255, 255), -1)
+
+    cv2.putText(image, transcriptions, (points[0][0], points[0][1] - int(min(height, width) / 150)), cv2.FONT_HERSHEY_SIMPLEX,
+                min(height, width) / 1000, (0, 255, 0), int(min(height, width) / 500))
+    
+fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(16, 9))
+axes = axes.flatten()
+
+axes[0].imshow(cv2.cvtColor(image_origin, cv2.COLOR_BGR2RGB))
+axes[0].axis('off')
+axes[0].set_title('Origin')
+
+axes[1].imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+axes[1].axis('off')
+axes[1].set_title('Annotation')
+
+plt.tight_layout()
+plt.show()
+```
+
+![png](C2.png)

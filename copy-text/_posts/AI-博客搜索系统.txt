@@ -1,0 +1,285 @@
+---
+title: AI-博客搜索系统
+date: Tue Jul 28 2026 18:58:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - Agent
+  - AI应用
+categories: 开发
+description: 给博客整点 AI 赋能！
+---
+
+
+import { Agent } from '../_components/Agent/index'
+import { KBAgent } from '../_components/Agent/KB'
+
+# 演示
+
+博客原先的文章搜索系统组件如下：
+
+<Search/>
+
+全新的知识库 Agent 如下。首次使用时，用户可以创建一个或多个 BYOK 配置，Agent 会在浏览器中完成供应商确认和模型发现：
+
+<KBAgent
+  searchIndexURL="/search-index.json"
+  copyTextBasePath="/copy-text/_posts/"
+  title="博客问答"
+  placeholder="输入问题，Agent 将搜索博客文章后回答..."
+  emptyTitle="有什么可以帮你的？"
+  emptyDescription="向 AI 助手提问关于博客文章的问题，Agent 会自动搜索文章、读取公开正文，再由 LLM 生成回答。"
+  exampleQuestions={[
+    '这个博客有哪些文章？',
+    '这个博客里的文章大都写什么的？',
+    '帮我找找博客里 AI 相关的文章？',
+  ]}
+  userLabel="You"
+  assistantLabel="AI 助手"
+  additionalSystemPrompt="Pro哥就是promefire的简称，他与杰哥，杰杰是一个人，他这么取网名是参考了普罗米修斯的火的英文；"
+/>
+
+也可以只用纯 LLM 对话（没有博客相关的关键词），不需要知识库：
+
+<Agent title="AI Chat" placeholder="随便聊聊..." />
+
+# 前言
+
+> [!Tip]
+>
+> 现在大家都讲究 AI 赋能，自己的博客系统自然也不能落下😭！操作一下代码 Agent 让它帮我整一个博客 Agent！
+>
+> 根据我对 Agent 的浅显理解，要设计一个能用的 Agent，重要的是给 Agent 足够的上下文，因此我想到了用原先博客框架中的搜索功能和复制全文功能的文件作为上下文，然后设计一个完备的 system prompt，完事。
+>
+> 正文内容 100% 由 AI 撰写，真是超高的 AI 入库率😎！
+
+# 正文
+
+## 一、构建时生成的两份数据
+
+搜索索引和文章全文副本都由 `scripts/run-all.mjs` 在 `prebuild` / `predev` 阶段生成：
+
+```mermaid
+flowchart TD
+    A[source/_posts/*.mdx] --> B[generate-search-index.mjs]
+    A --> C[generate-post-sources.mjs]
+    B --> D[public/search-index.json]
+    C --> E[public/copy-text/_posts/*.txt]
+    D --> F[Search.tsx / FlexSearch]
+    D --> G[Agent tools / search_blog]
+    E --> H[Agent tools / read_articles]
+    G --> I[Controller model]
+    H --> I
+    I --> J[finish]
+    J --> K[Final streaming answer]
+```
+
+`public/search-index.json` 为每篇可搜索文章保存标题、描述、slug、分类、标签和最多 5000 字的纯文本索引。加密文章只保留元数据，不泄露正文。`public/copy-text/_posts/{slug}.txt` 是 KBAgent 使用的公开正文副本；构建脚本会跳过密码文章或明确关闭复制的文章。
+
+## 二、自带搜索引擎（FlexSearch）
+
+组件路径：`src/components/mdx/Search.tsx`。
+
+组件挂载后一次性加载 `search-index.json`，动态加载 FlexSearch，并用 CJK 单字、二元组和三元组分词建立浏览器内倒排索引。用户输入后即时返回标题、描述、分类、标签和高亮片段；分类和标签筛选在前端完成。它不调用 LLM，也不读取全文副本。
+
+## 三、KBAgent 的 Agent Loop
+
+### 3.1 控制循环
+
+KBAgent 的实现位于 `source/_components/Agent/KB/`。控制器使用 OpenAI-compatible Chat Completions 的 function calling，但最终决策由本地 runtime 控制：
+
+```text
+用户问题
+   ↓
+加载索引与博客概览
+   ↓
+Controller model 选择只读工具
+   ↓
+校验参数 → 执行工具 → 结构化 Tool Result
+   ↓                         ↑
+追加 Observation ─────────────┘
+   ↓
+继续检索，或调用 finish
+   ↓
+组装已收集证据 → 最终流式回答
+```
+
+最终流式请求会重新携带博客系统提示、概览和安全规则，再附上已读取的有界文章摘录；控制器的历史 Tool Call 消息不会替换或丢弃这条 system message。
+
+运行状态由 reducer 管理：
+
+```text
+idle
+  → deciding
+  → executing_tool
+  → deciding ...
+  → finalizing
+  → completed | failed | cancelled
+```
+
+聊天 UI 只保存当前页面生命周期内的消息；`AgentRunState` 保存当前运行的步骤、工具事件、错误和证据数量，刷新页面后清空。活动面板默认折叠，展开后显示工具名、参数摘要、结果摘要和耗时，不显示模型隐藏推理。
+
+部分 thinking 模型会在带工具调用的 assistant 消息中返回 `reasoning_content`。runtime 会把这个字段原样保留并随下一轮 Tool Result 一起回传给同一供应商；它只用于协议兼容，不会展示在活动面板或最终聊天消息中。
+
+### 3.2 五个只读工具
+
+工具定义集中在 `KB/runtime.ts`，输入均为 JSON Schema，并由 runtime 再次校验：
+
+| 工具 | 用途 | 边界 |
+|---|---|---|
+| `get_blog_overview()` | 获取文章总数、加密数量、分类和标签 | 无参数，只读索引统计 |
+| `search_blog({ query, category?, tag?, limit? })` | 在索引上执行 TF-IDF 搜索 | `limit` 为 1–10，查询最多 120 字符 |
+| `read_articles({ slugs })` | 读取搜索结果中的公开文章 | 每次最多 5 篇，整轮最多 8 篇 |
+| `sample_articles({ count })` | 为主观推荐抽取公开文章 | `count` 为 1–5，排除加密文章 |
+| `finish({ reason })` | 表示证据足够，进入最终回答 | 不执行外部副作用 |
+
+文章内容会被放在明确的引用上下文中，并被视为不可信数据。正文中的指令不能修改系统规则、创建工具、扩大权限或要求泄露 Key。
+
+### 3.3 检索和上下文预算
+
+`search_blog` 仍使用 TF-IDF：标题匹配权重高于描述，描述高于正文；中文查询使用单字和二元组。`read_articles` 只接受索引中存在的 slug，并按文章相关性和当前剩余预算读取正文。
+
+正文不是无限完整地注入模型：单篇通常为 500–4000 字符，整轮正文上下文最多 20,000 字符。系统提示会明确说明这是有界摘录，模型不能声称读到了未提供的内容。
+
+### 3.4 停止、重试和取消
+
+默认运行限制如下：
+
+| 限制 | 默认值 |
+|---|---:|
+| 决策步骤 | 6 |
+| 工具调用总数 | 8 |
+| 唯一文章数 | 8 |
+| 工具超时 | 8 秒 |
+| 单次模型请求超时 | 25 秒 |
+| 整轮运行超时 | 90 秒 |
+| 失败预算 | 2 次 |
+| 控制响应上限 | 512 tokens |
+| 最终回答上限 | 2048 tokens |
+
+网络错误、429 和 5xx 会在总时限内重试一次；鉴权错误、参数错误和用户取消不会重试。达到步骤、时间或上下文上限后，runtime 使用已经收集的证据完成回答，并在必要时说明限制。点击停止会同时取消控制请求、工具请求、全文请求和最终流式请求。
+
+### 3.5 function calling 不兼容时的降级
+
+不同 OpenAI-compatible 网关对 tools 的支持并不一致。如果模型拒绝 `tools` / `tool_choice` 或返回明确的不支持错误，当前配置会标记为兼容模式，当前问题自动回退到固定 RAG：
+
+```text
+本地意图分类
+  search     → TF-IDF 搜索 → 读取正文
+  overview   → 只使用博客概览
+  recommend  → 抽取公开文章样本
+  chat       → 只使用博客说明
+          ↓
+       最终流式回答
+```
+
+因此，兼容模式不再依赖“空关键词”同时表示问候、统计和推荐；问候和统计问题不会错误地随机读取文章。
+
+## 四、BYOK 与模型发现
+
+### 4.1 多配置结构
+
+Agent 配置从单个对象升级为版本化设置：
+
+```ts
+interface AgentProfile {
+  id: string
+  label: string
+  provider: ProviderId
+  apiKey: string
+  baseURL: string
+  model: string
+  verification: 'unknown' | 'verified' | 'unverified' | 'invalid'
+  toolSupport: 'unknown' | 'supported' | 'unsupported'
+}
+
+interface AgentSettings {
+  version: 2
+  activeProfileId: string | null
+  profiles: AgentProfile[]
+}
+```
+
+用户可以新增、切换、重命名、编辑和删除多个配置。旧版 `{ apiKey, baseURL, model }` 会自动迁移为一个 Custom 配置，不会丢失已有数据。聊天消息和运行轨迹不持久化，只有配置集合会加密保存。
+
+### 4.2 供应商推断和 `/models`
+
+内置预设及默认 Base URL：
+
+| 供应商 | Base URL |
+|---|---|
+| OpenAI | `https://api.openai.com/v1` |
+| DeepSeek | `https://api.deepseek.com` |
+| OpenRouter | `https://openrouter.ai/api/v1` |
+| Groq | `https://api.groq.com/openai/v1` |
+| Together AI | `https://api.together.ai/v1` |
+| SiliconFlow | `https://api.siliconflow.cn/v1` |
+| Alibaba Cloud Model Studio | `https://dashscope.aliyuncs.com/compatible-mode/v1` |
+| Ollama | `http://localhost:11434/v1` |
+| Custom | 用户填写 |
+
+输入 Key 后只在本地检查高置信度特征，例如 OpenRouter 的 `sk-or-v1-` 和 Groq 的 `gsk_`。通用 `sk-` 不能唯一证明是 OpenAI 或 DeepSeek，因此界面只显示候选供应商。用户确认供应商和地址后，浏览器只向这一地址发送：
+
+```text
+GET {baseURL}/models
+Authorization: Bearer {apiKey}
+```
+
+返回的模型会过滤 embedding、rerank、audio、image 和 moderation 等非聊天模型，并优先推荐支持 `tools` 的文本模型。用户可以搜索、切换或手工输入模型。`/models` 因 CORS、404 或网关差异失败时，可以以“未验证”状态保存，不会自动发送可能计费的聊天请求。
+
+### 4.3 存储安全边界
+
+配置集合使用 Web Crypto API 的 AES-GCM + PBKDF2 加密后写入浏览器 `localStorage`。完整 Key 不进入日志、错误消息或活动面板，请求直接发送到用户确认的供应商地址。
+
+这属于本地存储保护，不是对抗 XSS 的绝对安全边界：同源恶意脚本如果已经能够执行，也可能访问页面内存或调用解密逻辑。因此部署博客时仍需保护脚本供应链和内容注入边界。
+
+## 五、组件文件与数据流
+
+```text
+source/_components/Agent/
+├── agent.ts                 # Chat Completions、SSE 和错误处理
+├── types.ts                 # Profile、RunState、ToolEvent、LoopOptions
+├── providers.ts             # 供应商预设、Key 建议和模型排序
+├── modelDiscovery.ts        # /models 请求、过滤和推荐
+├── secureStorage.ts         # v2 多配置加密存储与旧配置迁移
+├── ApiKeySetup.tsx          # 多配置 BYOK UI
+├── ChatAgent.tsx            # 聊天 UI、取消和活动面板
+└── KB/
+    ├── runtime.ts           # 工具注册与 Agent Loop
+    ├── rag.ts               # 索引、TF-IDF、正文和 Prompt 构建
+    ├── KBAgent.tsx          # 博客配置与 runtime 接入
+    └── index.tsx             # MDX 公共入口
+```
+
+一次用户输入的主要消息路径是：
+
+```text
+ChatAgent
+  → KB/runtime.runKBAgent
+  → requestCompletion(tools)
+  → executeTool()
+  → requestCompletion(tool results)
+  → streamCompletion(final messages)
+  → ChatAgent.onToken
+```
+
+## 六、搜索引擎对比
+
+| | 自带搜索 | KBAgent Agent Loop |
+|---|---|---|
+| 定位 | 即时定位文章 | 基于证据的博客问答 |
+| 搜索 | FlexSearch 倒排索引 | Agent 工具调用 + TF-IDF |
+| LLM | 不需要 | 控制器和最终回答需要 |
+| 全文 | 不读取全文副本 | 按预算读取公开正文摘录 |
+| 交互 | 固定搜索流程 | search/read/overview/recommend/finish |
+| 不兼容处理 | 不适用 | 自动回退固定 RAG |
+| 外部副作用 | 无 | 无，所有内置工具只读 |
+
+## 七、测试和构建
+
+Agent 纯逻辑测试位于 `tests/agent/`，覆盖供应商 Key 建议、模型发现、旧配置迁移、RAG 搜索和 `search → read → finish` 的运行轨迹。可以运行：
+
+```bash
+npm run test:agent
+npm run build
+```
+
+生产构建前仍会重新生成搜索索引和公开正文副本，确保静态站点中的 Agent 数据与文章源文件同步。

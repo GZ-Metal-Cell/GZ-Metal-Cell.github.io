@@ -1,0 +1,583 @@
+---
+title: DIP-Python tutorials for image processing and machine learning(73-78)-U-net
+date: Sat Dec 17 2022 12:11:00 GMT+0000 (Coordinated Universal Time)
+tags:
+  - DigitalSreeni
+  - 数字图像处理
+  - Python
+categories: 课程
+description: 学习自 Youtube 博主 DigitalSreeni。
+---
+
+
+# 正文
+
+## 73 - Image Segmentation using U-Net - Part1 -What is U-net-
+
+卷积神经网络的架构：
+
+![png](73_1.png)
+
+常见的卷积神经网络：
+
+![png](73_2.png)
+
+U-Net：
+
+![png](73_3.png)
+
+VGG 示意图及其代码：
+
+![png](73_4.png)
+
+U-Net architecture is designed for Semantic segmentation（语义分割）
+
+![png](73_5.png)
+
+## 74 - Image Segmentation using U-Net - Part 2 -Defining U-Net in Python using Keras-
+
+```python
+import tensorflow as tf
+
+IMG_WIDTH = 128
+IMG_HEIGHT = 128
+IMG_CHANNELS = 3
+```
+
+建立模型
+
+- [Conv2DTranspose layer 反卷积层](https://keras.io/api/layers/convolution_layers/convolution2d_transpose/)
+
+- [concatenate 连接层](https://keras.io/api/layers/merging_layers/concatenate/)
+
+
+```python
+inputs = tf.keras.layers.Input((IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS))
+s = tf.keras.layers.Lambda(lambda x: x / 255)(inputs)  # 将整数转换成浮点数
+
+# Contraction path 收缩路径
+c1 = tf.keras.layers.Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(s)
+c1 = tf.keras.layers.Dropout(0.1)(c1)
+c1 = tf.keras.layers.Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c1)
+p1 = tf.keras.layers.MaxPooling2D((2, 2))(c1)
+
+c2 = tf.keras.layers.Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(p1)
+c2 = tf.keras.layers.Dropout(0.1)(c2)
+c2 = tf.keras.layers.Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c2)
+p2 = tf.keras.layers.MaxPooling2D((2, 2))(c2)
+ 
+c3 = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(p2)
+c3 = tf.keras.layers.Dropout(0.2)(c3)
+c3 = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c3)
+p3 = tf.keras.layers.MaxPooling2D((2, 2))(c3)
+ 
+c4 = tf.keras.layers.Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(p3)
+c4 = tf.keras.layers.Dropout(0.2)(c4)
+c4 = tf.keras.layers.Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c4)
+p4 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2))(c4)
+ 
+c5 = tf.keras.layers.Conv2D(256, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(p4)
+c5 = tf.keras.layers.Dropout(0.3)(c5)
+c5 = tf.keras.layers.Conv2D(256, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c5)
+
+# Expansive path 延展路径
+u6 = tf.keras.layers.Conv2DTranspose(128, (2, 2), strides=(2, 2), padding='same')(c5)
+u6 = tf.keras.layers.concatenate([u6, c4])
+c6 = tf.keras.layers.Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(u6)
+c6 = tf.keras.layers.Dropout(0.2)(c6)
+c6 = tf.keras.layers.Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c6)
+ 
+u7 = tf.keras.layers.Conv2DTranspose(64, (2, 2), strides=(2, 2), padding='same')(c6)
+u7 = tf.keras.layers.concatenate([u7, c3])
+c7 = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(u7)
+c7 = tf.keras.layers.Dropout(0.2)(c7)
+c7 = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c7)
+ 
+u8 = tf.keras.layers.Conv2DTranspose(32, (2, 2), strides=(2, 2), padding='same')(c7)
+u8 = tf.keras.layers.concatenate([u8, c2])
+c8 = tf.keras.layers.Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(u8)
+c8 = tf.keras.layers.Dropout(0.1)(c8)
+c8 = tf.keras.layers.Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c8)
+ 
+u9 = tf.keras.layers.Conv2DTranspose(16, (2, 2), strides=(2, 2), padding='same')(c8)
+u9 = tf.keras.layers.concatenate([u9, c1], axis=3)
+c9 = tf.keras.layers.Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(u9)
+c9 = tf.keras.layers.Dropout(0.1)(c9)
+c9 = tf.keras.layers.Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c9)
+ 
+outputs = tf.keras.layers.Conv2D(1, (1, 1), activation='sigmoid')(c9)
+ 
+model = tf.keras.Model(inputs=[inputs], outputs=[outputs])
+model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+model.summary()
+```
+
+    Model: "model"
+    __________________________________________________________________________________________________
+     Layer (type)                   Output Shape         Param #     Connected to                     
+    ==================================================================================================
+     input_2 (InputLayer)           [(None, 128, 128, 3  0           []                               
+                                    )]                                                                
+                                                                                                      
+     lambda (Lambda)                (None, 128, 128, 3)  0           ['input_2[0][0]']                
+                                                                                                      
+     conv2d (Conv2D)                (None, 128, 128, 16  448         ['lambda[0][0]']                 
+                                    )                                                                 
+                                                                                                      
+     dropout (Dropout)              (None, 128, 128, 16  0           ['conv2d[0][0]']                 
+                                    )                                                                 
+                                                                                                      
+     conv2d_1 (Conv2D)              (None, 128, 128, 16  2320        ['dropout[0][0]']                
+                                    )                                                                 
+                                                                                                      
+     max_pooling2d (MaxPooling2D)   (None, 64, 64, 16)   0           ['conv2d_1[0][0]']               
+                                                                                                      
+     conv2d_2 (Conv2D)              (None, 64, 64, 32)   4640        ['max_pooling2d[0][0]']          
+                                                                                                      
+     dropout_1 (Dropout)            (None, 64, 64, 32)   0           ['conv2d_2[0][0]']               
+                                                                                                      
+     conv2d_3 (Conv2D)              (None, 64, 64, 32)   9248        ['dropout_1[0][0]']              
+                                                                                                      
+     max_pooling2d_1 (MaxPooling2D)  (None, 32, 32, 32)  0           ['conv2d_3[0][0]']               
+                                                                                                      
+     conv2d_4 (Conv2D)              (None, 32, 32, 64)   18496       ['max_pooling2d_1[0][0]']        
+                                                                                                      
+     dropout_2 (Dropout)            (None, 32, 32, 64)   0           ['conv2d_4[0][0]']               
+                                                                                                      
+     conv2d_5 (Conv2D)              (None, 32, 32, 64)   36928       ['dropout_2[0][0]']              
+                                                                                                      
+     max_pooling2d_2 (MaxPooling2D)  (None, 16, 16, 64)  0           ['conv2d_5[0][0]']               
+                                                                                                      
+     conv2d_6 (Conv2D)              (None, 16, 16, 128)  73856       ['max_pooling2d_2[0][0]']        
+                                                                                                      
+     dropout_3 (Dropout)            (None, 16, 16, 128)  0           ['conv2d_6[0][0]']               
+                                                                                                      
+     conv2d_7 (Conv2D)              (None, 16, 16, 128)  147584      ['dropout_3[0][0]']              
+                                                                                                      
+     max_pooling2d_3 (MaxPooling2D)  (None, 8, 8, 128)   0           ['conv2d_7[0][0]']               
+                                                                                                      
+     conv2d_8 (Conv2D)              (None, 8, 8, 256)    295168      ['max_pooling2d_3[0][0]']        
+                                                                                                      
+     dropout_4 (Dropout)            (None, 8, 8, 256)    0           ['conv2d_8[0][0]']               
+                                                                                                      
+     conv2d_9 (Conv2D)              (None, 8, 8, 256)    590080      ['dropout_4[0][0]']              
+                                                                                                      
+     conv2d_transpose (Conv2DTransp  (None, 16, 16, 128)  131200     ['conv2d_9[0][0]']               
+     ose)                                                                                             
+                                                                                                      
+     concatenate (Concatenate)      (None, 16, 16, 256)  0           ['conv2d_transpose[0][0]',       
+                                                                      'conv2d_7[0][0]']               
+                                                                                                      
+     conv2d_10 (Conv2D)             (None, 16, 16, 128)  295040      ['concatenate[0][0]']            
+                                                                                                      
+     dropout_5 (Dropout)            (None, 16, 16, 128)  0           ['conv2d_10[0][0]']              
+                                                                                                      
+     conv2d_11 (Conv2D)             (None, 16, 16, 128)  147584      ['dropout_5[0][0]']              
+                                                                                                      
+     conv2d_transpose_1 (Conv2DTran  (None, 32, 32, 64)  32832       ['conv2d_11[0][0]']              
+     spose)                                                                                           
+                                                                                                      
+     concatenate_1 (Concatenate)    (None, 32, 32, 128)  0           ['conv2d_transpose_1[0][0]',     
+                                                                      'conv2d_5[0][0]']               
+                                                                                                      
+     conv2d_12 (Conv2D)             (None, 32, 32, 64)   73792       ['concatenate_1[0][0]']          
+                                                                                                      
+     dropout_6 (Dropout)            (None, 32, 32, 64)   0           ['conv2d_12[0][0]']              
+                                                                                                      
+     conv2d_13 (Conv2D)             (None, 32, 32, 64)   36928       ['dropout_6[0][0]']              
+                                                                                                      
+     conv2d_transpose_2 (Conv2DTran  (None, 64, 64, 32)  8224        ['conv2d_13[0][0]']              
+     spose)                                                                                           
+                                                                                                      
+     concatenate_2 (Concatenate)    (None, 64, 64, 64)   0           ['conv2d_transpose_2[0][0]',     
+                                                                      'conv2d_3[0][0]']               
+                                                                                                      
+     conv2d_14 (Conv2D)             (None, 64, 64, 32)   18464       ['concatenate_2[0][0]']          
+                                                                                                      
+     dropout_7 (Dropout)            (None, 64, 64, 32)   0           ['conv2d_14[0][0]']              
+                                                                                                      
+     conv2d_15 (Conv2D)             (None, 64, 64, 32)   9248        ['dropout_7[0][0]']              
+                                                                                                      
+     conv2d_transpose_3 (Conv2DTran  (None, 128, 128, 16  2064       ['conv2d_15[0][0]']              
+     spose)                         )                                                                 
+                                                                                                      
+     concatenate_3 (Concatenate)    (None, 128, 128, 32  0           ['conv2d_transpose_3[0][0]',     
+                                    )                                 'conv2d_1[0][0]']               
+                                                                                                      
+     conv2d_16 (Conv2D)             (None, 128, 128, 16  4624        ['concatenate_3[0][0]']          
+                                    )                                                                 
+                                                                                                      
+     dropout_8 (Dropout)            (None, 128, 128, 16  0           ['conv2d_16[0][0]']              
+                                    )                                                                 
+                                                                                                      
+     conv2d_17 (Conv2D)             (None, 128, 128, 16  2320        ['dropout_8[0][0]']              
+                                    )                                                                 
+                                                                                                      
+     conv2d_18 (Conv2D)             (None, 128, 128, 1)  17          ['conv2d_17[0][0]']              
+                                                                                                      
+    ==================================================================================================
+    Total params: 1,941,105
+    Trainable params: 1,941,105
+    Non-trainable params: 0
+    __________________________________________________________________________________________________
+
+
+
+```python
+from tensorflow.keras import utils
+from keras.utils.vis_utils import model_to_dot
+
+utils.plot_model(model, 'model1.png',show_shapes=True,show_dtype=True,show_layer_names=True)
+```
+
+
+![png](74_1.png)
+
+## 75 - Image Segmentation using U-Net - Part 3 -What are trainable parameters-
+
+​	介绍了神经网络中参数量是怎么算的。
+
+## 76 - Image Segmentation using U-Net - Part 4 -Model fitting- checkpoints- and callbacks-
+
+Modelcheckpoint
+
+- [ModelCheckpoint 详解](https://blog.csdn.net/zengNLP/article/details/94589469)
+
+- [Module: tf.keras.callbacks  | TensorFlow v2.11.0 (google.cn)](https://tensorflow.google.cn/api_docs/python/tf/keras/callbacks?hl=zh-cn)
+
+```python
+checkpointer = tf.keras.callbacks.ModelCheckpoint('model_for_nuclei.h5', verbose=1, save_best_only=True)
+callbacks = [
+    tf.keras.callbacks.EarlyStopping(patience=2, monitor='val_loss'),
+    tf.keras.callbacks.TensorBoard(log_dir='logs')
+]
+```
+
+## 77 - Image Segmentation using U-Net - Part 5 -Understanding the data-
+
+获取数据集：[2018 Data Science Bowl | Kaggle](https://www.kaggle.com/competitions/data-science-bowl-2018/data)
+
+## 78 - Image Segmentation using U-Net - Part 6 -Running the code and understanding results-
+
+```python
+import tensorflow as tf
+import os
+import numpy as np
+
+IMG_WIDTH = 128
+IMG_HEIGHT = 128
+IMG_CHANNELS = 3
+
+TRAIN_PATH = 'stage1_train/'
+TEST_PATH = 'stage1_test/'
+
+train_ids = next(os.walk(TRAIN_PATH))[1]
+test_ids = next(os.walk(TEST_PATH))[1]
+
+X_train = np.zeros((len(train_ids), IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS), dtype=np.uint8)
+Y_train = np.zeros((len(train_ids), IMG_HEIGHT, IMG_WIDTH, 1), dtype=np.bool_)  # y 是一个二值图像
+```
+
+**Resizing training images and masks**
+
+- [python 进度条库 tqdm 详解](https://zhuanlan.zhihu.com/p/163613814)
+
+
+```python
+import random
+from tqdm import tqdm 
+from skimage.io import imread, imshow
+from skimage.transform import resize
+import matplotlib.pyplot as plt
+
+seed = 42
+np.random.seed = seed
+
+print('Resizing training images and masks')
+for n, id_ in tqdm(enumerate(train_ids), total=len(train_ids)):   
+    path = TRAIN_PATH + id_
+    img = imread(path + '/images/' + id_ + '.png')[:,:,:IMG_CHANNELS]  # 读取图像
+    img = resize(img, (IMG_HEIGHT, IMG_WIDTH), mode='constant', preserve_range=True)  # 将图像大小修改为 128x128
+    X_train[n] = img  # Fill empty X_train with values from img
+    mask = np.zeros((IMG_HEIGHT, IMG_WIDTH, 1), dtype=np.bool_)
+    for mask_file in next(os.walk(path + '/masks/'))[2]:
+        mask_ = imread(path + '/masks/' + mask_file)
+        mask_ = np.expand_dims(resize(mask_, (IMG_HEIGHT, IMG_WIDTH), mode='constant',  
+                                      preserve_range=True), axis=-1)
+        mask = np.maximum(mask, mask_)  
+            
+    Y_train[n] = mask # Fill empty Y_train with values from img
+```
+
+    Resizing training images and masks
+
+
+    100%|██████████| 670/670 [04:38<00:00,  2.41it/s]
+
+
+**Resizing test images**
+
+
+```python
+X_test = np.zeros((len(test_ids), IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS), dtype=np.uint8)
+sizes_test = []
+print('Resizing test images') 
+for n, id_ in tqdm(enumerate(test_ids), total=len(test_ids)):
+    path = TEST_PATH + id_
+    img = imread(path + '/images/' + id_ + '.png')[:,:,:IMG_CHANNELS]
+    sizes_test.append([img.shape[0], img.shape[1]])
+    img = resize(img, (IMG_HEIGHT, IMG_WIDTH), mode='constant', preserve_range=True)
+    X_test[n] = img
+
+print('Done!')
+```
+
+    Resizing test images
+
+
+    100%|██████████| 65/65 [00:01<00:00, 50.05it/s]
+    
+    Done!
+
+
+​	
+​	
+
+
+```python
+image_x = random.randint(0, len(train_ids))
+imshow(X_train[image_x])
+plt.show()
+```
+
+
+![png](78_1.png)
+    
+
+
+
+```python
+imshow(np.squeeze(Y_train[image_x]))
+plt.show()
+```
+
+
+![png](78_2.png)
+    
+
+
+
+```python
+inputs = tf.keras.layers.Input((IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS))
+s = tf.keras.layers.Lambda(lambda x: x / 255)(inputs)  # 将整数转换成浮点数
+
+# Contraction path 收缩路径
+c1 = tf.keras.layers.Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(s)
+c1 = tf.keras.layers.Dropout(0.1)(c1)
+c1 = tf.keras.layers.Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c1)
+p1 = tf.keras.layers.MaxPooling2D((2, 2))(c1)
+
+c2 = tf.keras.layers.Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(p1)
+c2 = tf.keras.layers.Dropout(0.1)(c2)
+c2 = tf.keras.layers.Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c2)
+p2 = tf.keras.layers.MaxPooling2D((2, 2))(c2)
+ 
+c3 = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(p2)
+c3 = tf.keras.layers.Dropout(0.2)(c3)
+c3 = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c3)
+p3 = tf.keras.layers.MaxPooling2D((2, 2))(c3)
+ 
+c4 = tf.keras.layers.Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(p3)
+c4 = tf.keras.layers.Dropout(0.2)(c4)
+c4 = tf.keras.layers.Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c4)
+p4 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2))(c4)
+ 
+c5 = tf.keras.layers.Conv2D(256, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(p4)
+c5 = tf.keras.layers.Dropout(0.3)(c5)
+c5 = tf.keras.layers.Conv2D(256, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c5)
+
+# Expansive path 延展路径
+u6 = tf.keras.layers.Conv2DTranspose(128, (2, 2), strides=(2, 2), padding='same')(c5)
+u6 = tf.keras.layers.concatenate([u6, c4])
+c6 = tf.keras.layers.Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(u6)
+c6 = tf.keras.layers.Dropout(0.2)(c6)
+c6 = tf.keras.layers.Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c6)
+ 
+u7 = tf.keras.layers.Conv2DTranspose(64, (2, 2), strides=(2, 2), padding='same')(c6)
+u7 = tf.keras.layers.concatenate([u7, c3])
+c7 = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(u7)
+c7 = tf.keras.layers.Dropout(0.2)(c7)
+c7 = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c7)
+ 
+u8 = tf.keras.layers.Conv2DTranspose(32, (2, 2), strides=(2, 2), padding='same')(c7)
+u8 = tf.keras.layers.concatenate([u8, c2])
+c8 = tf.keras.layers.Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(u8)
+c8 = tf.keras.layers.Dropout(0.1)(c8)
+c8 = tf.keras.layers.Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c8)
+ 
+u9 = tf.keras.layers.Conv2DTranspose(16, (2, 2), strides=(2, 2), padding='same')(c8)
+u9 = tf.keras.layers.concatenate([u9, c1], axis=3)
+c9 = tf.keras.layers.Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(u9)
+c9 = tf.keras.layers.Dropout(0.1)(c9)
+c9 = tf.keras.layers.Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c9)
+ 
+outputs = tf.keras.layers.Conv2D(1, (1, 1), activation='sigmoid')(c9)
+ 
+model = tf.keras.Model(inputs=[inputs], outputs=[outputs])
+model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+```
+
+Modelcheckpoint
+
+- [ModelCheckpoint 详解](https://blog.csdn.net/zengNLP/article/details/94589469)
+
+
+```python
+checkpointer = tf.keras.callbacks.ModelCheckpoint('model_for_nuclei.h5', verbose=1, save_best_only=True)
+callbacks = [
+    tf.keras.callbacks.EarlyStopping(patience=2, monitor='val_loss'),
+    tf.keras.callbacks.TensorBoard(log_dir='logs')
+]
+```
+
+
+```python
+results = model.fit(X_train, Y_train, validation_split=0.1, batch_size=16, epochs=25, callbacks=callbacks)
+```
+
+    Epoch 1/25
+    38/38 [==============================] - 20s 280ms/step - loss: 0.5785 - accuracy: 0.7459 - val_loss: 0.3360 - val_accuracy: 0.7809
+    Epoch 2/25
+    38/38 [==============================] - 7s 173ms/step - loss: 0.2739 - accuracy: 0.8642 - val_loss: 0.2158 - val_accuracy: 0.9125
+    Epoch 3/25
+    38/38 [==============================] - 7s 174ms/step - loss: 0.1924 - accuracy: 0.9304 - val_loss: 0.1558 - val_accuracy: 0.9406
+    Epoch 4/25
+    38/38 [==============================] - 7s 173ms/step - loss: 0.1589 - accuracy: 0.9422 - val_loss: 0.1474 - val_accuracy: 0.9425
+    Epoch 5/25
+    38/38 [==============================] - 7s 175ms/step - loss: 0.1449 - accuracy: 0.9472 - val_loss: 0.1173 - val_accuracy: 0.9543
+    Epoch 6/25
+    38/38 [==============================] - 7s 176ms/step - loss: 0.1394 - accuracy: 0.9480 - val_loss: 0.1090 - val_accuracy: 0.9565
+    Epoch 7/25
+    38/38 [==============================] - 7s 176ms/step - loss: 0.1246 - accuracy: 0.9540 - val_loss: 0.1084 - val_accuracy: 0.9579
+    Epoch 8/25
+    38/38 [==============================] - 7s 177ms/step - loss: 0.1204 - accuracy: 0.9553 - val_loss: 0.1113 - val_accuracy: 0.9577
+    Epoch 9/25
+    38/38 [==============================] - 7s 177ms/step - loss: 0.1124 - accuracy: 0.9581 - val_loss: 0.0957 - val_accuracy: 0.9611
+    Epoch 10/25
+    38/38 [==============================] - 7s 177ms/step - loss: 0.1087 - accuracy: 0.9591 - val_loss: 0.0930 - val_accuracy: 0.9618
+    Epoch 11/25
+    38/38 [==============================] - 7s 179ms/step - loss: 0.1079 - accuracy: 0.9593 - val_loss: 0.0892 - val_accuracy: 0.9650
+    Epoch 12/25
+    38/38 [==============================] - 7s 179ms/step - loss: 0.1044 - accuracy: 0.9605 - val_loss: 0.0918 - val_accuracy: 0.9643
+    Epoch 13/25
+    38/38 [==============================] - 7s 180ms/step - loss: 0.1021 - accuracy: 0.9608 - val_loss: 0.0888 - val_accuracy: 0.9651
+    Epoch 14/25
+    38/38 [==============================] - 7s 180ms/step - loss: 0.0989 - accuracy: 0.9621 - val_loss: 0.0950 - val_accuracy: 0.9616
+    Epoch 15/25
+    38/38 [==============================] - 7s 180ms/step - loss: 0.1003 - accuracy: 0.9612 - val_loss: 0.0858 - val_accuracy: 0.9661
+    Epoch 16/25
+    38/38 [==============================] - 7s 180ms/step - loss: 0.1005 - accuracy: 0.9613 - val_loss: 0.0872 - val_accuracy: 0.9660
+    Epoch 17/25
+    38/38 [==============================] - 7s 181ms/step - loss: 0.0963 - accuracy: 0.9630 - val_loss: 0.0846 - val_accuracy: 0.9659
+    Epoch 18/25
+    38/38 [==============================] - 7s 184ms/step - loss: 0.0956 - accuracy: 0.9632 - val_loss: 0.0840 - val_accuracy: 0.9665
+    Epoch 19/25
+    38/38 [==============================] - 7s 183ms/step - loss: 0.0925 - accuracy: 0.9642 - val_loss: 0.0819 - val_accuracy: 0.9675
+    Epoch 20/25
+    38/38 [==============================] - 7s 183ms/step - loss: 0.0927 - accuracy: 0.9640 - val_loss: 0.0833 - val_accuracy: 0.9677
+    Epoch 21/25
+    38/38 [==============================] - 7s 183ms/step - loss: 0.0917 - accuracy: 0.9641 - val_loss: 0.0846 - val_accuracy: 0.9660
+
+
+
+```python
+idx = random.randint(0, len(X_train))
+
+preds_train = model.predict(X_train[:int(X_train.shape[0]*0.9)], verbose=1)
+preds_val = model.predict(X_train[int(X_train.shape[0]*0.9):], verbose=1)
+preds_test = model.predict(X_test, verbose=1)
+
+preds_train_t = (preds_train > 0.5).astype(np.uint8)
+preds_val_t = (preds_val > 0.5).astype(np.uint8)
+preds_test_t = (preds_test > 0.5).astype(np.uint8)
+```
+
+    19/19 [==============================] - 5s 161ms/step
+    3/3 [==============================] - 0s 91ms/step
+    3/3 [==============================] - 1s 417ms/step
+
+
+**Perform a sanity check on some random training samples**
+
+- 对一些随机训练样本进行合理性检查
+
+
+```python
+ix = random.randint(0, len(preds_train_t))
+imshow(X_train[ix])
+plt.show()
+imshow(np.squeeze(Y_train[ix]))
+plt.show()
+imshow(np.squeeze(preds_train_t[ix]))
+plt.show()
+```
+
+
+![png](78_3.png)
+    
+
+
+
+
+![png](78_4.png)
+    
+
+
+    C:\Users\gzjzx\anaconda3\lib\site-packages\skimage\io\_plugins\matplotlib_plugin.py:150: UserWarning: Low image data range; displaying image with stretched contrast.
+      lo, hi, cmap = _get_display_range(image)
+
+
+
+
+![png](78_5.png)
+    
+
+
+**Perform a sanity check on some random validation samples**
+
+- 对一些随机的验证样本进行合理性检查
+
+
+```python
+ix = random.randint(0, len(preds_val_t))
+imshow(X_train[int(X_train.shape[0]*0.9):][ix])
+plt.show()
+imshow(np.squeeze(Y_train[int(Y_train.shape[0]*0.9):][ix]))
+plt.show()
+imshow(np.squeeze(preds_val_t[ix]))
+plt.show()
+```
+
+
+![png](78_6.png)
+    
+
+
+
+
+![png](78_7.png)
+    
+
+
+
+
+![png](78_8.png)
+    
+
+**可视化结果**
+
+```shell
+!tensorboard --logdir=logs/ --host localhost --port 8088
+```
+
+![png](78_9.png)
