@@ -63,6 +63,7 @@ function createCodeFileTools(codeFile) {
     var $downloadButton = $('<button class="download-button" type="button" title="下载代码文件"></button>').css('backgroundImage', 'url("' + DOWNLOAD_ICON + '")');
     $codeFileTools.append($downloadButton);
     function downloadFileFromUrl(url, filename) {
+        url = window.SiteAssets ? window.SiteAssets.resolve(url) : url;
         fetch(url)
             .then(response => response.blob())
             .then(blob => {

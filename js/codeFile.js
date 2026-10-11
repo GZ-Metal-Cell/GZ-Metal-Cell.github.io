@@ -42,7 +42,8 @@ class CodeFile {
     }
 
     async loadFile() {
-        return fetch(this.link)
+        const url = window.SiteAssets ? window.SiteAssets.resolve(this.link) : this.link;
+        return fetch(url)
             .then(response => {
                 if (!response.ok) {
                     throw new Error('网络响应失败');

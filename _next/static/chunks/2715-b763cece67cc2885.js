@@ -1260,19 +1260,21 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(95155);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(12115);
-/* harmony import */ var _barrel_optimize_names_Check_Copy_Download_File_Folder_FolderOpen_lucide_react__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(78916);
-/* harmony import */ var _barrel_optimize_names_Check_Copy_Download_File_Folder_FolderOpen_lucide_react__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(38798);
-/* harmony import */ var _barrel_optimize_names_Check_Copy_Download_File_Folder_FolderOpen_lucide_react__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(42129);
-/* harmony import */ var _barrel_optimize_names_Check_Copy_Download_File_Folder_FolderOpen_lucide_react__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(94514);
-/* harmony import */ var _barrel_optimize_names_Check_Copy_Download_File_Folder_FolderOpen_lucide_react__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(67635);
-/* harmony import */ var _barrel_optimize_names_Check_Copy_Download_File_Folder_FolderOpen_lucide_react__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(6962);
-/* harmony import */ var _components_ui_tree_view__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(2163);
-/* harmony import */ var _lib_language_icons__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(28710);
-/* harmony import */ var _lib_classnames__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(74767);
-/* harmony import */ var _components_ui_article_card_panel__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(15891);
-/* harmony import */ var _contexts_CodeBlockVariantContext__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(31104);
-/* harmony import */ var _components_ui_button__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(89239);
+/* harmony import */ var _lib_assets__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(46930);
+/* harmony import */ var _barrel_optimize_names_Check_Copy_Download_File_Folder_FolderOpen_lucide_react__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(78916);
+/* harmony import */ var _barrel_optimize_names_Check_Copy_Download_File_Folder_FolderOpen_lucide_react__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(38798);
+/* harmony import */ var _barrel_optimize_names_Check_Copy_Download_File_Folder_FolderOpen_lucide_react__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(42129);
+/* harmony import */ var _barrel_optimize_names_Check_Copy_Download_File_Folder_FolderOpen_lucide_react__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(94514);
+/* harmony import */ var _barrel_optimize_names_Check_Copy_Download_File_Folder_FolderOpen_lucide_react__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(67635);
+/* harmony import */ var _barrel_optimize_names_Check_Copy_Download_File_Folder_FolderOpen_lucide_react__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(6962);
+/* harmony import */ var _components_ui_tree_view__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(2163);
+/* harmony import */ var _lib_language_icons__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(28710);
+/* harmony import */ var _lib_classnames__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(74767);
+/* harmony import */ var _components_ui_article_card_panel__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(15891);
+/* harmony import */ var _contexts_CodeBlockVariantContext__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(31104);
+/* harmony import */ var _components_ui_button__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(89239);
 /* __next_internal_client_entry_do_not_use__ FileTreeViewerFolder,FileTreeViewerFile,FileTreeViewer auto */ 
+
 
 
 
@@ -1295,9 +1297,9 @@ __webpack_require__.r(__webpack_exports__);
 }
 function getIconForFile(name) {
     const lastDot = name.lastIndexOf('.');
-    if (lastDot === -1) return _barrel_optimize_names_Check_Copy_Download_File_Folder_FolderOpen_lucide_react__WEBPACK_IMPORTED_MODULE_7__/* ["default"] */ .A;
+    if (lastDot === -1) return _barrel_optimize_names_Check_Copy_Download_File_Folder_FolderOpen_lucide_react__WEBPACK_IMPORTED_MODULE_8__/* ["default"] */ .A;
     const ext = name.slice(lastDot + 1).toLowerCase();
-    return (0,_lib_language_icons__WEBPACK_IMPORTED_MODULE_3__/* .getLanguageIcon */ .A7)(ext, _barrel_optimize_names_Check_Copy_Download_File_Folder_FolderOpen_lucide_react__WEBPACK_IMPORTED_MODULE_7__/* ["default"] */ .A);
+    return (0,_lib_language_icons__WEBPACK_IMPORTED_MODULE_4__/* .getLanguageIcon */ .A7)(ext, _barrel_optimize_names_Check_Copy_Download_File_Folder_FolderOpen_lucide_react__WEBPACK_IMPORTED_MODULE_8__/* ["default"] */ .A);
 }
 function buildTreeFromChildren(children) {
     const leavesById = {};
@@ -1314,8 +1316,8 @@ function buildTreeFromChildren(children) {
                 out.push({
                     id: folderId,
                     name: folderName,
-                    icon: _barrel_optimize_names_Check_Copy_Download_File_Folder_FolderOpen_lucide_react__WEBPACK_IMPORTED_MODULE_8__/* ["default"] */ .A,
-                    openIcon: _barrel_optimize_names_Check_Copy_Download_File_Folder_FolderOpen_lucide_react__WEBPACK_IMPORTED_MODULE_9__/* ["default"] */ .A,
+                    icon: _barrel_optimize_names_Check_Copy_Download_File_Folder_FolderOpen_lucide_react__WEBPACK_IMPORTED_MODULE_9__/* ["default"] */ .A,
+                    openIcon: _barrel_optimize_names_Check_Copy_Download_File_Folder_FolderOpen_lucide_react__WEBPACK_IMPORTED_MODULE_10__/* ["default"] */ .A,
                     children: buildNodes(fp.children, folderId)
                 });
                 return;
@@ -1436,42 +1438,42 @@ function pathBasename(filePath) {
     const toPublicUrl = react__WEBPACK_IMPORTED_MODULE_1__.useCallback((leaf)=>{
         const underPublic = leaf.publicHrefPath?.replace(/\\/g, '/').replace(/^\/+/, '').trim();
         if (underPublic) {
-            return `/${underPublic.split('/').map(encodeURIComponent).join('/')}`;
+            return (0,_lib_assets__WEBPACK_IMPORTED_MODULE_2__/* .resolveAssetUrl */ .sS)(`/${underPublic.split('/').map(encodeURIComponent).join('/')}`);
         }
         // Legacy: path already relative to public root (no `./`); strip `.` segments to avoid `/./` -> wrong URL.
         const normalized = leaf.id.replace(/\\/g, '/');
         const segments = normalized.split('/').filter((s)=>s.length > 0 && s !== '.');
-        return `/${segments.map(encodeURIComponent).join('/')}`;
+        return (0,_lib_assets__WEBPACK_IMPORTED_MODULE_2__/* .resolveAssetUrl */ .sS)(`/${segments.map(encodeURIComponent).join('/')}`);
     }, []);
-    return /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_components_ui_article_card_panel__WEBPACK_IMPORTED_MODULE_4__/* .ArticleCardPanelRoot */ .T, {
+    return /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_components_ui_article_card_panel__WEBPACK_IMPORTED_MODULE_5__/* .ArticleCardPanelRoot */ .T, {
         className: "file-tree-viewer-root group not-prose",
         children: [
-            title?.trim() ? /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_components_ui_article_card_panel__WEBPACK_IMPORTED_MODULE_4__/* .ArticleCardPanelHeader */ .Cx, {
+            title?.trim() ? /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_components_ui_article_card_panel__WEBPACK_IMPORTED_MODULE_5__/* .ArticleCardPanelHeader */ .Cx, {
                 as: "figcaption",
                 className: "py-2.5 mt-0",
                 left: /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
                     children: [
-                        /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_barrel_optimize_names_Check_Copy_Download_File_Folder_FolderOpen_lucide_react__WEBPACK_IMPORTED_MODULE_8__/* ["default"] */ .A, {
+                        /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_barrel_optimize_names_Check_Copy_Download_File_Folder_FolderOpen_lucide_react__WEBPACK_IMPORTED_MODULE_9__/* ["default"] */ .A, {
                             className: "shrink-0",
                             "aria-hidden": true
                         }),
                         /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("span", {
-                            className: (0,_lib_classnames__WEBPACK_IMPORTED_MODULE_10__.cn)('truncate', _components_ui_article_card_panel__WEBPACK_IMPORTED_MODULE_4__/* .articleCardPanelHeaderText */ .J0),
+                            className: (0,_lib_classnames__WEBPACK_IMPORTED_MODULE_11__.cn)('truncate', _components_ui_article_card_panel__WEBPACK_IMPORTED_MODULE_5__/* .articleCardPanelHeaderText */ .J0),
                             children: title.trim()
                         })
                     ]
                 })
             }) : null,
-            /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_components_ui_article_card_panel__WEBPACK_IMPORTED_MODULE_4__/* .ArticleCardPanelBody */ .fY, {
+            /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_components_ui_article_card_panel__WEBPACK_IMPORTED_MODULE_5__/* .ArticleCardPanelBody */ .fY, {
                 className: "border-0 rounded-none",
                 children: /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", {
                     className: "flex flex-col gap-4",
                     children: [
-                        /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_components_ui_tree_view__WEBPACK_IMPORTED_MODULE_2__/* .TreeView */ .G, {
+                        /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_components_ui_tree_view__WEBPACK_IMPORTED_MODULE_3__/* .TreeView */ .G, {
                             data: treeData,
                             expandAll: expandAll,
-                            defaultNodeIcon: _barrel_optimize_names_Check_Copy_Download_File_Folder_FolderOpen_lucide_react__WEBPACK_IMPORTED_MODULE_8__/* ["default"] */ .A,
-                            defaultLeafIcon: _barrel_optimize_names_Check_Copy_Download_File_Folder_FolderOpen_lucide_react__WEBPACK_IMPORTED_MODULE_7__/* ["default"] */ .A,
+                            defaultNodeIcon: _barrel_optimize_names_Check_Copy_Download_File_Folder_FolderOpen_lucide_react__WEBPACK_IMPORTED_MODULE_9__/* ["default"] */ .A,
+                            defaultLeafIcon: _barrel_optimize_names_Check_Copy_Download_File_Folder_FolderOpen_lucide_react__WEBPACK_IMPORTED_MODULE_8__/* ["default"] */ .A,
                             selectedId: selectedPath ?? undefined,
                             onNodeClick: (id)=>setSelectedPath(id),
                             renderLeafActions: (item)=>{
@@ -1480,7 +1482,7 @@ function pathBasename(filePath) {
                                 const publicUrl = toPublicUrl(leaf);
                                 return /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
                                     children: [
-                                        leaf.kind === 'code' ? /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_components_ui_button__WEBPACK_IMPORTED_MODULE_6__/* .Button */ .$, {
+                                        leaf.kind === 'code' ? /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_components_ui_button__WEBPACK_IMPORTED_MODULE_7__/* .Button */ .$, {
                                             type: "button",
                                             variant: "ghost",
                                             size: "icon-xs",
@@ -1490,15 +1492,15 @@ function pathBasename(filePath) {
                                                 e.stopPropagation();
                                                 void handleCopyFile(leaf.id);
                                             },
-                                            children: copiedPath === leaf.id ? /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_barrel_optimize_names_Check_Copy_Download_File_Folder_FolderOpen_lucide_react__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .A, {
+                                            children: copiedPath === leaf.id ? /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_barrel_optimize_names_Check_Copy_Download_File_Folder_FolderOpen_lucide_react__WEBPACK_IMPORTED_MODULE_12__/* ["default"] */ .A, {
                                                 className: "size-4",
                                                 "aria-hidden": true
-                                            }) : /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_barrel_optimize_names_Check_Copy_Download_File_Folder_FolderOpen_lucide_react__WEBPACK_IMPORTED_MODULE_12__/* ["default"] */ .A, {
+                                            }) : /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_barrel_optimize_names_Check_Copy_Download_File_Folder_FolderOpen_lucide_react__WEBPACK_IMPORTED_MODULE_13__/* ["default"] */ .A, {
                                                 className: "size-4",
                                                 "aria-hidden": true
                                             })
                                         }) : null,
-                                        /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_components_ui_button__WEBPACK_IMPORTED_MODULE_6__/* .Button */ .$, {
+                                        /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_components_ui_button__WEBPACK_IMPORTED_MODULE_7__/* .Button */ .$, {
                                             type: "button",
                                             variant: "ghost",
                                             size: "icon-xs",
@@ -1511,7 +1513,7 @@ function pathBasename(filePath) {
                                                 onClick: (e)=>{
                                                     e.stopPropagation();
                                                 },
-                                                children: /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_barrel_optimize_names_Check_Copy_Download_File_Folder_FolderOpen_lucide_react__WEBPACK_IMPORTED_MODULE_13__/* ["default"] */ .A, {
+                                                children: /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_barrel_optimize_names_Check_Copy_Download_File_Folder_FolderOpen_lucide_react__WEBPACK_IMPORTED_MODULE_14__/* ["default"] */ .A, {
                                                     className: "size-4",
                                                     "aria-hidden": true
                                                 })
@@ -1528,7 +1530,7 @@ function pathBasename(filePath) {
                                     "aria-hidden": true
                                 }),
                                 /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("div", {
-                                    className: (0,_lib_classnames__WEBPACK_IMPORTED_MODULE_10__.cn)('min-w-0 overflow-hidden rounded-lg', selectedLeaf.kind === 'image' && 'flex justify-center'),
+                                    className: (0,_lib_classnames__WEBPACK_IMPORTED_MODULE_11__.cn)('min-w-0 overflow-hidden rounded-lg', selectedLeaf.kind === 'image' && 'flex justify-center'),
                                     children: selectedLeaf.kind === 'image' ? /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("span", {
                                         role: "button",
                                         tabIndex: 0,
@@ -1547,7 +1549,7 @@ function pathBasename(filePath) {
                                             alt: selectedLeaf.name,
                                             className: "block max-h-[min(85vh,56rem)] w-auto max-w-full rounded-lg border border-border"
                                         })
-                                    }) : /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_contexts_CodeBlockVariantContext__WEBPACK_IMPORTED_MODULE_5__/* .CodeBlockVariantProvider */ .T, {
+                                    }) : /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_contexts_CodeBlockVariantContext__WEBPACK_IMPORTED_MODULE_6__/* .CodeBlockVariantProvider */ .T, {
                                         value: "pure",
                                         children: /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("div", {
                                             className: "[&_figure]:my-0",
@@ -4219,7 +4221,7 @@ function createMdxImg(fancyboxEnabled, photoFigcaptionEnabled, postSlug, options
         const markdownImage = isMarkdownImage(restRecord);
         stripImgMediaOptOutAttrs(restFiltered);
         const srcStr = typeof src === 'string' ? src : undefined;
-        const resolvedSrc = srcStr && postSlug?.trim() ? (0,post_asset_url/* resolvePostRelativeUrl */.Au)(srcStr, postSlug) : srcStr;
+        const resolvedSrc = srcStr ? (0,post_asset_url/* resolvePostResourceUrl */.Us)(srcStr, postSlug) : srcStr;
         const useFancybox = !skipFancybox && (parseBoolAttr(dataFancybox) ?? fancyboxEnabled) && !!resolvedSrc;
         const dataFigcaptionExplicit = parseBoolAttr(dataFigcaption);
         const figcaptionOptIn = dataFigcaptionExplicit ?? photoFigcaptionEnabled;
@@ -4381,9 +4383,7 @@ function createPostBodyLink(postSlug) {
             });
         }
         let h = String(href).trim();
-        if (postSlug?.trim()) {
-            h = (0,post_asset_url/* resolvePostRelativeUrl */.Au)(h, postSlug);
-        }
+        h = (0,post_asset_url/* resolvePostResourceUrl */.Us)(h, postSlug);
         if (/^https?:\/\//i.test(h) || h.startsWith('mailto:') || h.startsWith('tel:')) {
             return /*#__PURE__*/ (0,jsx_runtime.jsx)("a", {
                 href: h,
@@ -5131,8 +5131,7 @@ function usePostAssetBase() {
     return (0,react__WEBPACK_IMPORTED_MODULE_1__.useContext)(PostAssetBaseContext);
 }
 function resolvePostAssetUrl(url, postSlug) {
-    if (!postSlug) return url;
-    return (0,_lib_post_post_asset_url__WEBPACK_IMPORTED_MODULE_2__/* .resolvePostRelativeUrl */ .Au)(url, postSlug);
+    return (0,_lib_post_post_asset_url__WEBPACK_IMPORTED_MODULE_2__/* .resolvePostResourceUrl */ .Us)(url, postSlug);
 }
 /** Resolve post-relative asset URLs at runtime (MDX shortcodes, links when slug is from context). */ function useResolvedPostAssetUrl(url) {
     const postSlug = usePostAssetBase();
@@ -5551,6 +5550,97 @@ function EncryptedFragment({ version, iterations, scopeId, encryptedHex, saltHex
             })
         ]
     });
+}
+
+
+/***/ }),
+
+/***/ 46930:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+
+// EXPORTS
+__webpack_require__.d(__webpack_exports__, {
+  sS: () => (/* binding */ resolveAssetUrl)
+});
+
+// UNUSED EXPORTS: assetCacheKey, assetsEnabled, localAssetUrl
+
+;// ./scripts/lib/assets-core.mjs
+/** Shared, browser-safe resource mapping. No filesystem, credentials or uploads. */ function createAssetResolver(mapping, development = false) {
+    const files = new Set(mapping.files);
+    const active = mapping.enabled && !(development && mapping.devMode === 'local');
+    return function resolve(url, postSlug) {
+        if (!active || typeof url !== 'string') return url;
+        const raw = url.trim();
+        if (!raw || /^(?:[a-z][a-z0-9+.-]*:|\/\/|#|\?)/i.test(raw)) return url;
+        if (!raw.startsWith('/') && !postSlug) return url;
+        const base = postSlug ? '/posts/' + postSlug.split('/').map(encodeURIComponent).join('/') + '/' : '/';
+        try {
+            const parsed = new URL(raw, 'https://assets.invalid' + base);
+            const segments = parsed.pathname.split('/').filter(Boolean).map(decodeURIComponent);
+            if (segments.some((s)=>s === '.' || s === '..' || /[\\/\u0000]/.test(s))) return url;
+            let key = segments.join('/');
+            if (!files.has(key)) key = mapping.directories[key] || '';
+            if (!key || !files.has(key)) return url;
+            const objectKey = [
+                mapping.keyPrefix,
+                key
+            ].filter(Boolean).join('/');
+            return mapping.baseUrl + '/' + objectKey.split('/').map(encodeURIComponent).join('/') + parsed.search + parsed.hash;
+        } catch  {
+            return url;
+        }
+    };
+}
+function globMatches(key, pattern) {
+    // Deliberately small glob vocabulary: *, **, **/ and ?. No shell expansion.
+    let source = '^';
+    for(let i = 0; i < pattern.length; i++){
+        const char = pattern[i];
+        if (char === '*' && pattern[i + 1] === '*') {
+            i++;
+            if (pattern[i + 1] === '/') {
+                source += '(?:.*/)?';
+                i++;
+            } else source += '.*';
+        } else if (char === '*') source += '[^/]*';
+        else if (char === '?') source += '[^/]';
+        else source += char.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+    return new RegExp(source + '$').test(key);
+}
+
+;// ./scripts/generated/assets.generated.ts
+// Generated by scripts/generate-assets.mjs; contains no storage credentials.
+const assets_generated_assetMapping = {
+    "enabled": false,
+    "devMode": "local",
+    "baseUrl": "",
+    "keyPrefix": "",
+    "files": [],
+    "directories": {}
+};
+const assetCacheKey = "bfa3f59135754a5aefb238e1cbcb4d428c1b98fa26908c19db35ad2ce19ddb9e";
+
+;// ./src/lib/assets.ts
+
+
+
+const assetsEnabled = assets_generated_assetMapping.enabled && !( false && 0);
+const resolveAssetUrl = createAssetResolver(assets_generated_assetMapping, "production" === 'development');
+/** Probes keep using the local source even after its public URL is mapped to a CDN. */ function localAssetUrl(url) {
+    if (!assetsEnabled) return url;
+    const prefix = assetMapping.baseUrl + '/' + (assetMapping.keyPrefix ? assetMapping.keyPrefix.split('/').map(encodeURIComponent).join('/') + '/' : '');
+    if (!url.startsWith(prefix)) return url;
+    try {
+        const key = url.slice(prefix.length).split(/[?#]/, 1)[0].split('/').map(decodeURIComponent).join('/');
+        if (!assetMapping.files.includes(key)) return url;
+        return '/' + key.split('/').map(encodeURIComponent).join('/');
+    } catch  {
+        return url;
+    }
 }
 
 
@@ -6308,14 +6398,17 @@ function FadeInNextImage({ enabled, className, fill, alt = '', onLoad, ...props 
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Au: () => (/* binding */ resolvePostRelativeUrl)
+/* harmony export */   Au: () => (/* binding */ resolvePostRelativeUrl),
+/* harmony export */   Us: () => (/* binding */ resolvePostResourceUrl)
 /* harmony export */ });
 /* unused harmony exports getPostPublicBasePath, isNonRelativeAssetUrl, rewriteCssRelativeAssetUrls, rewriteHtmlRelativeAssetUrls, rewriteSnippetList */
+/* harmony import */ var _lib_assets__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(46930);
 /**
  * Resolve relative asset URLs in post pages against /posts/{slug}/.
  * Hexo-era posts often use paths like `magazine.js` or `pages/01.jpg` next to
  * public/posts/{slug}/; the browser otherwise resolves them against /posts/.
- */ function getPostPublicBasePath(postSlug) {
+ */ 
+function getPostPublicBasePath(postSlug) {
     const segments = postSlug.split('/').filter(Boolean).map((segment)=>encodeURIComponent(segment));
     return `/posts/${segments.join('/')}/`;
 }
@@ -6333,20 +6426,24 @@ function FadeInNextImage({ enabled, className, fill, alt = '', onLoad, ...props 
     const trimmed = url.trim();
     if (!trimmed || !postSlug.trim() || isNonRelativeAssetUrl(trimmed)) return trimmed;
     const base = `https://placeholder.invalid${getPostPublicBasePath(postSlug)}`;
-    return new URL(trimmed, base).pathname;
+    const resolved = new URL(trimmed, base);
+    return resolved.pathname + resolved.search + resolved.hash;
+}
+/** Public rendering only; keep resolvePostRelativeUrl local for build-time file reads. */ function resolvePostResourceUrl(url, postSlug) {
+    const local = postSlug?.trim() ? resolvePostRelativeUrl(url, postSlug) : url;
+    return (0,_lib_assets__WEBPACK_IMPORTED_MODULE_0__/* .resolveAssetUrl */ .sS)(local, postSlug);
 }
 /** Rewrite relative url(...) paths in CSS strings (inline style, <style> blocks). */ function rewriteCssRelativeAssetUrls(css, postSlug) {
-    if (!postSlug?.trim() || !css) return css;
+    if (!css) return css;
     return css.replace(/url\(\s*(['"]?)([^'")]+)\1\s*\)/gi, (_match, quote, url)=>{
-        const resolved = resolvePostRelativeUrl(url, postSlug);
+        const resolved = resolvePostResourceUrl(url, postSlug);
         if (resolved === url.trim()) return _match;
         return `url(${quote}${resolved}${quote})`;
     });
 }
 /** Rewrite relative src/href/style in HTML snippets (inject link/script tags). */ function rewriteHtmlRelativeAssetUrls(html, postSlug) {
-    if (!postSlug?.trim()) return html;
     let out = html.replace(/\b(src|href)=(["'])([^"']+)\2/gi, (_match, attr, quote, url)=>{
-        const resolved = resolvePostRelativeUrl(url, postSlug);
+        const resolved = resolvePostResourceUrl(url, postSlug);
         return `${attr}=${quote}${resolved}${quote}`;
     });
     out = out.replace(/\bstyle=(["'])([\s\S]*?)\1/gi, (_match, quote, css)=>{
