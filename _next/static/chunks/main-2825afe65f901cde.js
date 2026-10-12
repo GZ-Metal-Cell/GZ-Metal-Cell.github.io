@@ -8144,8 +8144,7 @@ const METATYPES = [
  */ function reduceComponents(headChildrenElements) {
     return headChildrenElements.reduce(onlyReactElement, []).reverse().concat(defaultHead().reverse()).filter(unique()).reverse().map((c, i)=>{
         const key = c.key || i;
-        if (// omit JSON-LD structured data snippets from the warning
-        false) {}
+        if (false) {}
         return /*#__PURE__*/ _react.default.cloneElement(c, {
             key
         });
