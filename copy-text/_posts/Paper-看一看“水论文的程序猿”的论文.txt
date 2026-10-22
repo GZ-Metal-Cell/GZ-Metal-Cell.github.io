@@ -30,15 +30,15 @@ description: 论文阅读。
 
 ​	如图 1 的 MEV 所示，Zhang 等人使用最先进的 2-D CNN 和 3D CNN 在大型数据集上预训练来提取视觉时空特征。他们还获得了基于对象检测器 Mask R-CNN 和知识图模型 TransE 提取的对象之间的关系。现有的单向解码器从左到右逐个标记地生成目标语言序列，**并且它们不能充分利用目标侧未来上下文，其可以在从右到左的解码方向上产生。**因此，Wang 等人提出了一种双向解码器来解决上述问题。如图 1 的 BDD 所示，双向解码器由前向解码器（FD）和后向解码器（BD）组成，因为前向解码器接受由后向解码器生成的反向字幕，所以前向解码器可以考虑先前生成的输出和来自后向解码器的地面实况字幕的后续字。
 
-![webp](F1.webp)
+![webp](<F1.webp> "Fig.1 该图说明了基于 Transformer 架构的多模式视频编码器（MEV）和双向解码器（BDD）之间的直接连接，其中 PE 是位置编码。Oscillation 是知识图模块和对象检测模块之间的组合，其中 Mask R-CNN 和 TransE 分别表示对象检测器和知识图模型")
 
-<p style="color: var(--color-muted-foreground); font-size: var(--text-sm); line-height: var(--tw-leading, var(--text-sm--line-height)); text-align: center; margin-top: .375em !important;margin-bottom: .375em !important"><b>Fig.1</b> 该图说明了基于 Transformer 架构的多模式视频编码器（MEV）和双向解码器（BDD）之间的直接连接，其中 PE 是位置编码。Oscillation 是知识图模块和对象检测模块之间的组合，其中 Mask R-CNN 和 TransE 分别表示对象检测器和知识图模型</p>
+
 
 ​	然而，**双向解码器存在信息泄漏的问题**。泄漏是在训练阶段，前向解码器间接利用反向地面真值字幕，这是后向解码器的输入。相反，正向解码器在测试阶段采用反向解码器生成的反向字幕。因此，如果反向解码器生成更高质量的反向字幕，则相当于正向解码器在测试阶段使用更接近反向地面真实字幕的字幕，即只要反向解码器的性能越出色，泄漏对双向解码器的负面影响就越小。如图 1 的 ODRA 所示，我们从对象检测器 Mask R-CNN 中获取对象（“car”、“people”）。由于对象是由一系列孤立的实体组成的，并且上下文之间没有逆序概念，因此我们反转它们是不太明智的。从知识图模型 TransE 获得的关系也是如此。**因此，如果我们将对象和关系集成到反向解码器中，生成反向字幕的质量可能会降低，并进一步扩大泄漏。如图 1 所示。当我们直接连接一个双向解码器和一个融合对象和关系的编码器时，实验表明它确实放大了泄漏。**
 
-![webp](F2.webp)
+![webp](<F2.webp> "该图详细说明了我们提出的基于 Transformer 架构的 BTKG，其由时空编码器（STE）、对象和关系编码器（ORE）、后向解码器（BD）和前向解码器（FD）组成。在训练时，给定一段视频，通过 STE 得到视频的细粒度时空特征。然后，我们将 $E_{STE}$ 输入 BD 以获取反向预测字幕 $Y_{BD}$ 和 $Y_{BD}$ 的上下文 $\\overleftarrow{D}$。同时，为了获取视频编码 $E_{ORE}$，视频的粗粒度时空特征、通过对象检测器 Mask R-CNN 获得的对象以及基于知识图模型 TansE 提取的对象之间的关系由 ORE 联合编码。最后，将 EORE 与 $\\overleftarrow{D}$ 一起集成到 FD 中，以获得前向预测字幕 $Y_{FD}$")
 
-<p style="color: var(--color-muted-foreground); font-size: var(--text-sm); line-height: var(--tw-leading, var(--text-sm--line-height)); text-align: center; margin-top: .375em !important;margin-bottom: .375em !important">该图详细说明了我们提出的基于 Transformer 架构的 BTKG，其由时空编码器（STE）、对象和关系编码器（ORE）、后向解码器（BD）和前向解码器（FD）组成。在训练时，给定一段视频，通过 STE 得到视频的细粒度时空特征。然后，我们将 $E_{STE}$ 输入 BD 以获取反向预测字幕 $Y_{BD}$ 和 $Y_{BD}$ 的上下文 $\overleftarrow{D}$。同时，为了获取视频编码 $E_{ORE}$，视频的粗粒度时空特征、通过对象检测器 Mask R-CNN 获得的对象以及基于知识图模型 TansE 提取的对象之间的关系由 ORE 联合编码。最后，将 EORE 与  $\overleftarrow{D}$ 一起集成到 FD 中，以获得前向预测字幕 $Y_{FD}$</p>
+
 
 ​	**因此，我们提出了一个双向 Transformer 与知识图（BTKG），以减轻泄漏。**在图 2 中，我们分别为双向解码器的前向解码器和后向解码器中的每一个分配一个编码器，这与仅具有一个编码器和解码器的常规模型不同。由于集成对象和关系的编码器可能降低反向字幕的生成质量，如图 2 的 STE 所示，我们为连接到反向解码器的编码器去除对象和关系。此外，我们通过利用视频具有多个不同字幕的特性来生成伪反向字幕以减少泄漏。
 

@@ -18,7 +18,7 @@ description: 论文阅读。
 
 - Gitee：[configs/det/dbnet/README_CN.md · MindSpore Lab/mindocr - Gitee.com](https://gitee.com/mindspore-lab/mindocr/blob/main/configs/det/dbnet/README_CN.md#https://gitee.com/link?target=https%3A%2F%2Farxiv.org%2Fabs%2F1911.08947)
 
-- 代码复现：[Server-MindOCR-Zi-Zi's Journey](..//Server-MindOCR/)
+- 代码复现：[[Server-MindOCR|Server-MindOCR-Zi-Zi's Journey]]
 
 - [DBNet 的简单复现_dbnet 复现-CSDN 博客](https://blog.csdn.net/ytsaiztt/article/details/118090611)
 
@@ -62,9 +62,24 @@ description: 论文阅读。
 
 ![webp](F3.webp)
 
-{% tabs Model %}
 
-<!-- tab model.py -->
+
+<Tabs defaultValue="tab-1">
+
+<TabsList>
+<TabsTrigger value="tab-1">{"model.py"}</TabsTrigger>
+<TabsTrigger value="tab-2">{"backbone"}</TabsTrigger>
+<TabsTrigger value="tab-3">{"neck"}</TabsTrigger>
+<TabsTrigger value="tab-4">{"head"}</TabsTrigger>
+</TabsList>
+
+
+
+
+
+<TabsContent value="tab-1">
+
+
 
 ```python
 # -*- coding: utf-8 -*-
@@ -132,17 +147,33 @@ if __name__ == '__main__':
     # torch.save(model.state_dict(), 'PAN.pth')
 ```
 
-<!-- endtab -->
 
-<!-- tab backbone -->
+
+</TabsContent>
+
+
+
+
+
+<TabsContent value="tab-2">
+
+
 
 - resnet
 - MobilenetV3
 - shfflenetv2
 
-<!-- endtab -->
 
-<!-- tab neck -->
+
+</TabsContent>
+
+
+
+
+
+<TabsContent value="tab-3">
+
+
 
 - FPN
 
@@ -217,9 +248,17 @@ class FPN(nn.Module):
         return torch.cat([p2, p3, p4, p5], dim=1)
 ```
 
-<!-- endtab -->
 
-<!-- tab head -->
+
+</TabsContent>
+
+
+
+
+
+<TabsContent value="tab-4">
+
+
 
 - ConvHead
   - `ConvHead` 是一个非常基础且常见的模块，通过一个 1x1 卷积层和 Sigmoid 激活函数对输入特征图进行变换。它主要用于生成最终的输出特征图，特别是在需要将特征图转换为概率图的任务中。
@@ -323,9 +362,17 @@ class DBHead(nn.Module):
         return torch.reciprocal(1 + torch.exp(-self.k * (x - y)))
 ```
 
-<!-- endtab -->
 
-{% endtabs %}
+
+</TabsContent>
+
+
+
+
+
+</Tabs>
+
+
 
 1. 将**输入图像**输入到 feature-pyramid back-bone 中
 
@@ -363,9 +410,9 @@ def step_function(self, x, y):
 
 
 
-![webp](F4.webp)
+![webp](<F4.webp> "DB 的 k 越大，越接近于 Standard Binarization")
 
-<p style="color: var(--color-muted-foreground); font-size: var(--text-sm); line-height: var(--tw-leading, var(--text-sm--line-height)); text-align: center; margin-top: .375em !important;margin-bottom: .375em !important">DB 的 k 越大，越接近于 Standard Binarization</p>
+
 
 ​	DB 提高性能的原因可以通过梯度的反向传播来解释。以二元交叉熵损失为例。定义 $f(x)=\frac{1}{1+e^{-kx}}$  作为我们的 DB 函数，其中 $x=P_{i,j}-T_{i,j}$。那么正标签的损失 $l_{+}$ 和负标签的损失 $l_{−}$ 分别为：
 
@@ -390,9 +437,9 @@ $$\begin{aligned}&\frac{\partial l_+}{\partial x}=-kf(x)e^{-kx}\\&\frac{\partial
 
 #### Label generation
 
-![webp](F5.webp)
+![webp](<F5.webp> "Label generation。文本多边形的注释以红线显示。收缩和展开的多边形分别显示为蓝线和绿线")
 
-<p style="color: var(--color-muted-foreground); font-size: var(--text-sm); line-height: var(--tw-leading, var(--text-sm--line-height)); text-align: center; margin-top: .375em !important;margin-bottom: .375em !important">Label generation。文本多边形的注释以红线显示。收缩和展开的多边形分别显示为蓝线和绿线</p>
+
 
 ​	概率图的标签生成受到 PSENet 的启发。给定一个文本图像，其文本区域的每个多边形由一组线段描述：
 
@@ -560,9 +607,22 @@ class DBLoss(nn.Module):
 
 ## Experiments
 
-{% tabs train %}
 
-<!-- tab train.py -->
+
+<Tabs defaultValue="tab-1">
+
+<TabsList>
+<TabsTrigger value="tab-1">{"train.py"}</TabsTrigger>
+<TabsTrigger value="tab-2">{"trainer.py"}</TabsTrigger>
+</TabsList>
+
+
+
+
+
+<TabsContent value="tab-1">
+
+
 
 ```python
 from __future__ import print_function
@@ -651,9 +711,17 @@ if __name__ == '__main__':
     main(config)
 ```
 
-<!-- endtab -->
 
-<!-- tab trainer.py -->
+
+</TabsContent>
+
+
+
+
+
+<TabsContent value="tab-2">
+
+
 
 ```python
 import time
@@ -893,9 +961,17 @@ class Trainer(BaseTrainer):
         self.logger_info('finish train')
 ```
 
-<!-- endtab -->
 
-{% endtabs %}
+
+</TabsContent>
+
+
+
+
+
+</Tabs>
+
+
 
 ​	**SynthText** 是一个由 800k 张图像组成的合成数据集。这些图像是从 8k 个背景图像合成的。此数据集仅用于预训练我们的模型。
 

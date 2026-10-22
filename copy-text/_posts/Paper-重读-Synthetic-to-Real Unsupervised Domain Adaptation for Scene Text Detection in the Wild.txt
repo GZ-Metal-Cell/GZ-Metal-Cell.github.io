@@ -32,9 +32,9 @@ description: 论文阅读。
 
 ​	尽管合成数据提供了在训练场景文本检测器中替代真实的图像的可能性，其具有低标注成本和高标注精度，但是许多先前的工作也表明，由于被称为“**域移位 Domain Shift**”的现象，仅使用合成数据的训练降低了对真实的数据的性能。如图 1 所示，与常见对象不同，文本在现实场景中具有更多的形状、颜色、字体、大小和方向的多样性，这导致合成数据与真实的数据之间存在较大的域差距。因此，当仅从合成数据向真实的数据应用模型学习时，模型的性能显著降低。
 
-![webp](F1.webp)
+![webp](<F1.webp> "不同数据集的例子。第一行分别来自真实的 ICDAR 2013、ICDAR 2015 和 ICDAR 2017 MLI。第二行来自 SynthText、VISD 和 UnrealText。在合成数据和真实的数据之间仍有相当大的领域差距。")
 
-<p style="color: var(--color-muted-foreground); font-size: var(--text-sm); line-height: var(--tw-leading, var(--text-sm--line-height)); text-align: center; margin-top: .375em !important;margin-bottom: .375em !important">不同数据集的例子。第一行分别来自真实的 ICDAR 2013、ICDAR 2015 和 ICDAR 2017 MLI。<br/>第二行来自 SynthText、VISD 和 UnrealText。在合成数据和真实的数据之间仍有相当大的领域差距。</p>
+
 
 ​	为了解决域偏移问题，提出了一种基于合成到真实的域的场景文本检测方法，该方法利用合成数据和未标记的真实的数据，有效地提高了模型在真实的数据上的性能。受 [[1909.00597] Self-Training and Adversarial Background Regularization for Unsupervised Domain Adaptive One-Stage Object Detection (arxiv.org)](https://arxiv.org/abs/1909.00597) 和 [[1409.7495] Unsupervised Domain Adaptation by Backpropagation (arxiv.org)](https://arxiv.org/abs/1409.7495) 的启发，本文提出了**一种文本自训练（TST）方法**和**一种对抗性文本实例对齐（ATA）**来减少域移位。
 
@@ -138,13 +138,28 @@ class Loss_target(nn.Module):
 
 ​	其中 $\lambda$ 是权衡参数，我们在所有实验中将其设置为 0.2。通过优化损失，网络可以学习更多的文本域不变特征，更好地从合成数据转换到真实的数据。
 
-![webp](F2.webp)
+![webp](<F2.webp> "具有相应优化对象的网络架构。$\\theta$ 表示 EAST 的参数。域分类器（绿色）经由梯度反转层添加在特征提取器之后，梯度反转层在基于反向传播的训练期间将梯度乘以某个负常数。$L_{task}$ 是 EAST 原有的检测损失，$L_d$ 是领域分类器的损失")
 
-<p style="color: var(--color-muted-foreground); font-size: var(--text-sm); line-height: var(--tw-leading, var(--text-sm--line-height)); text-align: center; margin-top: .375em !important;margin-bottom: .375em !important">具有相应优化对象的网络架构。$\theta$ 表示 EAST 的参数。域分类器（绿色）经由梯度反转层添加在特征提取器之后，梯度反转层在基于反向传播的训练期间将梯度乘以某个负常数。$L_{task}$ 是 EAST 原有的检测损失，$L_d$ 是领域分类器的损失</p>
 
-{% tabs Model %}
 
-<!-- tab Backbone -->
+
+
+<Tabs defaultValue="tab-1">
+
+<TabsList>
+<TabsTrigger value="tab-1">{"Backbone"}</TabsTrigger>
+<TabsTrigger value="tab-2">{"FPN（Label Predictor）"}</TabsTrigger>
+<TabsTrigger value="tab-3">{"ATA（Domain Classifier）"}</TabsTrigger>
+<TabsTrigger value="tab-4">{"EAST 类"}</TabsTrigger>
+</TabsList>
+
+
+
+
+
+<TabsContent value="tab-1">
+
+
 
 ```python
 cfg = [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M', 512, 512, 512, 'M']  # 配置列表，指定网络层的类型和数量。
@@ -221,9 +236,17 @@ class extractor(nn.Module):  # 特征提取层。
         return out[1:]  # 返回 out[1:]，即从第二个池化层开始的特征图。这通常是为了匹配特定的特征提取需求。
 ```
 
-<!-- endtab -->
 
-<!-- tab FPN（Label Predictor）-->
+
+</TabsContent>
+
+
+
+
+
+<TabsContent value="tab-2">
+
+
 
 ```python
 class merge(nn.Module):  # EAST 的核心特征融合层。负责在特征图上进行一系列卷积操作并融合来自不同尺度的特征。它的主要任务是通过逐步上采样和融合不同层的特征图来生成最终的输出特征图。这通常用于目标检测和分割任务中的特征融合阶段。
@@ -327,9 +350,17 @@ class output(nn.Module):  # 输出层
         return score, geo
 ```
 
-<!-- endtab -->
 
-<!-- tab ATA（Domain Classifier）-->
+
+</TabsContent>
+
+
+
+
+
+<TabsContent value="tab-3">
+
+
 
 ```python
 class DAImgHead(nn.Module):
@@ -431,9 +462,17 @@ class DomainAdaptationModule(torch.nn.Module):
         return da_img_features
 ```
 
-<!-- endtab -->
 
-<!-- tab EAST 类 -->
+
+</TabsContent>
+
+
+
+
+
+<TabsContent value="tab-4">
+
+
 
 ```python
 class EAST(nn.Module):  # EAST 继承自 nn.Module，这是 PyTorch 中所有神经网络模型的基类。
@@ -455,9 +494,17 @@ class EAST(nn.Module):  # EAST 继承自 nn.Module，这是 PyTorch 中所有神
         # return self.output(self.merge(C)), class_domain：返回两个值，分别是模型的最终预测结果和领域自适应模块的输出。
 ```
 
-<!-- endtab -->
 
-{% endtabs %}
+
+</TabsContent>
+
+
+
+
+
+</Tabs>
+
+
 
 ### 3.3 Text Self-Training
 
@@ -467,9 +514,9 @@ class EAST(nn.Module):  # EAST 继承自 nn.Module，这是 PyTorch 中所有神
 
 #### 3.3.1 Reducing False Negatives.
 
-![webp](F3.webp)
+![webp](<F3.webp> "Up：提出了文本自我训练的框架。我们利用 SWS 对伪标签中的阳性样本进行过滤，以最大限度地减少假阳性，并选择三分之一置信度较低的阴性样本作为最终阴性样本，以最大程度地减少假阴性。Down：我们给出了伪标签的样本空间表示。（a）：薄弱的训练可以有效地过滤掉假阴性。（b）：假阳性通过笔划宽度和 SWS 的标准偏差（$\\sigma$）过滤掉。")
 
-<p style="color: var(--color-muted-foreground); font-size: var(--text-sm); line-height: var(--tw-leading, var(--text-sm--line-height)); text-align: center; margin-top: .375em !important;margin-bottom: .375em !important">Up：提出了文本自我训练的框架。我们利用 SWS 对伪标签中的阳性样本进行过滤，以最大限度地减少假阳性，并选择三分之一置信度较低的阴性样本作为最终阴性样本，以最大程度地减少假阴性。<br/>Down：我们给出了伪标签的样本空间表示。<br/>（a）：薄弱的训练可以有效地过滤掉假阴性。<br/>（b）：假阳性通过笔划宽度和 SWS 的标准偏差（$\sigma$）过滤掉。</p>
+
 
 ​	受 [[1909.00597] Self-Training and Adversarial Background Regularization for Unsupervised Domain Adaptive One-Stage Object Detection (arxiv.org)](https://arxiv.org/abs/1909.00597) 的启发，利用弱监督方式来最小化假阴性的影响。如 EAST 中所定义的，原始分数图损失是
 
@@ -530,13 +577,13 @@ $$SWS_v=\frac{w_v}{\sigma_v^2}$$
 
 ### 4.2 Performance Comparison and Analysis
 
-![webp](T1.webp)
+![webp](<T1.webp> "不同模型在 Syn2Real 场景文本检测数据集上的性能，用于 SynthText/VISD → ICDAR 2015 传输。UL 指未标记的数据。* 表示 UnrealText 中报告的性能。† 指的是我们的测试性能。")
 
-<p style="color: var(--color-muted-foreground); font-size: var(--text-sm); line-height: var(--tw-leading, var(--text-sm--line-height)); text-align: center; margin-top: .375em !important;margin-bottom: .375em !important">不同模型在 Syn2Real 场景文本检测数据集上的性能，用于 SynthText/VISD → ICDAR 2015 传输。UL 指未标记的数据。* 表示 UnrealText 中报告的性能。† 指的是我们的测试性能。</p>
 
-![webp](T2.webp)
 
-<p style="color: var(--color-muted-foreground); font-size: var(--text-sm); line-height: var(--tw-leading, var(--text-sm--line-height)); text-align: center; margin-top: .375em !important;margin-bottom: .375em !important">不同模型在 Syn2Real 场景文本检测数据集上的性能，用于 SynthText/VISD → ICDAR 2013 传输。UL 指未标记的数据。*表示 UnrealText 中报告的性能。† 指的是我们的测试性能。</p>
+![webp](<T2.webp> "不同模型在 Syn2Real 场景文本检测数据集上的性能，用于 SynthText/VISD → ICDAR 2013 传输。UL 指未标记的数据。*表示 UnrealText 中报告的性能。† 指的是我们的测试性能。")
+
+
 
 #### 4.2.1 Synthetic→ ICDAR2015 Transfer.
 
@@ -550,9 +597,9 @@ $$SWS_v=\frac{w_v}{\sigma_v^2}$$
 
 ​	表 3 显示了 ICDAR 2013 → ICDAR 2015 转移任务的性能。ICDAR 2013 的注释是矩形框，而 ICDAR 2015 的注释是旋转框，这限制了传输性能。然而，与仅使用源代码的基线 EAST 训练相比，我们实现了 7.6% 的性能提升。
 
-![webp](F4.webp)
+![webp](<F4.webp> "不同型号的检测结果示例。第一行是仅使用源域的基线训练的结果。第二行是使用所提出方法的结果。")
 
-<p style="color: var(--color-muted-foreground); font-size: var(--text-sm); line-height: var(--tw-leading, var(--text-sm--line-height)); text-align: center; margin-top: .375em !important;margin-bottom: .375em !important">不同型号的检测结果示例。第一行是仅使用源域的基线训练的结果。第二行是使用所提出方法的结果。</p>
+
 
 ### 4.3 Ablation Study
 
@@ -560,9 +607,9 @@ $$SWS_v=\frac{w_v}{\sigma_v^2}$$
 
 ​	为了验证所提出方法的有效性，我们在四个数据集上进行了 Syn2Real 转移任务的消融实验：SynthText、VISD、ICDAR2015 和 ICDAR2013。表 3 显示了实验结果。对于 SynthText→ICDAR2015 转移任务，使用 TST 和 ATA 后，F-得分分别提高了 4.1% 和 3.5%。此外，我们的方法比基线产生了高达 8% 的召回率，这表明了这种方法在提高模型鲁棒性方面的有效性。通过结合这两个组成部分，所提出方法的 F-得分达到了 68.0%，比基线绝对提高了 7.5%。VISD→ICDAR2015 转移任务表现更好，因为 VISD 具有更真实的合成效果。特别是，使用我们的方法的 F-得分达到了 73.8%，比相应的基线绝对提高了 9.3%。对于 SynthText/VISD→ICDAR2015 的传输，性能的提高也很显著。我们使用 SynthText 实现了 11.3% 的性能改进，使用 VISD 实现了 6.3% 的性能改善。
 
-![webp](T3.webp)
+![webp](<T3.webp> "消融研究所提出的 Syn2Real 场景文本检测转移。“基线”表示仅使用源域中的标记数据进行训练。表示与仅使用源代码的基线训练相比，F-分数的增加。UL 指未标记的数据。'F-target'表示在源域中进行预训练，并在目标域中使用原始伪边界框进行微调。")
 
-<p style="color: var(--color-muted-foreground); font-size: var(--text-sm); line-height: var(--tw-leading, var(--text-sm--line-height)); text-align: center; margin-top: .375em !important;margin-bottom: .375em !important">消融研究所提出的 Syn2Real 场景文本检测转移。“基线”表示仅使用源域中的标记数据进行训练。表示与仅使用源代码的基线训练相比，F-分数的增加。UL 指未标记的数据。'F-target'表示在源域中进行预训练，并在目标域中使用原始伪边界框进行微调。</p>
+
 
 #### 4.3.2 Parameter Sensitivity on TST.
 

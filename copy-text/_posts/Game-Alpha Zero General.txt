@@ -7,6 +7,8 @@ categories: 探索
 description: 研究棋牌类 AI！
 ---
 
+import { DeferredInlineScript as LegacyScript } from "../../src/components/business/DeferredInlineScript"
+
 
 # 资源
 
@@ -30,7 +32,11 @@ A general reinforcement learning algorithm that masters chess, shogi and Go thro
 
 **一个通用的强化学习算法，通过自我发挥掌握国际象棋，将棋和围棋**
 
-{% pdf A_general_reinforcement_learning_algorit.pdf %}
+
+
+<PdfViewer src="A_general_reinforcement_learning_algorit.pdf" />
+
+
 
 ## Abstract
 
@@ -176,7 +182,7 @@ A general reinforcement learning algorithm that masters chess, shogi and Go thro
 >    - **Alpha**：当前 Max 玩家（“我方”）的最佳选择的最小值。在搜索过程中，Alpha 会随着每一层的 Max 玩家逐步更新，表示 Max 玩家能够保证的最低得分。
 >    - **Beta**：当前 Min 玩家（“对方”）的最佳选择的最大值。在搜索过程中，Beta 会随着每一层的 Min 玩家逐步更新，表示 Min 玩家能够保证的最高得分。
 > 3. **剪枝的过程**：
->    - 在搜索树的某个节点，Max 玩家已经知道，**若继续搜索某个分支将无法改善其当前得分（因为 Beta <= Alpha），就可以停止对该分支的搜索**，称为**剪枝**。
+>    - 在搜索树的某个节点，Max 玩家已经知道，**若继续搜索某个分支将无法改善其当前得分（因为 Beta &lt;= Alpha），就可以停止对该分支的搜索**，称为**剪枝**。
 >    - 同理，Min 玩家也会剪枝那些其最优策略已不可能被改善的分支。
 
 ​	每个棋局位置 $s$ 由一个稀疏向量表示，向量包含**手工设计的特征** $\phi(s)$，其中包括中局/残局特定的棋子点值、棋子不平衡表、棋子-格表、棋子活动性和被困棋子、兵结构、王安全、前哨、象对等其他杂项评估模式。每个特征 $\phi_i$ 通过手动和自动调节的组合，分配一个相应的权重 $w_i$，并通过线性组合来评估位置：
@@ -271,9 +277,9 @@ $$N(s_t, a_t) = N(s_t, a_t) + 1, \quad W(s_t, a_t) = W(s_t, a_t) + v, \quad Q(s_
 >   - **特殊规则的平面**：例如，某个平面可能表示棋盘上是否发生了王车易位，或者表示某种特殊规则，如吃子或棋局是否无进展。
 > - **多平面的堆叠**：神经网络的输入是一个多个平面堆叠在一起的结构，每一组平面表示一个特定的棋盘状态。例如，AlphaZero 会将多个平面（如棋盘上每种棋子的分布）堆叠在一起，形成一个多层的表示，这样神经网络就能处理和理解更复杂的信息。
 
-![webp](S1.webp)
+![webp](<S1.webp> "AlphaZero 分别在围棋、国际象棋和将棋中使用的输入功能。在 $T=8$ 步历史中，对每个位置重复第一组特征。计数由单个实值输入表示；其他输入特征由使用指定数量的二进制输入平面的独热编码表示。当前玩家用 $\\mathrm{P}1$ 表示，对手用 $\\mathrm{P}2$ 表示。")
 
-<p style="color: var(--color-muted-foreground); font-size: var(--text-sm); line-height: var(--tw-leading, var(--text-sm--line-height)); text-align: center; margin-top: .375em !important;margin-bottom: .375em !important">AlphaZero 分别在围棋、国际象棋和将棋中使用的输入功能。在 $T=8$ 步历史中，对每个位置重复第一组特征。计数由单个实值输入表示；其他输入特征由使用指定数量的二进制输入平面的独热编码表示。当前玩家用 $\mathrm{P}1$ 表示，对手用 $\mathrm{P}2$ 表示。</p>
+
 
 ### 动作表示
 
@@ -477,24 +483,7 @@ splendor/pretrained_2players.pt vs human
 
 ​	项目部分代码：
 
-<script>
-const N1 = new CodeFileTreeNode('node1', false, './code/Arena.py');
-const N2 = new CodeFileTreeNode('node2', false, './code/Coach.py');
-const N3 = new CodeFileTreeNode('node3', false, './code/Game.py');
-const N4 = new CodeFileTreeNode('node4', false, './code/main.py');
-const N5 = new CodeFileTreeNode('node5', false, './code/MCTS.py');
-const N6 = new CodeFileTreeNode('node6', false, './code/NeuralNet.py');
-const N7 = new CodeFileTreeNode('node7', false, './code/pit.py');
-const N8 = new CodeFileTreeNode('node8', false, './code/splendor/NNet.py');
-const N9 = new CodeFileTreeNode('node9', false, './code/splendor/SplendorGame.py');
-const N10 = new CodeFileTreeNode('node10', false, './code/splendor/SplendorLogic.py');
-const N11 = new CodeFileTreeNode('node11', false, './code/splendor/SplendorLogicNumba.py');
-const N12 = new CodeFileTreeNode('node12', false, './code/splendor/SplendorNNet.py');
-const N13 = new CodeFileTreeNode('node13', false, './code/splendor/SplendorPlayers.py');
-const N14 = new CodeFileTreeNode('node14', true, 'splendor', [N8, N9, N10, N11, N12]);
-const root = new CodeFileTreeNode('node15', true, 'alpha-zero-general', [N14, N1, N2, N3, N4, N5, N6, N7]);
-new CodeFileTree('tree1', root, N4).render();
-</script>
+<LegacyScript>{";(function () { /* hexo-migration: lexical scope */\n\nconst N1 = new CodeFileTreeNode('node1', false, './code/Arena.py');\nconst N2 = new CodeFileTreeNode('node2', false, './code/Coach.py');\nconst N3 = new CodeFileTreeNode('node3', false, './code/Game.py');\nconst N4 = new CodeFileTreeNode('node4', false, './code/main.py');\nconst N5 = new CodeFileTreeNode('node5', false, './code/MCTS.py');\nconst N6 = new CodeFileTreeNode('node6', false, './code/NeuralNet.py');\nconst N7 = new CodeFileTreeNode('node7', false, './code/pit.py');\nconst N8 = new CodeFileTreeNode('node8', false, './code/splendor/NNet.py');\nconst N9 = new CodeFileTreeNode('node9', false, './code/splendor/SplendorGame.py');\nconst N10 = new CodeFileTreeNode('node10', false, './code/splendor/SplendorLogic.py');\nconst N11 = new CodeFileTreeNode('node11', false, './code/splendor/SplendorLogicNumba.py');\nconst N12 = new CodeFileTreeNode('node12', false, './code/splendor/SplendorNNet.py');\nconst N13 = new CodeFileTreeNode('node13', false, './code/splendor/SplendorPlayers.py');\nconst N14 = new CodeFileTreeNode('node14', true, 'splendor', [N8, N9, N10, N11, N12]);\nconst root = new CodeFileTreeNode('node15', true, 'alpha-zero-general', [N14, N1, N2, N3, N4, N5, N6, N7]);\nnew CodeFileTree('tree1', root, N4).render();\n\n}).call(window);"}</LegacyScript>
 
 ​	UML 类图：
 
