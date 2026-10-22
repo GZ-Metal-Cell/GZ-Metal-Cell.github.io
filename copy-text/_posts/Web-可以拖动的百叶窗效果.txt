@@ -16,129 +16,169 @@ description: 伟哥牛逼！
 
 ## CSS
 
-​	`slider.css` 用于存放样式：
+​	`slider.css` 用于存放样式。博客会为图片添加灯箱链接和淡入包装层，因此用独立的左右图层容纳图片，让包装层铺满容器，并裁剪整个图层。样式限定在 `.image-comparison` 内，避免影响文章外的图片：
 
 ```css
-.slider {
+.slider.image-comparison {
+    --slider-position: 50%;
     box-sizing: border-box;
     position: relative;
+    isolation: isolate;
     width: 80%;
-    padding-bottom: 56.25%;
-    height: 0;
-    margin: 0 auto;
+    height: auto;
+    aspect-ratio: 4 / 3;
+    padding: 0;
+    margin: 1em auto;
     overflow: hidden;
-    margin-top: 1em;
-    margin-bottom: 1em;
+    border-radius: 0.5rem;
 }
-.slider a {
-    display: block;
-    height: 100%;
-    object-fit: cover;
+
+@media screen and (max-width: 660px) {
+    .slider.image-comparison {
+        width: 95%;
+    }
+}
+
+.image-comparison > .slider-layer {
     position: absolute;
+    inset: 0;
+}
+
+/* 裁剪整个图层，灯箱链接和淡入背景也随图片一起裁剪。 */
+.image-comparison > .slider-left {
+    clip-path: inset(0 calc(100% - var(--slider-position)) 0 0);
+}
+
+.image-comparison > .slider-right {
+    clip-path: inset(0 0 0 var(--slider-position));
+}
+
+/* 兼容裸图片，以及博客生成的 a/span/淡入包装层。 */
+.image-comparison .slider-layer :is(a, span, img) {
+    box-sizing: border-box;
+    position: static;
+    display: block;
     width: 100%;
-    z-index: 1;
-}
-.mask {
-    position: absolute;
-    left: 49.5%; /* 初始化在中间 */
-    top: 0;
-    width: 1%; /* 滑块宽度 */
     height: 100%;
-    background: rgba(0, 0, 0, 0.66); /* 半透明滑块 */
-    cursor: ew-resize;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border-radius: 0;
+}
+
+.image-comparison .slider-layer img {
+    object-fit: cover;
+    clip-path: none;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+.image-comparison > .mask {
+    position: absolute;
     z-index: 2;
+    top: 0;
+    left: var(--slider-position);
+    width: 28px;
+    height: 100%;
+    transform: translateX(-50%);
+    background: transparent;
+    cursor: ew-resize;
+    touch-action: none;
+    user-select: none;
 }
 
-.slider .left-image {
-    clip-path: inset(0 50% 0 0); /* 初始剪裁右半部分 */
-    max-width: 100%;
-    display: block;
-    margin: 0;
+.image-comparison > .mask::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc(50% - 2px);
+    width: 4px;
+    background: rgba(0, 0, 0, 0.66);
 }
 
-.slider .right-image {
-    clip-path: inset(0 0 0 50%); /* 初始剪裁左半部分 */
-    max-width: 100%;
-    display: block;
-    margin: 0;
+.image-comparison > .mask:focus-visible {
+    outline: 2px solid #38bdf8;
+    outline-offset: -2px;
 }
 ```
 
 ## JavaScript
 
-​	`slider.js` 用于实现滑块的逻辑，把它封装起来：
+​	`slider.js` 用于实现滑块的逻辑。使用 Pointer Events 统一处理鼠标、触屏和触控笔，通过指针捕获保持拖动；拖动时只更新容器的 CSS 变量。滑块也支持左右方向键、Home 和 End 键：
 
 ```javascript
-class ImageSlider {
-    constructor(mask, leftImage, rightImage, widthPercent) {
-        this.mask = mask;
-        this.leftImage = leftImage;
-        this.rightImage = rightImage;
-        this.isDragging = false;
+(() => {
+    // 外层闭包允许文章在客户端切换路由后重新加载脚本。
+    const instances = new WeakMap();
 
-        this.mask.style.left = (widthPercent - 0.5) + '%';
-        this.leftImage.style.clipPath = 'inset(0 ' + (100 - widthPercent) + '% 0 0)';
-        this.rightImage.style.clipPath = 'inset(0 0 0 ' + widthPercent + '%)';
+    class ImageSlider {
+        constructor(slider, widthPercent) {
+            this.slider = slider;
+            this.mask = slider.querySelector('.mask');
+            this.pointerId = null;
+            this.setPosition(widthPercent);
 
-        // 添加触摸事件监听器
-        this.mask.addEventListener('touchstart', (e) => {
-            this.isDragging = true;
-            e.preventDefault(); // 阻止默认事件（如滚动）
-        });
-        document.addEventListener('touchend', () => {
-            this.isDragging = false;
-        });
-        document.addEventListener('touchmove', (e) => {
-            if (this.isDragging) {
-                this.touchDrag(e);
+            this.mask.addEventListener('pointerdown', (event) => {
+                if (!event.isPrimary || event.button !== 0 || this.pointerId !== null) return;
+                event.preventDefault();
+                this.pointerId = event.pointerId;
+                this.mask.focus({ preventScroll: true });
+                // 拖出滑块甚至容器后，仍由滑块接收移动和松开事件。
+                this.mask.setPointerCapture(event.pointerId);
+                this.drag(event);
+            });
+            this.mask.addEventListener('pointermove', (event) => {
+                if (event.pointerId === this.pointerId) this.drag(event);
+            });
+            const stopDragging = (event) => {
+                if (event.pointerId !== this.pointerId) return;
+                this.pointerId = null;
+                if (this.mask.hasPointerCapture(event.pointerId)) {
+                    this.mask.releasePointerCapture(event.pointerId);
+                }
+            };
+            this.mask.addEventListener('pointerup', stopDragging);
+            this.mask.addEventListener('pointercancel', stopDragging);
+            this.mask.addEventListener('lostpointercapture', stopDragging);
+            this.mask.addEventListener('keydown', (event) => {
+                let value = this.widthPercent;
+                switch (event.key) {
+                    case 'ArrowLeft': value -= 1; break;
+                    case 'ArrowRight': value += 1; break;
+                    case 'Home': value = 0; break;
+                    case 'End': value = 100; break;
+                    default: return;
+                }
+                event.preventDefault();
+                this.setPosition(value);
+            });
+        }
+
+        setPosition(value) {
+            this.widthPercent = Math.min(Math.max(value, 0), 100);
+            this.slider.style.setProperty('--slider-position', this.widthPercent + '%');
+            this.mask.setAttribute('aria-valuenow', String(Math.round(this.widthPercent)));
+        }
+
+        drag(event) {
+            const rect = this.slider.getBoundingClientRect();
+            if (rect.width > 0) {
+                this.setPosition((event.clientX - rect.left) / rect.width * 100);
             }
-        });
-
-        // 添加鼠标事件监听器
-        this.mask.addEventListener('mousedown', (e) => {
-            this.isDragging = true;
-            e.preventDefault(); // 阻止默认事件（如选择文本）
-        });
-        document.addEventListener('mouseup', () => {
-            this.isDragging = false;
-        });
-        document.addEventListener('mousemove', (e) => {
-            if (this.isDragging) {
-                this.drag(e);
-            }
-        });
+        }
     }
 
-    // 触摸拖动事件处理函数
-    touchDrag(e) {
-        var rect = this.mask.parentNode.getBoundingClientRect();
-        var x = e.touches[0].clientX - rect.left; // 获取触摸点相对于容器的位置
-        var widthPercent = (x / rect.width) * 100;
-        widthPercent = Math.min(Math.max(widthPercent, 0.5), 99.5);
-        this.mask.style.left = (widthPercent - 0.5) + '%';
-        this.leftImage.style.clipPath = 'inset(0 ' + (100 - widthPercent) + '% 0 0)';
-        this.rightImage.style.clipPath = 'inset(0 0 0 ' + widthPercent + '%)';
-    }
-
-    // 鼠标拖动事件处理函数
-    drag(e) {
-        var rect = this.mask.parentNode.getBoundingClientRect();
-        var x = e.clientX - rect.left; // 获取鼠标相对于容器的位置
-        var widthPercent = (x / rect.width) * 100;
-        widthPercent = Math.min(Math.max(widthPercent, 0.5), 99.5);
-        this.mask.style.left = (widthPercent - 0.5) + '%';
-        this.leftImage.style.clipPath = 'inset(0 ' + (100 - widthPercent) + '% 0 0)';
-        this.rightImage.style.clipPath = 'inset(0 0 0 ' + widthPercent + '%)';
-    }
-}
-
-function createImageSlider(sliderId, widthPercent=50) {
-    const slider = document.getElementById(sliderId);
-    const mask = slider.querySelector('.mask');
-    const leftImage = slider.querySelector('.left-image');
-    const rightImage = slider.querySelector('.right-image');
-    return new ImageSlider(mask, leftImage, rightImage, widthPercent);
-}
+    window.createImageSlider = (sliderId, widthPercent = 50) => {
+        const slider = document.getElementById(sliderId);
+        if (!slider || !slider.querySelector('.mask')) return null;
+        if (instances.has(slider)) return instances.get(slider);
+        const instance = new ImageSlider(slider, widthPercent);
+        instances.set(slider, instance);
+        return instance;
+    };
+})();
 ```
 
 ## Html
@@ -150,24 +190,32 @@ function createImageSlider(sliderId, widthPercent=50) {
 <script src="./slider.js"></script>
 ```
 
-​	使用这个效果：
+​	使用这个效果。左右图片分别放在 `.slider-left` 和 `.slider-right` 图层里，`data-figcaption="false"` 关闭演示图片的说明文字，仍然保留灯箱预览。本文将 CSS 和 JS 放在文章自己的资源目录，通过顶部 `inject.head` 加载，演示脚本会在框架完成正文挂载和资源加载后执行：
 
 ```html
 
-<div class="slider" id="slider1">
-    <img class="left-image" src="left_1.jpg" alt="jpg" />
-    <img class="right-image" src="right_1.jpg" alt="jpg" />
-    <div class="mask"></div>
+<div class="slider image-comparison" id="slider1">
+    <div class="slider-layer slider-left">
+        <img class="left-image" src="left_1.jpg" alt="jpg" data-figcaption="false" />
+    </div>
+    <div class="slider-layer slider-right">
+        <img class="right-image" src="right_1.jpg" alt="jpg" data-figcaption="false" />
+    </div>
+    <div class="mask" role="slider" tabindex="0" aria-label="图片对比分界线" aria-orientation="horizontal" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"></div>
 </div>
 
 <script>createImageSlider('slider1', 67.5);</script>
 
 ...
 
-<div class="slider" id="slidern">
-    <img class="left-image" src="left_n.jpg" alt="jpg" />
-    <img class="right-image" src="right_n.jpg" alt="jpg" />
-    <div class="mask"></div>
+<div class="slider image-comparison" id="slidern">
+    <div class="slider-layer slider-left">
+        <img class="left-image" src="left_n.jpg" alt="jpg" data-figcaption="false" />
+    </div>
+    <div class="slider-layer slider-right">
+        <img class="right-image" src="right_n.jpg" alt="jpg" data-figcaption="false" />
+    </div>
+    <div class="mask" role="slider" tabindex="0" aria-label="图片对比分界线" aria-orientation="horizontal" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"></div>
 </div>
 
 <script>createImageSlider('slidern', 48.5);</script>
@@ -180,74 +228,110 @@ function createImageSlider(sliderId, widthPercent=50) {
 
 ---
 
-<div class="slider" id="slider1">
-    <img class="left-image" src="left_1.jpg" alt="jpg" />
-    <img class="right-image" src="right_1.jpg" alt="jpg" />
-    <div class="mask"></div>
+<div class="slider image-comparison" id="slider1">
+    <div class="slider-layer slider-left">
+        <img class="left-image" src="left_1.jpg" alt="jpg" data-figcaption="false" />
+    </div>
+    <div class="slider-layer slider-right">
+        <img class="right-image" src="right_1.jpg" alt="jpg" data-figcaption="false" />
+    </div>
+    <div class="mask" role="slider" tabindex="0" aria-label="图片对比分界线" aria-orientation="horizontal" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"></div>
 </div>
 
 <script>createImageSlider('slider1', 59.4);</script>
 
-<div class="slider" id="slider2">
-    <img class="left-image" src="left_2.jpg" alt="jpg" />
-    <img class="right-image" src="right_2.jpg" alt="jpg" />
-    <div class="mask"></div>
+<div class="slider image-comparison" id="slider2">
+    <div class="slider-layer slider-left">
+        <img class="left-image" src="left_2.jpg" alt="jpg" data-figcaption="false" />
+    </div>
+    <div class="slider-layer slider-right">
+        <img class="right-image" src="right_2.jpg" alt="jpg" data-figcaption="false" />
+    </div>
+    <div class="mask" role="slider" tabindex="0" aria-label="图片对比分界线" aria-orientation="horizontal" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"></div>
 </div>
 
 <script>createImageSlider('slider2', 44.7);</script>
 
-<div class="slider" id="slider3">
-    <img class="left-image" src="left_3.jpg" alt="jpg" />
-    <img class="right-image" src="right_3.jpg" alt="jpg" />
-    <div class="mask"></div>
+<div class="slider image-comparison" id="slider3">
+    <div class="slider-layer slider-left">
+        <img class="left-image" src="left_3.jpg" alt="jpg" data-figcaption="false" />
+    </div>
+    <div class="slider-layer slider-right">
+        <img class="right-image" src="right_3.jpg" alt="jpg" data-figcaption="false" />
+    </div>
+    <div class="mask" role="slider" tabindex="0" aria-label="图片对比分界线" aria-orientation="horizontal" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"></div>
 </div>
 
 <script>createImageSlider('slider3', 34.6);</script>
 
-<div class="slider" id="slider4">
-    <img class="left-image" src="left_4.jpg" alt="jpg" />
-    <img class="right-image" src="right_4.jpg" alt="jpg" />
-    <div class="mask"></div>
+<div class="slider image-comparison" id="slider4">
+    <div class="slider-layer slider-left">
+        <img class="left-image" src="left_4.jpg" alt="jpg" data-figcaption="false" />
+    </div>
+    <div class="slider-layer slider-right">
+        <img class="right-image" src="right_4.jpg" alt="jpg" data-figcaption="false" />
+    </div>
+    <div class="mask" role="slider" tabindex="0" aria-label="图片对比分界线" aria-orientation="horizontal" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"></div>
 </div>
 
 <script>createImageSlider('slider4', 50);</script>
 
-<div class="slider" id="slider5">
-    <img class="left-image" src="left_5.jpg" alt="jpg" />
-    <img class="right-image" src="right_5.jpg" alt="jpg" />
-    <div class="mask"></div>
+<div class="slider image-comparison" id="slider5">
+    <div class="slider-layer slider-left">
+        <img class="left-image" src="left_5.jpg" alt="jpg" data-figcaption="false" />
+    </div>
+    <div class="slider-layer slider-right">
+        <img class="right-image" src="right_5.jpg" alt="jpg" data-figcaption="false" />
+    </div>
+    <div class="mask" role="slider" tabindex="0" aria-label="图片对比分界线" aria-orientation="horizontal" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"></div>
 </div>
 
 <script>createImageSlider('slider5', 54.8);</script>
 
-<div class="slider" id="slider6">
-    <img class="left-image" src="left_6.jpg" alt="jpg" />
-    <img class="right-image" src="right_6.jpg" alt="jpg" />
-    <div class="mask"></div>
+<div class="slider image-comparison" id="slider6">
+    <div class="slider-layer slider-left">
+        <img class="left-image" src="left_6.jpg" alt="jpg" data-figcaption="false" />
+    </div>
+    <div class="slider-layer slider-right">
+        <img class="right-image" src="right_6.jpg" alt="jpg" data-figcaption="false" />
+    </div>
+    <div class="mask" role="slider" tabindex="0" aria-label="图片对比分界线" aria-orientation="horizontal" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"></div>
 </div>
 
 <script>createImageSlider('slider6', 49.8);</script>
 
-<div class="slider" id="slider7">
-    <img class="left-image" src="left_7.jpg" alt="jpg" />
-    <img class="right-image" src="right_7.jpg" alt="jpg" />
-    <div class="mask"></div>
+<div class="slider image-comparison" id="slider7">
+    <div class="slider-layer slider-left">
+        <img class="left-image" src="left_7.jpg" alt="jpg" data-figcaption="false" />
+    </div>
+    <div class="slider-layer slider-right">
+        <img class="right-image" src="right_7.jpg" alt="jpg" data-figcaption="false" />
+    </div>
+    <div class="mask" role="slider" tabindex="0" aria-label="图片对比分界线" aria-orientation="horizontal" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"></div>
 </div>
 
 <script>createImageSlider('slider7', 56.7);</script>
 
-<div class="slider" id="slider8">
-    <img class="left-image" src="left_8.jpg" alt="jpg" />
-    <img class="right-image" src="right_8.jpg" alt="jpg" />
-    <div class="mask"></div>
+<div class="slider image-comparison" id="slider8">
+    <div class="slider-layer slider-left">
+        <img class="left-image" src="left_8.jpg" alt="jpg" data-figcaption="false" />
+    </div>
+    <div class="slider-layer slider-right">
+        <img class="right-image" src="right_8.jpg" alt="jpg" data-figcaption="false" />
+    </div>
+    <div class="mask" role="slider" tabindex="0" aria-label="图片对比分界线" aria-orientation="horizontal" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"></div>
 </div>
 
 <script>createImageSlider('slider8', 66.8);</script>
 
-<div class="slider" id="slider9">
-    <img class="left-image" src="left_9.jpg" alt="jpg" />
-    <img class="right-image" src="right_9.jpg" alt="jpg" />
-    <div class="mask"></div>
+<div class="slider image-comparison" id="slider9">
+    <div class="slider-layer slider-left">
+        <img class="left-image" src="left_9.jpg" alt="jpg" data-figcaption="false" />
+    </div>
+    <div class="slider-layer slider-right">
+        <img class="right-image" src="right_9.jpg" alt="jpg" data-figcaption="false" />
+    </div>
+    <div class="mask" role="slider" tabindex="0" aria-label="图片对比分界线" aria-orientation="horizontal" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"></div>
 </div>
 
 <script>createImageSlider('slider9', 52.3);</script>
