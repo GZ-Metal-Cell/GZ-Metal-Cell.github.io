@@ -21,4 +21,4 @@
 
 ## 博客使用的 WebP 版本
 
-上文及 CSV 为离线包的原始来源记录。博客的 real/ 目录保存 57 张大图及 57 张预览的 WebP 转换版本（quality=90），保留尺寸、不裁剪并校正 EXIF 方向。文件按景点编号命名为 NN.webp 和 NN-preview.webp；作者、来源及许可沿用原记录。worldPark.items.json 中 sha256 是离线包原始下载文件的校验值，asset_full_sha256 和 asset_preview_sha256 是转换后 WebP 文件的校验值。
+上文及 CSV 为离线包的原始来源记录。博客使用的 WebP 转换版本（quality=90）保留尺寸、不裁剪并校正 EXIF 方向。图片路径、作者、来源及许可统一由 worldPark.items.json 管理；导入只更新该文件中已有实景照片的资源，不改写景点数据。
