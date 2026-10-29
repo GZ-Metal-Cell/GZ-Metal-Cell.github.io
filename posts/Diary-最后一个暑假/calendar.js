@@ -1,4 +1,6 @@
+(function () {
 var dom = document.getElementById('calendar');
+if (!dom) return;
 var myChart = echarts.init(dom, null, {
     renderer: 'canvas',
     useDirtyRect: false
@@ -22,7 +24,7 @@ var option;
         return data;
     }
 
-    const graphData = [['2024-06-01', 0]];
+    const graphData = [];
     const links = graphData.map(function (item, idx) {
         return {
             source: idx,
@@ -36,7 +38,7 @@ var option;
             formatter: function (params) {
                 if (params.data) {
 
-                    return graphData[params.dataIndex][0].split('-')[1] + '/' + graphData[params.dataIndex][0].split('-')[2];
+                    return String(params.data[0]).slice(5).replace('-', '/');
                 }
                 return params.name;
             }
@@ -107,16 +109,17 @@ if (option && typeof option === 'object') {
     myChart.setOption(option);
 }
 
-window.addEventListener('resize', myChart.resize);
+const resizeChart = () => myChart.resize();
+window.addEventListener('resize', resizeChart);
 
-function setData(newGraphData) {
+window.summerDiarySetData = function (newGraphData) {
     myChart.setOption({
         tooltip: {
             position: 'top',
             formatter: function (params) {
                 if (params.data) {
 
-                    return newGraphData[params.dataIndex][0].split('-')[1] + '/' + newGraphData[params.dataIndex][0].split('-')[2];
+                    return String(params.data[0]).slice(5).replace('-', '/');
                 }
                 return params.name;
             }
@@ -145,3 +148,13 @@ function setData(newGraphData) {
         ]
     }, false);
 }
+
+const observer = new MutationObserver(() => {
+    if (dom.isConnected) return;
+    observer.disconnect();
+    window.removeEventListener('resize', resizeChart);
+    myChart.dispose();
+    delete window.summerDiarySetData;
+});
+observer.observe(document.body, { childList: true, subtree: true });
+})();
